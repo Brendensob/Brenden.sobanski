@@ -3,7 +3,12 @@
 A free browser survival-crafting game inspired by the mobile classics, without the pay-to-win.
 There is no shop, no premium currency, no keys and no ads. Everything is earned by playing.
 
-## Play
+There are two versions in this repo:
+
+- **Browser version** (this folder): a top-down game you can play by opening `index.html`.
+- **Godot version** (`godot/`): a side-scroller that plays like Pixel Survival Game 2. See [`godot/README.md`](godot/README.md).
+
+## Play the browser version
 
 Open `index.html` in any modern browser. No install or build step is needed.
 Your island saves automatically in the browser.
