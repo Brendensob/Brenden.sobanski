@@ -44,7 +44,6 @@ var station_t := 0.0
 var menu_step := "title"
 var new_char := "man_in_suit"
 var name_edit: LineEdit
-var address_edit: LineEdit
 var chat_btn: Button
 var chat_edit: LineEdit
 var chat_log := [] # recent room chat, newest last
@@ -1225,8 +1224,6 @@ func _refresh_title(_choosing := false) -> void:
 			var ok := _button("OK", func(): _create_ok(), true)
 			ok.custom_minimum_size = Vector2(80, 22)
 			screen.add_child(_at(ok, Vector2(250, 230)))
-		"multi":
-			_room_screen(screen)
 		"connecting":
 			var c := _heading("Connecting to the room...", 12)
 			c.size = Vector2(480, 16)
@@ -1234,7 +1231,7 @@ func _refresh_title(_choosing := false) -> void:
 			screen.add_child(_at(c, Vector2(0, 110)))
 			screen.add_child(_at(_button("Cancel", func():
 				Net.leave()
-				menu_step = "multi"
+				menu_step = "mode"
 				_refresh_title()), Vector2(208, 140)))
 		"mode":
 			_logo(screen, 20)
@@ -1247,76 +1244,27 @@ func _refresh_title(_choosing := false) -> void:
 			var who := _heading(info.get("name", name_edit.text if name_edit and is_instance_valid(name_edit) else ""), 10)
 			who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			v.add_child(who)
-			var sp := _button("Single Player", func(): _start_from_menu(), true)
+			var sp := _button("Play", func(): _start_from_menu(), true)
 			sp.custom_minimum_size = Vector2(160, 26)
 			v.add_child(sp)
-			var mp := _button("Multiplayer", func(): menu_step = "multi"; _refresh_title())
+			var mp := _button("Join a Friend", func(): open_friends())
 			mp.custom_minimum_size = Vector2(160, 26)
 			v.add_child(mp)
-			v.add_child(_button("Friends", func(): open_friends()))
 			v.add_child(_button("Back", func(): menu_step = "slots"; _refresh_title()))
-
-func _room_screen(screen: Control) -> void:
-	var head := _heading("Multiplayer", 12)
-	head.size = Vector2(480, 16)
-	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	screen.add_child(_at(head, Vector2(0, 10)))
-	var box := _frame(Vector2(40, 30), Vector2(400, 200))
-	box.mouse_filter = Control.MOUSE_FILTER_PASS
-	screen.add_child(box)
-	box.add_child(_at(_heading("Create a room", 10), Vector2(14, 10)))
-	box.add_child(_at(_wrap("Up to 4 players. Your friends join your world; everyone keeps their own bag and quests.", 230, C_INK, 8), Vector2(14, 26)))
-	var cr := _button("Create Room", func(): _start_room(true), true)
-	cr.custom_minimum_size = Vector2(110, 24)
-	box.add_child(_at(cr, Vector2(270, 16)))
-	box.add_child(_at(_heading("Join a room", 10), Vector2(14, 66)))
-	box.add_child(_at(_label("Room address", 8, C_MUTED), Vector2(14, 84)))
-	var keep := address_edit.text if address_edit and is_instance_valid(address_edit) else _last_address()
-	address_edit = LineEdit.new()
-	address_edit.text = keep
-	address_edit.placeholder_text = "192.168.1.5"
-	address_edit.position = Vector2(14, 96)
-	address_edit.size = Vector2(240, 20)
-	box.add_child(address_edit)
-	var jb := _button("Join Room", func(): _start_room(false), true)
-	jb.custom_minimum_size = Vector2(110, 24)
-	box.add_child(_at(jb, Vector2(270, 94)))
-	box.add_child(_at(_wrap("On the same Wi-Fi, type the address the host sees when they create a room. Over the internet the host forwards UDP port %d on their router, or everyone joins the same free VPN (Tailscale, ZeroTier or Radmin VPN) and uses its address." % Net.PORT, 372, C_MUTED, 8), Vector2(14, 126)))
-	screen.add_child(_at(_button("Back", func(): menu_step = "mode"; _refresh_title()), Vector2(208, 238)))
-
-func _last_address() -> String:
-	var f := FileAccess.open("user://last_room.txt", FileAccess.READ)
-	return f.get_as_text().strip_edges() if f else ""
-
-func _start_room(create: bool) -> void:
-	var nm := name_edit.text.strip_edges() if name_edit and is_instance_valid(name_edit) else ""
-	if create:
-		if GS.slot_info(GS.slot).is_empty():
-			GS.new_game(new_char, nm)
-			GS.save_game()
-		main.host_game()
-		return
-	var addr := address_edit.text.strip_edges()
-	if addr == "":
-		toast("Type the room address first.", "warn")
-		return
-	var f := FileAccess.open("user://last_room.txt", FileAccess.WRITE)
-	if f:
-		f.store_string(addr)
-	menu_step = "connecting"
-	_refresh_title()
-	main.join_game(addr, new_char, nm)
+			var note := _outlined(_label("Your world is your room: friends can join you from their friends list.", 8, C_WHITE))
+			note.size = Vector2(480, 12)
+			note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			screen.add_child(_at(note, Vector2(0, 252)))
 
 func _room_text() -> String:
 	if not Net.active:
-		return ""
+		return "You're playing offline. Claim your name in Friends to open your room." if GS.online_token == "" else ""
 	var names := [GS.player_name + " (you)"]
 	for pid in Net.players:
 		names.append(Net.players[pid].name)
-	var t := "Room: %d/%d players\n%s" % [Net.player_count(), Net.MAX_PLAYERS, ", ".join(names)]
+	var t := "%s\n%d/%d players: %s" % ["Your room" if Net.is_host() else "A friend's room", Net.player_count(), Net.MAX_PLAYERS, ", ".join(names)]
 	if Net.is_host():
-		var addrs := Net.local_addresses()
-		t += "\nFriends join with: %s" % (", ".join(addrs) if addrs.size() > 0 else "your IP address")
+		t += "\nFriends join you from their friends list. Nobody sees your IP address."
 	return t
 
 func chat_focused() -> bool:
@@ -1842,13 +1790,13 @@ func _refresh_friends() -> void:
 		var l := _label(str(f.name), 9)
 		l.custom_minimum_size = Vector2(130, 0)
 		row.add_child(l)
-		var status := "In a room" if f.room != null else ("Online" if f.online else "Offline")
+		var status := "Playing (%d/4)" % int(f.get("players", 1)) if f.room else ("Online" if f.online else "Offline")
 		var sl := _label(status, 8, C_MUTED)
 		sl.custom_minimum_size = Vector2(80, 0)
 		row.add_child(sl)
-		if f.room != null:
-			var addr: String = f.room
-			row.add_child(_button("Join", func(): _join_friend(addr), true))
+		if f.room:
+			var host_name: String = f.name
+			row.add_child(_button("Join", func(): _join_friend(host_name), true))
 		var fname: String = f.name
 		row.add_child(_button("Remove", func(): _remove_friend(fname)))
 		list.add_child(row)
@@ -1895,13 +1843,13 @@ func _remove_friend(nm: String) -> void:
 	await Online.remove_friend(nm)
 	_refresh_friends()
 
-## Joins the room a friend is hosting (leaves your current game first).
-func _join_friend(addr: String) -> void:
+## Joins the room a friend is hosting (your own room closes first).
+func _join_friend(friend: String) -> void:
 	if not main.on_title():
 		main.quit_to_title()
 	menu_step = "connecting"
 	open_panel("title")
-	main.join_game(addr)
+	main.join_game(friend)
 
 func _refresh_room_box() -> void:
 	if room_box == null:
@@ -1923,7 +1871,7 @@ func _refresh_room_box() -> void:
 # ---------------------------------------------------------------- trading
 func open_trade_pick() -> void:
 	if not Net.active:
-		toast("Trading needs a room: create one or join a friend's from Multiplayer.", "warn")
+		toast("Trading needs friends in your room. Claim your name in Friends so they can join.", "warn")
 		return
 	open_panel("trade_pick")
 	var list: VBoxContainer = panels.trade_pick.find_child("PickList", true, false)

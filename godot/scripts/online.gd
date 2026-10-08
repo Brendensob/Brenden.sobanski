@@ -1,7 +1,8 @@
 extends Node
 ## Talks to the Pixel Wilds online server (server/pixel_server.py): reserves
 ## player names so each one can only be taken once, keeps friends lists, and
-## tells friends when you're online and hosting a room.
+## tells friends when you're online. Rooms go through the same server's relay
+## (one port up), so no player ever sees another player's IP address.
 ##
 ## Set ONLINE_SERVER to wherever you run the server before sharing the game.
 ## It can also be changed with `-- --server http://address:24566`.
@@ -72,7 +73,19 @@ func _process(delta: float) -> void:
 	_presence_t -= delta
 	if _presence_t <= 0:
 		_presence_t = 30.0
-		call_api("/presence", {"token": GS.online_token, "room": Net.is_host(), "addrs": Net.local_addresses()})
+		call_api("/presence", {"token": GS.online_token})
 
 func ping_now() -> void:
 	_presence_t = 0.0
+
+## Where the room relay is: the same server, one port up.
+func relay_address() -> Array:
+	var rest := server.trim_prefix("http://").trim_prefix("https://")
+	rest = rest.split("/")[0]
+	var host := rest
+	var port := 24566
+	var colon := rest.rfind(":")
+	if colon > 0:
+		host = rest.substr(0, colon)
+		port = int(rest.substr(colon + 1))
+	return [host, port + 1]

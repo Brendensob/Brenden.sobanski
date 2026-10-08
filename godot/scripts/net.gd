@@ -1,13 +1,13 @@
 extends Node
-## Multiplayer rooms, like the original's: one player creates a room and up to
-## three friends join. Everyone keeps their own character, bag, quests,
-## furnaces and chests; the room host's game runs the shared world (the map
-## everyone is on, its monsters, resources, drops, walls and the time of day).
+## Multiplayer rooms, like the original's. Every player who starts the game is
+## the host of their own room, and up to three friends can join it from their
+## friends list. Everyone keeps their own character, bag, quests, furnaces and
+## chests; the host's game runs the shared world (the map everyone is on, its
+## monsters, resources, drops, walls and the time of day).
 ##
-## Uses Godot's ENet networking. On the same Wi-Fi, friends join with the
-## host's local address. Over the internet the host forwards UDP port 24565,
-## or everyone joins the same free VPN (Tailscale, ZeroTier, Radmin VPN).
-## A Steam build can swap in Steam's networking peer without changing the rest.
+## All traffic goes through the online server's relay (relay_peer.gd), so
+## players never connect to each other directly and never see each other's IP
+## address. Only friends can join a room, and a room holds 4 players.
 
 signal players_changed
 signal chat_received(from: String, text: String)
@@ -16,7 +16,7 @@ signal trade_started
 signal trade_changed
 signal trade_closed
 
-const PORT := 24565
+const RelayPeer := preload("res://scripts/relay_peer.gd")
 const MAX_PLAYERS := 4
 const SEND_RATE := 1.0 / 15.0
 
@@ -57,35 +57,40 @@ func authority() -> bool:
 func my_id() -> int:
 	return multiplayer.get_unique_id() if active else 1
 
-## The host's addresses to share with friends.
-func local_addresses() -> Array:
-	var out := []
-	for a in IP.get_local_addresses():
-		if a.count(".") == 3 and not a.begins_with("127.") and not a.begins_with("169.254."):
-			out.append(a)
-	return out
-
 # ---------------------------------------------------------------- rooms
+var relay: MultiplayerPeerExtension = null
+
+## Opens your own room on the relay. Needs a claimed name.
 func host_room() -> String:
-	var peer := ENetMultiplayerPeer.new()
-	var err := peer.create_server(PORT, MAX_PLAYERS - 1)
-	if err != OK:
-		return "Couldn't open a room on port %d." % PORT
+	if GS.online_token == "":
+		return "Claim your name in Friends so friends can join you."
+	var r: Array = Online.relay_address()
+	var peer = RelayPeer.new()
+	if peer.start(r[0], r[1], GS.online_token, true) != OK:
+		return peer.last_error
+	relay = peer
 	multiplayer.multiplayer_peer = peer
 	active = true
 	players.clear()
 	players_changed.emit()
 	return ""
 
-func join_room(address: String) -> String:
-	var peer := ENetMultiplayerPeer.new()
-	var err := peer.create_client(address.strip_edges(), PORT)
-	if err != OK:
-		return "Couldn't reach %s." % address
+## Joins a friend's room by their name, through the relay.
+func join_room(friend: String) -> String:
+	if GS.online_token == "":
+		return "Claim your name in Friends first."
+	var r: Array = Online.relay_address()
+	var peer = RelayPeer.new()
+	if peer.start(r[0], r[1], GS.online_token, false, friend) != OK:
+		return peer.last_error
+	relay = peer
 	multiplayer.multiplayer_peer = peer
 	active = true
 	players.clear()
 	return ""
+
+func last_error() -> String:
+	return relay.last_error if relay else ""
 
 func leave() -> void:
 	if trading():
@@ -93,6 +98,7 @@ func leave() -> void:
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
+	relay = null
 	active = false
 	players.clear()
 	_pending_take.clear()
@@ -121,9 +127,10 @@ func _on_connected() -> void:
 	hello.rpc_id(1, GS.player_name, GS.look)
 
 func _on_failed() -> void:
-	active = false
+	var why := last_error()
+	leave()
 	if main:
-		main.net_join_failed("Couldn't connect to that room.")
+		main.net_join_failed(why if why != "" else "Couldn't connect to that room.")
 
 func _on_server_gone() -> void:
 	leave()
@@ -198,6 +205,16 @@ func request_level(target: String) -> void:
 func _process(delta: float) -> void:
 	if not active or main == null or main.level == null or main.on_title():
 		return
+	# your own room closed (the online server went away): keep playing alone
+	if is_host() and relay and relay.status == MultiplayerPeer.CONNECTION_DISCONNECTED:
+		var why: String = relay.last_error
+		for pid in players.keys():
+			_on_peer_disconnected(pid)
+		leave()
+		main.hud.toast("%s Your room is closed; you can keep playing." % why, "warn")
+		return
+	if multiplayer.multiplayer_peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
+		return # the room is still opening
 	_send_t += delta
 	if _send_t >= SEND_RATE:
 		_send_t = 0.0

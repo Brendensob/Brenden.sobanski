@@ -48,13 +48,21 @@ Like the original, holding A while you open the bag turns on auto-attack until y
 
 ## Playing with friends
 
-Pick a character slot, then **Multiplayer**:
+Every player who starts the game is the host of their own room: your world is your
+room, and up to 3 friends can join it. To join a friend, pick **Join a Friend** on the
+play menu (or **Friends** in the compass menu) and press **Join** next to their name.
 
-- **Create Room**: you're the host. The game shows the address your friends type in
-  (it's also in the compass menu). Up to 4 players.
-- **Join Room**: type the host's address and press Join Room.
+- **Your IP stays private.** Players never connect to each other directly. All room
+  traffic goes through the online server's relay, so nobody in a room (or anyone who
+  isn't) can see another player's IP address. The friends list only says whether a
+  friend is playing, never where from. Only the server's owner can see connections.
+- **Only friends can join.** The relay checks the friends list on the server: someone
+  who isn't your accepted friend can't get into your room. Rooms hold 4 players.
+- **Names can't be faked.** Your name is tied to a secret key saved with your character,
+  so nobody can join as you.
+- Joining a friend closes your own room until you come back to your own world.
 
-How it works, like the original's rooms:
+How rooms work, like the original's:
 - Everyone keeps their own character, bag, gear, quests, furnaces, chests and seeds,
   saved on their own device.
 - The host's game runs the shared world: the map, its monsters, trees and ores, drops,
@@ -64,6 +72,7 @@ How it works, like the original's rooms:
   Tokens go to everyone. Fainting in a room gets you back up at the start of the map.
   Survival keys for dying are single player only, as in the original.
 - Tap **Chat..** under the bars (or press T) to talk to the room.
+- Without the online server (or with an unclaimed name), you just play alone.
 
 **Trading.** Up and to the left behind the chests in Pixel Town is the Trading Center,
 on a ledge you reach by two steps next to the Gatekeeper. An old wooden wall blocks it:
@@ -85,27 +94,22 @@ later in Friends.
 
 ### The online server
 
-Unique names and friends lists need one small server that everyone's game talks to:
-`server/pixel_server.py` (plain Python 3, nothing to install).
+Names, friends lists and rooms need one small server that everyone's game talks to:
+`server/pixel_server.py` (plain Python 3, nothing to install). It claims names, keeps
+friends lists, and relays room traffic so players never see each other's IP.
 
 1. Run it on a computer or cheap server that stays on: `python3 server/pixel_server.py --port 24566`
    (names and friends are saved to `names.json` next to it).
-2. Open TCP port 24566 to it.
+2. Open TCP ports 24566 (names and friends) and 24567 (room relay) to it.
 3. In `scripts/online.gd`, set `ONLINE_SERVER` to `http://<its address>:24566` before
    sharing the game. (For testing: `godot --path . -- --server http://address:24566`.)
 
-Without the server, everything else still works; names just aren't checked online and
-the friends list says it can't connect. Run its checks with `python3 server/test_server.py`.
+Without the server, single player still works; names just aren't checked online, the
+friends list says it can't connect, and rooms don't open. Run its checks with `python3 server/test_server.py`.
 
-Connecting:
-- **Same Wi-Fi:** use the address the host sees (like 192.168.1.5).
-- **Over the internet:** the host forwards UDP port 24565 on their router to their
-  computer, then friends use the host's public IP. Or, with no router setup, everyone
-  installs the same free VPN app (Tailscale, ZeroTier or Radmin VPN), joins one network,
-  and uses the host's address in that app.
-- **Steam later:** the networking uses Godot's standard multiplayer system, so a Steam
-  build can switch to Steam's own connections (GodotSteam) and join through friend
-  invites without changing the rest of the game.
+Nobody needs to set up their router: every player's game only connects out to the
+server. Steam later: the room connection is its own small piece (`relay_peer.gd`), so a
+Steam build can swap in Steam's relay (GodotSteam) the same way.
 
 ## What's in it
 
@@ -195,9 +199,10 @@ best match.
 | `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign |
 | `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu, chat and every other menu |
 | `scripts/net.gd` | Multiplayer rooms: hosting, joining, and keeping everyone's world in step |
+| `scripts/relay_peer.gd` | Sends room traffic through the server's relay so IPs stay private |
 | `scripts/remote_player.gd` | How other players in the room appear on your screen |
 | `scripts/online.gd` | Talks to the online server: claiming names, friends, who's online |
-| `server/pixel_server.py` | The online server for names and friends lists |
+| `server/pixel_server.py` | The online server: names, friends lists and the room relay |
 | `tests/autotest.gd` | Plays through the game and saves screenshots |
 | `tests/net_test.gd` | Two copies of the game play together over the network |
 
@@ -208,7 +213,7 @@ and `godot --path . -- --nettest client`.
 
 ## Not built yet
 
-- Joining a stranger's room without an address (friends can join from the friends list)
+- Public rooms for strangers (rooms are friends-only)
 - Worlds after Ice Cavern and Ghost Arena (Modina Ruins, Nightmare Valley and later)
 - Event and gem-shop items, and characters from later updates (Ninja, the buns)
 - Phone app export (set it up from **Project → Export** in Godot)

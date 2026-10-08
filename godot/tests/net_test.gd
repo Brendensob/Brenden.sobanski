@@ -62,9 +62,19 @@ func run_host() -> void:
 	GS.pending_token = reg.get("token", "")
 	GS.new_game("man_in_suit", "HostA")
 	GS.save_game()
-	main.host_game()
-	Online.ping_now()
-	check(Net.is_host(), "a room is open")
+	main.start_game(true)
+	check(Net.is_host(), "starting the game opens the host's own room")
+	check(await until(func(): return Net.relay != null and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED, 15.0), "the room is open on the relay")
+	# the friend asks to be friends; accept it (only friends can join)
+	var got_req := false
+	for k in 80:
+		var fr := await Online.friends()
+		if "Friend1" in fr.get("requests", []):
+			got_req = true
+			break
+		await wait(0.5)
+	check(got_req, "the host got a friend request from Friend1")
+	await Online.answer("Friend1", true)
 	check(await until(func(): return Net.players.size() == 1, 60.0), "a friend joined the room")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the host sees the friend in Pixel Town")
 	await wait(0.5)
@@ -88,17 +98,6 @@ func run_host() -> void:
 	check(await until(func(): return main.level.id == "grass_2", 20.0), "the friend's portal request moved the whole room")
 	await wait(1.0)
 	await shot("net_host_grass2")
-	# friends: the friend asked to be friends; accept it
-	var got_req := false
-	for k in 40:
-		var fr := await Online.friends()
-		if "Friend1" in fr.get("requests", []):
-			got_req = true
-			break
-		await wait(0.5)
-	check(got_req, "the host got a friend request from Friend1")
-	await Online.answer("Friend1", true)
-	Online.ping_now()
 	# trading at the Trading Center
 	check(await until(func(): return main.level.id == "town", 30.0), "the room went back to Pixel Town")
 	GS.flags["trade_wall"] = true
@@ -127,19 +126,35 @@ func run_client() -> void:
 	GS.delete_slot(1)
 	var taken := await Online.register("hosta")
 	check(not taken.get("ok", true) and str(taken.get("error", "")).contains("taken"), "HostA's name can't be taken again, even as hosta")
-	# trying to join the room with the same name as someone in it gets you kicked
-	GS.new_game("nurse", "HostA")
-	GS.save_game()
-	main.join_game("127.0.0.1")
-	check(await until(func(): return not Net.active and main.on_title(), 30.0), "joining with a name already in the room is refused")
-	GS.delete_slot(1)
 	var reg := await Online.register("Friend1")
 	check(reg.get("ok", false), "the friend claims the name Friend1")
 	GS.pending_token = reg.get("token", "")
 	GS.new_game("nurse", "Friend1")
 	GS.save_game()
 	await wait(2.0)
-	main.join_game("127.0.0.1")
+	# not friends yet: the room won't let you in
+	main.join_game("HostA")
+	check(await until(func(): return not Net.active and main.on_title(), 20.0), "a player who isn't a friend can't join the room")
+	var add := await Online.add_friend("HostA")
+	check(add.get("ok", false), "sent HostA a friend request")
+	var in_room := false
+	var fr_text := ""
+	for k in 80:
+		var fr := await Online.friends()
+		fr_text = JSON.stringify(fr)
+		for f in fr.get("friends", []):
+			if f.name == "HostA" and f.room == true:
+				in_room = true
+		if in_room:
+			break
+		await wait(0.5)
+	check(in_room, "HostA shows in the friends list as playing")
+	check(not fr_text.contains("127.0.0.1") and not fr_text.contains("ip"), "the friends list never shows an IP address")
+	main.hud.menu_step = "mode"
+	main.hud.open_friends()
+	await wait(1.5)
+	await shot("net_client_friends")
+	main.hud._join_friend("HostA")
 	check(await until(func(): return not main.on_title() and main.level.id == "town", 60.0), "joined the room in Pixel Town")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the friend sees the host")
 	check(await until(func(): return main.level.id == "grass_1", 30.0), "followed the host to Grasslands 1")
@@ -191,23 +206,6 @@ func run_client() -> void:
 	check(await until(func(): return main.level.id == "grass_2", 20.0), "the room moved to Grasslands 2")
 	await wait(1.0)
 	await shot("net_client_grass2")
-	# add the host as a friend; once accepted, the friends list shows their room
-	var add := await Online.add_friend("HostA")
-	check(add.get("ok", false), "sent HostA a friend request")
-	var in_room := false
-	for k in 60:
-		var fr := await Online.friends()
-		for f in fr.get("friends", []):
-			if f.name == "HostA" and f.online and f.room != null:
-				in_room = true
-		if in_room:
-			break
-		await wait(0.5)
-	check(in_room, "HostA shows in the friends list as online and hosting a room")
-	main.hud.open_friends()
-	await wait(1.5)
-	await shot("net_client_friends")
-	main.hud.close_panels()
 	# back to town, burn the wall with a torch, and go to the Trading Center
 	main.change_level("town")
 	check(await until(func(): return main.level.id == "town", 20.0), "the room went back to Pixel Town")

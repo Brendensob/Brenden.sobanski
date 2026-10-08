@@ -110,9 +110,6 @@ func run() -> void:
 	main.hud.menu_step = "mode"
 	main.hud._refresh_title()
 	await shot("01c_mode")
-	main.hud.menu_step = "multi"
-	main.hud._refresh_title()
-	await shot("01d_multiplayer")
 	main.start_game(false, "nurse", "Tester")
 	check(GS.look == "nurse" and GS.player_name == "Tester", "a new game starts as the Nurse named Tester")
 	check(GS.slot_info(0).get("name", "") == "Tester", "the character is saved in slot 1")

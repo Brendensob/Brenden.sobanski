@@ -56,6 +56,7 @@ func start_game(from_save: bool, character: String = "man_in_suit", pname: Strin
 	hud.close_panels()
 	change_level("town")
 	hud.menu_step = "title"
+	open_my_room()
 	if not from_save:
 		hud.toast("Welcome to Pixel Town! Talk to the Gatekeeper to visit the Grasslands.", "big")
 
@@ -83,22 +84,23 @@ func change_level(id: String) -> void:
 		Net.send_world()
 
 # ---------------------------------------------------------------- rooms
-## Opens a room with the character in GS.slot and starts in Pixel Town.
-func host_game() -> void:
-	start_game(GS.has_save())
+## Opens your room on the online server's relay: every player is the host of
+## their own world, and friends can join it from their friends list.
+func open_my_room() -> void:
+	if GS.online_token == "":
+		return
 	var err := Net.host_room()
 	if err != "":
-		hud.toast(err, "danger")
-		return
-	var addrs := Net.local_addresses()
-	hud.toast("Room open! Friends join with: %s" % (", ".join(addrs) if addrs.size() > 0 else "your IP address"), "big")
+		hud.toast(err, "warn")
+	else:
+		Online.ping_now()
 
-## Joins a friend's room with the character in GS.slot.
-func join_game(address: String, character: String = "man_in_suit", pname: String = "") -> void:
-	if not (GS.has_save() and GS.load_game()):
-		GS.new_game(character, pname)
-		GS.save_game()
-	var err := Net.join_room(address)
+## Joins a friend's room by name, with the character in GS.slot.
+func join_game(friend: String) -> void:
+	if not GS.load_game():
+		net_join_failed("Pick a character first.")
+		return
+	var err := Net.join_room(friend)
 	if err != "":
 		net_join_failed(err)
 
@@ -116,7 +118,8 @@ func net_load_world(world_id: String, seed: int, state: Dictionary) -> void:
 
 func net_join_failed(msg: String) -> void:
 	Net.leave()
-	hud.menu_step = "multi"
+	title_mode = true
+	hud.menu_step = "mode"
 	hud.open_panel("title")
 	hud.toast(msg, "danger")
 
