@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Wilds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&family=Silkscreen:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="view" aria-label="Game world"></canvas>
+  <div id="touchpad" aria-hidden="true"><div id="stickBase" hidden><div id="stickKnob"></div></div></div>
+
+  <div id="hud" hidden>
+    <div class="hud-top">
+      <div class="stats">
+        <div class="stat"><span class="stat-label">HP</span><div class="bar hp"><i id="hpFill"></i></div><span id="hpNum" class="num">100</span></div>
+        <div class="stat" id="hungerRow"><span class="stat-label">Food</span><div class="bar food"><i id="foodFill"></i></div><span id="foodNum" class="num">100</span></div>
+        <div class="clock"><span id="clockIcon" class="sun" aria-hidden="true"></span><span id="dayLabel">Day 1</span><span id="timeLabel" class="muted">Morning</span></div>
+      </div>
+      <div class="hud-right">
+        <div id="goal" class="goal"><span class="goal-label">Goal</span><span id="goalText"></span></div>
+        <button id="pauseBtn" class="icon-btn" aria-label="Pause">II</button>
+      </div>
+    </div>
+    <div id="bossBar" class="boss" hidden><span class="boss-name">Stone Golem</span><div class="bar boss-bar"><i id="bossFill"></i></div></div>
+    <div id="toasts" aria-live="polite"></div>
+    <div class="hud-bottom">
+      <div id="hotbar" class="hotbar" aria-label="Hotbar"></div>
+      <div class="hud-actions">
+        <button id="bagBtn" class="bag-btn">Bag <kbd>E</kbd></button>
+        <button id="actBtn" class="act-btn" aria-label="Action">A</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="bag" class="panel" hidden aria-label="Bag">
+    <header class="panel-head">
+      <h2>Bag</h2>
+      <div id="armorLine" class="armor-line"></div>
+      <button id="bagClose" class="icon-btn" aria-label="Close bag">×</button>
+    </header>
+    <div class="panel-body">
+      <div class="col">
+        <h3>Backpack <span class="muted small">top row is your hotbar</span></h3>
+        <div id="bagGrid" class="bag-grid"></div>
+        <div id="detail" class="detail"></div>
+      </div>
+      <div class="col">
+        <h3>Mixing pot</h3>
+        <p class="muted small">Add up to three different ingredients and press Mix to discover what they make. Nothing gets used up until you craft.</p>
+        <div class="pot-row"><div id="pot" class="pot"></div><button id="mixBtn" class="btn">Mix</button></div>
+        <div id="potResult" class="recipes"></div>
+        <h3>Recipe book <span id="bookCount" class="muted small"></span></h3>
+        <p id="hint" class="hint" hidden></p>
+        <div id="book" class="recipes"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="title" class="screen">
+    <div class="title-card">
+      <p class="eyebrow">Survive · Craft · Build</p>
+      <h1>Pixel<br>Wilds</h1>
+      <p class="tagline">Chop trees, mix recipes, build a camp and last the night. Everything is earned by playing. There is nothing to buy.</p>
+      <div class="menu">
+        <button id="continueBtn" class="btn" hidden>Continue <span id="continueInfo" class="small"></span></button>
+        <button id="newBtn" class="btn">New island</button>
+        <button id="arenaBtn" class="btn ghost">Arena <span id="bestInfo" class="small"></span></button>
+        <button id="helpBtn" class="btn ghost" aria-expanded="false" aria-controls="help">How to play</button>
+      </div>
+      <div id="help" class="help" hidden>
+        <div class="help-grid">
+          <div>
+            <h3>Keyboard &amp; mouse</h3>
+            <ul>
+              <li><kbd>WASD</kbd> or arrows to move</li>
+              <li><kbd>Space</kbd> or click to hit, eat, or place</li>
+              <li><kbd>1</kbd>–<kbd>8</kbd> or scroll to pick what you hold</li>
+              <li><kbd>E</kbd> to open your bag, <kbd>Esc</kbd> to pause</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Touch</h3>
+            <ul>
+              <li>Drag on the left side to move</li>
+              <li>Tap <b>A</b> or the right side to act</li>
+              <li>Tap the hotbar to pick what you hold</li>
+            </ul>
+          </div>
+        </div>
+        <h3>Tips</h3>
+        <ul>
+          <li>Whatever you hold decides what <b>A</b> does: swing it, eat it, or place it.</li>
+          <li>Recipes are secret. Put ingredients in the mixing pot to find them.</li>
+          <li>Monsters come out at night. They won't appear near a campfire, but ghouls can break walls.</li>
+          <li>Slimes and spiders sometimes drop eggs. Hatch one for a pet that fights with you.</li>
+          <li>Every 4th night the Stone Golem wakes up.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="pause" class="screen" hidden>
+    <div class="title-card small-card">
+      <h2>Paused</h2>
+      <p id="pauseNote" class="muted"></p>
+      <div class="menu">
+        <button id="resumeBtn" class="btn">Resume</button>
+        <button id="quitBtn" class="btn ghost">Save and quit</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="dead" class="screen" hidden>
+    <div class="title-card small-card">
+      <h2 id="deadTitle">You fainted</h2>
+      <p id="deadText" class="muted"></p>
+      <div class="menu">
+        <button id="deadBtn" class="btn">Wake up</button>
+        <button id="deadQuitBtn" class="btn ghost">Back to title</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/world.js"></script>
+<script src="js/input.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
