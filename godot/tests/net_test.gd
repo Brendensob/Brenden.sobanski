@@ -38,6 +38,12 @@ func check(ok: bool, what: String) -> void:
 	if not ok:
 		fails.append(what)
 
+func tap(action: String) -> void:
+	Input.action_press(action)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	Input.action_release(action)
+
 func shot(name: String) -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -51,9 +57,13 @@ func run_host() -> void:
 	await wait(1.0)
 	GS.slot = 2
 	GS.delete_slot(2)
-	GS.new_game("man_in_suit", "Host")
+	var reg := await Online.register("HostA")
+	check(reg.get("ok", false), "the host claims the name HostA online")
+	GS.pending_token = reg.get("token", "")
+	GS.new_game("man_in_suit", "HostA")
 	GS.save_game()
 	main.host_game()
+	Online.ping_now()
 	check(Net.is_host(), "a room is open")
 	check(await until(func(): return Net.players.size() == 1, 60.0), "a friend joined the room")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the host sees the friend in Pixel Town")
@@ -78,6 +88,36 @@ func run_host() -> void:
 	check(await until(func(): return main.level.id == "grass_2", 20.0), "the friend's portal request moved the whole room")
 	await wait(1.0)
 	await shot("net_host_grass2")
+	# friends: the friend asked to be friends; accept it
+	var got_req := false
+	for k in 40:
+		var fr := await Online.friends()
+		if "Friend1" in fr.get("requests", []):
+			got_req = true
+			break
+		await wait(0.5)
+	check(got_req, "the host got a friend request from Friend1")
+	await Online.answer("Friend1", true)
+	Online.ping_now()
+	# trading at the Trading Center
+	check(await until(func(): return main.level.id == "town", 30.0), "the room went back to Pixel Town")
+	GS.flags["trade_wall"] = true
+	GS.add_item("wood", 5)
+	var coins0 := GS.coins
+	check(await until(func(): return chat_log.has("ready to trade"), 90.0), "the friend burned the wall and is at the Trading Center")
+	var friend_peer: int = Net.players.keys()[0]
+	Net.ask_trade(friend_peer)
+	check(await until(func(): return Net.trading(), 15.0), "the friend accepted the trade")
+	var wood_slot := -1
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "wood":
+			wood_slot = i
+	Net.set_offer([wood_slot], 0)
+	check(await until(func(): return Net.trade_theirs.items.size() > 0, 15.0), "the host sees the friend's offer")
+	await shot("net_host_trade")
+	Net.set_ready(true)
+	check(await until(func(): return not Net.trading(), 20.0), "the trade finished")
+	check(GS.count("rock") == 3 and GS.coins == coins0 + 50 and GS.count("wood") == 0, "the host got 3 Rocks and 50 coins for 5 Wood")
 	check(await until(func(): return Net.players.is_empty(), 30.0), "the friend left the room")
 	finish()
 
@@ -85,7 +125,21 @@ func run_client() -> void:
 	await wait(4.0)
 	GS.slot = 1
 	GS.delete_slot(1)
-	main.join_game("127.0.0.1", "nurse", "Friend")
+	var taken := await Online.register("hosta")
+	check(not taken.get("ok", true) and str(taken.get("error", "")).contains("taken"), "HostA's name can't be taken again, even as hosta")
+	# trying to join the room with the same name as someone in it gets you kicked
+	GS.new_game("nurse", "HostA")
+	GS.save_game()
+	main.join_game("127.0.0.1")
+	check(await until(func(): return not Net.active and main.on_title(), 30.0), "joining with a name already in the room is refused")
+	GS.delete_slot(1)
+	var reg := await Online.register("Friend1")
+	check(reg.get("ok", false), "the friend claims the name Friend1")
+	GS.pending_token = reg.get("token", "")
+	GS.new_game("nurse", "Friend1")
+	GS.save_game()
+	await wait(2.0)
+	main.join_game("127.0.0.1")
 	check(await until(func(): return not main.on_title() and main.level.id == "town", 60.0), "joined the room in Pixel Town")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the friend sees the host")
 	check(await until(func(): return main.level.id == "grass_1", 30.0), "followed the host to Grasslands 1")
@@ -137,6 +191,67 @@ func run_client() -> void:
 	check(await until(func(): return main.level.id == "grass_2", 20.0), "the room moved to Grasslands 2")
 	await wait(1.0)
 	await shot("net_client_grass2")
+	# add the host as a friend; once accepted, the friends list shows their room
+	var add := await Online.add_friend("HostA")
+	check(add.get("ok", false), "sent HostA a friend request")
+	var in_room := false
+	for k in 60:
+		var fr := await Online.friends()
+		for f in fr.get("friends", []):
+			if f.name == "HostA" and f.online and f.room != null:
+				in_room = true
+		if in_room:
+			break
+		await wait(0.5)
+	check(in_room, "HostA shows in the friends list as online and hosting a room")
+	main.hud.open_friends()
+	await wait(1.5)
+	await shot("net_client_friends")
+	main.hud.close_panels()
+	# back to town, burn the wall with a torch, and go to the Trading Center
+	main.change_level("town")
+	check(await until(func(): return main.level.id == "town", 20.0), "the room went back to Pixel Town")
+	await wait(0.5)
+	lvl = main.level
+	var wall: Node = null
+	for n in lvl.props.get_children():
+		if n is NodeScript and n.kind == "trade_wall":
+			wall = n
+	check(wall != null, "a wooden wall blocks the Trading Center")
+	GS.inv[4] = {"id": "torch_weapon", "n": 1}
+	GS.sel = 4
+	GS.inventory_changed.emit()
+	var p: Node2D = lvl.player
+	p.position = wall.position + Vector2(12, -1)
+	p.facing = -1
+	await wait(0.3)
+	await shot("net_client_wall")
+	for k in 4:
+		p.cooldown = 0
+		await tap("attack")
+		await wait(1.1)
+	check(GS.flags.get("trade_wall", false), "the Torch burned the wall down")
+	p.position = lvl.cell_pos(Vector2i(26, 10))
+	GS.add_item("rock", 3)
+	GS.coins = 100
+	Net.say("ready to trade")
+	check(await until(func(): return Net.trade_invite_from != 0, 30.0), "HostA asked to trade")
+	await shot("net_client_trade_invite")
+	main.hud.close_panels()
+	Net.answer_trade(true)
+	check(await until(func(): return Net.trading() and main.hud.panels.trade.visible, 10.0), "the trade window opened")
+	var rock_slot := -1
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "rock":
+			rock_slot = i
+	Net.set_offer([rock_slot], 50)
+	check(await until(func(): return Net.trade_theirs.items.size() > 0, 15.0), "the friend sees HostA's offer")
+	await wait(0.5)
+	await shot("net_client_trade")
+	Net.set_ready(true)
+	check(await until(func(): return not Net.trading(), 20.0), "the trade finished")
+	check(GS.count("wood") >= 5 and GS.count("rock") == 0 and GS.coins == 50, "the friend got 5 Wood for 3 Rocks and 50 coins")
+	await wait(0.5)
 	main.quit_to_title()
 	await wait(1.0)
 	finish()

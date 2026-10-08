@@ -95,6 +95,7 @@ const LOOKS := {
 	"tools": {"h": "4a2a1a", "H": "3a2010", "cap": "d8433a", "capH": "a82a22", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
 		"over": [[7, 11, ["kkkk"]]]},
 	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230"},
+	"trader": {"h": "6a4220", "H": "4a2e14", "cap": "4f9a44", "capH": "2e7a2a", "c": "f2cf5b", "C": "c99a2e", "t": "4f9a44", "q": "4a3a2a", "f": "2a2230"},
 	"jumpie": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "5cbf3f", "C": "3e8a2e", "t": "f2efe6", "j": "4f9a44", "q": "f2c07a", "f": "3a2a22",
 		"over": [[8, 3, ["rr", "r."]]]},
 	# monsters that are drawn as people
@@ -266,7 +267,7 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 		"miner":
 			rect(img, 2, 3, 9, 3, Color("f2cf5b"))
 			rect(img, 8, 4, 2, 2, Color("f2efe6"))
-		"merchant", "tools":
+		"merchant", "tools", "trader":
 			rect(img, 1, 3, 10, 3, col(map.get("cap", map.h)))
 			rect(img, 7, 5, 5, 1, col(map.get("capH", map.H)))
 		"warden":
@@ -903,6 +904,17 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 				rect(img, 4, 1, 6, 4, c)
 				rect(img, 3, 1, 8, 1, c.darkened(0.3))
 				rect(img, 2, 9, 10, 1, c.lightened(0.25))
+			"trade_wall":
+				# rough wooden planks with vines, in front of the Trading Center
+				img = blank(18, 48)
+				for x in [0, 6, 12]:
+					rect(img, x + 1, 0, 5, 48, Color("8a5a32"))
+					rect(img, x + 1, 0, 1, 48, Color("a8703f"))
+					rect(img, x + 2, 2, 3, 1, Color("5a3a1a"))
+				for y in [8, 30]:
+					rect(img, 0, y, 18, 3, Color("6e4426"))
+				for k in 6:
+					rect(img, rng.randi_range(0, 16), rng.randi_range(0, 44), 2, 4, Color("3e8a2e"))
 			"rock_wall":
 				img = blank(20, 48)
 				for y in range(0, 48, 8):
@@ -1007,6 +1019,17 @@ func prop_tex(kind: String, state: String = "") -> Texture2D:
 			"torch": img = grid_image(ICON_GRIDS.torch_i)
 			"coin": img = grid_image([".yyy.", "yYyyy", "yyYyy", "yyyYy", ".yyy."])
 			"heart": img = grid_image([".rr.rr.", "rRrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."])
+			"trade_table":
+				# a trading table with a little scale on it
+				img = blank(22, 16)
+				rect(img, 0, 6, 22, 3, Color("a8703f"))
+				rect(img, 0, 6, 22, 1, Color("c89058"))
+				rect(img, 2, 9, 2, 7, Color("6e4426"))
+				rect(img, 18, 9, 2, 7, Color("6e4426"))
+				rect(img, 10, 0, 2, 6, Color("c99a2e"))
+				rect(img, 5, 1, 12, 1, Color("c99a2e"))
+				rect(img, 4, 2, 4, 2, Color("f2cf5b"))
+				rect(img, 14, 2, 4, 2, Color("f2cf5b"))
 			"board":
 				# a signboard showing what's next to it (state = item id)
 				img = blank(14, 18)

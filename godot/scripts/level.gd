@@ -258,6 +258,10 @@ func _gen_town() -> void:
 			top = 17 - (x - 73)
 		surface[x] = top
 		fill(x, top, 1, H - top)
+	# up and to the left behind the chests: two steps and the Trading Center ledge
+	fill(39, 15, 2, 1)
+	fill(36, 13, 2, 1)
+	fill(18, 11, 18, 1)
 	fill(0, 0, 1, H)
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(44, 16)
@@ -496,6 +500,14 @@ func _populate_town() -> void:
 	add_station("chest_golden", 0, Vector2i(32, y))
 	add_board("master_key", Vector2i(35, y))
 	add_station("chest_master", 0, Vector2i(36, y))
+	# the Trading Center on the ledge, behind a wooden wall you burn with a Torch
+	add_npc("trader", Vector2i(20, 10))
+	add_board("coin", Vector2i(22, 10))
+	add_station("trade_table", 0, Vector2i(25, 10))
+	add_station("trade_table", 1, Vector2i(29, 10))
+	if not GS.flags.get("trade_wall", false):
+		var tw: Node = add_node("trade_wall", Vector2i(34, 10))
+		tw.make_solid()
 	# the middle of town: the Gatekeeper opens portals, Miffie stands to his right
 	add_npc("keeper", Vector2i(41, y))
 	add_npc("mira", Vector2i(47, y))

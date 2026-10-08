@@ -332,6 +332,14 @@ func _do_hit() -> void:
 		return
 	var need: String = n.def.tool
 	var tier := 0
+	if need == "torch":
+		if id != "torch_weapon":
+			_say("It's an old wooden wall. A Torch would burn it down.")
+			n.shake()
+			return
+		level.burst(n.position + Vector2(0, -20), Color("f2a33a"), 6)
+		n.hit(1)
+		return
 	if it.get("type", "") == need:
 		tier = int(it.tier)
 	elif need == "axe" and it.has("axe"):

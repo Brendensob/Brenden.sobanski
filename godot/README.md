@@ -65,6 +65,38 @@ How it works, like the original's rooms:
   Survival keys for dying are single player only, as in the original.
 - Tap **Chat..** under the bars (or press T) to talk to the room.
 
+**Trading.** Up and to the left behind the chests in Pixel Town is the Trading Center,
+on a ledge you reach by two steps next to the Gatekeeper. An old wooden wall blocks it:
+hold a **Torch** (Wood + Fire Crystal + Coal, in the Survival Book) and hit the wall to
+burn it down. Inside are the Trader and two trading tables. In a room, stand at a table,
+pick a friend who's also in Pixel Town, and when they accept:
+- tap items in your bag to put them up (up to 6 stacks) and add coins,
+- both press **Ready**; the trade happens only when both are ready, and changing an
+  offer un-readies both sides. Both games confirm the trade before any items move.
+
+**Names and friends.** Each name can only be taken once. When you make a character the
+game claims the name on the online server; if someone has it, pick another. Your other
+character slots can't reuse it either, and a room won't let in two players with the
+same name. Deleting a character frees its name. Open **Friends** from the play menu or the
+compass menu to add friends by name, accept requests, see who's online, and **Join** a
+friend's room straight from the list. You can also add the players in your room from the
+compass menu. A character made while the server couldn't be reached can claim its name
+later in Friends.
+
+### The online server
+
+Unique names and friends lists need one small server that everyone's game talks to:
+`server/pixel_server.py` (plain Python 3, nothing to install).
+
+1. Run it on a computer or cheap server that stays on: `python3 server/pixel_server.py --port 24566`
+   (names and friends are saved to `names.json` next to it).
+2. Open TCP port 24566 to it.
+3. In `scripts/online.gd`, set `ONLINE_SERVER` to `http://<its address>:24566` before
+   sharing the game. (For testing: `godot --path . -- --server http://address:24566`.)
+
+Without the server, everything else still works; names just aren't checked online and
+the friends list says it can't connect. Run its checks with `python3 server/test_server.py`.
+
 Connecting:
 - **Same Wi-Fi:** use the address the host sees (like 192.168.1.5).
 - **Over the internet:** the host forwards UDP port 24565 on their router to their
@@ -164,18 +196,19 @@ best match.
 | `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu, chat and every other menu |
 | `scripts/net.gd` | Multiplayer rooms: hosting, joining, and keeping everyone's world in step |
 | `scripts/remote_player.gd` | How other players in the room appear on your screen |
+| `scripts/online.gd` | Talks to the online server: claiming names, friends, who's online |
+| `server/pixel_server.py` | The online server for names and friends lists |
 | `tests/autotest.gd` | Plays through the game and saves screenshots |
 | `tests/net_test.gd` | Two copies of the game play together over the network |
 
 Run the automatic test with `godot --path . -- --autotest` (add `--touch` to show the phone buttons).
 Screenshots are saved to Godot's user data folder under `shots/`.
-To test multiplayer, start two copies: `godot --path . -- --nettest host` and
-`godot --path . -- --nettest client`.
+To test multiplayer, start the online server and two copies: `godot --path . -- --nettest host`
+and `godot --path . -- --nettest client`.
 
 ## Not built yet
 
-- Trading items directly between players, and joining rooms without typing an address
-  (that needs a matchmaking server or Steam)
+- Joining a stranger's room without an address (friends can join from the friends list)
 - Worlds after Ice Cavern and Ghost Arena (Modina Ruins, Nightmare Valley and later)
 - Event and gem-shop items, and characters from later updates (Ninja, the buns)
 - Phone app export (set it up from **Project → Export** in Godot)

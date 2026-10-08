@@ -84,6 +84,9 @@ func _refresh() -> void:
 				state = "done" if GS.now() >= s.done else "growing"
 			tex = Art.prop_tex("soil", state)
 			text = "" if s == null else ("Ready!" if state == "done" else _time(s.done - GS.now()))
+		"trade_table":
+			tex = Art.prop_tex("trade_table")
+			text = "Trade"
 		"gate":
 			tex = Art.prop_tex("gate")
 			text = "Locked"
@@ -112,6 +115,8 @@ func interact(_player: Node) -> void:
 	match kind:
 		"furnace_board":
 			return
+		"trade_table":
+			level.main.hud.open_trade_pick()
 		"gate":
 			level.main.hud.toast("The gate is locked. Talk to the GateKeeper.", "warn")
 		"sign":

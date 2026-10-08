@@ -11,6 +11,10 @@ extends Node
 
 signal players_changed
 signal chat_received(from: String, text: String)
+signal trade_invited(peer: int, from: String)
+signal trade_started
+signal trade_changed
+signal trade_closed
 
 const PORT := 24565
 const MAX_PLAYERS := 4
@@ -22,6 +26,15 @@ var main: Node
 var _send_t := 0.0
 var _tick_t := 0.0
 var _pending_take := {} # nid -> true, pickups we asked the host for
+# trading: who with, and what each side has put up
+const TRADE_SLOTS := 6
+var trade_peer := 0
+var trade_invite_from := 0
+var trade_mine := [] # bag slot indexes you're offering
+var trade_coins := 0
+var trade_theirs := {"items": [], "coins": 0}
+var trade_ready_me := false
+var trade_ready_them := false
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)
@@ -75,6 +88,8 @@ func join_room(address: String) -> String:
 	return ""
 
 func leave() -> void:
+	if trading():
+		_end_trade("")
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
@@ -91,6 +106,8 @@ func _on_peer_connected(id: int) -> void:
 		multiplayer.multiplayer_peer.disconnect_peer(id)
 
 func _on_peer_disconnected(id: int) -> void:
+	if id == trade_peer:
+		_end_trade("Your trading partner left.")
 	if players.has(id):
 		var nm: String = players[id].name
 		players.erase(id)
@@ -119,6 +136,14 @@ func hello(pname: String, look: String) -> void:
 	if not is_host():
 		return
 	var id := multiplayer.get_remote_sender_id()
+	# each name only once in a room
+	var taken := pname.to_lower() == GS.player_name.to_lower()
+	for pid in players:
+		if players[pid].name.to_lower() == pname.to_lower():
+			taken = true
+	if taken:
+		kicked.rpc_id(id, "Someone in that room already uses the name %s." % pname)
+		return
 	players[id] = {"name": pname, "look": look, "state": {}}
 	players_changed.emit()
 	main.hud.toast("%s joined the room." % pname, "good")
@@ -127,6 +152,12 @@ func hello(pname: String, look: String) -> void:
 		roster[pid] = {"name": players[pid].name, "look": players[pid].look}
 	roster_update.rpc(roster)
 	send_world(id)
+
+@rpc("authority", "reliable")
+func kicked(reason: String) -> void:
+	leave()
+	if main:
+		main.net_join_failed(reason)
 
 @rpc("authority", "reliable")
 func roster_update(roster: Dictionary) -> void:
@@ -332,3 +363,204 @@ func say(text: String) -> void:
 @rpc("any_peer", "reliable")
 func chat(from: String, text: String) -> void:
 	chat_received.emit(from, text.left(80))
+
+# ---------------------------------------------------------------- trading
+## Players in your room who are in Pixel Town right now (you trade at the Trading Center).
+func players_in_town() -> Array:
+	var out := []
+	for pid in players:
+		if players[pid].get("state", {}).get("world", "") == "town":
+			out.append(pid)
+	return out
+
+func trading() -> bool:
+	return trade_peer != 0
+
+func ask_trade(peer: int) -> void:
+	if trading() or not players.has(peer):
+		return
+	trade_invite.rpc_id(peer, GS.player_name)
+	if main:
+		main.hud.toast("Asked %s to trade." % players[peer].name)
+
+@rpc("any_peer", "reliable")
+func trade_invite(from: String) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if trading():
+		trade_answer.rpc_id(id, false)
+		return
+	trade_invite_from = id
+	trade_invited.emit(id, from)
+
+func answer_trade(accept: bool) -> void:
+	var id := trade_invite_from
+	trade_invite_from = 0
+	if id == 0 or not players.has(id):
+		return
+	trade_answer.rpc_id(id, accept)
+	if accept:
+		_start_trade(id)
+
+@rpc("any_peer", "reliable")
+func trade_answer(accept: bool) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if accept and not trading():
+		_start_trade(id)
+	elif not accept and main:
+		main.hud.toast("%s said no to trading." % players.get(id, {"name": "They"}).name, "warn")
+
+func _start_trade(peer: int) -> void:
+	trade_peer = peer
+	trade_mine = []
+	trade_coins = 0
+	trade_theirs = {"items": [], "coins": 0}
+	trade_ready_me = false
+	trade_ready_them = false
+	trade_started.emit()
+
+## What you're offering, as [item, count] pairs.
+func my_offer() -> Array:
+	var out := []
+	for i in trade_mine:
+		var s = GS.inv[i]
+		if s:
+			out.append([s.id, int(s.n)])
+	return out
+
+func set_offer(slots: Array, coins: int) -> void:
+	if not trading():
+		return
+	trade_mine = slots.slice(0, TRADE_SLOTS)
+	trade_coins = clampi(coins, 0, GS.coins)
+	trade_ready_me = false
+	trade_ready_them = false
+	trade_offer.rpc_id(trade_peer, my_offer(), trade_coins)
+	trade_changed.emit()
+
+@rpc("any_peer", "reliable")
+func trade_offer(items: Array, coins: int) -> void:
+	if multiplayer.get_remote_sender_id() != trade_peer:
+		return
+	trade_theirs = {"items": items.slice(0, TRADE_SLOTS), "coins": maxi(0, coins)}
+	trade_ready_me = false
+	trade_ready_them = false
+	trade_changed.emit()
+
+## Can this trade go through on your side? Returns "" or the reason it can't.
+func trade_problem() -> String:
+	var need := {}
+	for e in my_offer():
+		need[e[0]] = need.get(e[0], 0) + int(e[1])
+	for id in need:
+		if GS.count(id) < need[id]:
+			return "You don't have those items any more."
+	if GS.coins < trade_coins:
+		return "You don't have that many coins."
+	var free := trade_mine.size()
+	for s in GS.inv:
+		if s == null:
+			free += 1
+	for e in trade_theirs.items:
+		if not Data.ITEMS.has(str(e[0])):
+			return "They offered something this game doesn't know."
+	if free < trade_theirs.items.size():
+		return "Make room in your bag first."
+	return ""
+
+func set_ready(on: bool) -> void:
+	if not trading():
+		return
+	if on:
+		var why := trade_problem()
+		if why != "":
+			if main:
+				main.hud.toast(why, "warn")
+			return
+	trade_ready_me = on
+	trade_ready.rpc_id(trade_peer, on)
+	trade_changed.emit()
+	_maybe_commit()
+
+@rpc("any_peer", "reliable")
+func trade_ready(on: bool) -> void:
+	if multiplayer.get_remote_sender_id() != trade_peer:
+		return
+	trade_ready_them = on
+	trade_changed.emit()
+	_maybe_commit()
+
+## When both are ready, the player with the lower number checks with the other
+## game first, and only then do both bags change, so nothing is lost or copied.
+func _maybe_commit() -> void:
+	if not (trade_ready_me and trade_ready_them) or my_id() > trade_peer:
+		return
+	if trade_problem() != "":
+		set_ready(false)
+		return
+	trade_commit.rpc_id(trade_peer, trade_theirs.items, trade_theirs.coins, my_offer(), trade_coins)
+
+@rpc("any_peer", "reliable")
+func trade_commit(your_items: Array, your_coins: int, my_items: Array, my_coins: int) -> void:
+	var id := multiplayer.get_remote_sender_id()
+	if id != trade_peer:
+		return
+	var same: bool = your_items == my_offer() and your_coins == trade_coins and my_items == trade_theirs.items and my_coins == trade_theirs.coins
+	if not same or not trade_ready_me or trade_problem() != "":
+		trade_done.rpc_id(id, false)
+		trade_ready_me = false
+		trade_changed.emit()
+		return
+	_apply_trade()
+	trade_done.rpc_id(id, true)
+
+@rpc("any_peer", "reliable")
+func trade_done(ok: bool) -> void:
+	if multiplayer.get_remote_sender_id() != trade_peer:
+		return
+	if ok:
+		_apply_trade()
+	else:
+		trade_ready_me = false
+		trade_changed.emit()
+		if main:
+			main.hud.toast("The trade didn't go through. Check the offers and try again.", "warn")
+
+func _apply_trade() -> void:
+	var give := my_offer()
+	var coins_out := trade_coins
+	var got: Array = trade_theirs.items
+	var coins_in: int = trade_theirs.coins
+	var slots := trade_mine.duplicate()
+	slots.sort()
+	slots.reverse()
+	for i in slots:
+		GS.inv[i] = null
+	GS.coins -= coins_out
+	for e in got:
+		GS.add_item(str(e[0]), int(e[1]), true)
+	GS.coins += coins_in
+	GS.inventory_changed.emit()
+	GS.stats_changed.emit()
+	GS.save_game()
+	_end_trade("Trade complete!")
+
+func cancel_trade() -> void:
+	if trading():
+		trade_cancel.rpc_id(trade_peer)
+	_end_trade("")
+
+@rpc("any_peer", "reliable")
+func trade_cancel() -> void:
+	if multiplayer.get_remote_sender_id() == trade_peer:
+		_end_trade("The trade was cancelled.")
+
+func _end_trade(msg: String) -> void:
+	trade_peer = 0
+	trade_mine = []
+	trade_coins = 0
+	trade_ready_me = false
+	trade_ready_them = false
+	trade_theirs = {"items": [], "coins": 0}
+	trade_closed.emit()
+	if msg != "" and main:
+		main.hud.toast(msg, "good" if msg == "Trade complete!" else "warn")

@@ -566,6 +566,9 @@ var NODES := {
 	"erbium_rock": {"tool": "pick", "min": 4, "hits": 10, "step": 2, "drops": [["erbium", 1.0, 1, 1], ["gold_ore", 0.3, 1, 1], ["silver_ore", 0.3, 1, 1], ["coal", 0.3, 1, 1]], "color": "c83a6a"},
 	"ice_rock": {"tool": "pick", "min": 3, "hits": 6, "drops": [["water_crystal", 0.3, 1, 1], ["silver_ore", 0.6, 1, 1], ["crystal", 0.4, 1, 1]], "color": "a6e6f2"},
 	"rock_wall": {"tool": "pick", "min": 4, "hits": 30, "step": 0, "drops": [], "color": "8a9099", "wall": true},
+	# the wooden wall in front of the Trading Center: hit it with a Torch to burn it down
+	"trade_wall": {"tool": "torch", "min": 1, "hits": 3, "step": 0, "drops": [], "color": "f2a33a", "wall": true, "flag": "trade_wall",
+		"opened": "The wall burns down! The Trading Center is open."},
 }
 
 func hits_needed(node: String, tier: int) -> int:
@@ -720,6 +723,7 @@ var NPCS := {
 	"miner": {"name": "Miner", "look": "miner", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
 	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
 	"warden_hell": {"name": "GateKeeper", "look": "warden", "talk": "Em Stones, for those who helped me."},
+	"trader": {"name": "Trader", "look": "trader", "talk": "Welcome to the Trading Center! Stand at a trading table to swap items with a friend in your room. Both of you put up your items, both press Ready, and the trade happens."},
 }
 
 # Quests are done in order per villager.

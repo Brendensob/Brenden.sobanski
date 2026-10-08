@@ -93,8 +93,11 @@ func hit(tier: int, _from_net: bool = false) -> void:
 		if level.netted and Net.is_host():
 			Net.node_changed.rpc(level.id, nid, hits, alive)
 		if def.get("wall", false):
-			GS.flags["rock_wall"] = true
-			level.main.hud.toast("The rock wall crumbles! The soils behind it are yours.", "good")
+			GS.flags[def.get("flag", "rock_wall")] = true
+			if def.tool == "torch":
+				for k in 4:
+					level.burst(position + Vector2(randf_range(-6, 6), -8 - k * 10), Color("f2a33a"), 8)
+			level.main.hud.toast(def.get("opened", "The rock wall crumbles! The soils behind it are yours."), "good")
 			if body:
 				body.queue_free()
 			queue_free()

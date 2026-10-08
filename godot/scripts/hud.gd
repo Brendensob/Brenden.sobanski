@@ -49,6 +49,9 @@ var chat_btn: Button
 var chat_edit: LineEdit
 var chat_log := [] # recent room chat, newest last
 var room_label: Label
+var room_box: VBoxContainer
+var trade_bag: Array = []
+var busy := false # waiting on the online server
 const MobScript := preload("res://scripts/mob.gd")
 
 const C_INK := Color("4a2410") # dark brown text on the peach panels
@@ -628,7 +631,7 @@ func any_open() -> bool:
 	return false
 
 func open_panel(key: String) -> void:
-	if main.on_title() and key != "title":
+	if main.on_title() and not key in ["title", "friends", "trade_invite"]:
 		return
 	for k in panels:
 		panels[k].visible = k == key
@@ -644,6 +647,7 @@ func open_panel(key: String) -> void:
 			_refresh_bag()
 		"map": _refresh_map()
 		"title": _refresh_title()
+		"pause": _refresh_room_box()
 
 func close_panels() -> void:
 	for k in panels:
@@ -652,6 +656,8 @@ func close_panels() -> void:
 	main.set_paused(false)
 	set_touch_visible(true)
 	hud_root.visible = not main.on_title()
+	if main.on_title():
+		panels.title.visible = true
 
 ## Centres a panel on screen; villager dialogs sit at the bottom.
 func _place(key: String) -> void:
@@ -1080,13 +1086,42 @@ func _build_panels() -> void:
 	send.custom_minimum_size = Vector2(62, 24)
 	ch.add_child(send)
 
+	var fr := _panel("friends", Vector2(440, 246), "Friends")
+	var me := _label("", 9, C_INK)
+	me.name = "Me"
+	me.position = Vector2(80, 8)
+	fr.add_child(me)
+	var add_row := HBoxContainer.new()
+	add_row.name = "AddRow"
+	add_row.position = Vector2(10, 26)
+	add_row.add_theme_constant_override("separation", 4)
+	fr.add_child(add_row)
+	_scroll(fr, Vector2(10, 56), Vector2(420, 182)).name = "FriendList"
+
+	var tp := _panel("trade_pick", Vector2(260, 160), "Trading Table")
+	_scroll(tp, Vector2(10, 28), Vector2(240, 124)).name = "PickList"
+
+	var ti := _panel("trade_invite", Vector2(260, 90), "Trade?", false)
+	var tit := _wrap("", 240)
+	tit.name = "Text"
+	tit.position = Vector2(10, 26)
+	ti.add_child(tit)
+	var tir := HBoxContainer.new()
+	tir.position = Vector2(10, 56)
+	tir.add_theme_constant_override("separation", 6)
+	ti.add_child(tir)
+	tir.add_child(_button("Trade", func(): close_panels(); Net.answer_trade(true), true))
+	tir.add_child(_button("No thanks", func(): close_panels(); Net.answer_trade(false)))
+
+	_build_trade()
+
 	var info := _panel("info", Vector2(380, 140), "")
 	var itext := _wrap("", 360)
 	itext.name = "Text"
 	itext.position = Vector2(10, 26)
 	info.add_child(itext)
 
-	var pz := _panel("pause", Vector2(260, 150), "Menu", false)
+	var pz := _panel("pause", Vector2(260, 236), "Menu", false)
 	var pv := VBoxContainer.new()
 	pv.position = Vector2(20, 28)
 	pv.custom_minimum_size = Vector2(220, 0)
@@ -1094,8 +1129,12 @@ func _build_panels() -> void:
 	pz.add_child(pv)
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): main.quit_to_title()))
+	pv.add_child(_button("Friends", func(): open_friends()))
 	room_label = _wrap("", 220, C_INK, 8)
 	pv.add_child(room_label)
+	room_box = VBoxContainer.new()
+	room_box.add_theme_constant_override("separation", 2)
+	pv.add_child(room_box)
 
 	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
 	var dtext := _wrap("", 240)
@@ -1183,9 +1222,7 @@ func _refresh_title(_choosing := false) -> void:
 			name_edit.size = Vector2(220, 20)
 			screen.add_child(name_edit)
 			screen.add_child(_at(_button("Back", func(): menu_step = "slots"; _refresh_title()), Vector2(150, 232)))
-			var ok := _button("OK", func():
-				menu_step = "mode"
-				_refresh_title(), true)
+			var ok := _button("OK", func(): _create_ok(), true)
 			ok.custom_minimum_size = Vector2(80, 22)
 			screen.add_child(_at(ok, Vector2(250, 230)))
 		"multi":
@@ -1216,6 +1253,7 @@ func _refresh_title(_choosing := false) -> void:
 			var mp := _button("Multiplayer", func(): menu_step = "multi"; _refresh_title())
 			mp.custom_minimum_size = Vector2(160, 26)
 			v.add_child(mp)
+			v.add_child(_button("Friends", func(): open_friends()))
 			v.add_child(_button("Back", func(): menu_step = "slots"; _refresh_title()))
 
 func _room_screen(screen: Control) -> void:
@@ -1305,6 +1343,35 @@ func _send_chat() -> void:
 	Net.say(chat_edit.text)
 	chat_edit.text = ""
 	close_panels()
+
+## Makes the new character: the name must be free on this device and on the
+## online server (each name can only be taken once).
+func _create_ok() -> void:
+	if busy:
+		return
+	var nm := name_edit.text.strip_edges()
+	if not Online.valid_name(nm):
+		toast("Names are 3 to 16 letters, numbers or _.", "warn")
+		return
+	if GS.name_in_other_slot(nm):
+		toast("One of your other characters already has that name.", "warn")
+		return
+	busy = true
+	toast("Checking the name...")
+	var r := await Online.register(nm)
+	busy = false
+	if r.get("offline", false):
+		toast("Couldn't reach the online server, so the name isn't claimed yet. Claim it later in Friends.", "warn")
+		GS.pending_token = ""
+	elif not r.get("ok", false):
+		toast(r.get("error", "That name can't be used."), "danger")
+		return
+	else:
+		GS.pending_token = r.token
+	GS.new_game(new_char, nm)
+	GS.save_game()
+	menu_step = "mode"
+	_refresh_title()
 
 func _slot_card(i: int, pos: Vector2) -> Control:
 	var card := _frame(pos, Vector2(136, 192))
@@ -1704,3 +1771,295 @@ func _dur(sec: float) -> String:
 	if s >= 60:
 		return "%dm %02ds" % [s / 60, s % 60]
 	return "%ds" % s
+
+# ---------------------------------------------------------------- friends
+func open_friends() -> void:
+	if main.on_title() and GS.slot_info(GS.slot).is_empty():
+		toast("Make your character first.", "warn")
+		return
+	if main.on_title():
+		GS.load_game()
+	open_panel("friends")
+	_refresh_friends()
+
+func _refresh_friends() -> void:
+	var p: Panel = panels.friends
+	var list: VBoxContainer = p.find_child("FriendList", true, false)
+	var add_row: HBoxContainer = p.get_node("AddRow")
+	_clear(list)
+	_clear(add_row)
+	(p.get_node("Me") as Label).text = "You: %s" % GS.player_name
+	if GS.online_token == "":
+		# this character's name was never claimed (made while offline)
+		var ne := LineEdit.new()
+		ne.text = GS.player_name
+		ne.max_length = 16
+		ne.custom_minimum_size = Vector2(200, 22)
+		add_row.add_child(ne)
+		add_row.add_child(_button("Claim this name", func(): _claim_name(ne.text.strip_edges()), true))
+		list.add_child(_wrap("Claim your name to use friends. Each name can only belong to one player, so if it's taken, pick another (your character gets the new name).", 400, C_MUTED))
+		return
+	var fe := LineEdit.new()
+	fe.placeholder_text = "Friend's name"
+	fe.max_length = 16
+	fe.custom_minimum_size = Vector2(200, 22)
+	add_row.add_child(fe)
+	add_row.add_child(_button("Add friend", func(): _add_friend(fe.text.strip_edges()), true))
+	add_row.add_child(_button("Refresh", func(): _refresh_friends()))
+	list.add_child(_label("Loading...", 9, C_MUTED))
+	var r := await Online.friends()
+	if not panels.friends.visible:
+		return
+	_clear(list)
+	if not r.get("ok", false):
+		list.add_child(_wrap(r.get("error", "Can't reach the online server."), 400, C_BAD))
+		return
+	var reqs: Array = r.get("requests", [])
+	if reqs.size() > 0:
+		list.add_child(_heading("Friend requests", 9))
+		for nm in reqs:
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 4)
+			var l := _label(str(nm), 9)
+			l.custom_minimum_size = Vector2(200, 0)
+			row.add_child(l)
+			var who: String = nm
+			row.add_child(_button("Accept", func(): _answer(who, true), true))
+			row.add_child(_button("Decline", func(): _answer(who, false)))
+			list.add_child(row)
+	var fl: Array = r.get("friends", [])
+	list.add_child(_heading("Friends (%d)" % fl.size(), 9))
+	if fl.is_empty():
+		list.add_child(_wrap("No friends yet. Type a name above, or add players from your room in the compass menu.", 400, C_MUTED))
+	for f in fl:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		var dot := ColorRect.new()
+		dot.color = C_GOOD if f.online else Color("9a8a7a")
+		dot.custom_minimum_size = Vector2(6, 6)
+		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(dot)
+		var l := _label(str(f.name), 9)
+		l.custom_minimum_size = Vector2(130, 0)
+		row.add_child(l)
+		var status := "In a room" if f.room != null else ("Online" if f.online else "Offline")
+		var sl := _label(status, 8, C_MUTED)
+		sl.custom_minimum_size = Vector2(80, 0)
+		row.add_child(sl)
+		if f.room != null:
+			var addr: String = f.room
+			row.add_child(_button("Join", func(): _join_friend(addr), true))
+		var fname: String = f.name
+		row.add_child(_button("Remove", func(): _remove_friend(fname)))
+		list.add_child(row)
+
+func _claim_name(nm: String) -> void:
+	if busy:
+		return
+	if not Online.valid_name(nm):
+		toast("Names are 3 to 16 letters, numbers or _.", "warn")
+		return
+	if nm.to_lower() != GS.player_name.to_lower() and GS.name_in_other_slot(nm):
+		toast("One of your other characters already has that name.", "warn")
+		return
+	busy = true
+	var r := await Online.register(nm)
+	busy = false
+	if not r.get("ok", false):
+		toast(r.get("error", "That name can't be used."), "danger")
+		return
+	GS.online_token = r.token
+	GS.player_name = r.name
+	GS.save_game()
+	if main.level and main.level.player and main.level.player.name_label:
+		main.level.player.name_label.text = GS.player_name
+	toast("The name %s is yours!" % GS.player_name, "good")
+	_refresh_friends()
+
+func _add_friend(nm: String) -> void:
+	if nm == "":
+		return
+	var r := await Online.add_friend(nm)
+	if r.get("ok", false):
+		toast("You're now friends with %s!" % nm if r.get("friends", false) else "Friend request sent to %s." % nm, "good")
+	else:
+		toast(r.get("error", "Couldn't add them."), "warn")
+	if panels.friends.visible:
+		_refresh_friends()
+
+func _answer(nm: String, accept: bool) -> void:
+	await Online.answer(nm, accept)
+	_refresh_friends()
+
+func _remove_friend(nm: String) -> void:
+	await Online.remove_friend(nm)
+	_refresh_friends()
+
+## Joins the room a friend is hosting (leaves your current game first).
+func _join_friend(addr: String) -> void:
+	if not main.on_title():
+		main.quit_to_title()
+	menu_step = "connecting"
+	open_panel("title")
+	main.join_game(addr)
+
+func _refresh_room_box() -> void:
+	if room_box == null:
+		return
+	_clear(room_box)
+	if not Net.active:
+		return
+	for pid in Net.players:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		var l := _label(Net.players[pid].name, 8)
+		l.custom_minimum_size = Vector2(120, 0)
+		row.add_child(l)
+		if GS.online_token != "":
+			var nm: String = Net.players[pid].name
+			row.add_child(_small_button("Add friend", func(): _add_friend(nm)))
+		room_box.add_child(row)
+
+# ---------------------------------------------------------------- trading
+func open_trade_pick() -> void:
+	if not Net.active:
+		toast("Trading needs a room: create one or join a friend's from Multiplayer.", "warn")
+		return
+	open_panel("trade_pick")
+	var list: VBoxContainer = panels.trade_pick.find_child("PickList", true, false)
+	_clear(list)
+	var here := Net.players_in_town()
+	if here.is_empty():
+		list.add_child(_wrap("Nobody else from your room is in Pixel Town right now.", 230, C_MUTED))
+		return
+	list.add_child(_wrap("Who do you want to trade with?", 230, C_MUTED))
+	for pid in here:
+		var row := HBoxContainer.new()
+		var l := _label(Net.players[pid].name, 9)
+		l.custom_minimum_size = Vector2(150, 0)
+		row.add_child(l)
+		var peer: int = pid
+		row.add_child(_button("Trade", func(): close_panels(); Net.ask_trade(peer), true))
+		list.add_child(row)
+
+func _on_trade_invited(_peer: int, from: String) -> void:
+	open_panel("trade_invite")
+	(panels.trade_invite.get_node("Text") as Label).text = "%s wants to trade with you." % from
+
+func _build_trade() -> void:
+	var t := _panel("trade", Vector2(440, 250), "Trade", false)
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.position = Vector2(10, 28)
+	grid.add_theme_constant_override("h_separation", 1)
+	grid.add_theme_constant_override("v_separation", 1)
+	t.add_child(grid)
+	for i in GS.BAG:
+		var b := _slot(28)
+		var idx := i
+		b.pressed.connect(func(): _trade_toggle(idx))
+		grid.add_child(b)
+		trade_bag.append(b)
+	t.add_child(_at(_wrap("Tap items in your bag to offer them.", 145, C_MUTED, 8), Vector2(10, 176)))
+	t.add_child(_at(_heading("You give", 9), Vector2(166, 24)))
+	var mine := HBoxContainer.new()
+	mine.name = "Mine"
+	mine.position = Vector2(166, 38)
+	mine.add_theme_constant_override("separation", 1)
+	t.add_child(mine)
+	var crow := HBoxContainer.new()
+	crow.name = "Coins"
+	crow.position = Vector2(166, 72)
+	crow.add_theme_constant_override("separation", 3)
+	t.add_child(crow)
+	var them_h := _heading("They give", 9)
+	them_h.name = "TheirName"
+	t.add_child(_at(them_h, Vector2(166, 100)))
+	var theirs := HBoxContainer.new()
+	theirs.name = "Theirs"
+	theirs.position = Vector2(166, 114)
+	theirs.add_theme_constant_override("separation", 1)
+	t.add_child(theirs)
+	var tc := _label("", 9, C_INK, true)
+	tc.name = "TheirCoins"
+	tc.position = Vector2(166, 150)
+	t.add_child(tc)
+	var st := _label("", 9, C_INK)
+	st.name = "State"
+	st.position = Vector2(166, 172)
+	t.add_child(st)
+	var ready := _button("Ready", func(): Net.set_ready(not Net.trade_ready_me), true)
+	ready.name = "Ready"
+	ready.position = Vector2(166, 208)
+	ready.custom_minimum_size = Vector2(110, 24)
+	t.add_child(ready)
+	t.add_child(_at(_button("Cancel", func(): Net.cancel_trade()), Vector2(290, 208)))
+	Net.trade_invited.connect(_on_trade_invited)
+	Net.trade_started.connect(func(): open_panel("trade"); _refresh_trade())
+	Net.trade_changed.connect(_refresh_trade)
+	Net.trade_closed.connect(func():
+		if panels.trade.visible or panels.trade_invite.visible:
+			close_panels())
+
+func _trade_toggle(i: int) -> void:
+	var slots: Array = Net.trade_mine.duplicate()
+	if i in slots:
+		slots.erase(i)
+	elif GS.inv[i] != null and slots.size() < Net.TRADE_SLOTS:
+		var it: Dictionary = Data.ITEMS[GS.inv[i].id]
+		if it.type in ["book"] and GS.inv[i].id == "survival_book":
+			toast("The Survival Book can't be traded.", "warn")
+			return
+		slots.append(i)
+	Net.set_offer(slots, Net.trade_coins)
+
+func _refresh_trade() -> void:
+	if not Net.trading():
+		return
+	var t: Panel = panels.trade
+	var partner: String = Net.players.get(Net.trade_peer, {"name": "?"}).name
+	(t.get_node("Title") as Label).text = "Trade with %s" % partner
+	(t.get_node("TheirName") as Label).text = "%s gives" % partner
+	for i in GS.BAG:
+		_fill_slot(trade_bag[i], GS.inv[i])
+		_select_style(trade_bag[i], i in Net.trade_mine)
+	var mine: HBoxContainer = t.get_node("Mine")
+	_clear(mine)
+	var offer := Net.my_offer()
+	for k in Net.TRADE_SLOTS:
+		var b := _slot(28)
+		if k < offer.size():
+			_fill_slot(b, {"id": offer[k][0], "n": offer[k][1]})
+			var slot_i: int = Net.trade_mine[k]
+			b.pressed.connect(func(): _trade_toggle(slot_i))
+		else:
+			_fill_slot(b, null)
+		mine.add_child(b)
+	var crow: HBoxContainer = t.get_node("Coins")
+	_clear(crow)
+	var ci := TextureRect.new()
+	ci.texture = Art.prop_tex("coin")
+	ci.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	crow.add_child(ci)
+	var cl := _label(str(Net.trade_coins), 9, C_INK, true)
+	cl.custom_minimum_size = Vector2(44, 0)
+	crow.add_child(cl)
+	for add in [10, 100, 1000]:
+		var amount: int = add
+		crow.add_child(_small_button("+%d" % amount, func(): Net.set_offer(Net.trade_mine, mini(GS.coins, Net.trade_coins + amount))))
+	crow.add_child(_small_button("Clear", func(): Net.set_offer(Net.trade_mine, 0)))
+	var theirs: HBoxContainer = t.get_node("Theirs")
+	_clear(theirs)
+	var their_items: Array = Net.trade_theirs.items
+	for k in Net.TRADE_SLOTS:
+		var b := _slot(28)
+		b.disabled = true
+		if k < their_items.size() and Data.ITEMS.has(str(their_items[k][0])):
+			_fill_slot(b, {"id": str(their_items[k][0]), "n": int(their_items[k][1])})
+		else:
+			_fill_slot(b, null)
+		theirs.add_child(b)
+	(t.get_node("TheirCoins") as Label).text = "%d coins" % Net.trade_theirs.coins
+	(t.get_node("State") as Label).text = "You: %s     %s: %s" % ["Ready!" if Net.trade_ready_me else "not ready", partner, "Ready!" if Net.trade_ready_them else "not ready"]
+	var rb: Button = t.get_node("Ready")
+	rb.text = "Not ready" if Net.trade_ready_me else "Ready"

@@ -35,6 +35,8 @@ var world := "town"
 var best_survival_day := 0
 var look := "man_in_suit" # which character you look like
 var player_name := "Player"
+var online_token := "" # the key that proves this character owns its name on the online server
+var pending_token := "" # a name just claimed for a character that's about to be made
 var slot := 0 # which character slot is being played
 
 func _ready() -> void:
@@ -67,6 +69,8 @@ func now() -> float:
 func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	look = character
 	player_name = pname if pname != "" else default_name()
+	online_token = pending_token
+	pending_token = ""
 	inv.clear()
 	inv.resize(BAG)
 	equip = {}
@@ -478,7 +482,7 @@ func save_game() -> void:
 	var data := {
 		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
-		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name,
+		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
 	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
 	if f:
@@ -506,9 +510,19 @@ func slot_info(i: int) -> Dictionary:
 	var d = _read_slot(i)
 	if d == null:
 		return {}
-	return {"name": str(d.get("name", "Player")), "look": str(d.get("look", "man_in_suit")), "day": int(d.get("day", 1))}
+	return {"name": str(d.get("name", "Player")), "look": str(d.get("look", "man_in_suit")), "day": int(d.get("day", 1)), "token": str(d.get("token", ""))}
+
+## Names used by this device's other character slots (each name only once).
+func name_in_other_slot(pname: String) -> bool:
+	for i in SLOTS:
+		if i != slot and str(slot_info(i).get("name", "")).to_lower() == pname.to_lower():
+			return true
+	return false
 
 func delete_slot(i: int) -> void:
+	var token: String = slot_info(i).get("token", "")
+	if token != "":
+		Online.release(token) # free the name for someone else
 	if FileAccess.file_exists(slot_path(i)):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_path(i)))
 
@@ -547,6 +561,7 @@ func load_game() -> bool:
 	best_survival_day = int(d.get("best_survival_day", 0))
 	look = str(d.get("look", "man_in_suit"))
 	player_name = str(d.get("name", "Player"))
+	online_token = str(d.get("token", ""))
 	if not Data.CHARACTERS.has(look):
 		look = "man_in_suit"
 	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())
