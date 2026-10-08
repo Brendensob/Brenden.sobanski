@@ -5,7 +5,8 @@ extends Node
 ## (one port up), so no player ever sees another player's IP address.
 ##
 ## Set ONLINE_SERVER to wherever you run the server before sharing the game.
-## It can also be changed with `-- --server http://address:24566`.
+## It can also be changed with a server.txt file next to the game holding the
+## address (like 192.168.1.20), or with `-- --server http://address:24566`.
 
 const ONLINE_SERVER := "http://127.0.0.1:24566"
 const NAME_RULE := "^[A-Za-z0-9_]{3,16}$"
@@ -14,6 +15,12 @@ var server := ONLINE_SERVER
 var _presence_t := 0.0
 
 func _ready() -> void:
+	# a server.txt next to the game (or in its save folder) holds the server's address
+	for path in [OS.get_executable_path().get_base_dir().path_join("server.txt"), "user://server.txt"]:
+		if FileAccess.file_exists(path):
+			var t := FileAccess.get_file_as_string(path).strip_edges()
+			if t != "":
+				server = t if t.begins_with("http") else "http://%s:24566" % t
 	var args := OS.get_cmdline_user_args()
 	var i := args.find("--server")
 	if i >= 0 and i + 1 < args.size():
