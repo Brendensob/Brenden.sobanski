@@ -1,5 +1,5 @@
 extends Node2D
-## One map. The ground is a tile grid (1 = solid). Builds Pixel Village,
+## One map. The ground is a tile grid (1 = solid). Builds Pixel Town,
 ## exploration worlds with caves, arenas and the Survival Grasslands corridor.
 
 const T := 16
@@ -365,7 +365,7 @@ func _weighted(list: Array) -> Array:
 	return list[0]
 
 func _populate_explore() -> void:
-	add_portal(Vector2i(2, surface[2] - 1), "town", "Village", Color("5cbf3f"))
+	add_portal(Vector2i(2, surface[2] - 1), "town", "Town", Color("5cbf3f"))
 	var cells := floor_cells(10)
 	cells.shuffle()
 	var used := {}
@@ -378,6 +378,11 @@ func _populate_explore() -> void:
 		var pc: Vector2i = deep.pop_back()
 		add_portal(pc, def.next, Data.WORLDS[def.next].name, Color("a77ee0"))
 		used[pc] = true
+	if id == "grass_1":
+		# Jumpie waits near the entrance of the first Grasslands
+		var jc := Vector2i(10, surface[10] - 1)
+		add_npc("jumpie", jc)
+		used[jc] = true
 	if def.get("chest", false) and deep.size() > 0:
 		var cc: Vector2i = deep.pop_back()
 		add_station("reward_chest", 0, cc)

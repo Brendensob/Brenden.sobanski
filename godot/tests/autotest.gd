@@ -50,18 +50,67 @@ func find_prop(pred: Callable) -> Node:
 			return n
 	return null
 
+## Every item named by a recipe, the Crafter, a furnace, a monster, a world, a quest,
+## a shop or a chest must exist.
+func check_data() -> void:
+	var missing := []
+	var ids := []
+	for r in Data.RECIPES:
+		ids += r.in
+		ids.append(r.out)
+	for r in Data.SMITH:
+		ids += r.cost.keys()
+		ids.append(r.out)
+	for r in Data.SMELT:
+		ids += r.cost.keys()
+		ids.append(r.out)
+	for m in Data.MOBS.values():
+		for d in m.drops:
+			ids.append(d[0])
+	for w in Data.WORLDS.values():
+		for d in w.get("boss_drops", []):
+			ids.append(d[0])
+	for q in Data.QUESTS:
+		ids += q.need.keys()
+		ids += q.reward.keys()
+	for sh in Data.SHOPS.values():
+		for e in sh.sells:
+			ids.append(e[0])
+	for c in Data.CHESTS.values():
+		for e in c.loot:
+			ids.append(e[0])
+	for t in Data.SEED_LOOT.values():
+		for e in t:
+			ids.append(e[0])
+	for id in ids:
+		if not Data.ITEMS.has(id) and not id in missing:
+			missing.append(id)
+	for n in Data.NPCS.values():
+		if not Art.LOOKS.has(n.look):
+			missing.append("look " + n.look)
+	for c in Data.CHARACTERS:
+		if not Art.LOOKS.has(c):
+			missing.append("look " + c)
+	check(missing.is_empty(), "every item and look the data uses exists %s" % [missing])
+	for id in Data.ITEMS:
+		Art.icon(id)
+
 func run() -> void:
 	await wait(1.0)
 	await shot("01_title")
-	main.start_game(false)
+	check_data()
+	main.hud._refresh_title(true)
+	await shot("01b_pick_character")
+	main.start_game(false, "nurse")
+	check(GS.look == "nurse", "a new game can start as the Nurse")
 	await wait(0.8)
 	await shot("02_village")
-	# talk to the Portal Keeper
+	# talk to the Gatekeeper
 	var keeper := find_prop(func(n): return n.get("npc_id") == "keeper")
 	await stand_by(keeper)
 	await tap("attack")
 	await wait(0.2)
-	check(main.hud.panels.npc.visible, "talking to the Portal Keeper opens a dialog")
+	check(main.hud.panels.npc.visible, "talking to the Gatekeeper opens a dialog")
 	await shot("03_keeper")
 	main.hud.open_panel("map")
 	await shot("04_world_list")
@@ -71,6 +120,49 @@ func run() -> void:
 	await shot("05_grasslands")
 	var lvl: Node = main.level
 	var p: Node2D = lvl.player
+	var jumpie := find_prop(func(n): return n.get("npc_id") == "jumpie")
+	check(jumpie != null, "Jumpie is in Grasslands 1")
+	var coins_before := GS.coins
+	GS.add_item("jelly", 10)
+	GS.complete_quest(GS.next_quest("jumpie"))
+	check(GS.coins == coins_before + 1, "Jumpie's quest pays a Pixel Coin")
+	# defense works like the wiki's calculator
+	var no_def := GS.roll_monster_hit(7, 0.0)
+	check(no_def.dmg == 7, "with 0 defense a 7-attack monster hits for 7 (got %d)" % no_def.dmg)
+	GS.equip.armor = "chainmail"
+	var low := 99
+	for i in 200:
+		low = mini(low, GS.roll_monster_hit(7, 0.0).dmg)
+	check(low == 1, "with defense 15 a 7-attack monster can drop to 1 damage")
+	GS.equip.armor = ""
+	# characters: becoming the Pirate gives a Golden Night, and character hats are crafted
+	GS.add_item("pirate", 11)
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "pirate":
+			GS.use_character(i)
+			break
+	check(GS.look == "pirate" and GS.count("gilded_blade") == 1, "becoming the Pirate gives a Golden Night")
+	var hat_recipe := {}
+	for r0 in Data.SMITH:
+		if r0.out == "pirate_hat":
+			hat_recipe = r0
+	check(GS.smith(hat_recipe) and GS.count("pirate_hat") == 1, "the Crafter turns 10 Pirates into a Pirate Hat")
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "pirate_hat":
+			GS.equip_from(i)
+	await wait(0.3)
+	await shot("05b_pirate_hat")
+	# cannons use their own ammo
+	GS.inv[4] = {"id": "crazy_cannon_1", "n": 1}
+	GS.add_item("cc_ball_1", 5)
+	GS.sel = 4
+	GS.inventory_changed.emit()
+	p.cooldown = 0
+	await tap("attack")
+	await wait(0.2)
+	check(GS.count("cc_ball_1") == 4, "Crazy Cannon I fires a ball")
+	await shot("05c_cannon")
+	GS.inv[4] = null
 	var slime: Node = lvl.spawn_mob_at("slime", p.position + Vector2(14, 0))
 	GS.sel = 0
 	GS.inventory_changed.emit()
@@ -132,7 +224,7 @@ func run() -> void:
 	await goto("town")
 	GS.add_item("wood_wall", 1)
 	GS.complete_quest(GS.next_quest("gruff"))
-	check(GS.flags.get("survival_access", false) and GS.count("survival_book") == 1, "Gruff's quest gives the Survival Book and survival access")
+	check(GS.flags.get("survival_access", false) and GS.count("survival_book") == 1, "Brutus' quest gives the Survival Book and survival access")
 	GS.add_item("pretzel", 1)
 	GS.complete_quest(GS.next_quest("warden"))
 	main.reload_level()
@@ -157,7 +249,7 @@ func run() -> void:
 	await shot("11_smith")
 	main.hud.close_panels()
 	var r: Dictionary = Data.SMITH[0]
-	check(GS.smith(r) and GS.count("copper_axe") == 1, "the Smith makes a Copper Axe")
+	check(GS.smith(r) and GS.count("copper_axe") == 1, "the Crafter makes a Copper Axe")
 	main.hud.open_book("survival")
 	await shot("12_book")
 	main.hud.close_panels()

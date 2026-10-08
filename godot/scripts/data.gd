@@ -58,7 +58,7 @@ func _items_materials() -> void:
 		["linen", "Linen", 10, "Woven from roots."], ["wood_board", "Wood Board", 3, "A flat plank."],
 		["nail", "Nail", 2, "Holds things together."], ["blue_wood", "Blue Wood", 15, "Wood from blue trees. Needs a gold axe."],
 		["apple", "Apple", 15, "Looks delicious, but it's for crafting."], ["evil_apple", "Evil Apple", 300, "Don't eat it."],
-		["living_flame", "Living Flame", 60, "A flame that won't go out. Smelted from fire crystals."],
+		["living_flame", "Fira", 60, "A living flame. Smelted from fire crystals."],
 		["copper_ore", "Copper Ore", 3, "Smelt 5 with 1 coal for a copper bar."], ["iron_ore", "Iron Ore", 5, "Smelt 5 with 1 coal for an iron bar."],
 		["silver_ore", "Silver Ore", 8, "Smelt 5 with 1 coal for a silver bar."], ["gold_ore", "Gold Ore", 12, "Smelt 5 with 1 coal for a gold bar."],
 		["erbium", "Erbium", 40, "A rare ore. Smelt 5 with 1 coal for an erbium bar."], ["volcanic_ore", "Volcanic Ore", 400, "Extremely rare ore."],
@@ -92,7 +92,7 @@ func _items_consumables() -> void:
 		if e.has("mana"): desc += "Restores %d mana. " % e.mana
 		if e.has("stamina"): desc += "Restores %d stamina. " % e.stamina
 		if e.has("cure"): desc += "Cures %s. " % e.cure
-		if r[0] == "pretzel": desc += "The Furnace Warden would love one."
+		if r[0] == "pretzel": desc += "The GateKeeper would love one."
 		_item(r[0], r[1], "food", r[2], desc.strip_edges(), e)
 
 func _items_weapons() -> void:
@@ -104,27 +104,27 @@ func _items_weapons() -> void:
 		["iron_sword_cast", "Iron Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword, and of the Hell Sword."],
 		["gold_sword_cast", "Gold Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword."],
 		["torch_weapon", "Torch", 5, 1.0, 22, true, 1, "Long reach, slow swing."],
-		["timber_club", "Timber Club", 5, 0.75, 18, true, 15, "A heavy wooden club."],
-		["short_blade", "Short Blade", 5, 0.45, 16, true, 20, "Small but quick. Slimes sometimes drop it."],
-		["gilded_blade", "Gilded Blade", 6, 0.5, 18, true, 30, "A short blade with a gold finish."],
-		["azure_blade", "Azure Blade", 9, 0.55, 20, true, 45, "A blue steel blade."],
+		["timber_club", "Wood King", 5, 0.75, 18, true, 15, "A heavy wooden club."],
+		["short_blade", "Short Blade", 5, 0.45, 16, true, 20, "Small but quick. Slimes sometimes drop it. Used to craft Golden Night."],
+		["gilded_blade", "Golden Night", 6, 0.5, 18, true, 30, "A short blade with a gold finish."],
+		["azure_blade", "Blue Night", 9, 0.55, 20, true, 45, "A blue steel blade."],
 		["fire_brand", "Fire Brand", 13, 0.55, 20, true, 45, "Warm to hold."],
-		["violet_edge", "Violet Edge", 19, 0.55, 20, true, 60, "A purple-glinting sword."],
+		["violet_edge", "Purple Mist", 19, 0.55, 20, true, 60, "A purple-glinting sword."],
 		["plunger", "Plunger", 4, 0.4, 16, true, 10, "For the bravest of plumbers."],
-		["knights_blade", "Knight's Blade", 15, 0.6, 22, true, 70, "A proper knight's sword."],
-		["kings_mace", "King's Mace", 27, 0.55, 22, true, 120, "Heavy and royal."],
+		["knights_blade", "Knights Mantle", 15, 0.6, 22, true, 70, "A proper knight's sword."],
+		["kings_mace", "Kings Mace", 27, 0.55, 22, true, 120, "Heavy and royal."],
 		["excalibur", "Excalibur", 23, 0.9, 24, true, 120, "Slow, but long and strong."],
 		["poison_ivy", "Poison Ivy", 31, 0.6, 22, true, 160, "A thorny green blade."],
 		["holy_knight", "Holy Knight", 34, 0.5, 22, true, 200, "Shines with holy light."],
-		["hellfire_blade", "Hellfire Blade", 38, 0.6, 24, true, 220, "Burns everything it touches."],
+		["hellfire_blade", "Fires Devil", 38, 0.6, 24, true, 220, "Burns everything it touches."],
 		["combo_sword", "Combo Sword", 14, 0.65, 18, true, 80, "Three casts forged into one."],
 		["moon_blade", "Moon Blade", 17, 0.65, 22, true, 150, "A crescent-shaped blade."],
 		["moon_blade_2", "Moon Blade II", 30, 0.65, 22, true, 300, "Sharper under moonlight."],
 		["moon_blade_3", "Moon Blade III", 55, 0.65, 24, true, 600, "Brighter than the moon."],
-		["glow_blade_blue", "Glow Blade (Blue)", 19, 0.5, 22, true, 150, "Emits a glowing blue light."],
-		["glow_blade_red", "Glow Blade (Red)", 19, 0.5, 22, true, 150, "Emits a glowing red light."],
-		["glow_blade_green", "Glow Blade (Green)", 21, 0.5, 22, true, 170, "Emits a glowing green light."],
-		["glow_blade_pink", "Glow Blade (Pink)", 21, 0.5, 22, true, 170, "Emits a glowing pink light."],
+		["glow_blade_blue", "Blue Fluorescent", 19, 0.5, 22, true, 150, "Emits a glowing blue light."],
+		["glow_blade_red", "Red Fluorescent", 19, 0.5, 22, true, 150, "Emits a glowing red light."],
+		["glow_blade_green", "Green Fluorescent", 21, 0.5, 22, true, 170, "Emits a glowing green light."],
+		["glow_blade_pink", "Pink Fluorescent", 21, 0.5, 22, true, 170, "Emits a glowing pink light."],
 		["long_sword", "Long Sword", 20, 0.6, 28, true, 150, "Long reach."],
 		["golden_long_sword", "Golden Long Sword", 28, 0.6, 28, true, 300, "Long reach, golden edge."],
 		["pole_axe", "Pole Axe", 15, 1.0, 26, true, 25, "A slow, heavy axe on a pole. Also chops trees.", {"axe": 2}],
@@ -146,10 +146,23 @@ func _items_weapons() -> void:
 	_item("healing_staff_2", "Healing Staff II", "staff", 200, "Uses 4 mana to heal you for 12.", {"heal": 12, "spd": 1.0, "mana_cost": 4, "color": "5cbf3f"})
 	_item("healing_staff_3", "Healing Staff III", "staff", 400, "Uses 5 mana to heal you for 20.", {"heal": 20, "spd": 1.0, "mana_cost": 5, "color": "5cbf3f"})
 	# ranged, uses arrows
-	_item("weak_bow", "Weak Bow", "bow", 15, "Shoots arrows.", {"dmg": 4, "spd": 0.7})
-	_item("bow", "Bow", "bow", 40, "Shoots arrows.", {"dmg": 9, "spd": 0.65})
-	_item("steel_bow", "Steel Bow", "bow", 120, "Shoots arrows hard.", {"dmg": 18, "spd": 0.6})
+	_item("weak_bow", "Weak Bow", "bow", 15, "Uses arrows.", {"dmg": 13, "spd": 0.65, "ammo": "arrow"})
+	_item("bow", "Bow", "bow", 40, "Uses arrows.", {"dmg": 19, "spd": 0.65, "ammo": "arrow"})
+	_item("steel_bow", "Steel Bow", "bow", 120, "Slow, uses arrows.", {"dmg": 64, "spd": 1.95, "ammo": "arrow"})
 	_item("arrow", "Arrow", "ammo", 1, "Ammunition for bows.")
+	# cannons: slow, heavy shots that use their own ammo
+	var cannons := [
+		["crazy_cannon_1", "Crazy Cannon I", 39, 2.5, "cc_ball_1"], ["crazy_cannon_2", "Crazy Cannon II", 78, 2.0, "cc_ball_2"],
+		["crazy_cannon_3", "Crazy Cannon III", 102, 1.5, "cc_ball_3"], ["waazookaa_1", "WaazooKaa I", 72, 3.0, "wk_missile_1"],
+		["waazookaa_2", "WaazooKaa II", 89, 2.5, "wk_missile_2"], ["waazookaa_3", "WaazooKaa III", 144, 2.0, "wk_missile_3"],
+	]
+	for c in cannons:
+		_item(c[0], c[1], "bow", 200, "Slow, uses %s." % ("Crazy Cannon balls" if c[0].begins_with("crazy") else "WaazooKaa missiles"),
+			{"dmg": c[2], "spd": c[3], "ammo": c[4], "cannon": true})
+	for a in [["cc_ball_1", "Crazy Cannon I Balls"], ["cc_ball_2", "Crazy Cannon II Balls"], ["cc_ball_3", "Crazy Cannon III Balls"],
+			["wk_missile_1", "WaazooKaa I Missiles"], ["wk_missile_2", "WaazooKaa II Missiles"], ["wk_missile_3", "WaazooKaa III Missiles"]]:
+		_item(a[0], a[1], "ammo", 3, "Ammunition for the %s." % a[1].rsplit(" ", true, 1)[0])
+	_item("snow_ball", "Snow Ball", "throw", 2, "Hold it and press A to throw it.", {"dmg": 8, "spd": 0.5})
 	# tools
 	var t := [
 		["wooden_axe", "Wooden Axe", "axe", 1, 1], ["copper_axe", "Copper Axe", "axe", 2, 2], ["iron_axe", "Iron Axe", "axe", 3, 3],
@@ -174,14 +187,30 @@ func _items_gear() -> void:
 	_gear("wooden_helmet", "Wooden Helmet", "helmet", [0, 1, 0, 0, 0, 0], 10)
 	_gear("copper_helmet", "Copper Helmet", "helmet", [0, 3, 0, 2, 0, 0], 40)
 	_gear("brass_helmet", "Brass Helmet", "helmet", [0, 4, 0, 4, 0, 0], 80)
-	_gear("pumpkin_hat", "Pumpkin Hat", "helmet", [4, 4, 4, 4, 0, 0], 150)
+	_gear("pumpkin_hat", "Pumppump Hat", "helmet", [0, 4, 0, 4, 4, 4], 150)
+	# character hats, made by the Crafter from characters
+	_gear("bear_head", "Bear Head", "helmet", [4, 4, 0, 5, 0, 5], 200)
+	_gear("dark_night", "Dark Night", "helmet", [5, 4, 5, 4, 0, 0], 200)
+	_gear("green_face", "Green Face", "helmet", [0, 4, 0, 5, 5, 4], 200)
+	_gear("soldier_helmet", "Soldier Helmet", "helmet", [5, 4, 5, 4, 0, 0], 200)
+	_gear("spy_mask", "SPY Mask", "helmet", [8, 0, 0, 10, 0, 0], 200)
+	_gear("the_fly", "The Fly", "helmet", [4, 4, 5, 0, 5, 0], 200)
+	_gear("trooper_pro", "Trooper Pro", "helmet", [5, 4, 5, 4, 0, 0], 200)
+	_gear("bad_mask", "Bad Mask", "helmet", [5, 4, 0, 5, 0, 4], 200)
+	_gear("chuu_hat", "Chuu Hat", "helmet", [0, 4, 5, 4, 5, 0], 200)
+	_gear("pirate_hat", "Pirate Hat", "helmet", [5, 4, 0, 5, 0, 4], 200)
+	_gear("cool_hat", "Cool Hat", "helmet", [8, 5, 0, 7, 0, 5], 400)
+	_gear("roman_hat", "Roman Hat", "helmet", [8, 6, 0, 8, 0, 6], 400)
+	_gear("storm_hat", "Storm Hat", "helmet", [8, 5, 0, 8, 0, 5], 400)
+	_gear("wood_mask", "Wood Mask", "helmet", [0, 2, 0, 2, 0, 0], 30)
+	_gear("skull_mask", "Skull Mask", "helmet", [0, 3, 0, 3, 0, 0], 50)
 	_gear("fear_helmet", "Fear Helmet", "helmet", [0, 7, 0, 7, 0, 0], 300)
 	_gear("fear_helmet_2", "Fear Helmet II", "helmet", [0, 15, 0, 15, 5, 0], 900)
 	_gear("hell_helmet", "Hell Helmet", "helmet", [0, 4, 0, 7, 7, 0], 300)
 	_gear("hell_helmet_2", "Hell Helmet II", "helmet", [0, 5, 0, 7, 10, 10], 900)
 	_gear("witch_helmet", "Witch Helmet", "helmet", [0, 5, 5, 5, 5, 0], 300)
 	_gear("witch_helmet_2", "Witch Helmet II", "helmet", [0, 7, 5, 10, 10, 0], 900)
-	_gear("spectre_hood", "Spectre Hood", "helmet", [3, 12, 3, 5, 5, 2], 1200, "Rare Ghost Lord drop.")
+	_gear("spectre_hood", "Ghost Hat", "helmet", [3, 12, 3, 5, 5, 2], 1200, "Rare Ghost Boss drop.")
 	# armor
 	_gear("wooden_armor", "Wooden Armor", "armor", [0, 2, 0, 2, 0, 0], 15)
 	_gear("stone_armor", "Stone Armor", "armor", [0, 3, 0, 5, 0, 0], 30)
@@ -241,9 +270,9 @@ func _items_misc() -> void:
 	_item("combo_book_4", "Combo Book IV", "book", 0, "+50% success on its combinations. Keep it in your bag.", {"book": "combo4"})
 	_item("combo_book_5", "Combo Book V", "book", 0, "+50% success on its combinations. Keep it in your bag.", {"book": "combo5"})
 	_item("combination_scroll", "Combination Scroll", "scroll", 100, "Put it in the scroll slot for +35% success. Used up.")
-	_item("silver_key", "Silver Key", "key", 0, "Opens a Silver Chest in Pixel Village.")
-	_item("golden_key", "Golden Key", "key", 0, "Opens a Golden Chest in Pixel Village.")
-	_item("master_key", "Master Key", "key", 0, "Opens the Master Chest in Pixel Village.")
+	_item("silver_key", "Silver Key", "key", 0, "Opens a Silver Chest in Pixel Town.")
+	_item("golden_key", "Golden Key", "key", 0, "Opens a Golden Chest in Pixel Town.")
+	_item("master_key", "Master Key", "key", 0, "Opens the Master Chest in Pixel Town.")
 	_item("survival_token", "Survival Token", "token", 0, "Earned by surviving nights in Survival Grasslands. Trade them with the Miner.")
 	_item("green_seeds", "Magic Seeds (Green)", "seed", 20, "Plant in the soil behind the rock wall. Grows in 6 minutes.", {"grow": 360})
 	_item("red_seeds", "Magic Seeds (Red)", "seed", 60, "Plant in the soil behind the rock wall. Grows in 1 hour.", {"grow": 3600})
@@ -251,7 +280,7 @@ func _items_misc() -> void:
 	var eggs := [["green_egg", "Monster Egg (Green)"], ["pink_egg", "Monster Egg (Pink)"], ["purple_egg", "Monster Egg (Purple)"],
 		["red_egg", "Monster Egg (Red)"], ["queen_egg", "Queen Egg"], ["king_egg", "King Egg"]]
 	for e in eggs:
-		_item(e[0], e[1], "egg", 50, "Hatch it in the Incubator in Pixel Village.")
+		_item(e[0], e[1], "egg", 50, "Hatch it in the Incubator in Pixel Town.")
 	for p in PETS:
 		var d: Dictionary = PETS[p]
 		var parts := []
@@ -260,6 +289,12 @@ func _items_misc() -> void:
 		if d.get("mp", 0) > 0: parts.append("restores %d mana" % d.mp)
 		if d.get("st", 0) > 0: parts.append("restores %d stamina" % d.st)
 		_item(p, d.name, "pet", 0, "A pet. Every %d seconds it %s. Equip it in the pet slot." % [d.every, " and ".join(parts)])
+	# characters: use one to change how you look (some come with a weapon)
+	for c in CHARACTERS:
+		var gives: String = CHARACTERS[c].get("gives", "")
+		var d := "A character. Use it to look like the %s" % CHARACTERS[c].name
+		d += (" and get a %s." % ITEMS[gives].name) if gives != "" else "."
+		_item(c, CHARACTERS[c].name, "character", 50, d + " The Crafter also makes hats from them.", {"look": c, "gives": gives})
 	# things you can place
 	_item("wood_wall", "Wood Wall", "place", 2, "Blocks monsters. Place it in front of you.", {"hp": 60})
 	_item("stone_wall", "Stone Wall", "place", 4, "A stronger wall.", {"hp": 150})
@@ -268,19 +303,30 @@ func _items_misc() -> void:
 	_item("campfire", "Campfire", "place", 10, "Slowly heals you while you stand near it.")
 	_item("torch", "Torch Stand", "place", 2, "Lights up the night.")
 
+# ---------------------------------------------------------------- characters
+# Man in Suit and Nurse are the starting choices. The others are unlocked from
+# quests, chests and monsters, and the Crafter turns them into hats.
+var CHARACTERS := {
+	"man_in_suit": {"name": "Man in Suit"}, "nurse": {"name": "Nurse"},
+	"cavemun": {"name": "Cavemun", "gives": "timber_club"}, "pirate": {"name": "Pirate", "gives": "gilded_blade"},
+	"the_spi": {"name": "The Spi", "gives": "azure_blade"}, "bad_man": {"name": "Bad Man"}, "school_girl": {"name": "School Girl"},
+	"soldier": {"name": "Soldier"}, "chuchu": {"name": "ChuChu"}, "drone": {"name": "Drone"}, "dark_knight": {"name": "Dark Knight"},
+}
+const START_CHARACTERS := ["man_in_suit", "nurse"]
+
 # ---------------------------------------------------------------- pets
 var PETS := {
 	"pet_snowball": {"name": "Snowball", "every": 12, "dmg": 6, "look": "snowball"},
 	"pet_waterball": {"name": "Waterball", "every": 12, "mp": 1, "look": "waterball"},
 	"pet_fireball": {"name": "Fireball", "every": 12, "hp": 1, "look": "fireball"},
 	"pet_goldball": {"name": "Goldball", "every": 12, "st": 1, "look": "goldball"},
-	"pet_trex": {"name": "Little T-Rex", "every": 10, "hp": 1, "look": "trex"},
-	"pet_shell": {"name": "Shell Crawler", "every": 10, "dmg": 10, "look": "shell"},
+	"pet_trex": {"name": "Rexy", "every": 10, "hp": 1, "look": "trex"},
+	"pet_shell": {"name": "Shelly", "every": 10, "dmg": 10, "look": "shell"},
 	"pet_chicklet": {"name": "Chicklet", "every": 10, "hp": 1, "mp": 1, "st": 1, "look": "chicklet"},
 	"pet_ufo": {"name": "UFO", "every": 8, "dmg": 15, "hp": 1, "mp": 1, "look": "ufo"},
-	"pet_phantom": {"name": "Phantom", "every": 6, "dmg": 18, "mp": 1, "st": 1, "look": "phantom"},
-	"pet_eye": {"name": "Mrs. Eye", "every": 8, "dmg": 36, "hp": 1, "st": 1, "look": "eyeball"},
-	"pet_hand": {"name": "Mr. Hand", "every": 8, "dmg": 36, "hp": 1, "st": 1, "look": "hand"},
+	"pet_phantom": {"name": "Ghast", "every": 6, "dmg": 18, "mp": 1, "st": 1, "look": "phantom"},
+	"pet_eye": {"name": "Mrs Eye", "every": 8, "dmg": 36, "hp": 1, "st": 1, "look": "eyeball"},
+	"pet_hand": {"name": "Mr Hand", "every": 8, "dmg": 36, "hp": 1, "st": 1, "look": "hand"},
 }
 # what hatches from each egg (equal chance)
 var EGG_PETS := {
@@ -302,7 +348,7 @@ var RECIPES := [
 	{"in": ["wood", "rock"], "out": "wood_wall", "rate": 90, "book": "survival"},
 	{"in": ["wood_board", "rock"], "out": "work_station", "rate": 90, "book": "survival"},
 	{"in": ["copper_ore", "crystal"], "out": "iron_ore", "rate": -25, "book": "survival"},
-	{"in": ["wood", "fire_crystal", "coal"], "out": "torch", "rate": 15, "book": "survival"},
+	{"in": ["wood", "fire_crystal", "coal"], "out": "torch_weapon", "rate": 15, "book": "survival"},
 	# Combo Book I
 	{"in": ["honey_bug", "herb"], "out": "pretzel", "rate": 5, "book": "combo1"},
 	{"in": ["jelly", "bone"], "out": "wooden_axe", "rate": 65, "book": "combo1"},
@@ -321,9 +367,18 @@ var RECIPES := [
 	{"in": ["monster_scale", "branch"], "out": "herb", "rate": 60, "book": "combo1"},
 	{"in": ["jelly", "fire_crystal"], "out": "sticky_balls", "rate": 25, "book": "combo1"},
 	{"in": ["copper_ore", "wood"], "out": "arrow", "n": 5, "rate": 40, "book": "combo1"},
+	{"in": ["pet_snowball", "crystal"], "out": "snow_ball", "n": 10, "rate": 35, "book": "combo1"},
+	{"in": ["scarab", "copper_bar"], "out": "cc_ball_1", "n": 5, "rate": 35, "book": "combo1"},
+	{"in": ["honey_bug", "copper_bar"], "out": "cc_ball_2", "n": 5, "rate": 35, "book": "combo1"},
+	{"in": ["stink_bug", "copper_bar"], "out": "cc_ball_3", "n": 5, "rate": 35, "book": "combo1"},
+	{"in": ["scarab", "iron_bar"], "out": "wk_missile_1", "n": 5, "rate": 35, "book": "combo1"},
+	{"in": ["honey_bug", "iron_bar"], "out": "wk_missile_2", "n": 5, "rate": 35, "book": "combo1"},
+	{"in": ["stink_bug", "iron_bar"], "out": "wk_missile_3", "n": 5, "rate": 35, "book": "combo1"},
 	# Combo Book II
 	{"in": ["honey_bug", "branch", "potion"], "out": "holy_banana", "rate": -10, "book": "combo2"},
 	{"in": ["wood_board", "iron_bar", "monster_leather"], "out": "faceguard", "rate": -10, "book": "combo2"},
+	{"in": ["sticky_bones", "bone", "scarab"], "out": "skull_mask", "rate": -40, "book": "combo2"},
+	{"in": ["herb", "branch", "scarab"], "out": "wood_mask", "rate": -40, "book": "combo2"},
 	{"in": ["apple", "staff_cast", "copper_ore"], "out": "hallow_staff", "rate": -40, "book": "combo2"},
 	{"in": ["scarab", "crystal"], "out": "catalyst", "rate": 25, "book": "combo2"},
 	{"in": ["honey_bug", "monster_shell"], "out": "crystal", "rate": 40, "book": "combo2"},
@@ -340,6 +395,8 @@ var RECIPES := [
 	{"in": ["water_crystal", "hero_bug", "glow_blade_red"], "out": "glow_blade_pink", "rate": 15, "book": "combo3"},
 	{"in": ["silver_ring", "gold_ring", "apple"], "out": "armor_ring", "rate": 0, "book": "combo3"},
 	{"in": ["gold_bar", "iron_bar", "copper_bar"], "out": "pole_axe", "rate": -45, "book": "combo3"},
+	{"in": ["power_bug", "armor_bug", "wk_missile_1"], "out": "waazookaa_1", "rate": -45, "book": "combo3"},
+	{"in": ["power_bug", "armor_bug", "cc_ball_1"], "out": "crazy_cannon_1", "rate": -45, "book": "combo3"},
 	{"in": ["plant_roots", "scarab"], "out": "linen", "rate": 25, "book": "combo3"},
 	{"in": ["monster_leather", "scarab"], "out": "harden_leather", "rate": 25, "book": "combo3"},
 	{"in": ["catalyst", "fire_bug"], "out": "dongle", "rate": 25, "book": "combo3"},
@@ -351,6 +408,8 @@ var RECIPES := [
 	{"in": ["silver_bar", "fire_crystal", "catalyst"], "out": "ruby_stone", "rate": -35, "book": "combo3"},
 	# Combo Book IV
 	{"in": ["healing_staff_2", "living_flame", "evil_crystal"], "out": "healing_staff_3", "rate": -55, "book": "combo4"},
+	{"in": ["hero_bug", "waazookaa_1", "wk_missile_2"], "out": "waazookaa_2", "rate": -45, "book": "combo4"},
+	{"in": ["hero_bug", "crazy_cannon_1", "cc_ball_2"], "out": "crazy_cannon_2", "rate": -45, "book": "combo4"},
 	{"in": ["gold_ring", "big_mana_potion", "catalyst"], "out": "orb_gold_ring", "rate": -5, "book": "combo4"},
 	{"in": ["silver_ring", "big_potion", "catalyst"], "out": "ruby_silver_ring", "rate": -5, "book": "combo4"},
 	{"in": ["armor_ring", "erbium_bar", "power_bug"], "out": "armor_ring_2", "rate": -35, "book": "combo4"},
@@ -385,7 +444,7 @@ func find_recipe(items: Array) -> Dictionary:
 	return {}
 
 # ---------------------------------------------------------------- blacksmith
-# Crafted by the Smith in Pixel Village (or at a Work Station). Always succeeds.
+# Crafted by the Crafter in Pixel Town (or at a Work Station). Always succeeds.
 var SMITH := [
 	# tools
 	{"out": "copper_axe", "cost": {"copper_bar": 20, "wooden_axe": 1}},
@@ -420,6 +479,19 @@ var SMITH := [
 	{"out": "fear_helmet_2", "cost": {"dark_bar": 65, "fear_helmet": 1}},
 	{"out": "hell_helmet_2", "cost": {"hell_bar": 65, "hell_helmet": 1}},
 	{"out": "witch_helmet_2", "cost": {"light_bar": 65, "witch_helmet": 1}},
+	{"out": "bear_head", "cost": {"cavemun": 10}},
+	{"out": "dark_night", "cost": {"dark_knight": 10}},
+	{"out": "green_face", "cost": {"cavemun": 5, "school_girl": 5}},
+	{"out": "soldier_helmet", "cost": {"soldier": 10}},
+	{"out": "spy_mask", "cost": {"the_spi": 10}},
+	{"out": "the_fly", "cost": {"school_girl": 10}},
+	{"out": "trooper_pro", "cost": {"drone": 10}},
+	{"out": "bad_mask", "cost": {"bad_man": 10}},
+	{"out": "chuu_hat", "cost": {"chuchu": 10}},
+	{"out": "pirate_hat", "cost": {"pirate": 10}},
+	{"out": "cool_hat", "cost": {"bad_man": 15, "the_spi": 15}},
+	{"out": "roman_hat", "cost": {"soldier": 15, "drone": 15}},
+	{"out": "storm_hat", "cost": {"pirate": 15, "chuchu": 15}},
 	# armor
 	{"out": "wooden_armor", "cost": {"wood": 50}},
 	{"out": "stone_armor", "cost": {"rock": 50, "wooden_armor": 1, "scarab": 50}},
@@ -520,38 +592,38 @@ func _ready() -> void:
 func _build_mobs() -> void:
 	# Grasslands. Slime drops are from the wiki (about 20% each, 5.5% blade).
 	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.2, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
-	_mob("wisp", "Flame Wisp", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
+	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
 	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 30, "charge_wait": 3.0})
-	_mob("shell", "Shell Crawler", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
+	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
 	_mob("octopus", "Octopus", "octopus", [65, 65], 5, "accel", [["monster_horn", 0.2, 1, 1], ["herb", 0.2, 1, 1], ["monster_scale", 0.2, 1, 1], ["green_egg", 0.01, 1, 1]], {"jump": true})
-	_mob("crusher", "Crusher Stone", "crusher", [999999, 999999], 1, "stone", [], {"invulnerable": true})
-	_mob("trex", "T-Rex", "trex", [450, 450], 7, "charge", [["antidote", 0.15, 1, 1], ["silver_key", 0.03, 1, 1], ["old_roots", 0.1, 1, 1], ["red_egg", 0.01, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36})
-	_mob("dark_trex", "Dark T-Rex", "dark_trex", [1050, 1050], 9, "charge", [["herb", 0.3, 1, 2], ["mana_potion", 0.15, 1, 1], ["potion", 0.15, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36, "coins": [20, 60]})
+	_mob("crusher", "Stone", "crusher", [999999, 999999], 1, "stone", [], {"invulnerable": true})
+	_mob("trex", "Rexy", "trex", [450, 450], 7, "charge", [["antidote", 0.15, 1, 1], ["silver_key", 0.03, 1, 1], ["old_roots", 0.1, 1, 1], ["red_egg", 0.01, 1, 1], ["cavemun", 0.03, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36})
+	_mob("dark_trex", "Dark Rexy", "dark_trex", [1050, 1050], 9, "charge", [["herb", 0.3, 1, 2], ["mana_potion", 0.15, 1, 1], ["potion", 0.15, 1, 1], ["cavemun", 0.04, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36, "coins": [20, 60]})
 	# Darklands
 	_mob("dark_slime", "Dark Slime", "slime_dark", [125, 150], 7, "walk", [["herb", 0.3, 1, 1], ["jelly", 0.15, 1, 1]], {"jump": true, "status": ["poison", 0.1]})
 	_mob("mantis", "Mantis", "mantis", [118, 183], 4, "accel", [["antidote_herb", 0.25, 1, 1], ["stink_bug", 0.25, 1, 1]], {"jump": true, "fast_hits": true})
 	_mob("zombie", "Zombie", "zombie", [75, 75], 5, "charge", [["plant_roots", 0.3, 1, 1]], {"jump": true, "status": ["fatigue", 0.1]})
 	_mob("ufo", "UFO", "ufo", [65, 65], 15, "fly", [["potion", 0.15, 1, 1], ["antidote_herb", 0.2, 1, 1], ["purple_egg", 0.008, 1, 1]], {"crit": 0.1, "speed": 44})
 	_mob("worm", "Worm", "worm", [300, 500], 17, "walk", [["mana_potion", 0.2, 1, 1], ["antidote_herb", 0.2, 1, 1]], {"crit": 0.1, "speed": 22, "status": ["poison", 0.15]})
-	_mob("hand", "Giant Hand", "hand", [2214, 2214], 8, "accel", [["apple", 0.08, 1, 1], ["combo_book_3", 0.01, 1, 1], ["combo_book_4", 0.005, 1, 1], ["green_egg", 0.03, 1, 1], ["red_egg", 0.03, 1, 1], ["purple_egg", 0.02, 1, 1], ["knights_blade", 0.02, 1, 1], ["glow_blade_green", 0.01, 1, 1], ["combination_scroll", 0.05, 1, 1], ["silver_key", 0.08, 1, 1], ["golden_key", 0.03, 1, 1], ["legendary_roots", 0.03, 1, 1], ["bone", 0.4, 1, 3], ["sticky_bones", 0.15, 1, 1], ["dongle", 0.08, 1, 1], ["crystal", 0.3, 1, 2]], {"jump": true, "big_jump": true, "crit": 0.1, "speed": 38, "coins": [40, 120]})
+	_mob("hand", "Hand", "hand", [2214, 2214], 8, "accel", [["apple", 0.08, 1, 1], ["combo_book_3", 0.01, 1, 1], ["combo_book_4", 0.005, 1, 1], ["green_egg", 0.03, 1, 1], ["red_egg", 0.03, 1, 1], ["purple_egg", 0.02, 1, 1], ["knights_blade", 0.02, 1, 1], ["glow_blade_green", 0.01, 1, 1], ["combination_scroll", 0.05, 1, 1], ["silver_key", 0.08, 1, 1], ["golden_key", 0.03, 1, 1], ["legendary_roots", 0.03, 1, 1], ["bone", 0.4, 1, 3], ["sticky_bones", 0.15, 1, 1], ["dongle", 0.08, 1, 1], ["crystal", 0.3, 1, 2], ["school_girl", 0.02, 1, 1]], {"jump": true, "big_jump": true, "crit": 0.1, "speed": 38, "coins": [40, 120]})
 	# Hell
 	_mob("wizard", "Wizard", "wizard", [700, 800], 17, "wizard", [["crystal", 0.25, 1, 1], ["fire_crystal", 0.08, 1, 1], ["water_crystal", 0.08, 1, 1], ["earth_crystal", 0.08, 1, 1], ["dark_crystal", 0.08, 1, 1], ["potion", 0.12, 1, 1], ["mana_potion", 0.12, 1, 1]], {"speed": 24, "shoots": true})
-	_mob("shadow", "Shadow", "shadow", [700, 1000], 27, "fly", [["dark_crystal", 0.1, 1, 1], ["small_evil_crystal", 0.03, 1, 1]], {"status": ["poison", 0.15]})
-	_mob("eyeball", "Eyeball", "eyeball", [1800, 2000], 46, "accel", [["dark_crystal", 0.15, 1, 1], ["small_evil_crystal", 0.05, 1, 1]], {"jump": true, "crit": 0.1, "status": ["poison", 0.2]})
-	_mob("phantom", "Phantom", "phantom", [1500, 1500], 42, "fly", [["small_evil_crystal", 0.06, 1, 1], ["purple_egg", 0.01, 1, 1]], {"through": true, "status": ["slow", 0.3]})
-	_mob("king", "Eye King", "king", [10000, 10000], 29, "charge", [["pole_axe", 0.06, 1, 1], ["combo_book_3", 0.05, 1, 1], ["combo_book_4", 0.03, 1, 1], ["combo_book_5", 0.01, 1, 1], ["evil_apple", 0.03, 1, 1], ["silver_key", 0.25, 1, 1], ["golden_key", 0.12, 1, 1], ["king_egg", 0.03, 1, 1], ["golden_long_sword", 0.03, 1, 1], ["golden_armor", 0.04, 1, 1], ["combination_scroll", 0.15, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 30, "coins": [300, 600]})
-	_mob("queen", "Eye Queen", "queen", [20000, 20000], 53, "charge", [["combo_book_3", 0.06, 1, 1], ["combo_book_4", 0.04, 1, 1], ["combo_book_5", 0.02, 1, 1], ["queen_egg", 0.05, 1, 1], ["armor_bug", 0.15, 1, 2], ["power_bug", 0.15, 1, 2], ["hero_bug", 0.03, 1, 1], ["evil_apple", 0.05, 1, 1], ["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.03, 1, 1], ["green_seeds", 0.1, 1, 1], ["red_seeds", 0.05, 1, 1], ["golden_seeds", 0.02, 1, 1], ["fear_helmet", 0.03, 1, 1], ["hell_helmet", 0.03, 1, 1], ["witch_helmet", 0.03, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 32, "coins": [600, 1200]})
+	_mob("shadow", "Shadow", "shadow", [700, 1000], 27, "fly", [["dark_crystal", 0.1, 1, 1], ["small_evil_crystal", 0.03, 1, 1], ["pirate", 0.02, 1, 1]], {"status": ["poison", 0.15]})
+	_mob("eyeball", "Eyeball", "eyeball", [1800, 2000], 46, "accel", [["dark_crystal", 0.15, 1, 1], ["small_evil_crystal", 0.05, 1, 1], ["bad_man", 0.02, 1, 1]], {"jump": true, "crit": 0.1, "status": ["poison", 0.2]})
+	_mob("phantom", "Ghast", "phantom", [1500, 1500], 42, "fly", [["small_evil_crystal", 0.06, 1, 1], ["purple_egg", 0.01, 1, 1]], {"through": true, "status": ["slow", 0.3]})
+	_mob("king", "King", "king", [10000, 10000], 29, "charge", [["pole_axe", 0.06, 1, 1], ["combo_book_3", 0.05, 1, 1], ["combo_book_4", 0.03, 1, 1], ["combo_book_5", 0.01, 1, 1], ["evil_apple", 0.03, 1, 1], ["silver_key", 0.25, 1, 1], ["golden_key", 0.12, 1, 1], ["king_egg", 0.03, 1, 1], ["golden_long_sword", 0.03, 1, 1], ["golden_armor", 0.04, 1, 1], ["combination_scroll", 0.15, 1, 1], ["cavemun", 0.03, 1, 1], ["pirate", 0.03, 1, 1], ["bad_man", 0.03, 1, 1], ["school_girl", 0.03, 1, 1], ["soldier", 0.03, 1, 1], ["the_spi", 0.02, 1, 1], ["chuchu", 0.02, 1, 1], ["drone", 0.02, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 30, "coins": [300, 600]})
+	_mob("queen", "Queen", "queen", [20000, 20000], 53, "charge", [["combo_book_3", 0.06, 1, 1], ["combo_book_4", 0.04, 1, 1], ["combo_book_5", 0.02, 1, 1], ["queen_egg", 0.05, 1, 1], ["armor_bug", 0.15, 1, 2], ["power_bug", 0.15, 1, 2], ["hero_bug", 0.03, 1, 1], ["evil_apple", 0.05, 1, 1], ["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.03, 1, 1], ["green_seeds", 0.1, 1, 1], ["red_seeds", 0.05, 1, 1], ["golden_seeds", 0.02, 1, 1], ["fear_helmet", 0.03, 1, 1], ["hell_helmet", 0.03, 1, 1], ["witch_helmet", 0.03, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 32, "coins": [600, 1200]})
 	# Ice Cavern
 	_mob("tornado", "Tornado", "tornado", [8000, 8400], 57, "accel", [["erbium", 0.15, 1, 1], ["volcanic_ore", 0.01, 1, 1]], {"jump": true})
-	_mob("tidal", "Tidal Spirit", "tidal", [4000, 4400], 81, "accel", [["queen_egg", 0.005, 1, 1], ["water_crystal", 0.2, 1, 1], ["antidote_herb", 0.2, 1, 1], ["potion", 0.15, 1, 1]], {"jump": true})
+	_mob("tidal", "Tsunami", "tidal", [4000, 4400], 81, "accel", [["queen_egg", 0.005, 1, 1], ["water_crystal", 0.2, 1, 1], ["antidote_herb", 0.2, 1, 1], ["potion", 0.15, 1, 1]], {"jump": true})
 	_mob("ice_bat", "Ice Bat", "ice_bat", [2900, 2900], 57, "fly", [["purple_egg", 0.01, 1, 1], ["erbium", 0.1, 1, 1], ["potion", 0.15, 1, 1], ["monster_horn", 0.2, 1, 1]], {"launch": true, "speed": 50, "status": ["cold", 0.2]})
-	_mob("cloud", "Storm Cloud", "cloud", [3000, 3000], 61, "fly", [["medium_potion", 0.12, 1, 1], ["water_crystal", 0.1, 1, 1]], {"speed": 36})
+	_mob("cloud", "Cloud", "cloud", [3000, 3000], 61, "fly", [["medium_potion", 0.12, 1, 1], ["water_crystal", 0.1, 1, 1], ["chuchu", 0.03, 1, 1]], {"speed": 36})
 	_mob("butterfly", "Butterfly", "butterfly", [4200, 4200], 146, "fly", [["volcanic_ore", 0.01, 1, 1], ["erbium", 0.12, 1, 1], ["silver_ore", 0.2, 1, 1], ["gold_ore", 0.15, 1, 1]], {"speed": 46})
-	_mob("empress", "Butterfly Empress", "empress", [72500, 72500], 141, "accel", [["em_stone", 0.06, 1, 1], ["ruby_stone", 0.06, 1, 1], ["sapphire_stone", 0.06, 1, 1], ["volcanic_ore", 0.15, 1, 2], ["herb", 0.5, 1, 3], ["monster_horn", 0.5, 1, 3], ["potion", 0.4, 1, 2], ["moon_blade", 0.05, 1, 1], ["moon_blade_2", 0.02, 1, 1], ["moon_blade_3", 0.01, 1, 1], ["master_key", 0.05, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 34, "coins": [2000, 4000]})
+	_mob("empress", "Butterfly Boss", "empress", [72500, 72500], 141, "accel", [["em_stone", 0.06, 1, 1], ["ruby_stone", 0.06, 1, 1], ["sapphire_stone", 0.06, 1, 1], ["volcanic_ore", 0.15, 1, 2], ["herb", 0.5, 1, 3], ["monster_horn", 0.5, 1, 3], ["potion", 0.4, 1, 2], ["moon_blade", 0.05, 1, 1], ["moon_blade_2", 0.02, 1, 1], ["moon_blade_3", 0.01, 1, 1], ["master_key", 0.05, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 34, "coins": [2000, 4000]})
 	# Ghost Arena
-	_mob("ghost_1", "Wailing Ghost", "ghost_1", [2100, 2100], 68, "fly", [], {"through": true, "status": ["slow", 0.2]})
-	_mob("ghost_2", "Grave Ghost", "ghost_2", [4100, 4100], 88, "fly", [], {"through": true, "status": ["slow", 0.2]})
-	_mob("ghost_lord", "Ghost Lord", "ghost_lord", [85000, 85000], 135, "fly", [["spectre_hood", 0.05, 1, 1], ["silver_key", 0.4, 1, 1], ["armor_ring", 0.08, 1, 1], ["armor_ring_2", 0.05, 1, 1], ["armor_ring_3", 0.03, 1, 1], ["armor_ring_4", 0.01, 1, 1], ["ring_of_attack", 0.02, 1, 1], ["devil_spike", 0.04, 1, 1], ["twin_sun", 0.05, 1, 1], ["living_flame", 0.1, 1, 1], ["combo_book_3", 0.06, 1, 1], ["combo_book_4", 0.04, 1, 1], ["combo_book_5", 0.02, 1, 1], ["combination_scroll", 0.2, 1, 1], ["dark_shield", 0.05, 1, 1], ["volcanic_ore", 0.15, 1, 1], ["healing_staff", 0.05, 1, 1], ["queen_egg", 0.03, 1, 1]], {"through": true, "heavy": true, "boss": true, "speed": 40, "coins": [3000, 6000]})
+	_mob("ghost_1", "Ghost", "ghost_1", [2100, 2100], 68, "fly", [], {"through": true, "status": ["slow", 0.2]})
+	_mob("ghost_2", "Ghost", "ghost_2", [4100, 4100], 88, "fly", [], {"through": true, "status": ["slow", 0.2]})
+	_mob("ghost_lord", "Ghost Boss", "ghost_lord", [85000, 85000], 135, "fly", [["spectre_hood", 0.05, 1, 1], ["silver_key", 0.4, 1, 1], ["armor_ring", 0.08, 1, 1], ["armor_ring_2", 0.05, 1, 1], ["armor_ring_3", 0.03, 1, 1], ["armor_ring_4", 0.01, 1, 1], ["ring_of_attack", 0.02, 1, 1], ["devil_spike", 0.04, 1, 1], ["twin_sun", 0.05, 1, 1], ["living_flame", 0.1, 1, 1], ["combo_book_3", 0.06, 1, 1], ["combo_book_4", 0.04, 1, 1], ["combo_book_5", 0.02, 1, 1], ["combination_scroll", 0.2, 1, 1], ["dark_shield", 0.05, 1, 1], ["volcanic_ore", 0.15, 1, 1], ["healing_staff", 0.05, 1, 1], ["queen_egg", 0.03, 1, 1], ["bad_man", 0.04, 1, 1], ["drone", 0.04, 1, 1], ["pirate", 0.04, 1, 1], ["waazookaa_2", 0.02, 1, 1]], {"through": true, "heavy": true, "boss": true, "speed": 40, "coins": [3000, 6000]})
 	# Survival Grasslands only
 	_mob("bat", "Giant Bat", "bat", [1300, 1300], 17, "fly", [["monster_hide", 0.2, 1, 1]], {"speed": 50})
 	_mob("small_stone", "Small Stone", "small_stone", [1200, 1200], 14, "walk", [["rock", 0.5, 1, 3]], {"jump": true})
@@ -563,7 +635,7 @@ func _build_mobs() -> void:
 # kind: town, explore, arena, survival
 # mobs: [mob, weight, hp multiplier, damage multiplier]
 var WORLDS := {
-	"town": {"name": "Pixel Village", "kind": "town", "theme": "grass"},
+	"town": {"name": "Pixel Town", "kind": "town", "theme": "grass"},
 	"grass_1": {"name": "Grasslands 1", "kind": "explore", "theme": "grass", "next": "grass_2", "count": 34,
 		"mobs": [["slime", 6], ["wisp", 3], ["mummy", 2], ["shell", 2]],
 		"nodes": [["tree", 7], ["stone", 4], ["copper", 3], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
@@ -591,26 +663,26 @@ var WORLDS := {
 	"grass_arena": {"name": "Grasslands Arena", "kind": "arena", "theme": "grass", "cap": 8,
 		"mobs": [["slime", 4, 1.23], ["wisp", 2, 1.67], ["mummy", 2], ["shell", 2]],
 		"bosses": [["trex", 2.22, 1.0], ["hand", 0.565, 1.0]],
-		"boss_drops": [["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1]]},
+		"boss_drops": [["cavemun", 0.05, 1, 1], ["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1]]},
 	"dark_arena": {"name": "Darklands Arena", "kind": "arena", "theme": "dark", "cap": 9,
 		"mobs": [["dark_slime", 3], ["mantis", 3], ["zombie", 2], ["ufo", 2], ["worm", 2], ["octopus", 2, 2.0, 1.5]],
 		"bosses": [["dark_trex", 4.76, 1.78], ["hand", 2.26, 1.75], ["king", 0.5, 0.52]], "bosses_pick": 2,
-		"boss_drops": [["small_potion", 0.3, 1, 2], ["silver_key", 0.3, 1, 1], ["golden_key", 0.08, 1, 1], ["excalibur", 0.03, 1, 1], ["combination_scroll", 0.1, 1, 1], ["combo_book_3", 0.04, 1, 1], ["big_rejuvenate_potion", 0.06, 1, 1], ["bow", 0.05, 1, 1], ["copper_sword_cast", 0.08, 1, 1], ["gold_sword_cast", 0.06, 1, 1], ["green_seeds", 0.1, 1, 1], ["jade_ring", 0.04, 1, 1], ["armor_ring", 0.04, 1, 1], ["crystal", 0.3, 1, 3], ["pole_axe", 0.04, 1, 1], ["healing_staff", 0.03, 1, 1], ["rooster_dress", 0.03, 1, 1], ["copper_helmet", 0.06, 1, 1], ["golden_armor", 0.03, 1, 1], ["magic_wand", 0.05, 1, 1]]},
+		"boss_drops": [["cavemun", 0.05, 1, 1], ["crazy_cannon_1", 0.02, 1, 1], ["small_potion", 0.3, 1, 2], ["silver_key", 0.3, 1, 1], ["golden_key", 0.08, 1, 1], ["excalibur", 0.03, 1, 1], ["combination_scroll", 0.1, 1, 1], ["combo_book_3", 0.04, 1, 1], ["big_rejuvenate_potion", 0.06, 1, 1], ["bow", 0.05, 1, 1], ["copper_sword_cast", 0.08, 1, 1], ["gold_sword_cast", 0.06, 1, 1], ["green_seeds", 0.1, 1, 1], ["jade_ring", 0.04, 1, 1], ["armor_ring", 0.04, 1, 1], ["crystal", 0.3, 1, 3], ["pole_axe", 0.04, 1, 1], ["healing_staff", 0.03, 1, 1], ["rooster_dress", 0.03, 1, 1], ["copper_helmet", 0.06, 1, 1], ["golden_armor", 0.03, 1, 1], ["magic_wand", 0.05, 1, 1]]},
 	"hell_arena": {"name": "Hell Arena", "kind": "arena", "theme": "hell", "cap": 9,
 		"mobs": [["mantis", 3, 2.0, 1.5], ["worm", 2, 1.2, 1.3], ["wizard", 2, 1.2, 1.3], ["shadow", 2, 1.2, 1.3], ["eyeball", 1, 1.1, 1.3], ["hand", 2, 0.5, 5.5]],
 		"bosses": [["king", 2.0, 1.48], ["queen", 1.25, 1.47]],
-		"boss_drops": [["fire_crystal", 0.2, 1, 2], ["earth_crystal", 0.2, 1, 2], ["dark_crystal", 0.2, 1, 2], ["medium_mana_potion", 0.2, 1, 1], ["rejuvenate_potion", 0.2, 1, 1], ["healing_staff_2", 0.02, 1, 1], ["combo_book_4", 0.05, 1, 1], ["combo_book_5", 0.02, 1, 1], ["master_key", 0.06, 1, 1], ["sapphire_stone", 0.03, 1, 1], ["moon_blade_3", 0.01, 1, 1], ["fear_helmet", 0.05, 1, 1], ["hell_helmet", 0.05, 1, 1], ["dark_shield", 0.06, 1, 1], ["dark_armor", 0.04, 1, 1], ["jelly_armor", 0.05, 1, 1], ["golden_armor", 0.05, 1, 1], ["sandy_armor", 0.02, 1, 1], ["knight_shield", 0.1, 1, 1]]},
+		"boss_drops": [["pirate", 0.03, 1, 1], ["bad_man", 0.03, 1, 1], ["school_girl", 0.03, 1, 1], ["soldier", 0.03, 1, 1], ["the_spi", 0.02, 1, 1], ["chuchu", 0.02, 1, 1], ["drone", 0.02, 1, 1], ["cavemun", 0.03, 1, 1], ["fire_crystal", 0.2, 1, 2], ["earth_crystal", 0.2, 1, 2], ["dark_crystal", 0.2, 1, 2], ["medium_mana_potion", 0.2, 1, 1], ["rejuvenate_potion", 0.2, 1, 1], ["healing_staff_2", 0.02, 1, 1], ["combo_book_4", 0.05, 1, 1], ["combo_book_5", 0.02, 1, 1], ["master_key", 0.06, 1, 1], ["sapphire_stone", 0.03, 1, 1], ["moon_blade_3", 0.01, 1, 1], ["fear_helmet", 0.05, 1, 1], ["hell_helmet", 0.05, 1, 1], ["dark_shield", 0.06, 1, 1], ["dark_armor", 0.04, 1, 1], ["jelly_armor", 0.05, 1, 1], ["golden_armor", 0.05, 1, 1], ["sandy_armor", 0.02, 1, 1], ["knight_shield", 0.1, 1, 1]]},
 	"dream_arena": {"name": "Dream Arena", "kind": "arena", "theme": "dream", "cap": 10,
 		"mobs": [["mantis", 2], ["shadow", 2, 1.0, 1.7], ["worm", 2, 1.0, 1.6], ["eyeball", 1, 1.0, 1.5], ["wizard", 2, 1.0, 1.5], ["hand", 2, 0.45, 8.0]],
 		"bosses": [["king", 2.0, 1.48], ["queen", 1.25, 1.47], ["empress", 0.93, 0.74]], "bosses_pick": 2,
-		"boss_drops": [["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.06, 1, 1], ["glow_blade_blue", 0.04, 1, 1], ["bow", 0.05, 1, 1], ["big_rejuvenate_potion", 0.1, 1, 1], ["devil_spike", 0.02, 1, 1], ["volcanic_ore", 0.1, 1, 1], ["em_stone", 0.04, 1, 1], ["ruby_stone", 0.04, 1, 1], ["sapphire_stone", 0.04, 1, 1]]},
+		"boss_drops": [["pirate", 0.05, 1, 1], ["bad_man", 0.05, 1, 1], ["school_girl", 0.05, 1, 1], ["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.06, 1, 1], ["glow_blade_blue", 0.04, 1, 1], ["bow", 0.05, 1, 1], ["big_rejuvenate_potion", 0.1, 1, 1], ["devil_spike", 0.02, 1, 1], ["volcanic_ore", 0.1, 1, 1], ["em_stone", 0.04, 1, 1], ["ruby_stone", 0.04, 1, 1], ["sapphire_stone", 0.04, 1, 1]]},
 	"ghost_arena": {"name": "Ghost Arena", "kind": "arena", "theme": "ghost", "cap": 8,
 		"mobs": [["ghost_1", 3], ["ghost_2", 2]],
 		"bosses": [["ghost_lord", 1.0, 1.0]],
-		"boss_drops": []},
+		"boss_drops": [["dark_knight", 0.03, 1, 1], ["waazookaa_3", 0.01, 1, 1], ["crazy_cannon_3", 0.01, 1, 1]]},
 	"survival": {"name": "Survival Grasslands", "kind": "survival", "theme": "grass", "needs": "survival_access"},
 }
-# The Portal Keeper offers these. Deeper levels are reached through portals inside each world.
+# The Gatekeeper offers these. Deeper levels are reached through portals inside each world.
 const WORLD_MENU := [["Exploration", ["grass_1", "dark_1", "hell_1", "ice_cavern"]],
 	["Arena", ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena"]],
 	["Survival", ["survival"]]]
@@ -636,52 +708,54 @@ func survival_tokens(day: int) -> int:
 
 # ---------------------------------------------------------------- village
 var NPCS := {
-	"keeper": {"name": "Portal Keeper", "look": "keeper", "talk": "Where to? Pick a world and I'll open a portal."},
-	"gruff": {"name": "Gruff", "look": "gruff", "talk": "Out here by the rock wall it's quiet. Bring me proof you can build and I'll show you the survival fields."},
-	"mira": {"name": "Mira", "look": "mira", "talk": "I always need things collected. Help me and I'll make it worth your while!"},
-	"warden": {"name": "Furnace Warden", "look": "warden", "talk": "Nobody gets to the furnaces on an empty stomach. Mine, I mean."},
-	"smith": {"name": "Smith", "look": "smith", "talk": "Bring me materials and I'll forge anything on my list. No luck needed."},
-	"merchant": {"name": "Merchant", "look": "merchant", "talk": "Buying and selling, best prices in the village!"},
-	"tools": {"name": "Tool Seller", "look": "tools", "talk": "Lost your tools? I've got spares."},
+	"keeper": {"name": "Gatekeeper", "look": "keeper", "talk": "Which world do you want to explore? I'll open a portal for you."},
+	"gruff": {"name": "Brutus", "look": "gruff", "talk": "Bring me a Wood Wall and I'll show you how to survive out there."},
+	"mira": {"name": "Miffie", "look": "mira", "talk": "I always need things collected. Help me and I'll make it worth your while!"},
+	"warden": {"name": "GateKeeper", "look": "warden", "talk": "Nobody gets to the furnaces without bringing me a Pretzel."},
+	"smith": {"name": "Crafter", "look": "smith", "talk": "Bring me materials and I'll make anything on my list. No luck needed."},
+	"merchant": {"name": "Merchant", "look": "merchant", "talk": "Buying and selling, best prices in town!"},
+	"tools": {"name": "Plumber", "look": "tools", "talk": "Lost your tools? I've got spares."},
 	"miner": {"name": "Miner", "look": "miner", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
+	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
 }
 
 # Quests are done in order per villager.
 var QUESTS := [
 	{"id": "gruff_1", "npc": "gruff", "need": {"wood_wall": 1}, "reward": {"survival_book": 1}, "unlock": "survival_access",
-		"text": "Make a Wood Wall (Wood + Rock in the combination slots) and give it to me. You'll get the Survival Book and the way into Survival Grasslands."},
+		"text": "Make a Wood Wall (Wood + Rock in the combination slots) and give it to me. You'll get the Survival Book and access to Survival Grasslands."},
 	{"id": "warden_1", "npc": "warden", "need": {"pretzel": 1}, "reward": {}, "unlock": "furnaces",
-		"text": "Bring me a Pretzel (Honey Bug + Herb, much easier with Combo Book I) and I'll open the gate to the furnaces."},
+		"text": "Bring me a Pretzel (Honey Bug + Herb, from Combo Book I) and I'll open the gate to the furnaces."},
 	{"id": "mira_1", "npc": "mira", "need": {"jelly": 10}, "reward": {"combo_book_1": 1}, "text": "Could you bring me 10 Jellies? Slimes in the Grasslands drop them."},
 	{"id": "mira_2", "npc": "mira", "need": {"jelly": 50}, "reward": {"combo_book_2": 1}, "text": "More jelly! 50 this time."},
 	{"id": "mira_3", "npc": "mira", "need": {"copper_bar": 5}, "reward": {"gilded_blade": 1}, "text": "Bring me 5 Copper Bars from the furnace."},
 	{"id": "mira_4", "npc": "mira", "need": {"iron_bar": 5}, "reward": {"azure_blade": 1}, "text": "Now 5 Iron Bars, please."},
 	{"id": "mira_5", "npc": "mira", "need": {"nail": 50}, "reward": {"silver_key": 2}, "text": "I need 50 Nails."},
-	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"silver_key": 2, "combination_scroll": 1}, "text": "Could I have a Gilded Blade?"},
+	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"silver_key": 2, "combination_scroll": 1}, "text": "Could I have a Golden Night?"},
 	{"id": "mira_7", "npc": "mira", "need": {"catalyst": 10}, "reward": {"golden_key": 1}, "text": "10 Catalysts, please."},
 	{"id": "mira_8", "npc": "mira", "need": {"crystal": 10}, "reward": {"brass_helmet": 1}, "text": "Bring me 10 Crystals."},
-	{"id": "mira_9", "npc": "mira", "need": {"scarab": 99}, "reward": {"combination_scroll": 2}, "text": "99 Scarabs. I know, I know."},
-	{"id": "mira_10", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"golden_key": 1}, "text": "99 Stink Bugs. Hold your nose."},
-	{"id": "mira_11", "npc": "mira", "need": {"honey_bug": 99}, "reward": {"combination_scroll": 3}, "text": "99 Honey Bugs."},
-	{"id": "mira_12", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"golden_key": 2}, "text": "99 Fire Bugs."},
+	{"id": "mira_9", "npc": "mira", "need": {"scarab": 99}, "reward": {"pirate": 1}, "text": "99 Scarabs. I know, I know."},
+	{"id": "mira_10", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"bad_man": 1}, "text": "99 Stink Bugs. Hold your nose."},
+	{"id": "mira_11", "npc": "mira", "need": {"honey_bug": 99}, "reward": {"pirate": 1}, "text": "99 Honey Bugs."},
+	{"id": "mira_12", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"soldier": 1}, "text": "99 Fire Bugs."},
 	{"id": "mira_13", "npc": "mira", "need": {"gold_shield": 1}, "reward": {"master_key": 1}, "text": "I'd love a Gold Shield."},
 	{"id": "mira_14", "npc": "mira", "need": {"dust": 999}, "reward": {"master_key": 2}, "text": "Dust! I need 999 Dust."},
 	{"id": "mira_15", "npc": "mira", "need": {"silver_bar": 25}, "reward": {"master_key": 1}, "text": "25 Silver Bars."},
 	{"id": "mira_16", "npc": "mira", "need": {"jelly": 99}, "reward": {"pumpkin_hat": 1}, "text": "99 Jellies, for old times' sake."},
-	{"id": "mira_17", "npc": "mira", "need": {"living_flame": 10}, "reward": {"pink_egg": 1, "red_egg": 1}, "text": "10 Living Flames from the furnace."},
+	{"id": "mira_17", "npc": "mira", "need": {"living_flame": 10}, "reward": {"pink_egg": 1, "red_egg": 1}, "text": "10 Firas from the furnace."},
 	{"id": "mira_18", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"combo_book_3": 1}, "text": "99 more Fire Bugs and you'll get Combo Book III."},
 	{"id": "mira_19", "npc": "mira", "need": {"gold_bar": 50}, "reward": {"master_key": 3}, "text": "50 Gold Bars."},
 	{"id": "mira_20", "npc": "mira", "need": {"erbium_bar": 50}, "reward": {"master_key": 3, "combo_book_4": 1}, "text": "50 Erbium Bars."},
 	{"id": "mira_21", "npc": "mira", "need": {"dark_bar": 50}, "reward": {"master_key": 3}, "text": "50 Dark Bars."},
 	{"id": "mira_22", "npc": "mira", "need": {"light_bar": 50}, "reward": {"master_key": 3}, "text": "50 Light Bars."},
+	{"id": "jumpie_1", "npc": "jumpie", "need": {"jelly": 10}, "reward": {}, "coins": 1, "text": "Could you bring me 10 Jellies? I'll give you a Pixel Coin!"},
 	{"id": "mira_23", "npc": "mira", "need": {"hell_bar": 50}, "reward": {"master_key": 3, "combo_book_5": 1}, "text": "50 Hell Bars."},
 ]
 
 # Shops: what each villager sells, and for how many coins (or tokens).
 var SHOPS := {
-	"merchant": {"title": "Merchant", "sells": [["combo_book_2", 1500], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["wood_wall", 10], ["campfire", 60], ["green_egg", 10000]], "buys": true},
-	"tools": {"title": "Tool Seller", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250]], "buys": true},
-	"gruff": {"title": "Gruff's Wares", "sells": [["wood", 5], ["rock", 5], ["branch", 5]], "buys": false},
+	"merchant": {"title": "Merchant", "sells": [["combo_book_2", 1500], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["green_egg", 10000]], "buys": true},
+	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250]], "buys": true},
+	"gruff": {"title": "Brutus' Shop", "sells": [["wood", 5], ["rock", 5], ["branch", 5]], "buys": false},
 	"miner": {"title": "Miner (Survival Tokens)", "currency": "survival_token", "sells": [["green_seeds", 15], ["red_seeds", 45], ["silver_key", 10], ["golden_key", 35], ["master_key", 100]], "buys": false},
 }
 
@@ -702,7 +776,9 @@ var CHESTS := {
 		["staff_cast", 1, 1], ["magic_wand", 1, 1], ["wooden_helmet", 1, 1], ["copper_helmet", 1, 1, 0.3], ["wooden_armor", 1, 1], ["stone_armor", 1, 1],
 		["leather_armor", 1, 1], ["copper_armor", 1, 1], ["iron_armor", 1, 1, 0.5], ["wooden_shield", 1, 1], ["leather_shield", 1, 1], ["copper_shield", 1, 1],
 		["hard_shield", 1, 1], ["faceguard", 1, 1], ["silver_ring", 1, 1, 0.3], ["gold_ring", 1, 1, 0.3], ["armor_ring", 1, 1, 0.2],
-		["combination_scroll", 1, 1, 0.3], ["silver_key", 1, 1, 0.3], ["golden_key", 1, 1, 0.1], ["survival_token", 1, 3], ["green_egg", 1, 1, 0.1]]},
+		["combination_scroll", 1, 1, 0.3], ["silver_key", 1, 1, 0.3], ["golden_key", 1, 1, 0.1], ["survival_token", 1, 3], ["green_egg", 1, 1, 0.1],
+		["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["soldier", 1, 1, 0.2], ["pirate", 1, 1, 0.2],
+		["cc_ball_1", 3, 8], ["wk_missile_1", 3, 8], ["snow_ball", 5, 10]]},
 	"golden": {"name": "Golden Chest", "key": "golden_key", "rolls": 2, "loot": [
 		["timber_club", 1, 1], ["gilded_blade", 1, 1], ["azure_blade", 1, 1], ["fire_brand", 1, 1], ["violet_edge", 1, 1], ["excalibur", 1, 1],
 		["bow", 1, 1], ["long_sword", 1, 1], ["plunger", 1, 1], ["magic_wand", 1, 1], ["fire_staff", 1, 1, 0.5], ["knights_blade", 1, 1],
@@ -712,14 +788,16 @@ var CHESTS := {
 		["stone_armor", 1, 1], ["silver_armor", 1, 1], ["copper_armor", 1, 1], ["linen_armor", 1, 1], ["leather_armor", 1, 1], ["jelly_armor", 1, 1],
 		["iron_armor", 1, 1], ["golden_armor", 1, 1], ["tough_leather_armor", 1, 1, 0.3], ["silver_ring", 1, 1], ["gold_ring", 1, 1], ["armor_ring", 1, 1],
 		["jade_ring", 1, 1], ["holy_banana", 1, 2], ["evil_shield", 1, 1, 0.3], ["pink_egg", 1, 1], ["green_egg", 1, 1], ["staff_cast", 1, 1],
-		["healing_staff", 1, 1, 0.3], ["healing_staff_2", 1, 1, 0.1], ["combination_scroll", 1, 2]]},
+		["healing_staff", 1, 1, 0.3], ["healing_staff_2", 1, 1, 0.1], ["combination_scroll", 1, 2],
+		["crazy_cannon_1", 1, 1, 0.3], ["waazookaa_1", 1, 1, 0.3], ["cc_ball_2", 3, 8], ["wk_missile_2", 3, 8], ["the_spi", 1, 1, 0.3], ["chuchu", 1, 1, 0.3], ["drone", 1, 1, 0.3]]},
 	"master": {"name": "Master Chest", "key": "master_key", "rolls": 1, "loot": [
 		["pole_axe", 1, 1], ["combo_sword", 1, 1], ["moon_blade", 1, 1], ["moon_blade_2", 1, 1], ["moon_blade_3", 1, 1], ["twin_sun", 1, 1],
 		["devil_spike", 1, 1], ["golden_long_sword", 1, 1], ["copper_faceguard", 1, 1], ["tank_shield", 1, 1], ["iron_armor", 1, 1], ["golden_armor", 1, 1],
 		["gold_shield", 1, 1], ["blue_shield", 1, 1], ["armor_ring_2", 1, 1], ["armor_ring_3", 1, 1], ["jade_ring", 1, 1], ["blood_diamond_armor", 1, 1],
 		["seer_armor", 1, 1], ["ivory_armor", 1, 1], ["scale_armor", 1, 1], ["copper_helmet", 1, 1], ["brass_helmet", 1, 1], ["fear_helmet", 1, 1],
 		["fear_helmet_2", 1, 1], ["hell_helmet", 1, 1], ["hell_helmet_2", 1, 1], ["witch_helmet", 1, 1], ["witch_helmet_2", 1, 1], ["golden_seeds", 1, 1],
-		["healing_staff", 1, 1], ["healing_staff_2", 1, 1], ["healing_staff_3", 1, 1], ["sapphire_stone", 1, 1], ["em_stone", 1, 1], ["green_egg", 1, 1], ["gold_sword_cast", 1, 1]]},
+		["healing_staff", 1, 1], ["healing_staff_2", 1, 1], ["healing_staff_3", 1, 1], ["sapphire_stone", 1, 1], ["em_stone", 1, 1], ["green_egg", 1, 1], ["gold_sword_cast", 1, 1],
+		["crazy_cannon_2", 1, 1], ["waazookaa_2", 1, 1], ["crazy_cannon_3", 1, 1, 0.5], ["waazookaa_3", 1, 1, 0.5], ["dark_knight", 1, 1]]},
 }
 var REWARD_CHEST := "silver" # chests found inside worlds use the silver loot table
 

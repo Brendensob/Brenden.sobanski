@@ -8,6 +8,7 @@ var friendly := true
 var color := Color.WHITE
 var life := 1.6
 var gravity := 0.0
+var radius := 2.0
 
 func setup(lvl: Node, v: Vector2, damage: int, from_player: bool, c: Color) -> void:
 	level = lvl
@@ -34,7 +35,7 @@ func _process(delta: float) -> void:
 		level.burst(position, color, 4)
 		queue_free()
 		return
-	var r := Rect2(position.x - 3, position.y - 3, 6, 6)
+	var r := Rect2(position.x - radius - 1, position.y - radius - 1, radius * 2 + 2, radius * 2 + 2)
 	if friendly:
 		var hit: Array = level.mobs_in_rect(r)
 		if hit.size() > 0:
@@ -46,6 +47,7 @@ func _process(delta: float) -> void:
 		queue_free()
 
 func _draw() -> void:
-	draw_rect(Rect2(-3, -3, 6, 6), Color("1b1a24"))
-	draw_rect(Rect2(-2, -2, 4, 4), color)
-	draw_rect(Rect2(-1, -1, 2, 2), Color.WHITE)
+	var o := radius + 1
+	draw_rect(Rect2(-o, -o, o * 2, o * 2), Color("1b1a24"))
+	draw_rect(Rect2(-radius, -radius, radius * 2, radius * 2), color)
+	draw_rect(Rect2(-radius + 1, -radius + 1, 2, 2), Color.WHITE)

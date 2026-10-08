@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## On-screen interface: hotbar, bars, clock, touch buttons, and every menu
-## (bag and combining, recipe books, villagers, shops, the Smith, furnaces,
+## (bag and combining, recipe books, villagers, shops, the Crafter, furnaces,
 ## chests, incubator, soils, world list, pause, title and fainting).
 
 var main: Node
@@ -44,6 +44,9 @@ const C_EMBER := Color("f2a33a")
 const C_DARK := Color("1b1a24")
 const C_GOOD := Color("7cc35a")
 const C_BAD := Color("e2553f")
+const C_SLOT := Color("efd2a4")
+const C_SLOT_EDGE := Color("7a4a26")
+const C_SLOT_SEL := Color("4fd040")
 
 func _ready() -> void:
 	layer = 10
@@ -99,6 +102,12 @@ func _make_theme() -> void:
 	ui_theme.set_color("font_hover_color", "Accent", Color("2a1606"))
 	ui_theme.set_color("font_pressed_color", "Accent", Color("2a1606"))
 	ui_theme.set_stylebox("panel", "ScrollContainer", StyleBoxEmpty.new())
+	# item slots: peach squares with a brown edge, like the original
+	ui_theme.set_type_variation("Slot", "Button")
+	ui_theme.set_stylebox("normal", "Slot", _box(C_SLOT, C_SLOT_EDGE, 2, 1))
+	ui_theme.set_stylebox("hover", "Slot", _box(Color("f8e2bc"), C_SLOT_EDGE, 2, 1))
+	ui_theme.set_stylebox("pressed", "Slot", _box(Color("e2c08e"), C_SLOT_EDGE, 2, 1))
+	ui_theme.set_stylebox("disabled", "Slot", _box(Color("b8a080"), C_SLOT_EDGE, 2, 1))
 
 func _label(text: String, size: int = 10, color: Color = C_INK, title: bool = false) -> Label:
 	var l := Label.new()
@@ -139,6 +148,7 @@ func _slot(size: int = 22) -> Button:
 	b.custom_minimum_size = Vector2(size, size)
 	b.size = Vector2(size, size)
 	b.focus_mode = Control.FOCUS_NONE
+	b.theme_type_variation = "Slot"
 	var icon := TextureRect.new()
 	icon.name = "Icon"
 	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -166,7 +176,9 @@ func _fill_slot(b: Button, s) -> void:
 		b.tooltip_text = ""
 
 func _select_style(b: Button, on: bool, color: Color = C_EMBER) -> void:
-	if on:
+	if on and b.theme_type_variation == "Slot":
+		b.add_theme_stylebox_override("normal", _box(Color("fbe6c2"), C_SLOT_SEL if color == C_EMBER else color, 2, 1))
+	elif on:
 		b.add_theme_stylebox_override("normal", _box(Color("3a3150"), color, 2, 3))
 	else:
 		b.remove_theme_stylebox_override("normal")
@@ -274,7 +286,7 @@ func _build_hud() -> void:
 	hud_root.add_child(boss_box)
 	toasts = VBoxContainer.new()
 	toasts.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	toasts.position = Vector2(-130, 86)
+	toasts.position = Vector2(-130, 64)
 	toasts.size = Vector2(260, 60)
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.add_theme_constant_override("separation", 2)
@@ -392,7 +404,7 @@ func toast(text: String, kind: String = "") -> void:
 	p.add_child(l)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	toasts.add_child(p)
-	while toasts.get_child_count() > 3:
+	while toasts.get_child_count() > 2:
 		toasts.get_child(0).free()
 	var tw := p.create_tween()
 	tw.tween_interval(2.6)
@@ -653,8 +665,8 @@ func _refresh_bag() -> void:
 	var it: Dictionary = Data.ITEMS[s.id]
 	info_box.add_child(_label("%s%s" % [it.name, "  x%d" % s.n if s.n > 1 else ""], 10, C_EMBER, true))
 	var extra := ""
-	if it.has("dmg") and it.type in ["weapon", "axe", "pick", "bow"]:
-		extra = "  Attack %d, %.2fs per swing." % [it.dmg, it.spd]
+	if it.has("dmg") and it.type in ["weapon", "axe", "pick", "bow", "throw"]:
+		extra = "  Attack %d, %.2fs per %s." % [it.dmg, it.spd, "shot" if it.type in ["bow", "throw"] else "swing"]
 	if it.has("sell") and int(it.sell) > 0:
 		extra += "  Sells for %d." % it.sell
 	info_box.add_child(_wrap(it.desc + extra, 220))
@@ -672,6 +684,11 @@ func _refresh_bag() -> void:
 				main.level.spawn_pet()))
 	if it.type == "book":
 		row.add_child(_button("Read", func(): open_book(it.book)))
+	if it.type == "character":
+		row.add_child(_button("Become", func():
+			toast(GS.use_character(bag_sel), "big")
+			bag_sel = -1
+			_refresh_bag()))
 	if bag_sel >= GS.HOTBAR:
 		row.add_child(_button("Hold", func():
 			GS.swap(bag_sel, GS.sel)
@@ -720,7 +737,7 @@ func _build_panels() -> void:
 	_scroll(sh, Vector2(234, 38), Vector2(218, 198)).name = "Sell"
 	sh.add_child(_at(_label("Sell", 10, C_MUTED, true), Vector2(234, 24)))
 
-	var sm := _panel("smith", Vector2(460, 244), "Smith")
+	var sm := _panel("smith", Vector2(460, 244), "Crafter")
 	sm.add_child(_at(_label("Always succeeds. Gear you use up must be in your bag (not equipped).", 8, C_MUTED), Vector2(70, 8)))
 	_scroll(sm, Vector2(8, 26), Vector2(444, 210))
 
@@ -734,7 +751,7 @@ func _build_panels() -> void:
 	st.add_child(stext)
 	_scroll(st, Vector2(8, 56), Vector2(424, 166))
 
-	var m := _panel("map", Vector2(440, 214), "Portal Keeper")
+	var m := _panel("map", Vector2(440, 214), "Gatekeeper")
 	var cols := HBoxContainer.new()
 	cols.name = "Cols"
 	cols.position = Vector2(8, 26)
@@ -762,7 +779,7 @@ func _build_panels() -> void:
 	dtext.name = "Text"
 	dtext.position = Vector2(8, 24)
 	dead.add_child(dtext)
-	var wake := _button("Wake up in Pixel Village", func(): main.respawn(), true)
+	var wake := _button("Wake up in Pixel Town", func(): main.respawn(), true)
 	wake.position = Vector2(8, 80)
 	dead.add_child(wake)
 
@@ -787,12 +804,27 @@ func _build_panels() -> void:
 	tv.add_theme_constant_override("separation", 5)
 	t.add_child(tv)
 
-func _refresh_title() -> void:
+func _refresh_title(choosing := false) -> void:
 	var tv: VBoxContainer = panels.title.get_node("Menu")
 	_clear(tv)
+	if choosing:
+		# like the original, a new adventure starts as the Man in Suit or the Nurse
+		tv.add_child(_outlined(_label("Pick your character", 10, C_INK, true)))
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		for c in Data.START_CHARACTERS:
+			var b := _button(Data.CHARACTERS[c].name, func(): main.start_game(false, c), c == "man_in_suit")
+			b.icon = Art.character(c, "stand", 2)
+			b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+			b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			b.custom_minimum_size = Vector2(76, 0)
+			row.add_child(b)
+		tv.add_child(row)
+		tv.add_child(_button("Back", func(): _refresh_title()))
+		return
 	if GS.has_save():
 		tv.add_child(_button("Continue", func(): main.start_game(true), true))
-	tv.add_child(_button("New game", func(): main.start_game(false), not GS.has_save()))
+	tv.add_child(_button("New game", func(): _refresh_title(true), not GS.has_save()))
 
 func show_dead(text: String) -> void:
 	panels.dead.get_node("Text").text = text
@@ -972,7 +1004,7 @@ func _refresh_map() -> void:
 			var b := _button(w.name, func(): close_panels(); main.change_level(target), false)
 			if w.has("needs") and not GS.flags.get(w.needs, false):
 				b.disabled = true
-				b.tooltip_text = "Finish Gruff's quest first."
+				b.tooltip_text = "Finish Brutus' quest first."
 			v.add_child(b)
 		cols.add_child(v)
 
@@ -997,7 +1029,7 @@ func _refresh_station() -> void:
 			title.text = "Furnace %d" % (i + 1)
 			var job = GS.furnaces[i]
 			if not GS.flags.get("furnaces", false):
-				text.text = "The furnaces are locked. Bring the Furnace Warden a Pretzel."
+				text.text = "The furnaces are locked. Bring the GateKeeper a Pretzel."
 			elif job == null:
 				text.text = "Pick what to smelt. It keeps working even while you're away."
 				for r in Data.SMELT:

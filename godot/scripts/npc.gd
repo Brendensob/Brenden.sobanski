@@ -16,10 +16,10 @@ func setup(id: String, lvl: Node) -> void:
 func _ready() -> void:
 	sprite = Sprite2D.new()
 	sprite.texture = Art.character(data.look)
-	sprite.position = Vector2(0, -9)
+	sprite.position = Vector2(0, -sprite.texture.get_height() / 2.0)
 	add_child(sprite)
-	add_child(_label(data.name, Vector2(-30, -32), Color.WHITE, Art.font_body))
-	badge = _label("", Vector2(-10, -42), Color("f2cf5b"), Art.font_title)
+	add_child(_label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_body))
+	badge = _label("", Vector2(-10, -46), Color("f2cf5b"), Art.font_title)
 	add_child(badge)
 
 func _label(text: String, pos: Vector2, c: Color, f: Font) -> Label:

@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = JUMP
 		if Input.is_action_just_pressed("attack"):
 			use_held(true)
-		elif Input.is_action_pressed("attack") and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", ""]:
+		elif Input.is_action_pressed("attack") and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
 			use_held(false)
 	if not is_on_floor():
 		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
@@ -133,7 +133,8 @@ func _tick(delta: float, dir: float) -> void:
 		frame = "jump"
 	elif dir != 0 and int(anim * 8) % 2 == 1:
 		frame = "walk"
-	body_sprite.texture = Art.character_flash("player") if flash > 0 else Art.character("player", frame)
+	body_sprite.texture = Art.character_flash(GS.look) if flash > 0 else Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""))
+	body_sprite.position.y = -body_sprite.texture.get_height() / 2.0
 	body_sprite.flip_h = facing < 0
 	body_sprite.visible = not (invuln > 0 and flash <= 0 and int(anim * 20) % 2 == 0)
 	held_sprite.position = Vector2(facing * 5, -7)
@@ -188,7 +189,7 @@ func use_held(pressed: bool) -> void:
 			if not pressed:
 				return
 			if level.kind == "town":
-				_say("You can't build in the village.")
+				_say("You can't build in town.")
 			elif level.place(id, position, facing):
 				GS.remove_at(GS.sel)
 			else:
@@ -205,11 +206,20 @@ func use_held(pressed: bool) -> void:
 				if type == "pet":
 					level.spawn_pet()
 			return
+		"character":
+			if pressed:
+				level.main.hud.toast(GS.use_character(GS.sel), "big")
+				level.burst(position + Vector2(0, -8), Color("ffe08a"), 14)
+				cooldown = 0.4
+			return
+		"throw":
+			_throw(id, it)
+			return
 		"egg", "seed", "key", "scroll", "token", "ammo":
 			if pressed:
-				_say({"egg": "Hatch eggs in the Incubator in Pixel Village.", "seed": "Plant seeds in the soil behind the village rock wall.",
-					"key": "Use keys on the chests in Pixel Village.", "scroll": "Put scrolls in the scroll slot when combining.",
-					"token": "Trade Survival Tokens with the Miner.", "ammo": "Hold a bow to shoot arrows."}[type])
+				_say({"egg": "Hatch eggs in the Incubator in Pixel Town.", "seed": "Plant seeds in the soil behind the rock wall in town.",
+					"key": "Use keys on the chests in Pixel Town.", "scroll": "Put scrolls in the scroll slot when combining.",
+					"token": "Trade Survival Tokens with the Miner.", "ammo": "Hold the bow or cannon that uses it, then press A."}[type])
 			return
 		"staff":
 			_cast(id, it)
@@ -255,15 +265,33 @@ func _cast(id: String, it: Dictionary) -> void:
 	level.entities.add_child(p)
 
 func _shoot(id: String, it: Dictionary) -> void:
-	if GS.count("arrow") <= 0:
-		_say("You're out of arrows.")
+	var ammo: String = it.get("ammo", "arrow")
+	if GS.count(ammo) <= 0:
+		_say("You're out of %s." % Data.ITEMS[ammo].name)
 		return
-	GS.remove_item("arrow", 1)
+	GS.remove_item(ammo, 1)
 	cooldown = float(it.spd)
 	var r := GS.attack_range(id)
 	var p := ProjectileScript.new()
-	p.setup(level, Vector2(facing * 220, -20), randi_range(r.x, r.y), true, Color("e8dccb"))
-	p.gravity = 120.0
+	if it.get("cannon", false):
+		p.setup(level, Vector2(facing * 200, -40), randi_range(r.x, r.y), true, Color("3a3540") if ammo.begins_with("cc") else Color("d9542c"))
+		p.radius = 4.0
+		p.gravity = 160.0
+		level.main.shake(2.0)
+	else:
+		p.setup(level, Vector2(facing * 220, -20), randi_range(r.x, r.y), true, Color("e8dccb"))
+		p.gravity = 120.0
+	p.position = position + Vector2(facing * 8, -10)
+	level.entities.add_child(p)
+
+## Snow Balls are thrown straight from the hand and used up.
+func _throw(id: String, it: Dictionary) -> void:
+	GS.remove_at(GS.sel, 1)
+	cooldown = float(it.spd)
+	var r := GS.attack_range(id)
+	var p := ProjectileScript.new()
+	p.setup(level, Vector2(facing * 180, -60), randi_range(r.x, r.y), true, Color("f4fbff"))
+	p.gravity = 300.0
 	p.position = position + Vector2(facing * 8, -10)
 	level.entities.add_child(p)
 

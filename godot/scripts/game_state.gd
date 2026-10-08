@@ -31,6 +31,7 @@ var clock := 0.3 # 0..1; night is 0.75 to 0.25 of the next day via darkness()
 var day := 1
 var world := "town"
 var best_survival_day := 0
+var look := "man_in_suit" # which character you look like
 
 func _ready() -> void:
 	_setup_input()
@@ -59,7 +60,8 @@ func _setup_input() -> void:
 func now() -> float:
 	return Time.get_unix_time_from_system()
 
-func new_game() -> void:
+func new_game(character: String = "man_in_suit") -> void:
+	look = character
 	inv.clear()
 	inv.resize(BAG)
 	equip = {}
@@ -119,10 +121,12 @@ func roll_attack(weapon_id: String) -> int:
 	var r := attack_range(weapon_id)
 	return randi_range(r.x, r.y)
 
-## Damage a monster deals to you: its attack (sometimes a double critical hit)
-## minus a random number between 0 and your defense, but never less than 1.
+## Damage a monster deals to you, the same way the wiki's defense calculator does it:
+## the monster's attack (doubled on a critical hit) minus a random number between
+## 0 and your defense, never less than 1. So defense equal to a monster's attack
+## halves its hits on average, and twice its attack makes most hits deal 1.
 func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
-	var hit := randi_range(maxi(1, int(ceil(dmg * 0.8))), dmg)
+	var hit := dmg
 	var crit := randf() < crit_chance
 	if crit:
 		hit *= 2
@@ -144,7 +148,7 @@ func stack_size(id: String) -> int:
 	var t: String = Data.ITEMS[id].type
 	if t in ["weapon", "staff", "bow", "axe", "pick", "helmet", "armor", "shield", "ring", "pet", "book"]:
 		return 1
-	if t in ["ammo", "token"]:
+	if t in ["ammo", "token", "throw"]:
 		return 999
 	if id == "hero_bug":
 		return 25
@@ -345,7 +349,7 @@ func smith(recipe: Dictionary) -> bool:
 
 func start_smelt(f: int, recipe: Dictionary) -> String:
 	if not flags.get("furnaces", false):
-		return "The furnace gate is locked. Talk to the Furnace Warden."
+		return "The furnace gate is locked. Talk to the GateKeeper."
 	if furnaces[f] != null:
 		return "That furnace is busy."
 	if not has_all(recipe.cost):
@@ -436,6 +440,8 @@ func complete_quest(q: Dictionary) -> void:
 	take_all(q.need)
 	for id in q.reward:
 		add_item(id, q.reward[id])
+	if q.has("coins"):
+		coins += int(q.coins)
 	if q.has("unlock"):
 		flags[q.unlock] = true
 	quests_done.append(q.id)
@@ -462,7 +468,7 @@ func save_game() -> void:
 	var data := {
 		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
-		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day,
+		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f:
@@ -506,9 +512,29 @@ func load_game() -> bool:
 	clock = float(d.get("clock", 0.3))
 	day = int(d.get("day", 1))
 	best_survival_day = int(d.get("best_survival_day", 0))
+	look = str(d.get("look", "man_in_suit"))
+	if not Data.CHARACTERS.has(look):
+		look = "man_in_suit"
 	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())
 	mp = float(d.get("mp", max_mp()))
 	st = float(d.get("st", max_st()))
 	clamp_stats()
 	inventory_changed.emit()
 	return true
+
+## Use a character item: you take on its look, and some characters come with a weapon.
+func use_character(i: int) -> String:
+	var s = inv[i]
+	if s == null or Data.ITEMS[s.id].type != "character":
+		return ""
+	var it: Dictionary = Data.ITEMS[s.id]
+	remove_at(i, 1)
+	look = it.look
+	var msg := "You're now the %s!" % it.name
+	if it.gives != "":
+		if add_item(it.gives, 1, true) == 0:
+			msg += " You got a %s." % Data.ITEMS[it.gives].name
+		else:
+			msg += " Your bag was full, so the %s was lost." % Data.ITEMS[it.gives].name
+	inventory_changed.emit()
+	return msg

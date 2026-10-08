@@ -17,41 +17,92 @@ const PAL := {
 	"c": "4fb6d0", "C": "a6e6f2", "m": "e06a9a", "z": "8fb07a", "Z": "5e7a52",
 }
 
-# ---------------------------------------------------------------- villagers
-const BODY_TOP := [
-	"...hhhhhh...",
-	"..hhhhhhhhh.",
-	".hhhhhhhhhhh",
-	".hhhsssssh..",
-	".hhssssess..",
-	".hhssssessS.",
-	"..hsssssss..",
-	"...SSsssS...",
+# ---------------------------------------------------------------- characters
+# Chibi people: a big head with two dot eyes, a small body and stubby legs.
+# Channels: h/H hair, s/S skin, e eyes, c/C clothes, v collar, t tie or trim,
+# j lower body (skirt or belt), q legs, f shoes. Missing channels fall back.
+const PAD := 4 # empty rows above the head for hats
+const HAIR := {
+	"short": [
+		"...hhhhhh...",
+		"..hhhhhhhhh.",
+		".hhhhhhhhhhh",
+		".hhhhsssshh.",
+		".hhsssesses.",
+		".hhsssesseS.",
+		"..hssssssss.",
+		"...SSssssS..",
+	],
+	"bald": [
+		"...ssssss...",
+		"..sssssssss.",
+		".sssssssssss",
+		".sssssssssS.",
+		".SssssesseS.",
+		".SssssesseS.",
+		"..Sssssssss.",
+		"...SSssssS..",
+	],
+}
+const BODY := [
+	"...cvtvcc...",
+	"..cccCtCcc..",
+	"..sccCtCcs..",
 	"...cccccc...",
-	"..cccCcccc..",
-	"..sccCccsc..",
-	"...cccccc...",
-	"...qqqqqq...",
+	"...jjjjjj...",
 ]
 const LEGS := {
 	"stand": ["...qq..qq...", "...qq..qq...", "...ff..ff..."],
 	"walk": ["..qq....qq..", "..qq....qq..", "..ff....ff.."],
 	"jump": ["...qq..qq...", "..ff....ff..", "............"],
 }
+# over: extra pixels drawn on top, as [x, y, rows] with y counted from the top
+# of the hat space (the head starts at y = PAD).
 const LOOKS := {
-	"player": {"h": "c8302a", "H": "8a1e1a", "c": "2c3a6a", "C": "1e2a50", "q": "3a3a52", "f": "2a2230", "e": "1b1a24"},
-	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "e": "1b1a24", "s": "e8b48a"},
-	"gruff": {"h": "6a4a2a", "H": "4a3218", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "e": "1b1a24", "s": "d49a72"},
-	"mira": {"h": "f06aa0", "H": "c84a80", "c": "f2efe6", "C": "d8d0c0", "q": "e06a9a", "f": "3a2a22", "e": "1b1a24"},
-	"warden": {"h": "2a2a2a", "H": "1b1a24", "s": "8fc07a", "S": "6a9a5a", "c": "4a4a5a", "C": "3a3a48", "q": "3a3a48", "f": "1b1a24", "e": "1b1a24"},
-	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "e": "1b1a24", "s": "c88a5a"},
-	"merchant": {"h": "d8433a", "H": "a82a22", "c": "3b5dc9", "C": "2c4596", "q": "4a3a2a", "f": "2a2230", "e": "1b1a24"},
-	"tools": {"h": "3b5dc9", "H": "2c4596", "c": "3b5dc9", "C": "2c4596", "q": "3b5dc9", "f": "6e4426", "e": "1b1a24", "s": "f2c29a"},
-	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230", "e": "1b1a24"},
+	# playable characters
+	"man_in_suit": {"h": "2a2230", "H": "1b1a24", "c": "2e3242", "C": "1e2030", "v": "f2efe6", "t": "d8433a", "q": "2e3242", "f": "1b1a24"},
+	"nurse": {"h": "a0663a", "H": "6e4426", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "f2efe6", "t": "f2efe6", "j": "f2efe6", "q": "f2c29a", "f": "f2efe6",
+		"over": [[3, 1, [".wwwww.", "wwwrwww", "wwrrrww", ".wwrww."]]]},
+	"cavemun": {"h": "6a4220", "H": "4a2e14", "s": "e2a070", "S": "b87a4e", "c": "ea8a33", "C": "8a4a1a", "v": "e2a070", "t": "ea8a33", "j": "ea8a33", "q": "e2a070", "f": "8a5a32",
+		"over": [[1, 2, ["..h..h..h...", ".hhhhhhhhhh."]], [10, 10, ["N"]], [10, 11, ["w"]]]},
+	"pirate": {"h": "1b1a24", "H": "1b1a24", "c": "f2efe6", "C": "d8433a", "v": "f2efe6", "t": "d8433a", "q": "2e3242", "f": "6e4426",
+		"over": [[1, 3, ["..rrrrrr....", ".rrRrrrrrr..", "rrrrrrrrrrr."]], [0, 6, ["rr"]], [0, 7, [".r"]], [3, 7, ["kkkkk"]], [8, 8, ["kk"]], [8, 9, ["kk"]]]},
+	"the_spi": {"h": "1b1a24", "H": "3a3a48", "c": "1b1a24", "C": "2e3242", "v": "f2efe6", "t": "1b1a24", "q": "1b1a24", "f": "1b1a24",
+		"over": [[4, 8, ["kkkkkkk"]], [5, 9, ["kUk.kUk"]]]},
+	"bad_man": {"h": "2a2a30", "H": "1b1a24", "s": "3a3a44", "S": "2a2a30", "c": "4a4a5a", "C": "2a2a30", "v": "4a4a5a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
+		"over": [[5, 8, ["wkwwkw"]], [5, 9, ["wkwwkw"]]]},
+	"school_girl": {"h": "1b1a24", "H": "2a2230", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "1b1a24"},
+	"soldier": {"h": "5a3a20", "H": "3a2614", "c": "6a8a4a", "C": "4a6a2a", "v": "6a8a4a", "t": "4a6a2a", "j": "3a2a22", "q": "4a6a2a", "f": "3a2a22",
+		"over": [[2, 2, ["..ZZZZZZ..", ".ZzZZZZZZZ.", "ZZZZZzZZZZZ", "ZZZZZZZZZZZ", "zzzzzzzzzzz"]]]},
+	"chuchu": {"h": "f08ac8", "H": "c05a98", "long": true, "c": "f06aa0", "C": "c84a80", "v": "f2efe6", "t": "f2efe6", "j": "f06aa0", "q": "f2c29a", "f": "f2efe6",
+		"over": [[1, 1, [".hh......hh.", "hhHh....hHhh", ".hh......hh."]]]},
+	"drone": {"h": "5c616b", "H": "3e424a", "s": "a8b0bc", "S": "7a8290", "e": "4fd0f0", "c": "7a8290", "C": "5c616b", "v": "a8b0bc", "t": "4fd0f0", "q": "5c616b", "f": "3e424a", "hair": "bald",
+		"over": [[6, 0, ["A", "a", "a"]], [4, 3, ["aaaaa"]], [5, 8, ["cCCCCc"]], [5, 9, ["cCCCCc"]], [6, 8, ["C"]]]},
+	"dark_knight": {"h": "3a2a5a", "H": "2a1e40", "s": "4a3a6a", "S": "2a1e40", "e": "d8433a", "c": "4a3a6a", "C": "2a1e40", "v": "7b4fb8", "t": "7b4fb8", "j": "2a1e40", "q": "2a1e40", "f": "1b1a24", "hair": "bald",
+		"over": [[3, 0, [".rr.", "rRr.", "rr..", "PPPPPPPP"]], [2, 7, ["PPPPPPPPPP"]], [5, 8, ["kekkek"]], [5, 9, ["kekkek"]]]},
+	# villagers
+	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
+		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
+	"gruff": {"h": "6a4a2a", "H": "4a3218", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "s": "d49a72", "j": "3a2a22",
+		"over": [[6, 10, ["HHHHH"]], [7, 11, ["HHH"]]]},
+	"mira": {"h": "f06aa0", "H": "c84a80", "long": true, "c": "f2efe6", "C": "d8d0c0", "t": "f06aa0", "j": "e06a9a", "q": "f2c29a", "f": "3a2a22",
+		"over": [[8, 3, ["yy", "y."]]]},
+	"warden": {"h": "2a2a2a", "H": "1b1a24", "s": "8fc07a", "S": "6a9a5a", "c": "4a4a5a", "C": "3a3a48", "q": "3a3a48", "f": "1b1a24"},
+	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "s": "c88a5a", "v": "a07a55", "t": "a07a55"},
+	"merchant": {"h": "d8433a", "H": "a82a22", "c": "3b5dc9", "C": "2c4596", "q": "4a3a2a", "f": "2a2230", "t": "f2cf5b"},
+	"tools": {"h": "3b5dc9", "H": "2c4596", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
+		"over": [[6, 10, ["bbbb"]]]},
+	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230"},
+	"jumpie": {"h": "a0663a", "H": "6e4426", "c": "5cbf3f", "C": "3e8a2e", "t": "f2cf5b", "q": "3b5dc9", "f": "d8433a",
+		"over": [[2, 0, ["...aAAa....", "....n......", "..ggggg....", ".gggggggg..", "gggGggggggg"]]]},
+	# monsters that are drawn as people
 	"zombie": {"h": "3a3a2a", "H": "2a2a1e", "s": "8fb07a", "S": "5e7a52", "c": "6e5a3e", "C": "4a3e2a", "q": "3e4a5a", "f": "2a2230", "e": "d8433a"},
 	"wizard": {"h": "3b5dc9", "H": "2c4596", "s": "e8c8a8", "S": "c8a888", "c": "3b5dc9", "C": "6b8ff0", "q": "3b5dc9", "f": "2c4596", "e": "f2cf5b"},
 	"mummy": {"h": "e8e0c8", "H": "b8b098", "s": "e8e0c8", "S": "b8b098", "c": "e8e0c8", "C": "b8b098", "q": "e8e0c8", "f": "b8b098", "e": "d8433a"},
 }
+# Character hats show the matching character's headwear when worn.
+const HAT_LOOKS := {"pirate_hat": "pirate", "soldier_helmet": "soldier", "spy_mask": "the_spi", "chuu_hat": "chuchu",
+	"trooper_pro": "drone", "dark_night": "dark_knight", "bad_mask": "bad_man"}
 
 func _ready() -> void:
 	font_body = load("res://fonts/PixelifySans.ttf")
@@ -146,46 +197,108 @@ func eyes(img: Image, x1: int, x2: int, y: int, size: int = 1, c: Color = OUTLIN
 	rect(img, x2, y, size, size + 1, c)
 
 # ---------------------------------------------------------------- characters
-func character(look: String, frame: String = "stand", scale: int = 1) -> Texture2D:
-	return cached("char_%s_%s_%d" % [look, frame, scale], func():
-		return to_tex(outline(_char_img(look, frame, scale))))
+## A person sprite. helmet and armor are item ids, drawn over the character.
+func character(look: String, frame: String = "stand", scale: int = 1, helmet: String = "", armor: String = "") -> Texture2D:
+	return cached("char_%s_%s_%d_%s_%s" % [look, frame, scale, helmet, armor], func():
+		return to_tex(outline(_char_img(look, frame, scale, helmet, armor))))
 
 func character_flash(look: String) -> Texture2D:
 	return cached("charflash_" + look, func():
 		return to_tex(flash_image(outline(_char_img(look, "stand", 1)))))
 
-func _char_img(look: String, frame: String, scale: int) -> Image:
-	var img := grid_image(BODY_TOP + LEGS[frame], LOOKS[look], scale)
-	if look == "wizard":
-		var hat := blank(img.get_width(), img.get_height() + 5)
-		hat.blit_rect(img, Rect2i(0, 0, img.get_width(), img.get_height()), Vector2i(0, 5))
-		var c := Color("2c4596")
-		for i in 6:
-			rect(hat, 5 - i / 2, i, 2 + i, 1, c)
-		rect(hat, 0, 5, 12, 2, c)
-		px(hat, 6, 1, Color("f2cf5b"))
-		return hat
-	if look == "miner":
-		rect(img, 2, 0, 9, 3, Color("f2cf5b"))
-		rect(img, 8, 1, 2, 2, Color("f2efe6"))
-	if look == "merchant" or look == "tools":
-		rect(img, 1, 0, 10, 3, col(LOOKS[look].h))
-		rect(img, 7, 2, 5, 1, col(LOOKS[look].H))
-	if look == "warden":
-		rect(img, 2, 0, 9, 2, Color("2a2a2a"))
-		px(img, 1, 6, Color("a8a8b0"))
-		px(img, 10, 6, Color("a8a8b0"))
+func _char_map(look: String, armor: String) -> Dictionary:
+	var d: Dictionary = LOOKS.get(look, LOOKS.man_in_suit)
+	var map := {}
+	for k in d:
+		if d[k] is String:
+			map[k] = d[k]
+	if not map.has("e"): map.e = "1b1a24"
+	if not map.has("t"): map.t = map.get("c", "4a4a5a")
+	if not map.has("v"): map.v = map.get("c", "4a4a5a")
+	if not map.has("j"): map.j = map.get("q", "3a3a52")
+	if armor != "":
+		var mc := material_colors(armor)
+		map.c = mc.X
+		map.C = mc.x
+		map.v = mc.X
+		map.t = mc.x
+	return map
+
+func _overlay(img: Image, parts: Array, map: Dictionary) -> void:
+	for o in parts:
+		var g := grid_image(o[2], map)
+		img.blend_rect(g, Rect2i(0, 0, g.get_width(), g.get_height()), Vector2i(o[0], o[1]))
+
+func _char_img(look: String, frame: String, scale: int, helmet: String = "", armor: String = "") -> Image:
+	var d: Dictionary = LOOKS.get(look, LOOKS.man_in_suit)
+	var map := _char_map(look, armor)
+	var base := grid_image(HAIR[d.get("hair", "short")] + BODY + LEGS[frame], map)
+	if d.get("long", false):
+		for y in range(6, 11):
+			for x in [1, 2]:
+				if base.get_pixel(x, y).a < 0.5 and (x == 1 or y < 9):
+					base.set_pixel(x, y, col(map.h))
 	if look == "mummy":
-		var clean := img.duplicate()
-		for y in range(0, img.get_height(), 3):
-			rect(img, 0, y, img.get_width(), 1, Color("b8b098"))
-		for y in img.get_height():
-			for x in img.get_width():
+		var clean := base.duplicate()
+		for y in range(0, base.get_height(), 3):
+			rect(base, 0, y, base.get_width(), 1, Color("b8b098"))
+		for y in base.get_height():
+			for x in base.get_width():
 				if clean.get_pixel(x, y).a < 0.5:
-					img.set_pixel(x, y, Color(0, 0, 0, 0))
-		px(img, 7, 4, Color("d8433a"))
-		px(img, 9, 4, Color("d8433a"))
+					base.set_pixel(x, y, Color(0, 0, 0, 0))
+		px(base, 6, 4, Color("d8433a"))
+		px(base, 9, 4, Color("d8433a"))
+	var img := blank(base.get_width(), base.get_height() + PAD)
+	img.blit_rect(base, Rect2i(0, 0, base.get_width(), base.get_height()), Vector2i(0, PAD))
+	_overlay(img, d.get("over", []), map)
+	match look:
+		"wizard":
+			var c := Color("2c4596")
+			for i in 5:
+				rect(img, 6 - (i + 1) / 2, i, 1 + i, 1, c)
+			rect(img, 0, 4, 12, 2, c)
+			px(img, 6, 1, Color("f2cf5b"))
+		"miner":
+			rect(img, 2, 3, 9, 3, Color("f2cf5b"))
+			rect(img, 8, 4, 2, 2, Color("f2efe6"))
+		"merchant", "tools":
+			rect(img, 1, 3, 10, 3, col(map.h))
+			rect(img, 7, 5, 5, 1, col(map.H))
+		"warden":
+			rect(img, 2, 3, 9, 2, Color("2a2a2a"))
+			px(img, 1, 10, Color("a8a8b0"))
+			px(img, 10, 10, Color("a8a8b0"))
+	if helmet != "":
+		_draw_helmet(img, helmet)
+	if scale > 1:
+		img.resize(img.get_width() * scale, img.get_height() * scale, Image.INTERPOLATE_NEAREST)
 	return img
+
+func _draw_helmet(img: Image, helmet: String) -> void:
+	if HAT_LOOKS.has(helmet):
+		var hl: String = HAT_LOOKS[helmet]
+		_overlay(img, LOOKS[hl].get("over", []), _char_map(hl, ""))
+		return
+	var mc := material_colors(helmet)
+	var map := {"X": mc.X, "x": mc.x}
+	match helmet:
+		"bear_head":
+			_overlay(img, [[1, 1, [".nn.....nn..", "nNNnnnnnNNn.", "nnnnnnnnnnnn", "nnnnnnnnnnnn", "nnn.......nn"]]], {"n": "8a5a32", "N": "c8a070"})
+		"green_face":
+			_overlay(img, [[2, 6, ["ggggggggg", "gggkggkgg", "gggkggkgg", "ggggggggg", ".gggGGgg."]]], {"g": "5cbf3f", "G": "2e7a2a"})
+		"the_fly":
+			_overlay(img, [[2, 4, ["..kkkkkk...", ".kkkkkkkkk.", "kkcCkkkcCk.", "kkCCkkkCCk."]]], {"c": "a6e6f2", "C": "4fb6d0"})
+		"wood_mask", "skull_mask":
+			var m: Dictionary = {"X": "a8703f", "x": "6e4426"} if helmet == "wood_mask" else {"X": "f2ecd8", "x": "a89878"}
+			_overlay(img, [[4, 6, [".XXXXXX", "XXkXXkX", "XXkXXkX", "XXXXXXX", ".XxxxX."]]], m)
+		"cool_hat", "roman_hat", "storm_hat":
+			var c3: Array = {"cool_hat": ["1b1a24", "3a3a48"], "roman_hat": ["f2cf5b", "d8433a"], "storm_hat": ["6b8ff0", "2c4596"]}[helmet]
+			_overlay(img, [[1, 2, ["...XXXXXX...", "..XXXXXXXX..", "..XxxxxxxX..", "XXXXXXXXXXXX"]]], {"X": c3[0], "x": c3[1]})
+		_:
+			if helmet.contains("hat") or helmet.contains("witch") or helmet.contains("hood"):
+				_overlay(img, [[1, 1, ["....XXXX....", "...XXXXXX...", "...XwXXXX...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]], map)
+			else:
+				_overlay(img, [[1, 2, ["...XXXXXX...", "..XXwXXXXXX.", ".XXXXXXXXXXX", ".XXxxxxxxxx.", ".Xx.........", ".Xx........."]]], map)
 
 # ---------------------------------------------------------------- monster shapes
 func blob(body: Color, w: int, h: int, squash: bool, face := true) -> Image:
@@ -526,10 +639,19 @@ const ICON_GRIDS := {
 	"station": ["..........", "nnnnnnnnnn", "llllllllll", ".n..aa..n.", ".n.aAAa.n.", ".n......n.", ".n......n.", ".n......n.", "..........", ".........."],
 	"fire": ["..........", "....y.....", "...yoy....", "...oRo....", "..oRrRo...", ".nlnnlnl..", "nlnnlnnl..", "..........", "..........", ".........."],
 	"fire2": ["..........", ".....y....", "....yoy...", "...yoRo...", "..oRrRo...", ".nlnnlnl..", "nlnnlnnl..", "..........", "..........", ".........."],
+	"cannon": ["..........", "..........", "......kk..", ".XXXXXXXkk", "XwXXXXXXXk", "XXXXXXXXxk", ".xxxxxxkk.", "...nn.....", "..nNNn....", ".........."],
+	"missile": ["..........", "......XX..", ".....XwXr.", "....XXXr..", "...XXXX...", "..XXXX....", ".rXXX.....", "rrr.......", ".r........", ".........."],
+	"balls": ["..........", "..........", "...XX.....", "..XwXx....", "..XXxx.XX.", "...xx.XwXx", ".XX...XXxx", "XwXx...xx.", "XXxx......", ".xx......."],
+	"mask": ["..........", "..XXXXXX..", ".XXXXXXXX.", ".XkkXXkkX.", ".XkkXXkkX.", ".XXXXXXXX.", "..XXxxXX..", "...XXXX...", "..........", ".........."],
 	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
 }
 
 const MATERIAL_COLORS := [
+	["bear", "8a5a32", "5a3a1a"], ["pirate", "d8433a", "8a1e1a"], ["soldier", "6a8a4a", "4a6a2a"], ["spy", "3a3a48", "1b1a24"],
+	["the_fly", "3a3a48", "1b1a24"], ["bad_mask", "3a3a44", "1b1a24"], ["chuu", "f08ac8", "c05a98"], ["trooper", "a8b0bc", "5c616b"],
+	["green_face", "5cbf3f", "2e7a2a"], ["skull", "f2ecd8", "a89878"], ["cool", "3a3a48", "1b1a24"], ["roman", "f2cf5b", "d8433a"],
+	["storm", "6b8ff0", "2c4596"], ["crazy", "5c616b", "2a2c32"], ["waazoo", "6a8a4a", "3e5a2a"], ["cc_ball", "3a3a44", "1b1a24"],
+	["wk_missile", "a8b0bc", "5c616b"],
 	["volcanic", "ff5a2a", "a8241a"], ["erbium", "c83a6a", "7a1e4a"], ["copper", "e8864a", "a85a2a"], ["silver", "e3ebf5", "9fb0c8"],
 	["golden_knight", "f2cf5b", "c99a2e"], ["gold", "f2cf5b", "c99a2e"], ["iron", "8ab0d8", "5a7a9a"], ["light", "f2efe6", "c8c0b0"],
 	["dark", "7b4fb8", "3a2a5a"], ["hell", "d8433a", "8a1e1a"], ["evil", "5a2a6a", "2a1030"], ["fear", "5c616b", "2a2c32"],
@@ -614,6 +736,7 @@ func icon_spec(id: String) -> Array:
 		"devil_spike": return ["spike", mc]
 		"plunger": return ["plunger", mc]
 		"arrow": return ["arrow", {}]
+		"snow_ball": return ["balls", {"X": "f4fbff", "x": "a6c6d8"}]
 		"wood_wall": return ["wall", {}]
 		"stone_wall": return ["wall", {"n": "9aa2ad", "l": "c8ced6", "N": "5c616b"}]
 		"wooden_spikes": return ["spikes", {}]
@@ -637,11 +760,15 @@ func icon_spec(id: String) -> Array:
 		"weapon":
 			return ["long" if id.contains("long") or id == "excalibur" else "sword", mc]
 		"staff": return ["staff", mc]
-		"bow": return ["bow", {}]
+		"bow": return ["cannon", mc] if it.get("cannon", false) else ["bow", {}]
+		"ammo": return ["balls", mc] if id.begins_with("cc_") else ["missile", mc]
 		"axe": return ["axe", mc]
 		"pick": return ["pick", mc]
 		"armor": return ["armor", mc]
-		"helmet": return ["hat" if id.contains("hat") or id.contains("witch") or id.contains("hood") else "helmet", mc]
+		"helmet":
+			if id.ends_with("_mask") or id == "green_face" or id == "the_fly":
+				return ["mask", mc]
+			return ["hat" if id.contains("hat") or id.contains("witch") or id.contains("hood") else "helmet", mc]
 		"shield": return ["shield", mc]
 		"ring": return ["ring", {"X": mc.X, "x": "c99a2e"}]
 		"book":
@@ -665,6 +792,9 @@ func pet_look(id: String) -> String:
 func icon(id: String) -> Texture2D:
 	return cached("icon_" + id, func():
 		var it: Dictionary = Data.ITEMS.get(id, {})
+		if it.get("type", "") == "character":
+			var full: Image = _char_img(it.look, "stand", 1)
+			return to_tex(outline(full.get_region(Rect2i(0, 1, full.get_width(), 16))))
 		if it.get("type", "") == "pet":
 			var img: Image = mob_tex(pet_look(id), false).get_image()
 			var s := 12.0 / maxf(img.get_width(), img.get_height())

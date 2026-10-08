@@ -105,8 +105,8 @@ func _process(delta: float) -> void:
 func interact(_player: Node) -> void:
 	match kind:
 		"gate":
-			level.main.hud.toast("The gate is locked. Talk to the Furnace Warden.", "warn")
+			level.main.hud.toast("The gate is locked. Talk to the GateKeeper.", "warn")
 		"sign":
-			level.main.hud.open_info("Pixel Village", "West: Gruff and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Portal Keeper takes you to every world.\nEast: Mira, the shops, the Smith and the Miner. Up the hill: the furnaces.")
+			level.main.hud.open_info("Pixel Town", "West: Brutus and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
 		_:
 			level.main.hud.open_station(self)

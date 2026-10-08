@@ -40,14 +40,14 @@ func set_paused(on: bool) -> void:
 func input_blocked() -> bool:
 	return title_mode or hud.any_open()
 
-func start_game(from_save: bool) -> void:
+func start_game(from_save: bool, character: String = "man_in_suit") -> void:
 	if not (from_save and GS.load_game()):
-		GS.new_game()
+		GS.new_game(character)
 	title_mode = false
 	hud.close_panels()
 	change_level("town")
 	if not from_save:
-		hud.toast("Welcome to Pixel Village! Talk to the Portal Keeper to visit the Grasslands.", "big")
+		hud.toast("Welcome to Pixel Town! Talk to the Gatekeeper to visit the Grasslands.", "big")
 
 func quit_to_title() -> void:
 	GS.save_game()
@@ -104,7 +104,7 @@ func drop_from_player(id: String, n: int) -> void:
 	level.entities.add_child(pk)
 
 func player_died() -> void:
-	var text := "You'll wake up in Pixel Village with everything still in your bag."
+	var text := "You'll wake up in Pixel Town with everything still in your bag."
 	if level.kind == "survival":
 		var d: int = level.s_day
 		var key := ""
