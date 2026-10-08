@@ -26,6 +26,10 @@ var dead := false
 var body_sprite: Sprite2D
 var held_sprite: Sprite2D
 var light: PointLight2D
+var name_label: Label
+## Like the original: hold A and open the bag, and you keep attacking on your own
+## until you press A again or faint.
+var auto_attack := false
 
 func _ready() -> void:
 	collision_layer = 2
@@ -48,6 +52,17 @@ func _ready() -> void:
 	light.energy = 0.0
 	light.position = Vector2(0, -10)
 	add_child(light)
+	name_label = Label.new()
+	name_label.add_theme_font_override("font", Art.font_body)
+	name_label.add_theme_font_size_override("font_size", 6)
+	name_label.add_theme_color_override("font_color", Color("ff3a3a"))
+	name_label.add_theme_color_override("font_outline_color", Color("1b1a24"))
+	name_label.add_theme_constant_override("outline_size", 2)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.size = Vector2(80, 10)
+	name_label.position = Vector2(-40, -36)
+	name_label.text = GS.player_name
+	add_child(name_label)
 	GS.inventory_changed.connect(_update_held)
 	_update_held()
 
@@ -68,8 +83,9 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("jump") and is_on_floor():
 			velocity.y = JUMP
 		if Input.is_action_just_pressed("attack"):
+			auto_attack = false
 			use_held(true)
-		elif Input.is_action_pressed("attack") and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
+		elif (Input.is_action_pressed("attack") or auto_attack) and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
 			use_held(false)
 	if not is_on_floor():
 		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
@@ -343,6 +359,7 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 		_die()
 
 func _die() -> void:
+	auto_attack = false
 	GS.hp = 0
 	dead = true
 	body_sprite.rotation = PI / 2 * facing
@@ -350,3 +367,11 @@ func _die() -> void:
 
 func hit_rect() -> Rect2:
 	return Rect2(position.x - 5, position.y - 16, 10, 16)
+
+## The bomb button: faint on purpose to get back to Pixel Town (nothing is lost).
+func self_destruct() -> void:
+	if dead:
+		return
+	level.burst(position + Vector2(0, -8), Color("3e424a"), 16)
+	level.main.shake(3.0)
+	_die()

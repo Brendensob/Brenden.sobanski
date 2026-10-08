@@ -5,10 +5,10 @@ signal inventory_changed
 signal stats_changed
 signal message(text: String, kind: String)
 
-const SAVE_PATH := "user://save2.json"
-const VERSION := 2
+const VERSION := 3
+const SLOTS := 3 # character slots on the main menu, like the original
 const HOTBAR := 5
-const BAG := 30
+const BAG := 25 # 5 x 5, the top row is the hotbar
 const EQUIP_SLOTS := ["helmet", "armor", "shield", "ring_l", "ring_r", "pet"]
 const BASE := {"atk": 1, "def": 0, "mag": 0, "hp": 5, "mp": 2, "st": 4}
 const STATUS_TIME := 10.0
@@ -27,11 +27,15 @@ var furnaces: Array = []
 var incubator := {}
 var soils: Array = []
 var reward_chests := {} # world id -> unix day it was last opened
-var clock := 0.3 # 0..1; night is 0.75 to 0.25 of the next day via darkness()
+# Time of day from 0 to 1. Like the original (216 s a day): daytime for the first
+# 11 of 24 ticks, sunset for 4, night for 9, then straight back to morning.
+var clock := 0.0
 var day := 1
 var world := "town"
 var best_survival_day := 0
 var look := "man_in_suit" # which character you look like
+var player_name := "Player"
+var slot := 0 # which character slot is being played
 
 func _ready() -> void:
 	_setup_input()
@@ -60,8 +64,9 @@ func _setup_input() -> void:
 func now() -> float:
 	return Time.get_unix_time_from_system()
 
-func new_game(character: String = "man_in_suit") -> void:
+func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	look = character
+	player_name = pname if pname != "" else default_name()
 	inv.clear()
 	inv.resize(BAG)
 	equip = {}
@@ -78,7 +83,7 @@ func new_game(character: String = "man_in_suit") -> void:
 	soils = []
 	soils.resize(5)
 	reward_chests = {}
-	clock = 0.3
+	clock = 0.0
 	day = 1
 	world = "town"
 	add_item("sword_cast", 1, true)
@@ -166,6 +171,8 @@ func count(id: String) -> int:
 	return n
 
 func has_room(id: String) -> bool:
+	if id == "coin":
+		return true
 	for s in inv:
 		if s == null or (s.id == id and s.n < stack_size(id)):
 			return true
@@ -173,6 +180,10 @@ func has_room(id: String) -> bool:
 
 ## Adds items; returns how many did not fit.
 func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
+	if id == "coin":
+		coins += n
+		stats_changed.emit()
+		return 0
 	var m := stack_size(id)
 	for s in inv:
 		if n <= 0:
@@ -355,7 +366,7 @@ func start_smelt(f: int, recipe: Dictionary) -> String:
 	if not has_all(recipe.cost):
 		return "You need %s." % cost_text(recipe.cost)
 	take_all(recipe.cost)
-	furnaces[f] = {"out": recipe.out, "done": now() + recipe.time}
+	furnaces[f] = {"out": recipe.out, "done": now() + recipe.time, "main": recipe.main}
 	return ""
 
 func collect_smelt(f: int) -> bool:
@@ -437,7 +448,7 @@ func quest_ready(q: Dictionary) -> bool:
 	return has_all(q.need)
 
 func complete_quest(q: Dictionary) -> void:
-	take_all(q.need)
+	take_all(q.get("take", q.need)) # a couple of Miffie's quests check for 10 but take 5
 	for id in q.reward:
 		add_item(id, q.reward[id])
 	if q.has("coins"):
@@ -449,42 +460,64 @@ func complete_quest(q: Dictionary) -> void:
 	stats_changed.emit()
 
 # ---------------------------------------------------------------- time of day
+const SUNSET := 11.0 / 24.0
+const NIGHT := 15.0 / 24.0
+
 func darkness() -> float:
-	# day 0.25-0.7, dusk to 0.8, night to 0.15, dawn to 0.25
-	var c := clock
-	if c >= 0.25 and c < 0.7:
+	if clock < SUNSET:
 		return 0.0
-	if c >= 0.7 and c < 0.8:
-		return (c - 0.7) / 0.1
-	if c >= 0.15 and c < 0.25:
-		return 1.0 - (c - 0.15) / 0.1
+	if clock < NIGHT:
+		return (clock - SUNSET) / (NIGHT - SUNSET)
 	return 1.0
 
 func is_night() -> bool:
-	return clock >= 0.8 or clock < 0.15
+	return clock >= NIGHT
 
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
 		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
-		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look,
+		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name,
 	}
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data))
 
-func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+func slot_path(i: int) -> String:
+	return "user://slot%d.json" % i
 
-func load_game() -> bool:
-	if not has_save():
-		return false
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+func has_save() -> bool:
+	return FileAccess.file_exists(slot_path(slot))
+
+func _read_slot(i: int):
+	if not FileAccess.file_exists(slot_path(i)):
+		return null
+	var f := FileAccess.open(slot_path(i), FileAccess.READ)
 	if f == null:
-		return false
+		return null
 	var d = JSON.parse_string(f.get_as_text())
 	if typeof(d) != TYPE_DICTIONARY or int(d.get("v", 0)) != VERSION:
+		return null
+	return d
+
+## What the main menu shows for a slot: name, look and day, or empty if it's free.
+func slot_info(i: int) -> Dictionary:
+	var d = _read_slot(i)
+	if d == null:
+		return {}
+	return {"name": str(d.get("name", "Player")), "look": str(d.get("look", "man_in_suit")), "day": int(d.get("day", 1))}
+
+func delete_slot(i: int) -> void:
+	if FileAccess.file_exists(slot_path(i)):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_path(i)))
+
+func default_name() -> String:
+	return "Player_%d" % randi_range(100000000, 999999999)
+
+func load_game() -> bool:
+	var d = _read_slot(slot)
+	if d == null:
 		return false
 	new_game()
 	inv.clear()
@@ -509,10 +542,11 @@ func load_game() -> bool:
 	for i in mini(ss.size(), 5):
 		soils[i] = ss[i]
 	reward_chests = d.get("reward_chests", {})
-	clock = float(d.get("clock", 0.3))
+	clock = 0.0 # entering Pixel Town from the menu always starts at morning
 	day = int(d.get("day", 1))
 	best_survival_day = int(d.get("best_survival_day", 0))
 	look = str(d.get("look", "man_in_suit"))
+	player_name = str(d.get("name", "Player"))
 	if not Data.CHARACTERS.has(look):
 		look = "man_in_suit"
 	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())
@@ -538,3 +572,17 @@ func use_character(i: int) -> String:
 			msg += " Your bag was full, so the %s was lost." % Data.ITEMS[it.gives].name
 	inventory_changed.emit()
 	return msg
+
+## The Daily Free Gift button in Pixel Town: one free roll per real day.
+func gift_ready() -> bool:
+	return int(flags.get("gift_day", -1)) != today()
+
+func open_gift() -> Array:
+	if not gift_ready():
+		return []
+	flags["gift_day"] = today()
+	var got: Array = Data.pick_loot(Data.DAILY_GIFT)
+	if add_item(got[0], got[1], true) > 0:
+		message.emit("Your bag is full.", "warn")
+	inventory_changed.emit()
+	return got

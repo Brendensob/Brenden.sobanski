@@ -27,21 +27,23 @@ const HAIR := {
 		"...hhhhhh...",
 		"..hhhhhhhhh.",
 		".hhhhhhhhhhh",
-		".hhhhsssshh.",
-		".hhsssesses.",
-		".hhsssesseS.",
-		"..hssssssss.",
-		"...SSssssS..",
+		".hhhhsssshhh",
+		".hhhsbbsbbs.",
+		".hhssweswes.",
+		".hhssweswes.",
+		"..hsssssmmm.",
+		"...SSsssSS..",
 	],
 	"bald": [
 		"...ssssss...",
 		"..sssssssss.",
 		".sssssssssss",
-		".sssssssssS.",
-		".SssssesseS.",
-		".SssssesseS.",
-		"..Sssssssss.",
-		"...SSssssS..",
+		".ssssssssss.",
+		".Ssssbbsbbs.",
+		".Ssssweswes.",
+		".Ssssweswes.",
+		"..Sssssmmm..",
+		"...SSsssSS..",
 	],
 }
 const BODY := [
@@ -64,37 +66,37 @@ const LOOKS := {
 	"nurse": {"h": "a0663a", "H": "6e4426", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "f2efe6", "t": "f2efe6", "j": "f2efe6", "q": "f2c29a", "f": "f2efe6",
 		"over": [[3, 1, [".wwwww.", "wwwrwww", "wwrrrww", ".wwrww."]]]},
 	"cavemun": {"h": "6a4220", "H": "4a2e14", "s": "e2a070", "S": "b87a4e", "c": "ea8a33", "C": "8a4a1a", "v": "e2a070", "t": "ea8a33", "j": "ea8a33", "q": "e2a070", "f": "8a5a32",
-		"over": [[1, 2, ["..h..h..h...", ".hhhhhhhhhh."]], [10, 10, ["N"]], [10, 11, ["w"]]]},
+		"over": [[1, 2, ["..h..h..h...", ".hhhhhhhhhh."]]]},
 	"pirate": {"h": "1b1a24", "H": "1b1a24", "c": "f2efe6", "C": "d8433a", "v": "f2efe6", "t": "d8433a", "q": "2e3242", "f": "6e4426",
-		"over": [[1, 3, ["..rrrrrr....", ".rrRrrrrrr..", "rrrrrrrrrrr."]], [0, 6, ["rr"]], [0, 7, [".r"]], [3, 7, ["kkkkk"]], [8, 8, ["kk"]], [8, 9, ["kk"]]]},
+		"over": [[1, 3, ["..rrrrrr....", ".rrRrrrrrr..", "rrrrrrrrrrr."]], [0, 6, ["rr"]], [0, 7, [".r"]], [3, 8, ["kkkkkkk"]], [8, 9, ["kk"]], [8, 10, ["kk"]]]},
 	"the_spi": {"h": "1b1a24", "H": "3a3a48", "c": "1b1a24", "C": "2e3242", "v": "f2efe6", "t": "1b1a24", "q": "1b1a24", "f": "1b1a24",
-		"over": [[4, 8, ["kkkkkkk"]], [5, 9, ["kUk.kUk"]]]},
+		"over": [[4, 9, ["kkkkkkk", ".kk.kk."]]]},
 	"bad_man": {"h": "2a2a30", "H": "1b1a24", "s": "3a3a44", "S": "2a2a30", "c": "4a4a5a", "C": "2a2a30", "v": "4a4a5a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
-		"over": [[5, 8, ["wkwwkw"]], [5, 9, ["wkwwkw"]]]},
+		"over": [[4, 9, ["wwewwew", "wwewwew"]]]},
 	"school_girl": {"h": "1b1a24", "H": "2a2230", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "1b1a24"},
 	"soldier": {"h": "5a3a20", "H": "3a2614", "c": "6a8a4a", "C": "4a6a2a", "v": "6a8a4a", "t": "4a6a2a", "j": "3a2a22", "q": "4a6a2a", "f": "3a2a22",
 		"over": [[2, 2, ["..ZZZZZZ..", ".ZzZZZZZZZ.", "ZZZZZzZZZZZ", "ZZZZZZZZZZZ", "zzzzzzzzzzz"]]]},
 	"chuchu": {"h": "f08ac8", "H": "c05a98", "long": true, "c": "f06aa0", "C": "c84a80", "v": "f2efe6", "t": "f2efe6", "j": "f06aa0", "q": "f2c29a", "f": "f2efe6",
 		"over": [[1, 1, [".hh......hh.", "hhHh....hHhh", ".hh......hh."]]]},
 	"drone": {"h": "5c616b", "H": "3e424a", "s": "a8b0bc", "S": "7a8290", "e": "4fd0f0", "c": "7a8290", "C": "5c616b", "v": "a8b0bc", "t": "4fd0f0", "q": "5c616b", "f": "3e424a", "hair": "bald",
-		"over": [[6, 0, ["A", "a", "a"]], [4, 3, ["aaaaa"]], [5, 8, ["cCCCCc"]], [5, 9, ["cCCCCc"]], [6, 8, ["C"]]]},
+		"over": [[6, 0, ["A", "a", "a"]], [4, 3, ["aaaaa"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
 	"dark_knight": {"h": "3a2a5a", "H": "2a1e40", "s": "4a3a6a", "S": "2a1e40", "e": "d8433a", "c": "4a3a6a", "C": "2a1e40", "v": "7b4fb8", "t": "7b4fb8", "j": "2a1e40", "q": "2a1e40", "f": "1b1a24", "hair": "bald",
-		"over": [[3, 0, [".rr.", "rRr.", "rr..", "PPPPPPPP"]], [2, 7, ["PPPPPPPPPP"]], [5, 8, ["kekkek"]], [5, 9, ["kekkek"]]]},
+		"over": [[3, 0, [".rr.", "rRr.", "rr..", "PPPPPPPP"]], [2, 8, ["PPPPPPPPPP"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
 	# villagers
 	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
 		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
-	"gruff": {"h": "6a4a2a", "H": "4a3218", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "s": "d49a72", "j": "3a2a22",
-		"over": [[6, 10, ["HHHHH"]], [7, 11, ["HHH"]]]},
-	"mira": {"h": "f06aa0", "H": "c84a80", "long": true, "c": "f2efe6", "C": "d8d0c0", "t": "f06aa0", "j": "e06a9a", "q": "f2c29a", "f": "3a2a22",
-		"over": [[8, 3, ["yy", "y."]]]},
-	"warden": {"h": "2a2a2a", "H": "1b1a24", "s": "8fc07a", "S": "6a9a5a", "c": "4a4a5a", "C": "3a3a48", "q": "3a3a48", "f": "1b1a24"},
+	"gruff": {"h": "8a3a12", "H": "5a2208", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "s": "f2c07a", "j": "3a2a22", "long": true,
+		"over": [[0, 0, ["..hhhhhhhh..", ".hhhhhhhhhh.", "hhhhhhhhhhhh", "hhhhhhhhhhhh"]], [0, 8, ["hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [10, 7, ["hh"]]]},
+	"mira": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "f06aa0", "C": "c84a80", "t": "f2efe6", "j": "e06a9a", "q": "f2c07a", "f": "3a2a22"},
+	"warden": {"h": "1b1a24", "H": "1b1a24", "s": "2e9a52", "S": "1e7a3e", "b": "1b1a24", "c": "3a4a3a", "C": "2a3a2a", "q": "3a3a48", "f": "1b1a24", "hair": "bald",
+		"over": [[1, 2, ["..kkkkkkkk.", ".kkkkkkkkkk", "kkkkkkkkkkk"]], [4, 8, ["kkkkkkk"]]]},
 	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "s": "c88a5a", "v": "a07a55", "t": "a07a55"},
-	"merchant": {"h": "d8433a", "H": "a82a22", "c": "3b5dc9", "C": "2c4596", "q": "4a3a2a", "f": "2a2230", "t": "f2cf5b"},
-	"tools": {"h": "3b5dc9", "H": "2c4596", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
-		"over": [[6, 10, ["bbbb"]]]},
+	"merchant": {"h": "6a4220", "H": "4a2e14", "cap": "d8433a", "capH": "a82a22", "c": "3b5dc9", "C": "2c4596", "q": "4a3a2a", "f": "2a2230", "t": "f2cf5b"},
+	"tools": {"h": "4a2a1a", "H": "3a2010", "cap": "d8433a", "capH": "a82a22", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
+		"over": [[7, 11, ["kkkk"]]]},
 	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230"},
-	"jumpie": {"h": "a0663a", "H": "6e4426", "c": "5cbf3f", "C": "3e8a2e", "t": "f2cf5b", "q": "3b5dc9", "f": "d8433a",
-		"over": [[2, 0, ["...aAAa....", "....n......", "..ggggg....", ".gggggggg..", "gggGggggggg"]]]},
+	"jumpie": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "5cbf3f", "C": "3e8a2e", "t": "f2efe6", "j": "4f9a44", "q": "f2c07a", "f": "3a2a22",
+		"over": [[8, 3, ["rr", "r."]]]},
 	# monsters that are drawn as people
 	"zombie": {"h": "3a3a2a", "H": "2a2a1e", "s": "8fb07a", "S": "5e7a52", "c": "6e5a3e", "C": "4a3e2a", "q": "3e4a5a", "f": "2a2230", "e": "d8433a"},
 	"wizard": {"h": "3b5dc9", "H": "2c4596", "s": "e8c8a8", "S": "c8a888", "c": "3b5dc9", "C": "6b8ff0", "q": "3b5dc9", "f": "2c4596", "e": "f2cf5b"},
@@ -213,6 +215,9 @@ func _char_map(look: String, armor: String) -> Dictionary:
 		if d[k] is String:
 			map[k] = d[k]
 	if not map.has("e"): map.e = "1b1a24"
+	if not map.has("m"): map.m = "e8501e"
+	if not map.has("b"): map.b = "4a2a1a"
+	if not map.has("w"): map.w = "ffffff"
 	if not map.has("t"): map.t = map.get("c", "4a4a5a")
 	if not map.has("v"): map.v = map.get("c", "4a4a5a")
 	if not map.has("j"): map.j = map.get("q", "3a3a52")
@@ -246,8 +251,8 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 			for x in base.get_width():
 				if clean.get_pixel(x, y).a < 0.5:
 					base.set_pixel(x, y, Color(0, 0, 0, 0))
-		px(base, 6, 4, Color("d8433a"))
-		px(base, 9, 4, Color("d8433a"))
+		px(base, 6, 5, Color("d8433a"))
+		px(base, 9, 5, Color("d8433a"))
 	var img := blank(base.get_width(), base.get_height() + PAD)
 	img.blit_rect(base, Rect2i(0, 0, base.get_width(), base.get_height()), Vector2i(0, PAD))
 	_overlay(img, d.get("over", []), map)
@@ -262,8 +267,8 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 			rect(img, 2, 3, 9, 3, Color("f2cf5b"))
 			rect(img, 8, 4, 2, 2, Color("f2efe6"))
 		"merchant", "tools":
-			rect(img, 1, 3, 10, 3, col(map.h))
-			rect(img, 7, 5, 5, 1, col(map.H))
+			rect(img, 1, 3, 10, 3, col(map.get("cap", map.h)))
+			rect(img, 7, 5, 5, 1, col(map.get("capH", map.H)))
 		"warden":
 			rect(img, 2, 3, 9, 2, Color("2a2a2a"))
 			px(img, 1, 10, Color("a8a8b0"))
@@ -285,12 +290,12 @@ func _draw_helmet(img: Image, helmet: String) -> void:
 		"bear_head":
 			_overlay(img, [[1, 1, [".nn.....nn..", "nNNnnnnnNNn.", "nnnnnnnnnnnn", "nnnnnnnnnnnn", "nnn.......nn"]]], {"n": "8a5a32", "N": "c8a070"})
 		"green_face":
-			_overlay(img, [[2, 6, ["ggggggggg", "gggkggkgg", "gggkggkgg", "ggggggggg", ".gggGGgg."]]], {"g": "5cbf3f", "G": "2e7a2a"})
+			_overlay(img, [[3, 7, ["ggggggggg", "ggbbgbbgg", "ggwegwegg", "ggwegwegg", "gggggmmmg", ".gGGGGGg."]]], {"g": "5cbf3f", "G": "2e7a2a", "b": "1b1a24", "w": "ffffff", "e": "1b1a24", "m": "e8501e"})
 		"the_fly":
-			_overlay(img, [[2, 4, ["..kkkkkk...", ".kkkkkkkkk.", "kkcCkkkcCk.", "kkCCkkkCCk."]]], {"c": "a6e6f2", "C": "4fb6d0"})
+			_overlay(img, [[2, 6, ["..kkkkkk...", ".kkkkkkkkk.", "kkkcCkcCkk.", "kkkCCkCCkk."]]], {"c": "a6e6f2", "C": "4fb6d0"})
 		"wood_mask", "skull_mask":
 			var m: Dictionary = {"X": "a8703f", "x": "6e4426"} if helmet == "wood_mask" else {"X": "f2ecd8", "x": "a89878"}
-			_overlay(img, [[4, 6, [".XXXXXX", "XXkXXkX", "XXkXXkX", "XXXXXXX", ".XxxxX."]]], m)
+			_overlay(img, [[4, 8, [".XXXXXX", "XXkXXkX", "XXkXXkX", "XXXXXXX", ".XxxxX."]]], m)
 		"cool_hat", "roman_hat", "storm_hat":
 			var c3: Array = {"cool_hat": ["1b1a24", "3a3a48"], "roman_hat": ["f2cf5b", "d8433a"], "storm_hat": ["6b8ff0", "2c4596"]}[helmet]
 			_overlay(img, [[1, 2, ["...XXXXXX...", "..XXXXXXXX..", "..XxxxxxxX..", "XXXXXXXXXXXX"]]], {"X": c3[0], "x": c3[1]})
@@ -744,6 +749,7 @@ func icon_spec(id: String) -> Array:
 		"campfire": return ["fire", {}]
 		"torch": return ["torch_i", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
+		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
 		"combination_scroll": return ["scroll", {"X": "a77ee0"}]
 	if id.ends_with("_ore") or id == "erbium":
 		return ["ore", {"X": mc.X}]
@@ -803,6 +809,13 @@ func icon(id: String) -> Texture2D:
 			return to_tex(img)
 		var spec := icon_spec(id)
 		return to_tex(outline(grid_image(ICON_GRIDS[spec[0]], spec[1]))))
+
+## The same icon at double size, for the big bag and hotbar slots.
+func icon_big(id: String) -> Texture2D:
+	return cached("iconbig_" + id, func():
+		var img: Image = icon(id).get_image()
+		img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
+		return to_tex(img))
 
 # ---------------------------------------------------------------- world themes
 const THEMES := {
@@ -929,35 +942,46 @@ func prop_tex(kind: String, state: String = "") -> Texture2D:
 		var img: Image = null
 		match kind:
 			"furnace":
-				img = blank(22, 26)
-				rect(img, 1, 4, 20, 22, Color("7a7f88"))
-				for y in range(5, 26, 4):
-					rect(img, 1, y, 20, 1, Color("5c616b"))
-				rect(img, 6, 0, 10, 5, Color("5c616b"))
-				rect(img, 6, 13, 10, 8, Color("1b1a24"))
-				if state == "busy" or state == "done":
-					rect(img, 7, 16, 8, 5, Color("ea8a33"))
-					rect(img, 9, 14, 4, 3, Color("f2cf5b"))
-				if state == "done":
-					rect(img, 8, 1, 6, 3, Color("5cbf3f"))
+				# a dark iron stove on short legs; the window glows while smelting
+				img = blank(16, 24)
+				rect(img, 3, 0, 10, 2, Color("3e4a62"))
+				rect(img, 1, 2, 14, 17, Color("2a3348"))
+				rect(img, 2, 2, 12, 2, Color("4a5a78"))
+				rect(img, 1, 18, 14, 2, Color("1e2436"))
+				var lit: bool = state == "busy" or state == "done"
+				rect(img, 3, 7, 10, 7, Color("e2501e") if lit else Color("0e0e16"))
+				rect(img, 4, 8, 8, 5, Color("ff8a2a") if lit else Color("1b1a24"))
+				if lit:
+					rect(img, 5, 9, 6, 2, Color("ffc04a"))
+				rect(img, 3, 14, 10, 1, Color("1e2436"))
+				rect(img, 2, 20, 3, 4, Color("1e2436"))
+				rect(img, 11, 20, 3, 4, Color("1e2436"))
 			"chest":
-				img = blank(20, 16)
-				var c: Color = {"silver": Color("c8ced6"), "golden": Color("f2cf5b"), "master": Color("d8433a"), "reward": Color("a8703f")}.get(state, Color("a8703f"))
-				rect(img, 0, 4, 20, 12, Color("8a5a32"))
-				rect(img, 0, 0, 20, 6, Color("a8703f"))
-				rect(img, 0, 5, 20, 2, c)
-				rect(img, 0, 0, 2, 16, c)
-				rect(img, 18, 0, 2, 16, c)
-				rect(img, 8, 6, 4, 4, c)
-				px(img, 9, 8, OUTLINE)
+				# keg-shaped chests like the original: wooden slats with coloured bands
+				img = blank(20, 15)
+				var band: Color = {"silver": Color("e3ebf5"), "golden": Color("f2cf5b"), "master": Color("c8a0e8"), "reward": Color("c8ced6")}.get(state, Color("c8ced6"))
+				var wood: Color = Color("7b4fb8") if state == "master" else Color("b8642a")
+				rect(img, 1, 1, 18, 13, wood)
+				for x in range(3, 18, 3):
+					rect(img, x, 1, 1, 13, wood.darkened(0.3))
+				rect(img, 1, 1, 18, 2, wood.lightened(0.2))
+				rect(img, 0, 0, 3, 15, band)
+				rect(img, 17, 0, 3, 15, band)
+				rect(img, 1, 0, 1, 15, band.darkened(0.25))
+				rect(img, 18, 0, 1, 15, band.darkened(0.25))
+				rect(img, 8, 9, 4, 4, band)
+				px(img, 9, 10, OUTLINE)
+				px(img, 10, 10, OUTLINE)
 			"incubator":
-				img = blank(18, 22)
-				ellipse(img, 9, 8, 8, 8, Color(0.7, 0.9, 1.0, 0.85))
-				rect(img, 2, 14, 14, 8, Color("7a7f88"))
-				rect(img, 2, 14, 14, 2, Color("a8a8b0"))
+				# a blue capsule with a dark window
+				img = blank(16, 22)
+				ellipse(img, 8, 11, 8, 11, Color("2c4596"))
+				ellipse(img, 8, 11, 6, 9, Color("3b5dc9"))
+				ellipse(img, 8, 10, 4, 6, Color("0e1a3a"))
+				rect(img, 3, 19, 10, 3, Color("1e2a6a"))
 				if state != "":
-					ellipse(img, 9, 9, 3.5, 4.5, Color("f2efe6"))
-					px(img, 8, 8, Color("5cbf3f"))
+					ellipse(img, 8, 11, 2.5, 3.5, Color("f2efe6"))
+					px(img, 7, 10, Color("5cbf3f"))
 			"soil":
 				img = blank(18, 8)
 				rect(img, 0, 2, 18, 6, Color("5a3a1a"))
@@ -983,6 +1007,25 @@ func prop_tex(kind: String, state: String = "") -> Texture2D:
 			"torch": img = grid_image(ICON_GRIDS.torch_i)
 			"coin": img = grid_image([".yyy.", "yYyyy", "yyYyy", "yyyYy", ".yyy."])
 			"heart": img = grid_image([".rr.rr.", "rRrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."])
+			"board":
+				# a signboard showing what's next to it (state = item id)
+				img = blank(14, 18)
+				rect(img, 6, 13, 2, 5, Color("4a2e14"))
+				rect(img, 0, 0, 14, 14, Color("4a2e14"))
+				rect(img, 1, 1, 12, 12, Color("8a4a1e"))
+				if state != "" and Data.ITEMS.has(state):
+					var ic: Image = icon(state).get_image()
+					img.blend_rect(ic, Rect2i(0, 0, ic.get_width(), ic.get_height()), Vector2i(7 - ic.get_width() / 2, 7 - ic.get_height() / 2))
+			"bubble":
+				# a speech bubble with an item in it (state = item id)
+				img = blank(16, 17)
+				rect(img, 1, 0, 14, 14, Color("f2efe6"))
+				rect(img, 0, 1, 16, 12, Color("f2efe6"))
+				rect(img, 5, 14, 3, 2, Color("f2efe6"))
+				px(img, 5, 16, Color("f2efe6"))
+				if state != "" and Data.ITEMS.has(state):
+					var ib: Image = icon(state).get_image()
+					img.blend_rect(ib, Rect2i(0, 0, ib.get_width(), ib.get_height()), Vector2i(8 - ib.get_width() / 2, 7 - ib.get_height() / 2))
 			"sign":
 				img = blank(16, 16)
 				rect(img, 7, 6, 2, 10, Color("6e4426"))
@@ -1067,4 +1110,68 @@ func button_tex(w: int, h: int, c: Color) -> Texture2D:
 		rect(img, 2, 2, w - 4, h - 4, c)
 		rect(img, 2, h - 5, w - 4, 3, c.darkened(0.3))
 		rect(img, 3, 3, w - 6, 2, c.lightened(0.25))
+		return to_tex(img))
+
+# ---------------------------------------------------------------- interface
+const UI_GRIDS := {
+	"backpack": ["...nnn....", "..n...n...", ".NNNNNNN..", "NnnnnnnnN.", "NnNNNNNnN.", "NnnyynnnN.", "NnnyynnnN.", "NnnnnnnnN.", ".NNNNNNN.."],
+	"compass": ["..YYYY..", ".YwwwwY.", "YwwrwwwY", "YwwrwwwY", "YwwkwwwY", "YwwkwwwY", ".YwwwwY.", "..YYYY.."],
+	"bomb": ["......yo", ".....n..", "...DDn..", ".DDDDDD.", "DDwwDDDD", "DwDwDDDD", "DDwwDDDD", "DDDDDDDD", ".DDDDDD.", "..DDDD.."],
+	"hammer": [".aaaa.....", "aAAAAa....", "aAAAAan...", ".aaaa.nl..", "......nl..", ".......nl.", "........nl"],
+	"trash": ["...kk...", "kkkkkkkk", ".kkkkkk.", ".kOkOkk.", ".kOkOkk.", ".kOkOkk.", ".kkkkkk."],
+	"close": ["kk....kk", ".kk..kk.", "..kkkk..", "...kk...", "..kkkk..", ".kk..kk.", "kk....kk"],
+	"plus": ["..g..", "..g..", "ggggg", "..g..", "..g.."],
+}
+
+## Small interface icons (backpack, compass, bomb, hammer, trash, close).
+func ui_icon(name: String, scale: int = 1) -> Texture2D:
+	return cached("ui_%s_%d" % [name, scale], func():
+		var map := {"N": "6a3a4a", "n": "9a5a6a", "Y": "c99a2e", "O": "e8862a", "k": "5a2a10", "g": "f2cf5b"}
+		var img := grid_image(UI_GRIDS[name], map, scale)
+		if name in ["trash", "close", "plus"]:
+			return to_tex(img)
+		return to_tex(outline(img)))
+
+## Faded placeholder for an empty equipment slot.
+func equip_ghost(slot: String) -> Texture2D:
+	return cached("ghost_" + slot, func():
+		var g: String = {"helmet": "helmet", "armor": "armor", "shield": "shield", "ring_l": "ring", "ring_r": "ring", "pet": "egg"}.get(slot, "ring")
+		var img := grid_image(ICON_GRIDS[g], {"X": "e8a050", "x": "d8903e", "w": "f0b868", "k": "d8903e"}, 2)
+		return to_tex(img))
+
+## Nine-slice frames for the orange interface. kind: frame, cell, button, button_down, green, tab
+func ui_frame(kind: String) -> Texture2D:
+	return cached("frame_" + kind, func():
+		var img := blank(12, 12)
+		var dark := Color("4a1e08")
+		match kind:
+			"frame":
+				rect(img, 0, 0, 12, 12, dark)
+				rect(img, 1, 1, 10, 10, Color("e8862a"))
+				rect(img, 1, 1, 10, 1, Color("f8b050"))
+				rect(img, 3, 3, 6, 6, Color("a8501a"))
+				rect(img, 4, 4, 4, 4, Color("f9c98a"))
+			"cell":
+				rect(img, 0, 0, 12, 12, Color("c8803e"))
+				rect(img, 1, 1, 10, 10, Color("f6b882"))
+			"button", "button_down", "tab":
+				var fill := Color("e8862a") if kind != "button_down" else Color("c86a1a")
+				rect(img, 0, 0, 12, 12, dark)
+				rect(img, 1, 1, 10, 10, fill)
+				rect(img, 1, 1, 10, 2, fill.lightened(0.25))
+				rect(img, 1, 9, 10, 2, fill.darkened(0.25))
+				if kind == "tab":
+					rect(img, 3, 3, 6, 6, Color("a8501a"))
+			"green":
+				rect(img, 0, 0, 12, 12, Color("0e3a0e"))
+				rect(img, 1, 1, 10, 10, Color("2e9a1e"))
+				rect(img, 1, 1, 10, 2, Color("5cc83a"))
+				rect(img, 1, 9, 10, 2, Color("1e6a12"))
+			"slot":
+				rect(img, 0, 0, 12, 12, Color("7a4a26"))
+				rect(img, 1, 1, 10, 10, Color("f6b882"))
+			"slot_sel":
+				rect(img, 0, 0, 12, 12, Color("1e8a12"))
+				rect(img, 1, 1, 10, 10, Color("4fd040"))
+				rect(img, 2, 2, 8, 8, Color("f6b882"))
 		return to_tex(img))

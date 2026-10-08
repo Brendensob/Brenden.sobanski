@@ -99,10 +99,28 @@ func run() -> void:
 	await wait(1.0)
 	await shot("01_title")
 	check_data()
+	for i in GS.SLOTS:
+		GS.delete_slot(i)
+	main.hud.menu_step = "slots"
+	main.hud._refresh_title()
+	await shot("01a_slots")
+	GS.slot = 0
 	main.hud._refresh_title(true)
-	await shot("01b_pick_character")
-	main.start_game(false, "nurse")
-	check(GS.look == "nurse", "a new game can start as the Nurse")
+	await shot("01b_create_character")
+	main.hud.menu_step = "mode"
+	main.hud._refresh_title()
+	await shot("01c_mode")
+	main.start_game(false, "nurse", "Tester")
+	check(GS.look == "nurse" and GS.player_name == "Tester", "a new game starts as the Nurse named Tester")
+	check(GS.slot_info(0).get("name", "") == "Tester", "the character is saved in slot 1")
+	check(GS.clock == 0.0 and not GS.is_night(), "a new game starts in the morning")
+	GS.clock = 0.5
+	check(GS.darkness() > 0.0 and not GS.is_night(), "sunset starts after 11 of 24 hours")
+	GS.clock = 0.7
+	check(GS.is_night(), "night starts after 15 of 24 hours")
+	GS.clock = 0.0
+	var g1 := GS.open_gift()
+	check(not g1.is_empty() and GS.open_gift().is_empty(), "the Daily Free Gift opens once a day")
 	await wait(0.8)
 	await shot("02_village")
 	# talk to the Gatekeeper
@@ -206,6 +224,8 @@ func run() -> void:
 	# combine wood + rock into a wall
 	GS.add_item("wood", 3)
 	GS.add_item("rock", 3)
+	main.hud.bag_mode = "bag"
+	main.hud.bag_tab = "combine"
 	main.hud.open_panel("bag")
 	var wi := -1
 	var ri := -1
@@ -219,7 +239,26 @@ func run() -> void:
 	var before := GS.count("wood_wall") + GS.count("dust")
 	main.hud._do_combine()
 	check(GS.count("wood_wall") + GS.count("dust") == before + 1, "combining gives a wall or dust")
+	main.hud.bag_tab = "character"
+	main.hud._refresh_bag()
+	await shot("09b_bag_character")
 	main.hud.close_panels()
+	# hold A and open the bag: auto-attack, like the original
+	Input.action_press("attack")
+	main.hud.toggle_bag()
+	Input.action_release("attack")
+	check(main.level.player.auto_attack, "holding A while opening the bag turns on auto-attack")
+	main.hud.close_panels()
+	await tap("attack")
+	check(not main.level.player.auto_attack, "pressing A stops auto-attack")
+	# the bomb button sends you home
+	main.level.player.invuln = 0.0
+	main.level.player.self_destruct()
+	await wait(1.4)
+	check(main.hud.panels.dead.visible, "the bomb makes you faint")
+	main.respawn()
+	await wait(0.4)
+	await shot("09c_town")
 	# quests in the village
 	await goto("town")
 	GS.add_item("wood_wall", 1)
@@ -230,6 +269,13 @@ func run() -> void:
 	main.reload_level()
 	await wait(0.3)
 	check(GS.flags.get("furnaces", false), "the Pretzel unlocks the furnaces")
+	# Miffie's 3rd quest asks for 10 Copper Bars but only takes 5
+	for q in ["mira_1", "mira_2"]:
+		GS.quests_done.append(q)
+	GS.add_item("copper_bar", 10)
+	GS.complete_quest(GS.next_quest("mira"))
+	check(GS.count("copper_bar") == 5 and GS.count("gilded_blade") >= 1, "Miffie checks for 10 Copper Bars and takes 5")
+	GS.remove_item("copper_bar", 5)
 	# smelt copper, then smith a copper axe
 	GS.add_item("copper_ore", 100)
 	GS.add_item("coal", 20)
@@ -246,7 +292,9 @@ func run() -> void:
 	check(GS.count("copper_bar") == 1, "collecting a copper bar")
 	GS.add_item("copper_bar", 19)
 	main.hud.open_smith()
-	await shot("11_smith")
+	main.hud.craft_sel = 0
+	main.hud._refresh_bag()
+	await shot("11_crafter")
 	main.hud.close_panels()
 	var r: Dictionary = Data.SMITH[0]
 	check(GS.smith(r) and GS.count("copper_axe") == 1, "the Crafter makes a Copper Axe")

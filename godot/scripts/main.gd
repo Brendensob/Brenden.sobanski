@@ -40,17 +40,20 @@ func set_paused(on: bool) -> void:
 func input_blocked() -> bool:
 	return title_mode or hud.any_open()
 
-func start_game(from_save: bool, character: String = "man_in_suit") -> void:
+## Starts the character in GS.slot: loads it, or creates it with a look and name.
+func start_game(from_save: bool, character: String = "man_in_suit", pname: String = "") -> void:
 	if not (from_save and GS.load_game()):
-		GS.new_game(character)
+		GS.new_game(character, pname)
 	title_mode = false
 	hud.close_panels()
 	change_level("town")
+	hud.menu_step = "title"
 	if not from_save:
 		hud.toast("Welcome to Pixel Town! Talk to the Gatekeeper to visit the Grasslands.", "big")
 
 func quit_to_title() -> void:
 	GS.save_game()
+	hud.menu_step = "slots"
 	title_mode = true
 	hud.set_boss(null)
 	_load_level("grass_1", true)

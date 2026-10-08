@@ -187,6 +187,7 @@ func _items_gear() -> void:
 	_gear("wooden_helmet", "Wooden Helmet", "helmet", [0, 1, 0, 0, 0, 0], 10)
 	_gear("copper_helmet", "Copper Helmet", "helmet", [0, 3, 0, 2, 0, 0], 40)
 	_gear("brass_helmet", "Brass Helmet", "helmet", [0, 4, 0, 4, 0, 0], 80)
+	_gear("alien_hat", "Alien Hat", "helmet", [0, 1, 0, 3, 7, 0], 200, "Miffie's reward for 99 Jellies.")
 	_gear("pumpkin_hat", "Pumppump Hat", "helmet", [0, 4, 0, 4, 4, 4], 150)
 	# character hats, made by the Crafter from characters
 	_gear("bear_head", "Bear Head", "helmet", [4, 4, 0, 5, 0, 5], 200)
@@ -273,6 +274,7 @@ func _items_misc() -> void:
 	_item("silver_key", "Silver Key", "key", 0, "Opens a Silver Chest in Pixel Town.")
 	_item("golden_key", "Golden Key", "key", 0, "Opens a Golden Chest in Pixel Town.")
 	_item("master_key", "Master Key", "key", 0, "Opens the Master Chest in Pixel Town.")
+	_item("coin", "Pixel Coin", "coin", 0, "Money for the shops in Pixel Town.")
 	_item("survival_token", "Survival Token", "token", 0, "Earned by surviving nights in Survival Grasslands. Trade them with the Miner.")
 	_item("green_seeds", "Magic Seeds (Green)", "seed", 20, "Plant in the soil behind the rock wall. Grows in 6 minutes.", {"grow": 360})
 	_item("red_seeds", "Magic Seeds (Red)", "seed", 60, "Plant in the soil behind the rock wall. Grows in 1 hour.", {"grow": 3600})
@@ -717,6 +719,7 @@ var NPCS := {
 	"tools": {"name": "Plumber", "look": "tools", "talk": "Lost your tools? I've got spares."},
 	"miner": {"name": "Miner", "look": "miner", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
 	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
+	"warden_hell": {"name": "GateKeeper", "look": "warden", "talk": "Em Stones, for those who helped me."},
 }
 
 # Quests are done in order per villager.
@@ -725,30 +728,39 @@ var QUESTS := [
 		"text": "Make a Wood Wall (Wood + Rock in the combination slots) and give it to me. You'll get the Survival Book and access to Survival Grasslands."},
 	{"id": "warden_1", "npc": "warden", "need": {"pretzel": 1}, "reward": {}, "unlock": "furnaces",
 		"text": "Bring me a Pretzel (Honey Bug + Herb, from Combo Book I) and I'll open the gate to the furnaces."},
+	# Miffie's questline in the original's order. Gems don't exist here, so quests
+	# that gave gems give that many Silver Keys instead.
 	{"id": "mira_1", "npc": "mira", "need": {"jelly": 10}, "reward": {"combo_book_1": 1}, "text": "Could you bring me 10 Jellies? Slimes in the Grasslands drop them."},
 	{"id": "mira_2", "npc": "mira", "need": {"jelly": 50}, "reward": {"combo_book_2": 1}, "text": "More jelly! 50 this time."},
-	{"id": "mira_3", "npc": "mira", "need": {"copper_bar": 5}, "reward": {"gilded_blade": 1}, "text": "Bring me 5 Copper Bars from the furnace."},
-	{"id": "mira_4", "npc": "mira", "need": {"iron_bar": 5}, "reward": {"azure_blade": 1}, "text": "Now 5 Iron Bars, please."},
-	{"id": "mira_5", "npc": "mira", "need": {"nail": 50}, "reward": {"silver_key": 2}, "text": "I need 50 Nails."},
-	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"silver_key": 2, "combination_scroll": 1}, "text": "Could I have a Golden Night?"},
-	{"id": "mira_7", "npc": "mira", "need": {"catalyst": 10}, "reward": {"golden_key": 1}, "text": "10 Catalysts, please."},
+	{"id": "mira_3", "npc": "mira", "need": {"copper_bar": 10}, "take": {"copper_bar": 5}, "reward": {"gilded_blade": 1}, "text": "Bring me 10 Copper Bars from the furnace."},
+	{"id": "mira_4", "npc": "mira", "need": {"iron_bar": 10}, "take": {"iron_bar": 5}, "reward": {"azure_blade": 1}, "text": "Now 10 Iron Bars, please."},
+	{"id": "mira_5", "npc": "mira", "need": {"nail": 50}, "reward": {"silver_key": 1}, "text": "I need 50 Nails."},
+	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"silver_key": 1}, "text": "Could I have a Golden Night?"},
+	{"id": "mira_7", "npc": "mira", "need": {"catalyst": 10}, "reward": {"silver_key": 1}, "text": "10 Catalysts, please."},
 	{"id": "mira_8", "npc": "mira", "need": {"crystal": 10}, "reward": {"brass_helmet": 1}, "text": "Bring me 10 Crystals."},
 	{"id": "mira_9", "npc": "mira", "need": {"scarab": 99}, "reward": {"pirate": 1}, "text": "99 Scarabs. I know, I know."},
 	{"id": "mira_10", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"bad_man": 1}, "text": "99 Stink Bugs. Hold your nose."},
 	{"id": "mira_11", "npc": "mira", "need": {"honey_bug": 99}, "reward": {"pirate": 1}, "text": "99 Honey Bugs."},
 	{"id": "mira_12", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"soldier": 1}, "text": "99 Fire Bugs."},
-	{"id": "mira_13", "npc": "mira", "need": {"gold_shield": 1}, "reward": {"master_key": 1}, "text": "I'd love a Gold Shield."},
-	{"id": "mira_14", "npc": "mira", "need": {"dust": 999}, "reward": {"master_key": 2}, "text": "Dust! I need 999 Dust."},
+	{"id": "mira_13", "npc": "mira", "need": {"gold_shield": 1}, "reward": {"silver_key": 1}, "text": "I'd love a Gold Shield."},
+	{"id": "mira_14", "npc": "mira", "need": {"dust": 1000}, "reward": {"silver_key": 5}, "text": "Dust! I need 1000 Dust."},
 	{"id": "mira_15", "npc": "mira", "need": {"silver_bar": 25}, "reward": {"master_key": 1}, "text": "25 Silver Bars."},
-	{"id": "mira_16", "npc": "mira", "need": {"jelly": 99}, "reward": {"pumpkin_hat": 1}, "text": "99 Jellies, for old times' sake."},
-	{"id": "mira_17", "npc": "mira", "need": {"living_flame": 10}, "reward": {"pink_egg": 1, "red_egg": 1}, "text": "10 Firas from the furnace."},
-	{"id": "mira_18", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"combo_book_3": 1}, "text": "99 more Fire Bugs and you'll get Combo Book III."},
-	{"id": "mira_19", "npc": "mira", "need": {"gold_bar": 50}, "reward": {"master_key": 3}, "text": "50 Gold Bars."},
-	{"id": "mira_20", "npc": "mira", "need": {"erbium_bar": 50}, "reward": {"master_key": 3, "combo_book_4": 1}, "text": "50 Erbium Bars."},
-	{"id": "mira_21", "npc": "mira", "need": {"dark_bar": 50}, "reward": {"master_key": 3}, "text": "50 Dark Bars."},
-	{"id": "mira_22", "npc": "mira", "need": {"light_bar": 50}, "reward": {"master_key": 3}, "text": "50 Light Bars."},
+	{"id": "mira_16", "npc": "mira", "need": {"jelly": 99}, "reward": {"alien_hat": 1}, "text": "99 Jellies, for old times' sake."},
+	{"id": "mira_17", "npc": "mira", "need": {"living_flame": 10}, "reward": {"purple_egg": 1}, "text": "10 Firas from the furnace."},
+	{"id": "mira_18", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"silver_key": 2}, "text": "99 Stink Bugs again."},
+	{"id": "mira_19", "npc": "mira", "need": {"scarab": 99}, "reward": {"silver_key": 3}, "text": "99 Scarabs again."},
+	{"id": "mira_20", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"combo_book_3": 1}, "text": "99 more Fire Bugs and you'll get Combo Book III."},
+	{"id": "mira_21", "npc": "mira", "need": {"dust": 1000}, "reward": {"master_key": 3}, "text": "1000 Dust, one more time."},
+	{"id": "mira_22", "npc": "mira", "need": {"gold_bar": 50}, "reward": {"master_key": 3}, "text": "50 Gold Bars."},
+	{"id": "mira_23", "npc": "mira", "need": {"erbium_bar": 50}, "reward": {"master_key": 3}, "text": "50 Erbium Bars."},
+	{"id": "mira_24", "npc": "mira", "need": {"dark_bar": 50}, "reward": {"master_key": 3}, "text": "50 Dark Bars."},
+	{"id": "mira_25", "npc": "mira", "need": {"light_bar": 50}, "reward": {"master_key": 3}, "text": "50 Light Bars."},
+	{"id": "mira_26", "npc": "mira", "need": {"hell_bar": 50}, "reward": {"master_key": 3}, "text": "50 Hell Bars."},
+	{"id": "mira_27", "npc": "mira", "need": {"evil_bar": 50}, "reward": {"master_key": 3}, "text": "50 Evil Bars."},
 	{"id": "jumpie_1", "npc": "jumpie", "need": {"jelly": 10}, "reward": {}, "coins": 1, "text": "Could you bring me 10 Jellies? I'll give you a Pixel Coin!"},
-	{"id": "mira_23", "npc": "mira", "need": {"hell_bar": 50}, "reward": {"master_key": 3, "combo_book_5": 1}, "text": "50 Hell Bars."},
+	# the GateKeeper turns up again in Hell 2, missing his mask
+	{"id": "mask_1", "npc": "warden_hell", "need": {"green_face": 1}, "reward": {"silver_key": 1}, "unlock": "em_shop",
+		"text": "I lost my mask somewhere down here... Bring me a Green Face and I'll sell you Em Stones."},
 ]
 
 # Shops: what each villager sells, and for how many coins (or tokens).
@@ -756,6 +768,7 @@ var SHOPS := {
 	"merchant": {"title": "Merchant", "sells": [["combo_book_2", 1500], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["green_egg", 10000]], "buys": true},
 	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250]], "buys": true},
 	"gruff": {"title": "Brutus' Shop", "sells": [["wood", 5], ["rock", 5], ["branch", 5]], "buys": false},
+	"warden_hell": {"title": "GateKeeper", "needs": "em_shop", "sells": [["em_stone", 92500]], "buys": false},
 	"miner": {"title": "Miner (Survival Tokens)", "currency": "survival_token", "sells": [["green_seeds", 15], ["red_seeds", 45], ["silver_key", 10], ["golden_key", 35], ["master_key", 100]], "buys": false},
 }
 
@@ -801,11 +814,20 @@ var CHESTS := {
 }
 var REWARD_CHEST := "silver" # chests found inside worlds use the silver loot table
 
+# What magic seeds grow into (the wiki's lists, without gems).
 var SEED_LOOT := {
-	"green_seeds": [["green_seeds", 1, 2], ["big_potion", 1, 1], ["big_rejuvenate_potion", 1, 1], ["silver_key", 1, 1], ["golden_key", 1, 1, 0.3], ["survival_token", 1, 3], ["silver_ore", 3, 6]],
-	"red_seeds": [["red_seeds", 1, 1], ["green_seeds", 1, 3], ["golden_key", 1, 1], ["silver_key", 1, 2], ["gold_ore", 3, 6], ["erbium", 1, 3], ["master_key", 1, 1, 0.2]],
+	"green_seeds": [["green_seeds", 1, 2], ["big_potion", 1, 1], ["big_rejuvenate_potion", 1, 1], ["silver_key", 1, 1], ["golden_key", 1, 1, 0.3],
+		["coin", 200, 800], ["survival_token", 1, 3], ["silver_ore", 3, 6]],
+	"red_seeds": [["green_seeds", 1, 3], ["red_seeds", 1, 1], ["silver_key", 1, 2], ["golden_key", 1, 1], ["master_key", 1, 1, 0.2], ["armor_bug", 1, 2],
+		["power_bug", 1, 2], ["hero_bug", 1, 1, 0.3], ["small_evil_crystal", 1, 2], ["evil_crystal", 1, 1, 0.3], ["purple_egg", 1, 1, 0.3],
+		["queen_egg", 1, 1, 0.1], ["gold_bar", 1, 3], ["erbium_bar", 1, 2], ["survival_token", 2, 5]],
 	"golden_seeds": [["golden_seeds", 1, 1, 0.3], ["red_seeds", 1, 2], ["master_key", 1, 1], ["golden_key", 1, 2], ["erbium", 3, 6], ["volcanic_ore", 1, 1, 0.3]],
 }
+
+# The Daily Free Gift in Pixel Town (one roll a day): seeds, keys, potions and characters.
+var DAILY_GIFT := [["green_seeds", 1, 1, 2], ["red_seeds", 1, 1, 0.5], ["silver_key", 1, 1, 1.5], ["golden_key", 1, 1, 0.4],
+	["small_potion", 3, 5, 2], ["potion", 2, 3, 1], ["combination_scroll", 1, 1, 0.5], ["coin", 100, 500, 2],
+	["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["pirate", 1, 1, 0.2], ["soldier", 1, 1, 0.2]]
 
 func pick_loot(table: Array) -> Array:
 	# entries: [item, min, max, weight=1]

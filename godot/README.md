@@ -17,13 +17,34 @@ with all art redrawn in code, and nothing for sale.
 | Move | A / D or arrow keys | ◀ ▶ buttons |
 | Jump (B) | K, Space, W or Up | B button |
 | Use what you hold (A) | J, X or Enter | A button |
-| Bag and combining | E | Bag button |
+| Bag and combining | E | Backpack (top right) |
 | Pick hotbar slot | 1 to 5 | Tap the slot |
-| Pause | Esc | II button |
+| Menu (save and leave) | Esc | Compass (right side) |
+| Go back to town | | Bomb (right side, outside town) |
 
 A does whatever fits what you're holding: swing a weapon or tool, cast with a staff,
 shoot a bow, eat or drink, place a wall or campfire, or read a book. Standing next to
 a villager, portal, chest or furnace, A talks or uses it. Hold A to keep attacking.
+Like the original, holding A while you open the bag turns on auto-attack until you press A again.
+
+## Menus and screen, laid out like the original
+
+- **Main menu:** Play, then three character slots (each shows the character, name and day,
+  with Play and Delete). An empty slot creates a character: pick the Man in Suit or the
+  Nurse and type a name (it starts as Player_ and nine numbers). Then Single Player or
+  Multiplayer (online play isn't built yet).
+- **Screen:** five peach hotbar slots top left (green border on the one you hold), the red,
+  blue and green bars under them, the turning sky clock top centre with the day and your
+  coins, the backpack, compass and bomb down the right side, grey ◀ ▶ bottom left and the
+  red A above the green B bottom right. Your name shows in red above your head. Pickups
+  show as "Wood obtained" under the clock. In town there's a Daily Free Gift button.
+- **Bag:** the equipment column on the left with the trash and close buttons under it,
+  the 5 x 5 bag (top row is the hotbar), the item box under it, and three tabs on the
+  right: your character and stats, combining (big result slot, scroll slot, slots I, II,
+  III and Combine), and the menu. Tapping items fills the green combination slot.
+- **Crafter:** the same layout with weapon, helmet, armor, shield and ring tabs.
+- **Day and night:** 216 seconds a day: 99 s of daytime, 45 s of sunset, 72 s of night, then
+  straight back to morning. Coming into Pixel Town from the menu always starts in the morning.
 
 ## What's in it
 
@@ -37,14 +58,20 @@ a villager, portal, chest or furnace, A talks or uses it. Hold A to keep attacki
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
 
-**Pixel Town**
-- Gatekeeper (worlds), Brutus (Wood Wall quest: Survival Book and Survival Grasslands),
-  Miffie (a long questline that also rewards Pirate, Bad Man and Soldier), GateKeeper
-  (Pretzel quest: unlocks the furnaces), Crafter (gear from materials), Merchant, Plumber
-  and Miner (token shop). Jumpie waits at the start of Grasslands 1.
-- Five furnaces that smelt over time, even while you're away.
-- Silver, Golden and Master Chests opened with keys, an Incubator for monster eggs, and
-  five magic seed soils behind a rock wall that needs a gold pickaxe (30 hits).
+**Pixel Town**, west to east
+- Five magic seed soils behind the rock wall (break it with a gold pickaxe), the Miner
+  (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and
+  Survival Grasslands) next to it.
+- The Incubator and the Silver, Golden and Master keg chests, each with a signboard
+  showing its egg or key.
+- The Gatekeeper in the middle (opens portals), Miffie to his right (her 27 quests in the
+  original's order), the Merchant in the red hat (Combo Book II for 1,500), the Plumber
+  (tools) and the Crafter.
+- Up top, the green GateKeeper guards the furnaces (Pretzel quest). Five furnaces with
+  signboards; a bubble with the bar pops up when one is done.
+- Jumpie, the girl who looks like Miffie, is in Grasslands 1 (10 Jellies for a Pixel Coin).
+  The GateKeeper turns up in Hell 2 missing his mask: bring a Green Face and he sells Em
+  Stones for 92,500 coins.
 
 **Characters**
 - A new game starts as the Man in Suit or the Nurse.
@@ -69,7 +96,7 @@ a villager, portal, chest or furnace, A talks or uses it. Hold A to keep attacki
 - Tools: better axes and pickaxes take fewer hits, and some ores need a minimum tier.
 - Status effects from monsters: poison, fatigue, slow and cold, each for 10 seconds.
 - Pets regenerate health, mana or stamina, or attack nearby monsters.
-- A full day lasts 216 seconds. The game saves on every map change and every 30 seconds.
+- The game saves on every map change and every 30 seconds, into the character's slot.
 
 ## Where the numbers come from
 
@@ -84,7 +111,14 @@ Item, character, villager and monster names match the original. Characters based
 other companies' properties (Backstreet Boy, Sailor Moon, Iron Man) and the items that
 need them were left out, and the Green Face uses School Girls in place of Backstreet Boys.
 No sprites were copied: every sprite is drawn in code to look like the original's style.
-Gems and the gem shop were left out on purpose.
+Gems and the gem shop were left out on purpose: quests that gave gems give that many
+Silver Keys instead.
+
+The screen layout, bag, combining panel, Crafter tabs, sky clock, furnace row and chest
+signboards follow the game's official trailer and App Store screenshots. The main menu's
+three character slots and character creation follow the wiki; the exact look of the
+original's menu screens isn't documented anywhere I could find, so those screens are a
+best match.
 
 ## Files
 
@@ -98,7 +132,7 @@ Gems and the gem shop were left out on purpose.
 | `scripts/player.gd` | Movement, attacking, magic, bows, eating, building, status effects |
 | `scripts/mob.gd` | Monster and boss behaviour |
 | `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign |
-| `scripts/hud.gd` | HUD, touch buttons and every menu |
+| `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu and every other menu |
 | `tests/autotest.gd` | Plays through the game and saves screenshots |
 
 Run the automatic test with `godot --path . -- --autotest` (add `--touch` to show the phone buttons).

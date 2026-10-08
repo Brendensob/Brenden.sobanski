@@ -378,6 +378,11 @@ func _populate_explore() -> void:
 		var pc: Vector2i = deep.pop_back()
 		add_portal(pc, def.next, Data.WORLDS[def.next].name, Color("a77ee0"))
 		used[pc] = true
+	if id == "hell_2":
+		# the GateKeeper who lost his mask
+		var gc := Vector2i(12, surface[12] - 1)
+		add_npc("warden_hell", gc)
+		used[gc] = true
 	if id == "grass_1":
 		# Jumpie waits near the entrance of the first Grasslands
 		var jc := Vector2i(10, surface[10] - 1)
@@ -420,7 +425,7 @@ func _populate_arena() -> void:
 func _populate_survival() -> void:
 	add_portal(Vector2i(W / 2 - 6, 16), "town", "Leave", Color("5cbf3f"))
 	s_day = 1
-	GS.clock = 0.3
+	GS.clock = 0.0
 	for i in 70:
 		_survival_resource()
 
@@ -443,37 +448,52 @@ func _survival_resource() -> void:
 
 func _populate_town() -> void:
 	var y := 16
-	var houses := [[18, "e8dccb", "d8433a", 60], [38, "c8d6e8", "3b5dc9", 52], [52, "e8d8b0", "4f9a44", 52], [62, "d8c8e8", "7b4fb8", 60]]
+	var houses := [[20, "e8dccb", "d8433a", 60], [44, "c8d6e8", "3b5dc9", 52], [56, "e8d8b0", "4f9a44", 52], [66, "d8c8e8", "7b4fb8", 60]]
 	for h in houses:
 		var s := Sprite2D.new()
 		s.texture = Art.house_tex(Color(h[1]), Color(h[2]), h[3])
 		s.centered = false
 		s.position = Vector2(h[0] * T - h[3] / 2, (y + 1) * T - 47)
 		props.add_child(s)
-	# west: soils for magic seeds, behind a rock wall that needs a gold pickaxe
+	# west: magic soils behind the rock wall (break it with a gold pickaxe).
+	# The Miner and Brutus stand by the wall.
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
 	if not GS.flags.get("rock_wall", false):
 		var rw: Node = add_node("rock_wall", Vector2i(13, y))
 		rw.make_solid()
-	add_npc("gruff", Vector2i(16, y))
-	add_station("chest_silver", 0, Vector2i(21, y))
-	add_station("chest_golden", 0, Vector2i(24, y))
-	add_station("chest_master", 0, Vector2i(27, y))
-	add_station("incubator", 0, Vector2i(31, y))
-	add_station("sign", 0, Vector2i(36, y))
-	add_npc("keeper", Vector2i(40, y))
-	add_npc("mira", Vector2i(48, y))
+	add_npc("miner", Vector2i(15, y))
+	add_npc("gruff", Vector2i(18, y))
+	# the incubator and the three keg chests, each with a signboard showing its egg or key
+	add_board("green_egg", Vector2i(23, y))
+	add_station("incubator", 0, Vector2i(24, y))
+	add_board("silver_key", Vector2i(27, y))
+	add_station("chest_silver", 0, Vector2i(28, y))
+	add_board("golden_key", Vector2i(31, y))
+	add_station("chest_golden", 0, Vector2i(32, y))
+	add_board("master_key", Vector2i(35, y))
+	add_station("chest_master", 0, Vector2i(36, y))
+	# the middle of town: the Gatekeeper opens portals, Miffie stands to his right
+	add_npc("keeper", Vector2i(41, y))
+	add_npc("mira", Vector2i(47, y))
+	add_station("sign", 0, Vector2i(50, y))
 	add_npc("merchant", Vector2i(54, y))
-	add_npc("tools", Vector2i(58, y))
-	add_npc("smith", Vector2i(63, y))
-	add_npc("miner", Vector2i(68, y))
-	# east: furnaces up on the hill behind a gate
+	add_npc("tools", Vector2i(59, y))
+	add_npc("smith", Vector2i(64, y))
+	# up top: the green GateKeeper guards the furnaces, each with a signboard
 	add_npc("warden", Vector2i(79, 12))
 	if not GS.flags.get("furnaces", false):
 		add_station("gate", 0, Vector2i(82, 12))
 	for i in Data.FURNACES:
-		add_station("furnace", i, Vector2i(86 + i * 4, 12))
+		add_station("furnace", i, Vector2i(85 + i * 5, 12))
+		add_station("furnace_board", i, Vector2i(87 + i * 5, 12))
+
+func add_board(item: String, c: Vector2i) -> void:
+	var s := Sprite2D.new()
+	s.texture = Art.prop_tex("board", item)
+	s.centered = false
+	s.position = Vector2(c.x * T + 8 - s.texture.get_width() / 2.0, (c.y + 1) * T - s.texture.get_height() + 1)
+	props.add_child(s)
 
 # ---------------------------------------------------------------- monsters
 func count_mobs(include_boss: bool = true) -> int:
@@ -524,6 +544,8 @@ func interactable_near(pos: Vector2, facing: int) -> Node:
 	var bd := 18.0
 	for n in props.get_children():
 		if n is PlacedScript and n.item != "work_station":
+			continue
+		if n.get("kind") == "furnace_board":
 			continue
 		if n.has_method("interact") and absf(n.position.y - pos.y) < 20:
 			var dx: float = n.position.x - pos.x

@@ -9,6 +9,7 @@ var sprite: Sprite2D
 var label: Label
 var body: StaticBody2D
 var t := 0.0
+var bubble: Sprite2D
 
 func setup(k: String, i: int, lvl: Node) -> void:
 	kind = k
@@ -38,6 +39,9 @@ func _ready() -> void:
 		shape.position = Vector2(0, -24)
 		body.add_child(shape)
 		add_child(body)
+	bubble = Sprite2D.new()
+	bubble.visible = false
+	add_child(bubble)
 	_refresh()
 
 func _refresh() -> void:
@@ -50,23 +54,25 @@ func _refresh() -> void:
 			if job != null:
 				st = "done" if GS.now() >= job.done else "busy"
 			tex = Art.prop_tex("furnace", st)
-			if job == null:
-				text = "Furnace %d" % (index + 1)
-			elif st == "done":
-				text = "Ready!"
-			else:
-				text = _time(job.done - GS.now())
+			# like the original, a bubble with the finished bar pops up when it's done
+			bubble.visible = st == "done"
+			if st == "done":
+				bubble.texture = Art.prop_tex("bubble", job.out)
+				bubble.position = Vector2(0, -tex.get_height() - 12)
+			text = "" if job == null or st == "done" else _time(job.done - GS.now())
+		"furnace_board":
+			var job2 = GS.furnaces[index]
+			tex = Art.prop_tex("board", job2.main if job2 != null and job2.has("main") else "copper_ore")
 		"chest_silver", "chest_golden", "chest_master":
 			var c := kind.replace("chest_", "")
 			tex = Art.prop_tex("chest", c)
-			text = Data.CHESTS[c].name
 		"reward_chest":
 			tex = Art.prop_tex("chest", "reward")
 			text = "Reward Chest" if GS.reward_chests.get(level.id, -1) != GS.today() else "Opened today"
 		"incubator":
 			tex = Art.prop_tex("incubator", "egg" if not GS.incubator.is_empty() else "")
 			if GS.incubator.is_empty():
-				text = "Incubator"
+				text = ""
 			elif GS.now() >= GS.incubator.done:
 				text = "Hatched!"
 			else:
@@ -104,6 +110,8 @@ func _process(delta: float) -> void:
 
 func interact(_player: Node) -> void:
 	match kind:
+		"furnace_board":
+			return
 		"gate":
 			level.main.hud.toast("The gate is locked. Talk to the GateKeeper.", "warn")
 		"sign":
