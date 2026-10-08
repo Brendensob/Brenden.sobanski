@@ -1,32 +1,31 @@
 extends CharacterBody2D
-## The player. ◀ ▶ to move, B to jump, A to use whatever you are holding:
-## swing a weapon or tool, eat food, place a wall or torch, or talk to someone nearby.
+## The player. ◀ ▶ move, B jumps, A uses whatever you hold: swing a weapon or
+## tool, cast with a staff, shoot a bow, eat, place a building, read a book,
+## or talk to whoever you're standing next to. Hold A to keep attacking.
 
 const ProjectileScript := preload("res://scripts/projectile.gd")
 
 const SPEED := 82.0
-const JUMP := -238.0
+const JUMP := -240.0
 const GRAVITY := 720.0
-const SWING_TIME := 0.32
-const HIT_AT := 0.1
+const STAMINA_COST := 0.5
 
 var level: Node
 var facing := 1
 var anim := 0.0
+var cooldown := 0.0
 var swing := 0.0
-var swing_hit := false
+var swing_len := 0.3
+var swing_hit := true
 var invuln := 0.0
 var flash := 0.0
-var stamina_wait := 0.0
-var mana_timer := 0.0
-var hp_timer := 0.0
 var since_hurt := 99.0
-var tired_msg := 0.0
+var regen := {"hp": 0.0, "mp": 0.0, "st": 0.0, "poison": 0.0}
+var msg_cd := 0.0
 var dead := false
 var body_sprite: Sprite2D
 var held_sprite: Sprite2D
 var light: PointLight2D
-var touch_act := false
 
 func _ready() -> void:
 	collision_layer = 2
@@ -39,14 +38,13 @@ func _ready() -> void:
 	shape.position = Vector2(0, -7.5)
 	add_child(shape)
 	held_sprite = Sprite2D.new()
-	held_sprite.offset = Vector2(4, -5)
 	add_child(held_sprite)
 	body_sprite = Sprite2D.new()
 	body_sprite.position = Vector2(0, -9)
 	add_child(body_sprite)
 	light = PointLight2D.new()
 	light.texture = Art.light_tex()
-	light.texture_scale = 1.1
+	light.texture_scale = 1.2
 	light.energy = 0.0
 	light.position = Vector2(0, -10)
 	add_child(light)
@@ -56,7 +54,10 @@ func _ready() -> void:
 func _update_held() -> void:
 	var id := GS.held()
 	held_sprite.texture = Art.icon(id) if id != "" else null
-	held_sprite.visible = id != ""
+
+func held_type() -> String:
+	var id := GS.held()
+	return Data.ITEMS[id].type if id != "" else ""
 
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -67,56 +68,66 @@ func _physics_process(delta: float) -> void:
 		if Input.is_action_just_pressed("jump") and is_on_floor():
 			velocity.y = JUMP
 		if Input.is_action_just_pressed("attack"):
-			use_held()
-		elif Input.is_action_pressed("attack") and swing <= 0 and _held_type() in ["weapon", "axe", "pick", "", "wand"]:
-			use_held()
+			use_held(true)
+		elif Input.is_action_pressed("attack") and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", ""]:
+			use_held(false)
 	if not is_on_floor():
-		velocity.y = minf(velocity.y + GRAVITY * delta, 400)
-	var target := dir * SPEED
-	velocity.x = move_toward(velocity.x, target, 900 * delta)
+		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
+	var speed := SPEED
+	if GS.has_status("slow"):
+		speed *= 0.55
+	elif GS.has_status("cold"):
+		speed *= 0.75
+	velocity.x = move_toward(velocity.x, dir * speed, 900 * delta)
 	if dir != 0:
 		facing = 1 if dir > 0 else -1
 	move_and_slide()
-	if position.y > 200:
-		position = Vector2(position.x, level.surface_y(position.x) - 4)
+	if position.y > level.H * 16 + 40:
+		position = level.cell_pos(level.spawn_cell)
 		velocity = Vector2.ZERO
 	_tick(delta, dir)
-
-func _held_type() -> String:
-	var id := GS.held()
-	return Data.ITEMS[id].type if id != "" else ""
 
 func _tick(delta: float, dir: float) -> void:
 	anim += delta
 	invuln -= delta
 	flash -= delta
 	since_hurt += delta
-	tired_msg -= delta
-	# regenerate
-	stamina_wait -= delta
-	if stamina_wait <= 0 and GS.stamina < GS.max_stamina():
-		GS.stamina = minf(GS.max_stamina(), GS.stamina + delta * 1.25)
-		GS.stats_changed.emit()
-	mana_timer += delta
-	if mana_timer > 5.0:
-		mana_timer = 0
-		if GS.mana < GS.max_mana():
-			GS.mana = minf(GS.max_mana(), GS.mana + 1)
+	msg_cd -= delta
+	cooldown -= delta
+	# statuses wear off
+	for k in GS.status.keys():
+		GS.status[k] -= delta
+		if GS.status[k] <= 0:
+			GS.status.erase(k)
 			GS.stats_changed.emit()
-	if since_hurt > 6.0:
-		hp_timer += delta
-		if hp_timer > 8.0:
-			hp_timer = 0
-			if GS.hp < GS.max_hp():
-				GS.hp = minf(GS.max_hp(), GS.hp + 1)
-				GS.stats_changed.emit()
-	# swing
+	# poison: 1 damage + 1 more per 15 max health, every 2 seconds
+	if GS.has_status("poison"):
+		regen.poison += delta
+		if regen.poison >= 2.0:
+			regen.poison = 0
+			var p := 1 + int(GS.max_hp() / 15.0)
+			GS.hp -= p
+			level.number(position + Vector2(0, -24), "-%d" % p, Color("8fd04a"))
+			GS.stats_changed.emit()
+			if GS.hp <= 0:
+				_die()
+				return
+	# natural recovery
+	var st_rate := 1.0 if not GS.has_status("cold") else 0.5
+	if not GS.has_status("fatigue"):
+		_regen("st", delta * st_rate, 1.0)
+	_regen("mp", delta, 5.0)
+	if since_hurt > 8.0:
+		_regen("hp", delta, 12.0)
+	# campfires heal
+	if level.structures_near(position, 40, "campfire"):
+		_regen("hp", delta, 2.0)
+	# swing animation and hit
 	if swing > 0:
 		swing -= delta
-		if not swing_hit and swing <= SWING_TIME - HIT_AT:
+		if not swing_hit and swing <= swing_len * 0.6:
 			swing_hit = true
 			_do_hit()
-	# looks
 	var frame := "stand"
 	if not is_on_floor():
 		frame = "jump"
@@ -124,123 +135,190 @@ func _tick(delta: float, dir: float) -> void:
 		frame = "walk"
 	body_sprite.texture = Art.character_flash("player") if flash > 0 else Art.character("player", frame)
 	body_sprite.flip_h = facing < 0
-	if invuln > 0 and flash <= 0:
-		body_sprite.visible = int(anim * 20) % 2 == 0
-	else:
-		body_sprite.visible = true
+	body_sprite.visible = not (invuln > 0 and flash <= 0 and int(anim * 20) % 2 == 0)
 	held_sprite.position = Vector2(facing * 5, -7)
 	held_sprite.flip_h = facing < 0
 	held_sprite.offset = Vector2(4 * facing, -5)
 	var ang := -0.5
 	if swing > 0:
-		var k := 1.0 - swing / SWING_TIME
+		var k := 1.0 - swing / swing_len
 		ang = lerpf(-2.0, 1.4, minf(k * 2.0, 1.0))
 	held_sprite.rotation = ang * facing
-	light.energy = GS.darkness() * (0.8 if GS.held() == "torch" else 0.3)
-	light.texture_scale = 1.8 if GS.held() == "torch" else 1.1
+	var glow := 1.0 if GS.held() == "torch_weapon" else 0.35
+	var gloom := 1.0 if level.modulate_node.color.r < 0.9 else 0.0
+	light.energy = maxf(GS.darkness(), gloom) * glow
+
+func _regen(stat: String, delta: float, every: float) -> void:
+	var cur: float = GS.get(stat)
+	var mx: float = GS.call("max_" + stat)
+	if cur >= mx:
+		regen[stat] = 0.0
+		return
+	regen[stat] += delta
+	if regen[stat] >= every:
+		regen[stat] = 0.0
+		GS.set(stat, minf(mx, cur + 1))
+		GS.stats_changed.emit()
+
+func _say(text: String) -> void:
+	if msg_cd <= 0:
+		level.main.hud.toast(text, "warn")
+		msg_cd = 1.5
 
 # ---------------------------------------------------------------- actions
-func use_held() -> void:
-	if swing > 0:
+func use_held(pressed: bool) -> void:
+	if cooldown > 0:
 		return
-	var near: Node = level.interactable_near(position)
-	if near:
-		near.interact(self)
-		return
-	var id := GS.held()
-	var type := _held_type()
-	if type == "food":
-		if GS.consume(GS.sel):
-			level.number(position + Vector2(0, -22), "Yum", Color("f2cf5b"))
-		return
-	if type == "place":
-		if level.is_town:
-			level.main.hud.toast("You can't build in the village.", "warn")
+	if pressed:
+		var near: Node = level.interactable_near(position, facing)
+		if near:
+			near.interact(self)
+			cooldown = 0.25
 			return
-		if level.place(id, position, facing):
-			GS.remove_at(GS.sel)
-		else:
-			level.main.hud.toast("No room to place that. Face flat, empty ground.", "warn")
-		return
-	if type in ["book", "key", "material", "armor", "helmet", "shield", "ring"]:
-		if type in Data.EQUIP_SLOTS:
-			GS.equip_from(GS.sel)
-			return
-	if type == "wand":
-		var cost: int = Data.ITEMS[id].mana_cost
-		if GS.mana < cost:
-			if tired_msg <= 0:
-				level.main.hud.toast("Not enough mana.", "warn")
-				tired_msg = 1.5
-			return
-		GS.mana -= cost
-		GS.stats_changed.emit()
-		swing = SWING_TIME
-		swing_hit = true
-		var p := ProjectileScript.new()
-		p.setup(level, Vector2(facing * 170, 0), Data.ITEMS[id].dmg + GS.bonus_damage(), true, Color("f2a33a"))
-		p.position = position + Vector2(facing * 8, -10)
-		level.entities.add_child(p)
-		return
-	# swing a weapon, tool or fists
-	if GS.stamina < 1.0:
-		if tired_msg <= 0:
-			level.main.hud.toast("Too tired! Wait for your stamina.", "warn")
-			tired_msg = 1.5
-		return
-	GS.stamina -= 1.0
-	stamina_wait = 0.6
-	GS.stats_changed.emit()
-	swing = SWING_TIME
-	swing_hit = false
-
-func _do_hit() -> void:
-	var x0 := position.x + (2 if facing > 0 else -24)
-	var r := Rect2(x0, position.y - 24, 22, 26)
 	var id := GS.held()
 	var it: Dictionary = Data.ITEMS[id] if id != "" else {}
-	var dmg := float(it.get("dmg", 1)) + GS.bonus_damage()
+	var type: String = it.get("type", "")
+	match type:
+		"food":
+			if pressed and GS.consume(GS.sel):
+				level.number(position + Vector2(0, -22), "Yum", Color("f2cf5b"))
+				cooldown = 0.3
+			return
+		"place":
+			if not pressed:
+				return
+			if level.kind == "town":
+				_say("You can't build in the village.")
+			elif level.place(id, position, facing):
+				GS.remove_at(GS.sel)
+			else:
+				_say("No room to place that. Face flat, open ground.")
+			cooldown = 0.25
+			return
+		"book":
+			if pressed:
+				level.main.hud.open_book(it.book)
+			return
+		"helmet", "armor", "shield", "ring", "pet":
+			if pressed:
+				GS.equip_from(GS.sel)
+				if type == "pet":
+					level.spawn_pet()
+			return
+		"egg", "seed", "key", "scroll", "token", "ammo":
+			if pressed:
+				_say({"egg": "Hatch eggs in the Incubator in Pixel Village.", "seed": "Plant seeds in the soil behind the village rock wall.",
+					"key": "Use keys on the chests in Pixel Village.", "scroll": "Put scrolls in the scroll slot when combining.",
+					"token": "Trade Survival Tokens with the Miner.", "ammo": "Hold a bow to shoot arrows."}[type])
+			return
+		"staff":
+			_cast(id, it)
+			return
+		"bow":
+			_shoot(id, it)
+			return
+	_swing(id, it)
+
+func _swing(id: String, it: Dictionary) -> void:
+	if GS.st < STAMINA_COST:
+		_say("Too tired! Wait for your stamina.")
+		return
+	GS.st -= STAMINA_COST
+	GS.stats_changed.emit()
+	var spd: float = it.get("spd", 0.5)
+	cooldown = spd
+	swing_len = minf(0.3, spd * 0.8)
+	swing = swing_len
+	swing_hit = false
+
+func _cast(id: String, it: Dictionary) -> void:
+	var cost: int = it.mana_cost
+	if GS.mp < cost:
+		_say("Not enough mana.")
+		return
+	GS.mp -= cost
+	GS.stats_changed.emit()
+	cooldown = float(it.spd)
+	swing_len = 0.25
+	swing = swing_len
+	swing_hit = true
+	if it.has("heal"):
+		GS.hp = minf(GS.max_hp(), GS.hp + it.heal)
+		GS.stats_changed.emit()
+		level.number(position + Vector2(0, -24), "+%d" % it.heal, Color("5cbf3f"))
+		level.burst(position + Vector2(0, -8), Color("5cbf3f"), 8)
+		return
+	var dmg := int(it.dmg) + GS.stat("mag")
+	var p := ProjectileScript.new()
+	p.setup(level, Vector2(facing * 170, 0), dmg, true, Color(it.color))
+	p.position = position + Vector2(facing * 8, -10)
+	level.entities.add_child(p)
+
+func _shoot(id: String, it: Dictionary) -> void:
+	if GS.count("arrow") <= 0:
+		_say("You're out of arrows.")
+		return
+	GS.remove_item("arrow", 1)
+	cooldown = float(it.spd)
+	var r := GS.attack_range(id)
+	var p := ProjectileScript.new()
+	p.setup(level, Vector2(facing * 220, -20), randi_range(r.x, r.y), true, Color("e8dccb"))
+	p.gravity = 120.0
+	p.position = position + Vector2(facing * 8, -10)
+	level.entities.add_child(p)
+
+func _do_hit() -> void:
+	var id := GS.held()
+	var it: Dictionary = Data.ITEMS[id] if id != "" else {}
+	var reach: float = it.get("reach", 14)
+	var x0 := position.x + (2.0 if facing > 0 else -2.0 - reach)
+	var r := Rect2(x0, position.y - 24, reach, 26)
 	var mobs: Array = level.mobs_in_rect(r)
 	if mobs.size() > 0:
 		for m in mobs:
-			m.take_damage(dmg, position.x)
+			m.take_damage(GS.roll_attack(id), position.x, it.get("kb", false))
 		return
 	var n: Node = level.node_in_rect(r)
-	if n:
-		var need: String = n.def.need
-		var power := 1
-		if need == "":
-			power = 1
-		elif it.get("type", "") == need:
-			power = int(it.power)
-			if power < int(n.def.min):
-				level.main.hud.toast("You need a better %s for that." % ("pickaxe" if need == "pick" else "axe"), "warn")
-				n.shake()
-				return
-		else:
-			level.main.hud.toast("Hold %s to break that." % ("a pickaxe" if need == "pick" else "an axe"), "warn")
-			n.shake()
-			return
-		n.hit(power)
+	if n == null:
+		return
+	var need: String = n.def.tool
+	var tier := 0
+	if it.get("type", "") == need:
+		tier = int(it.tier)
+	elif need == "axe" and it.has("axe"):
+		tier = int(it.axe)
+	if tier <= 0:
+		_say("You need %s for that." % ("an axe" if need == "axe" else "a pickaxe"))
+		n.shake()
+		return
+	if Data.hits_needed(n.kind, tier) < 0:
+		_say("You need a better %s for that." % ("axe" if need == "axe" else "pickaxe"))
+		n.shake()
+		return
+	n.hit(tier)
 
-func hurt(dmg: float, from_x: float) -> void:
+func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if dead or invuln > 0:
 		return
-	var real := maxf(1.0, dmg - GS.defense())
-	GS.hp -= real
+	var r := GS.roll_monster_hit(dmg, crit_chance)
+	GS.hp -= r.dmg
 	GS.stats_changed.emit()
-	invuln = 0.9
+	invuln = 0.6
 	flash = 0.12
 	since_hurt = 0
-	hp_timer = 0
-	velocity = Vector2(signf(position.x - from_x) * 150, -140)
-	level.number(position + Vector2(0, -24), "-%d" % int(real), Color("f06a5a"))
-	level.main.shake(3)
+	velocity = Vector2(signf(position.x - from_x) * 140, -130)
+	level.number(position + Vector2(0, -24), ("CRIT -%d" if r.crit else "-%d") % r.dmg, Color("f06a5a"))
+	level.main.shake(4 if r.crit else 2)
+	if status.size() == 2 and randf() < status[1]:
+		GS.add_status(status[0])
 	if GS.hp <= 0:
-		GS.hp = 0
-		dead = true
-		body_sprite.rotation = PI / 2 * facing
-		level.main.player_died()
+		_die()
+
+func _die() -> void:
+	GS.hp = 0
+	dead = true
+	body_sprite.rotation = PI / 2 * facing
+	level.main.player_died()
 
 func hit_rect() -> Rect2:
 	return Rect2(position.x - 5, position.y - 16, 10, 16)

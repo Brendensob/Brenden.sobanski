@@ -23,26 +23,27 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	life += delta
-	if life > 120:
+	if life > 180:
 		queue_free()
 		return
 	var p: Node2D = level.player
 	var to := p.position + Vector2(0, -8) - position
 	var can_take: bool = item == "coin" or GS.has_room(item)
-	if life > 0.5 and not p.dead and can_take and to.length() < 30:
-		position += to.normalized() * minf(to.length(), 160 * delta)
+	if life > 0.5 and not p.dead and can_take and to.length() < 34:
+		position += to.normalized() * minf(to.length(), 170 * delta)
 		if to.length() < 8:
 			_collect()
 		return
 	if not landed:
 		vel.y += 600 * delta
-		position += vel * delta
-		var ground: float = level.surface_y(position.x)
-		if position.y >= ground:
-			position.y = ground
+		var nxt := position + vel * delta
+		var ground: float = level.floor_y(nxt.x, position.y - 2)
+		if nxt.y >= ground:
+			nxt.y = ground
 			vel = Vector2.ZERO
 			landed = true
-	sprite.position.y = -6 - absf(sin(life * 3)) * 2 if landed else -6.0
+		position = nxt
+	sprite.position.y = (-6 - absf(sin(life * 3)) * 2) if landed else -6.0
 
 func _collect() -> void:
 	if item == "coin":
@@ -51,9 +52,12 @@ func _collect() -> void:
 		level.number(position + Vector2(0, -10), "+%d coins" % n, Color("f2cf5b"))
 		queue_free()
 		return
-	var left := GS.add_item(item, n)
+	var left := GS.add_item(item, n, true)
 	if left < n:
-		level.number(position + Vector2(0, -10), "+%d %s" % [n - left, Data.ITEMS[item].name], Color("f2efe6"))
+		level.main.hud.toast("%s obtained" % Data.ITEMS[item].name + (" x%d" % (n - left) if n - left > 1 else ""), "")
 	n = left
 	if n <= 0:
 		queue_free()
+	else:
+		level.main.hud.toast("Inventory full.", "warn")
+		life = 0.0

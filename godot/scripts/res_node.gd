@@ -1,40 +1,54 @@
 extends Node2D
-## A tree, rock or bush you can harvest. Grows back after a while.
+## A tree, rock, ore, plant, pot or vase. Breaks after a set number of hits;
+## better tools need fewer hits (numbers from the wiki's tool pages).
 
-const REGROW := 45.0
+const REGROW := 60.0
 
 var kind := ""
 var def: Dictionary
 var level: Node
-var hp := 1.0
+var hits := 0
 var alive := true
 var regrow := 0.0
 var wobble := 0.0
 var sprite: Sprite2D
+var body: StaticBody2D
 
 func setup(k: String, lvl: Node) -> void:
 	kind = k
 	def = Data.NODES[k]
 	level = lvl
-	hp = def.hp
 
 func _ready() -> void:
 	sprite = Sprite2D.new()
-	sprite.texture = Art.node_tex(kind, level.zone)
+	sprite.texture = Art.node_tex(kind, level.th)
 	sprite.centered = false
 	var s: Vector2 = sprite.texture.get_size()
 	sprite.position = Vector2(-s.x / 2, -s.y + 1)
 	add_child(sprite)
 
+## The village rock wall blocks the way until it's broken.
+func make_solid() -> void:
+	body = StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(16, 48)
+	shape.shape = rect
+	shape.position = Vector2(0, -24)
+	body.add_child(shape)
+	add_child(body)
+
 func _process(delta: float) -> void:
 	if not alive:
+		if level.kind != "survival":
+			return
 		regrow -= delta
 		if regrow <= 0:
 			alive = true
-			hp = def.hp
+			hits = 0
 			sprite.visible = true
-			sprite.modulate.a = 0
-			create_tween().tween_property(sprite, "modulate:a", 1.0, 0.5)
 		return
 	if wobble > 0:
 		wobble -= delta
@@ -49,16 +63,24 @@ func hit_rect() -> Rect2:
 func shake() -> void:
 	wobble = 0.15
 
-func hit(power: int) -> void:
-	hp -= power
+func hit(tier: int) -> void:
+	var need := Data.hits_needed(kind, tier)
+	hits += 1
 	shake()
-	var c := Color("8a9099") if def.need == "pick" else Color("3e9a3a")
+	var c := Color(def.color)
 	level.burst(position + Vector2(0, -8), c, 3)
-	if hp <= 0:
+	level.number(position + Vector2(0, -20), "%d/%d" % [hits, need], Color("e8dccb"))
+	if hits >= need:
 		alive = false
 		regrow = REGROW
 		sprite.visible = false
-		level.burst(position + Vector2(0, -8), c, 8)
+		level.burst(position + Vector2(0, -8), c, 10)
 		for d in def.drops:
 			if randf() < d[1]:
 				level.drop(d[0], randi_range(d[2], d[3]), position + Vector2(0, -6))
+		if def.get("wall", false):
+			GS.flags["rock_wall"] = true
+			level.main.hud.toast("The rock wall crumbles! The soils behind it are yours.", "good")
+			if body:
+				body.queue_free()
+			queue_free()

@@ -1,14 +1,15 @@
 extends Node2D
-## A fireball from your wand, or a shot from a boss.
+## A magic bolt, an arrow, or a monster's shot.
 
 var level: Node
 var vel := Vector2.ZERO
-var dmg := 1.0
+var dmg := 1
 var friendly := true
 var color := Color.WHITE
 var life := 1.6
+var gravity := 0.0
 
-func setup(lvl: Node, v: Vector2, damage: float, from_player: bool, c: Color) -> void:
+func setup(lvl: Node, v: Vector2, damage: int, from_player: bool, c: Color) -> void:
 	level = lvl
 	vel = v
 	dmg = damage
@@ -24,9 +25,12 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	life -= delta
+	vel.y += gravity * delta
 	position += vel * delta
 	queue_redraw()
-	if life <= 0 or position.y > level.surface_y(position.x):
+	var cx := int(position.x / 16)
+	var cy := int(position.y / 16)
+	if life <= 0 or level.solid(cx, cy):
 		level.burst(position, color, 4)
 		queue_free()
 		return
@@ -34,11 +38,11 @@ func _process(delta: float) -> void:
 	if friendly:
 		var hit: Array = level.mobs_in_rect(r)
 		if hit.size() > 0:
-			hit[0].take_damage(dmg, position.x - signf(vel.x) * 10)
+			hit[0].take_damage(dmg, position.x - signf(vel.x) * 10, true)
 			level.burst(position, color, 6)
 			queue_free()
 	elif not level.player.dead and r.intersects(level.player.hit_rect()):
-		level.player.hurt(dmg, position.x - signf(vel.x) * 10)
+		level.player.hurt(dmg, 0.05, position.x - signf(vel.x) * 10)
 		queue_free()
 
 func _draw() -> void:

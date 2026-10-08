@@ -1,6 +1,6 @@
 extends Node
 ## Runs the game: loads maps, moves you between them, ticks the clock,
-## handles fainting, saving and the title screen.
+## handles fainting (and Survival Grasslands key rewards), saving and the title screen.
 
 const LevelScript := preload("res://scripts/level.gd")
 const HudScript := preload("res://scripts/hud.gd")
@@ -21,8 +21,9 @@ func _ready() -> void:
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 8.0
+	camera.zoom = Vector2(2, 2)
 	add_child(camera)
-	_load_level("grass_1", "left", true)
+	_load_level("grass_1", true)
 	hud.open_panel("title")
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t: Node = load("res://tests/autotest.gd").new()
@@ -44,45 +45,44 @@ func start_game(from_save: bool) -> void:
 		GS.new_game()
 	title_mode = false
 	hud.close_panels()
-	change_level(GS.level_id, "left")
+	change_level("town")
 	if not from_save:
-		hud.toast("Welcome to Pixel Village! Talk to Pip, then head through the portal on the right.", "big")
+		hud.toast("Welcome to Pixel Village! Talk to the Portal Keeper to visit the Grasslands.", "big")
 
 func quit_to_title() -> void:
 	GS.save_game()
 	title_mode = true
 	hud.set_boss(null)
-	_load_level("grass_1", "left", true)
+	_load_level("grass_1", true)
 	hud.open_panel("title")
 
-func change_level(id: String, entry: String) -> void:
-	GS.level_id = id
-	GS.unlocked[id] = true
-	_load_level(id, entry, false)
+func change_level(id: String) -> void:
+	GS.world = id
+	_load_level(id, false)
 	hud.set_boss(null)
-	hud.toast(Data.level_name(id), "big")
+	hud.toast(Data.WORLDS[id].name, "big")
 	GS.save_game()
 
 func reload_level() -> void:
-	var px: float = level.player.position.x
-	_load_level(GS.level_id, "left", false)
-	level.player.position = Vector2(px, level.surface_y(px))
-	camera.position = level.player.position
+	var pos: Vector2 = level.player.position
+	_load_level(GS.world, false)
+	level.player.position = pos
+	camera.position = pos
 
-func _load_level(id: String, entry: String, demo: bool) -> void:
+func _load_level(id: String, demo: bool) -> void:
 	if level:
 		level.queue_free()
 		remove_child(level)
 	level = LevelScript.new()
-	level.setup(id, self, entry)
+	level.setup(id, self)
 	add_child(level)
 	move_child(level, 0)
+	var size: Vector2 = level.world_size()
 	camera.limit_left = 0
-	camera.limit_right = int(level.world_width())
-	camera.limit_bottom = -28
-	camera.zoom = Vector2(2, 2)
-	camera.limit_top = -1000
-	camera.position = level.player.position + Vector2(0, -24)
+	camera.limit_right = int(size.x)
+	camera.limit_top = -400
+	camera.limit_bottom = int(size.y) - 8
+	camera.position = level.player.position + Vector2(0, -20)
 	camera.reset_smoothing()
 	hud.set_hud_visible(not demo)
 	if demo:
@@ -91,43 +91,9 @@ func _load_level(id: String, entry: String, demo: bool) -> void:
 	set_paused(false)
 
 func use_portal(target: String) -> void:
-	if target == "map":
-		hud.open_panel("map")
-		return
-	if target == "town":
-		change_level("town", "portal_town")
-		return
 	if target == "":
 		return
-	if target.ends_with("_lair"):
-		var zone: Dictionary = Data.ZONES[target.split("_")[0]]
-		var key: String = zone.key
-		if GS.count(key) <= 0:
-			hud.toast("The lair is sealed. You need a %s (Crystal + %s)." % [Data.ITEMS[key].name, _key_part(key)], "warn")
-			GS.unlocked[target] = true
-			return
-		GS.remove_item(key, 1)
-		change_level(target, "left")
-		return
-	var going_back: bool = level.id != "town" and _level_index(target) < _level_index(level.id)
-	change_level(target, "right" if going_back else "left")
-
-func _key_part(key: String) -> String:
-	for r in Data.RECIPES:
-		if r.out == key:
-			return Data.ITEMS[r.b].name
-	return "?"
-
-func _level_index(id: String) -> int:
-	if id == "town":
-		return -1
-	var p := id.split("_")
-	var z := Data.ZONE_ORDER.find(p[0])
-	var n := 9 if p[1] == "lair" else int(p[1])
-	return z * 10 + n
-
-func near_furnace() -> bool:
-	return level != null and level.player != null and level.near_furnace(level.player.position)
+	change_level(target)
 
 func drop_from_player(id: String, n: int) -> void:
 	var p: Node2D = level.player
@@ -138,14 +104,31 @@ func drop_from_player(id: String, n: int) -> void:
 	level.entities.add_child(pk)
 
 func player_died() -> void:
+	var text := "You'll wake up in Pixel Village with everything still in your bag."
+	if level.kind == "survival":
+		var d: int = level.s_day
+		var key := ""
+		if d >= 45:
+			key = "master_key"
+		elif d >= 19:
+			key = "golden_key"
+		elif d >= 7:
+			key = "silver_key"
+		text = "You lasted until day %d of Survival Grasslands." % d
+		if key != "":
+			if GS.add_item(key, 1, true) == 0:
+				text += " You earned a %s!" % Data.ITEMS[key].name
+			else:
+				text += " Your bag was full, so the %s was lost." % Data.ITEMS[key].name
 	await get_tree().create_timer(1.0).timeout
-	hud.show_dead()
+	hud.show_dead(text)
 
 func respawn() -> void:
 	GS.hp = GS.max_hp()
-	GS.stamina = GS.max_stamina()
+	GS.st = GS.max_st()
+	GS.status.clear()
 	hud.close_panels()
-	change_level("town", "left")
+	change_level("town")
 
 func shake(amount: float) -> void:
 	shake_amt = maxf(shake_amt, amount)
@@ -155,21 +138,20 @@ func _process(delta: float) -> void:
 		return
 	if title_mode:
 		title_t += delta
-		var w: float = level.world_width()
-		camera.position = Vector2(120 + (sin(title_t * 0.1) * 0.5 + 0.5) * (w - 240), -100)
+		var w: float = level.world_size().x
+		camera.position = Vector2(140 + (sin(title_t * 0.08) * 0.5 + 0.5) * (w - 280), level.surface[10] * 16 - 40)
 		return
-	if not get_tree().paused and not hud.any_open():
-		GS.clock += delta / GS.DAY_LENGTH
+	if not hud.any_open():
+		GS.clock += delta / Data.DAY_LENGTH
 		if GS.clock >= 1.0:
 			GS.clock -= 1.0
 			GS.day += 1
-			hud.toast("Day %d" % GS.day, "big")
 		autosave += delta
 		if autosave > 30:
 			autosave = 0
 			GS.save_game()
 	var p: Node2D = level.player
-	camera.position = p.position + Vector2(0, -24)
+	camera.position = p.position + Vector2(0, -20)
 	shake_amt = maxf(0, shake_amt - delta * 20)
 	camera.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake_amt
 

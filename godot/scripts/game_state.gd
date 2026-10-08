@@ -1,30 +1,36 @@
 extends Node
-## Everything that gets saved: inventory, equipment, stats, coins, quests,
-## unlocked maps and the time of day. Also sets up the controls.
+## Everything that gets saved, plus the combat formulas and crafting rules.
 
 signal inventory_changed
 signal stats_changed
 signal message(text: String, kind: String)
 
-const SAVE_PATH := "user://save.json"
+const SAVE_PATH := "user://save2.json"
+const VERSION := 2
 const HOTBAR := 5
-const BAG := 25
-const DAY_LENGTH := 360.0 # seconds for a full day and night
+const BAG := 30
+const EQUIP_SLOTS := ["helmet", "armor", "shield", "ring_l", "ring_r", "pet"]
+const BASE := {"atk": 1, "def": 0, "mag": 0, "hp": 5, "mp": 2, "st": 4}
+const STATUS_TIME := 10.0
 
 var inv: Array = []
-var equip := {"helmet": "", "armor": "", "shield": "", "ring": ""}
+var equip := {}
 var sel := 0
 var coins := 0
 var hp := 5.0
-var mana := 2.0
-var stamina := 4.0
+var mp := 2.0
+var st := 4.0
+var status := {} # effect -> seconds left
+var flags := {}
 var quests_done: Array = []
-var bosses: Array = []
-var unlocked := {"town": true, "grass_1": true}
-var furnace := false
+var furnaces: Array = []
+var incubator := {}
+var soils: Array = []
+var reward_chests := {} # world id -> unix day it was last opened
+var clock := 0.3 # 0..1; night is 0.75 to 0.25 of the next day via darkness()
 var day := 1
-var clock := 0.2 # 0..1, night is from 0.7 to 0.95
-var level_id := "town"
+var world := "town"
+var best_survival_day := 0
 
 func _ready() -> void:
 	_setup_input()
@@ -32,12 +38,9 @@ func _ready() -> void:
 
 func _setup_input() -> void:
 	var keys := {
-		"move_left": [KEY_A, KEY_LEFT],
-		"move_right": [KEY_D, KEY_RIGHT],
-		"jump": [KEY_K, KEY_SPACE, KEY_W, KEY_UP],
-		"attack": [KEY_J, KEY_X, KEY_ENTER],
-		"bag": [KEY_E, KEY_I, KEY_TAB],
-		"pause": [KEY_ESCAPE, KEY_P],
+		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
+		"jump": [KEY_K, KEY_SPACE, KEY_W, KEY_UP], "attack": [KEY_J, KEY_X, KEY_ENTER],
+		"bag": [KEY_E, KEY_I, KEY_TAB], "pause": [KEY_ESCAPE, KEY_P],
 		"slot_1": [KEY_1], "slot_2": [KEY_2], "slot_3": [KEY_3], "slot_4": [KEY_4], "slot_5": [KEY_5],
 	}
 	for action in keys:
@@ -53,50 +56,99 @@ func _setup_input() -> void:
 		jb.button_index = pad[action]
 		InputMap.action_add_event(action, jb)
 
+func now() -> float:
+	return Time.get_unix_time_from_system()
+
 func new_game() -> void:
 	inv.clear()
 	inv.resize(BAG)
-	equip = {"helmet": "", "armor": "", "shield": "", "ring": ""}
+	equip = {}
+	for s in EQUIP_SLOTS:
+		equip[s] = ""
 	sel = 0
 	coins = 0
+	status = {}
+	flags = {}
 	quests_done = []
-	bosses = []
-	unlocked = {"town": true, "grass_1": true}
-	furnace = false
+	furnaces = []
+	furnaces.resize(Data.FURNACES)
+	incubator = {}
+	soils = []
+	soils.resize(5)
+	reward_chests = {}
+	clock = 0.3
 	day = 1
-	clock = 0.2
-	level_id = "town"
-	add_item("wood_club")
-	add_item("wood_axe")
-	add_item("wood_pick")
+	world = "town"
+	add_item("sword_cast", 1, true)
+	add_item("wooden_axe", 1, true)
+	add_item("wooden_pick", 1, true)
+	add_item("small_potion", 3, true)
 	hp = max_hp()
-	mana = max_mana()
-	stamina = max_stamina()
+	mp = max_mp()
+	st = max_st()
 
 # ---------------------------------------------------------------- stats
-func _gear_sum(stat: String) -> float:
-	var total := 0.0
-	for slot in equip:
+func stat(k: String) -> int:
+	var total: int = BASE[k]
+	for slot in EQUIP_SLOTS:
 		var id: String = equip[slot]
-		if id != "":
-			total += float(Data.ITEMS[id].get(stat, 0))
+		if id != "" and Data.ITEMS[id].has("stats"):
+			total += int(Data.ITEMS[id].stats.get(k, 0))
 	return total
 
-func max_hp() -> float: return 5.0 + _gear_sum("hp")
-func max_mana() -> float: return 2.0 + _gear_sum("mana")
-func max_stamina() -> float: return 4.0 + _gear_sum("stamina")
-func defense() -> float: return _gear_sum("def")
-func bonus_damage() -> float: return _gear_sum("bonus_dmg")
+func max_hp() -> float: return float(stat("hp"))
+func max_mp() -> float: return float(stat("mp"))
+func max_st() -> float: return float(stat("st"))
 
 func clamp_stats() -> void:
 	hp = minf(hp, max_hp())
-	mana = minf(mana, max_mana())
-	stamina = minf(stamina, max_stamina())
+	mp = minf(mp, max_mp())
+	st = minf(st, max_st())
 	stats_changed.emit()
+
+## Damage you deal: a random number between your fixed attack + 1 and your fixed
+## attack + your weapon's attack (from the wiki's game-mechanics page).
+func attack_range(weapon_id: String) -> Vector2i:
+	var fixed := stat("atk")
+	var w := 1
+	if weapon_id != "" and Data.ITEMS[weapon_id].has("dmg"):
+		w = int(Data.ITEMS[weapon_id].dmg)
+	return Vector2i(fixed + 1, fixed + w)
+
+func roll_attack(weapon_id: String) -> int:
+	var r := attack_range(weapon_id)
+	return randi_range(r.x, r.y)
+
+## Damage a monster deals to you: its attack (sometimes a double critical hit)
+## minus a random number between 0 and your defense, but never less than 1.
+func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
+	var hit := randi_range(maxi(1, int(ceil(dmg * 0.8))), dmg)
+	var crit := randf() < crit_chance
+	if crit:
+		hit *= 2
+	var blocked := randi_range(0, maxi(0, stat("def")))
+	return {"dmg": maxi(1, hit - blocked), "crit": crit}
+
+func add_status(effect: String) -> void:
+	var had := status.has(effect)
+	status[effect] = STATUS_TIME
+	if not had:
+		message.emit({"poison": "You've been poisoned!", "fatigue": "Fatigue! Your stamina won't recover.", "slow": "You've been slowed!", "cold": "Brr! You're freezing."}.get(effect, effect), "warn")
+	stats_changed.emit()
+
+func has_status(effect: String) -> bool:
+	return status.has(effect)
 
 # ---------------------------------------------------------------- inventory
 func stack_size(id: String) -> int:
-	return 1 if Data.ITEMS[id].type in Data.UNSTACKABLE else Data.STACK
+	var t: String = Data.ITEMS[id].type
+	if t in ["weapon", "staff", "bow", "axe", "pick", "helmet", "armor", "shield", "ring", "pet", "book"]:
+		return 1
+	if t in ["ammo", "token"]:
+		return 999
+	if id == "hero_bug":
+		return 25
+	return 99
 
 func held() -> String:
 	var s = inv[sel]
@@ -115,8 +167,8 @@ func has_room(id: String) -> bool:
 			return true
 	return false
 
-## Returns how many did not fit.
-func add_item(id: String, n: int = 1) -> int:
+## Adds items; returns how many did not fit.
+func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 	var m := stack_size(id)
 	for s in inv:
 		if n <= 0:
@@ -132,6 +184,8 @@ func add_item(id: String, n: int = 1) -> int:
 			var k := mini(n, m)
 			inv[i] = {"id": id, "n": k}
 			n -= k
+	if n > 0 and not quiet:
+		message.emit("Inventory full.", "warn")
 	inventory_changed.emit()
 	return n
 
@@ -157,18 +211,36 @@ func remove_at(i: int, n: int = 1) -> void:
 		inv[i] = null
 	inventory_changed.emit()
 
+func has_all(cost: Dictionary) -> bool:
+	for id in cost:
+		if count(id) < cost[id]:
+			return false
+	return true
+
+func take_all(cost: Dictionary) -> void:
+	for id in cost:
+		remove_item(id, cost[id])
+
 func swap(a: int, b: int) -> void:
 	var t = inv[a]
 	inv[a] = inv[b]
 	inv[b] = t
 	inventory_changed.emit()
 
+func equip_slot_for(id: String) -> String:
+	var t: String = Data.ITEMS[id].type
+	if t == "ring":
+		return "ring_r" if equip.ring_l != "" and equip.ring_r == "" else "ring_l"
+	if t in EQUIP_SLOTS:
+		return t
+	return ""
+
 func equip_from(i: int) -> void:
 	var s = inv[i]
 	if s == null:
 		return
-	var slot: String = Data.ITEMS[s.id].type
-	if not slot in Data.EQUIP_SLOTS:
+	var slot := equip_slot_for(s.id)
+	if slot == "":
 		return
 	var old: String = equip[slot]
 	equip[slot] = s.id
@@ -182,13 +254,13 @@ func unequip(slot: String) -> void:
 	if id == "":
 		return
 	if not has_room(id):
-		message.emit("Your bag is full.", "warn")
+		message.emit("Inventory full.", "warn")
 		return
 	equip[slot] = ""
 	add_item(id)
 	clamp_stats()
 
-## Eats or drinks the item in slot i. Returns true when it was used.
+## Uses food or a potion in slot i. Returns true if it was used.
 func consume(i: int) -> bool:
 	var s = inv[i]
 	if s == null:
@@ -200,11 +272,14 @@ func consume(i: int) -> bool:
 	if it.has("heal") and hp < max_hp():
 		hp = minf(max_hp(), hp + it.heal)
 		used = true
-	if it.has("stamina") and stamina < max_stamina():
-		stamina = max_stamina()
+	if it.has("mana") and mp < max_mp():
+		mp = minf(max_mp(), mp + it.mana)
 		used = true
-	if it.has("mana") and mana < max_mana():
-		mana = max_mana()
+	if it.has("stamina") and st < max_st():
+		st = minf(max_st(), st + it.stamina)
+		used = true
+	if it.has("cure") and status.has(it.cure):
+		status.erase(it.cure)
 		used = true
 	if not used:
 		message.emit("You don't need that right now.", "warn")
@@ -214,44 +289,138 @@ func consume(i: int) -> bool:
 	return true
 
 # ---------------------------------------------------------------- combining
-## Works out what two items make and the success chance, before trying it.
-func preview_combo(a: String, b: String, near_furnace: bool) -> Dictionary:
-	var r := Data.find_recipe(a, b)
-	if r.is_empty():
-		return {"known": false}
-	var chance: int = r.chance
-	var book := ""
-	if r.tier > 0:
-		book = Data.TIER_BOOK[r.tier]
-		if count(book) > 0:
-			chance += int(Data.ITEMS[book].bonus)
-	var blocked := ""
-	if r.get("station", "") == "furnace" and not near_furnace:
-		blocked = "Stand next to the furnace in Pixel Village to smelt."
-	return {"known": true, "recipe": r, "chance": mini(chance, 100), "book": book, "blocked": blocked}
+func has_book(book: String) -> bool:
+	return count(Data.BOOK_ITEM[book]) > 0
 
-## Uses one of each input. Success gives the result; failure gives Dust.
-func combine(slot_a: int, slot_b: int, near_furnace: bool) -> Dictionary:
-	var sa = inv[slot_a]
-	var sb = inv[slot_b]
-	if sa == null or sb == null:
-		return {"ok": false, "reason": "Pick two items."}
-	if slot_a == slot_b and sa.n < 2:
-		return {"ok": false, "reason": "You need two of that item."}
-	var p := preview_combo(sa.id, sb.id, near_furnace)
-	if not p.known:
-		return {"ok": false, "reason": "Unknown"}
-	if p.blocked != "":
-		return {"ok": false, "reason": p.blocked}
-	var a_id: String = sa.id
-	var b_id: String = sb.id
-	remove_item(a_id, 1)
-	remove_item(b_id, 1)
-	if randi_range(1, 100) <= p.chance:
-		var left := add_item(p.recipe.out, p.recipe.n)
-		return {"ok": true, "success": true, "out": p.recipe.out, "n": p.recipe.n, "left": left}
+## What the items in the combination slots would make, and the chance.
+func preview_combo(slots: Array, use_scroll: bool) -> Dictionary:
+	var ids := []
+	for i in slots:
+		if i >= 0 and inv[i] != null:
+			ids.append(inv[i].id)
+	if ids.size() < 2:
+		return {"ready": false}
+	var r := Data.find_recipe(ids)
+	if r.is_empty():
+		return {"ready": true, "known": false, "chance": 0}
+	var chance: int = r.rate
+	var book := has_book(r.book)
+	if book:
+		chance += Data.BOOK_BONUS
+	if use_scroll:
+		chance += Data.SCROLL_BONUS
+	return {"ready": true, "known": true, "recipe": r, "chance": clampi(chance, 0, 100), "book": book}
+
+func combine(slots: Array, use_scroll: bool) -> Dictionary:
+	var used := []
+	var need := {}
+	for i in slots:
+		if i >= 0 and inv[i] != null:
+			used.append(i)
+			need[inv[i].id] = need.get(inv[i].id, 0) + 1
+	if used.size() < 2:
+		return {"ok": false, "reason": "Put at least two items in the slots."}
+	if not has_all(need):
+		return {"ok": false, "reason": "You don't have enough of those items."}
+	if use_scroll and count("combination_scroll") <= 0:
+		use_scroll = false
+	var p := preview_combo(slots, use_scroll)
+	take_all(need)
+	if use_scroll:
+		remove_item("combination_scroll", 1)
+	if p.known and randi_range(1, 100) <= p.chance:
+		var n: int = p.recipe.get("n", 1)
+		add_item(p.recipe.out, n)
+		return {"ok": true, "success": true, "out": p.recipe.out, "n": n}
 	add_item("dust", 1)
-	return {"ok": true, "success": false}
+	return {"ok": true, "success": false, "known": p.known}
+
+# ---------------------------------------------------------------- smith and furnaces
+func smith(recipe: Dictionary) -> bool:
+	if not has_all(recipe.cost):
+		return false
+	take_all(recipe.cost)
+	add_item(recipe.out, 1)
+	return true
+
+func start_smelt(f: int, recipe: Dictionary) -> String:
+	if not flags.get("furnaces", false):
+		return "The furnace gate is locked. Talk to the Furnace Warden."
+	if furnaces[f] != null:
+		return "That furnace is busy."
+	if not has_all(recipe.cost):
+		return "You need %s." % cost_text(recipe.cost)
+	take_all(recipe.cost)
+	furnaces[f] = {"out": recipe.out, "done": now() + recipe.time}
+	return ""
+
+func collect_smelt(f: int) -> bool:
+	var job = furnaces[f]
+	if job == null or now() < job.done:
+		return false
+	if add_item(job.out, 1) > 0:
+		return false
+	furnaces[f] = null
+	return true
+
+func cost_text(cost: Dictionary) -> String:
+	var parts := []
+	for id in cost:
+		parts.append("%d %s" % [cost[id], Data.ITEMS[id].name])
+	return ", ".join(parts)
+
+# ---------------------------------------------------------------- incubator and soils
+func start_hatch(egg: String) -> bool:
+	if not incubator.is_empty() or count(egg) <= 0:
+		return false
+	remove_item(egg, 1)
+	incubator = {"egg": egg, "done": now() + Data.HATCH_TIME}
+	return true
+
+func collect_hatch() -> String:
+	if incubator.is_empty() or now() < incubator.done:
+		return ""
+	var options: Array = Data.EGG_PETS[incubator.egg]
+	var pet: String = options[randi() % options.size()]
+	if add_item(pet, 1) > 0:
+		return ""
+	incubator = {}
+	return pet
+
+func plant(soil: int, seed: String) -> bool:
+	if soils[soil] != null or count(seed) <= 0:
+		return false
+	remove_item(seed, 1)
+	soils[soil] = {"seed": seed, "done": now() + float(Data.ITEMS[seed].grow)}
+	return true
+
+func harvest(soil: int) -> Array:
+	var s = soils[soil]
+	if s == null or now() < s.done:
+		return []
+	var loot := []
+	for i in 3:
+		loot.append(Data.pick_loot(Data.SEED_LOOT[s.seed]))
+	for l in loot:
+		add_item(l[0], l[1], true)
+	soils[soil] = null
+	return loot
+
+# ---------------------------------------------------------------- chests
+func open_chest(kind: String) -> Array:
+	var c: Dictionary = Data.CHESTS[kind]
+	if count(c.key) <= 0:
+		return []
+	remove_item(c.key, 1)
+	var loot := []
+	for i in c.rolls:
+		var l := Data.pick_loot(c.loot)
+		loot.append(l)
+		add_item(l[0], l[1], true)
+	return loot
+
+func today() -> int:
+	return int(now() / 86400.0)
 
 # ---------------------------------------------------------------- quests
 func next_quest(npc: String) -> Dictionary:
@@ -261,63 +430,39 @@ func next_quest(npc: String) -> Dictionary:
 	return {}
 
 func quest_ready(q: Dictionary) -> bool:
-	for id in q.need:
-		if count(id) < q.need[id]:
-			return false
-	if q.has("boss") and not q.boss in bosses:
-		return false
-	return true
+	return has_all(q.need)
 
 func complete_quest(q: Dictionary) -> void:
-	for id in q.need:
-		remove_item(id, q.need[id])
+	take_all(q.need)
 	for id in q.reward:
-		var left := add_item(id, q.reward[id])
-		if left > 0:
-			message.emit("Your bag is full, so some of the reward was lost.", "warn")
-	coins += int(q.get("coins", 0))
-	if q.get("unlock", "") == "furnace":
-		furnace = true
+		add_item(id, q.reward[id])
+	if q.has("unlock"):
+		flags[q.unlock] = true
 	quests_done.append(q.id)
 	inventory_changed.emit()
 	stats_changed.emit()
 
-# ---------------------------------------------------------------- maps
-func level_after(id: String) -> String:
-	var parts := id.split("_")
-	if parts[1] == "lair":
-		return ""
-	var n := int(parts[1])
-	if n < Data.LEVELS_PER_ZONE:
-		return "%s_%d" % [parts[0], n + 1]
-	return parts[0] + "_lair"
-
-func defeat_boss(mob_id: String) -> void:
-	if not mob_id in bosses:
-		bosses.append(mob_id)
-	for z in Data.ZONE_ORDER:
-		if Data.ZONES[z].unlock_after == mob_id:
-			unlocked[z + "_1"] = true
-			message.emit("%s is now open!" % Data.ZONES[z].name, "good")
+# ---------------------------------------------------------------- time of day
+func darkness() -> float:
+	# day 0.25-0.7, dusk to 0.8, night to 0.15, dawn to 0.25
+	var c := clock
+	if c >= 0.25 and c < 0.7:
+		return 0.0
+	if c >= 0.7 and c < 0.8:
+		return (c - 0.7) / 0.1
+	if c >= 0.15 and c < 0.25:
+		return 1.0 - (c - 0.15) / 0.1
+	return 1.0
 
 func is_night() -> bool:
-	return clock >= 0.7 and clock < 0.95
-
-func darkness() -> float:
-	if clock < 0.62:
-		return 0.0
-	if clock < 0.72:
-		return (clock - 0.62) / 0.10
-	if clock < 0.92:
-		return 1.0
-	return clampf((1.0 - clock) / 0.08, 0.0, 1.0)
+	return clock >= 0.8 or clock < 0.15
 
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
-		"v": 1, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mana": mana,
-		"stamina": stamina, "quests": quests_done, "bosses": bosses, "unlocked": unlocked,
-		"furnace": furnace, "day": day, "clock": clock, "level": level_id,
+		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mp": mp, "st": st,
+		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
+		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f:
@@ -333,32 +478,37 @@ func load_game() -> bool:
 	if f == null:
 		return false
 	var d = JSON.parse_string(f.get_as_text())
-	if typeof(d) != TYPE_DICTIONARY:
+	if typeof(d) != TYPE_DICTIONARY or int(d.get("v", 0)) != VERSION:
 		return false
+	new_game()
 	inv.clear()
 	inv.resize(BAG)
-	var saved_inv: Array = d.get("inv", [])
-	for i in mini(saved_inv.size(), BAG):
-		var s = saved_inv[i]
+	var saved: Array = d.get("inv", [])
+	for i in mini(saved.size(), BAG):
+		var s = saved[i]
 		if s and Data.ITEMS.has(s.id):
 			inv[i] = {"id": s.id, "n": int(s.n)}
-	for slot in equip:
+	for slot in EQUIP_SLOTS:
 		var id: String = d.get("equip", {}).get(slot, "")
 		equip[slot] = id if Data.ITEMS.has(id) else ""
 	sel = int(d.get("sel", 0))
 	coins = int(d.get("coins", 0))
+	flags = d.get("flags", {})
 	quests_done = d.get("quests", [])
-	bosses = d.get("bosses", [])
-	unlocked = d.get("unlocked", {"town": true, "grass_1": true})
-	furnace = bool(d.get("furnace", false))
+	var fs: Array = d.get("furnaces", [])
+	for i in mini(fs.size(), Data.FURNACES):
+		furnaces[i] = fs[i]
+	incubator = d.get("incubator", {})
+	var ss: Array = d.get("soils", [])
+	for i in mini(ss.size(), 5):
+		soils[i] = ss[i]
+	reward_chests = d.get("reward_chests", {})
+	clock = float(d.get("clock", 0.3))
 	day = int(d.get("day", 1))
-	clock = float(d.get("clock", 0.2))
-	level_id = d.get("level", "town")
-	hp = float(d.get("hp", max_hp()))
-	mana = float(d.get("mana", max_mana()))
-	stamina = float(d.get("stamina", max_stamina()))
-	if hp <= 0:
-		hp = max_hp()
+	best_survival_day = int(d.get("best_survival_day", 0))
+	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())
+	mp = float(d.get("mp", max_mp()))
+	st = float(d.get("st", max_st()))
 	clamp_stats()
 	inventory_changed.emit()
 	return true

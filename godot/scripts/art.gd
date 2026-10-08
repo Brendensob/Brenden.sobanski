@@ -1,6 +1,6 @@
 extends Node
-## All the pixel art, made in code. Characters and icons are text grids
-## (one letter = one pixel); trees, rocks, slimes and mountains are generated.
+## All the pixel art, made in code: villagers from text grids, monsters and
+## scenery from simple shapes, and item icons from templates coloured by material.
 ## Every sprite gets a dark outline added automatically.
 
 const OUTLINE := Color("1b1a24")
@@ -17,7 +17,7 @@ const PAL := {
 	"c": "4fb6d0", "C": "a6e6f2", "m": "e06a9a", "z": "8fb07a", "Z": "5e7a52",
 }
 
-# Character body; h/H hair, s/S skin, e eyes, c/C shirt, q/Q trousers, f shoes.
+# ---------------------------------------------------------------- villagers
 const BODY_TOP := [
 	"...hhhhhh...",
 	"..hhhhhhhhh.",
@@ -33,228 +33,24 @@ const BODY_TOP := [
 	"...cccccc...",
 	"...qqqqqq...",
 ]
-const LEGS_STAND := ["...qq..qq...", "...qq..qq...", "...ff..ff..."]
-const LEGS_WALK := ["..qq....qq..", "..qq....qq..", "..ff....ff.."]
-const LEGS_JUMP := ["...qq..qq...", "..ff....ff..", "............"]
-
+const LEGS := {
+	"stand": ["...qq..qq...", "...qq..qq...", "...ff..ff..."],
+	"walk": ["..qq....qq..", "..qq....qq..", "..ff....ff.."],
+	"jump": ["...qq..qq...", "..ff....ff..", "............"],
+}
 const LOOKS := {
-	"player": {"h": "6a3a1e", "H": "4a2814", "c": "3b5dc9", "C": "2c4596", "q": "3a3a52", "f": "2a2230", "e": "1b1a24"},
-	"pip": {"h": "8a5a32", "H": "6e4426", "c": "4f9a44", "C": "3a7a32", "q": "5a4a3a", "f": "3a2a22", "e": "1b1a24"},
-	"tilly": {"h": "f2cf5b", "H": "c99a2e", "c": "e06a9a", "C": "b0487a", "q": "6a3a6a", "f": "3a2a22", "e": "1b1a24"},
-	"hollis": {"h": "d8d8d8", "H": "a8a8a8", "c": "8a5a32", "C": "6e4426", "q": "4a4a4a", "f": "2a2a2a", "e": "1b1a24"},
-	"bram": {"h": "2a2230", "H": "1b1a24", "c": "7a7f88", "C": "5c616b", "q": "4a3428", "f": "2a2230", "e": "1b1a24"},
-	"moss": {"h": "5cbf3f", "H": "3e8a2e", "c": "7b4fb8", "C": "5a3a8a", "q": "5a3a8a", "f": "2a2230", "e": "1b1a24"},
+	"player": {"h": "c8302a", "H": "8a1e1a", "c": "2c3a6a", "C": "1e2a50", "q": "3a3a52", "f": "2a2230", "e": "1b1a24"},
+	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "e": "1b1a24", "s": "e8b48a"},
+	"gruff": {"h": "6a4a2a", "H": "4a3218", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "e": "1b1a24", "s": "d49a72"},
+	"mira": {"h": "f06aa0", "H": "c84a80", "c": "f2efe6", "C": "d8d0c0", "q": "e06a9a", "f": "3a2a22", "e": "1b1a24"},
+	"warden": {"h": "2a2a2a", "H": "1b1a24", "s": "8fc07a", "S": "6a9a5a", "c": "4a4a5a", "C": "3a3a48", "q": "3a3a48", "f": "1b1a24", "e": "1b1a24"},
+	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "e": "1b1a24", "s": "c88a5a"},
+	"merchant": {"h": "d8433a", "H": "a82a22", "c": "3b5dc9", "C": "2c4596", "q": "4a3a2a", "f": "2a2230", "e": "1b1a24"},
+	"tools": {"h": "3b5dc9", "H": "2c4596", "c": "3b5dc9", "C": "2c4596", "q": "3b5dc9", "f": "6e4426", "e": "1b1a24", "s": "f2c29a"},
+	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230", "e": "1b1a24"},
 	"zombie": {"h": "3a3a2a", "H": "2a2a1e", "s": "8fb07a", "S": "5e7a52", "c": "6e5a3e", "C": "4a3e2a", "q": "3e4a5a", "f": "2a2230", "e": "d8433a"},
-	"hell_knight": {"h": "3e424a", "H": "2a2c32", "s": "5c616b", "S": "3e424a", "c": "8a1e1a", "C": "5a1210", "q": "3e424a", "f": "1b1a24", "e": "f2a33a"},
-	"cinder_lord": {"h": "f2a33a", "H": "d8433a", "s": "8a2416", "S": "5a1210", "c": "3a1210", "C": "1b0a08", "q": "3a1210", "f": "1b0a08", "e": "f2cf5b"},
-}
-
-const GRIDS := {
-	"bee": [
-		"...ww.....",
-		"..wwww....",
-		".yykyyky..",
-		"yykyykyyk.",
-		"yykyykyykk",
-		".yykyyky..",
-	],
-	"shroom": [
-		"...rrrrrr...",
-		"..rrwrrrrr..",
-		".rrrrrrwrrr.",
-		"rrwrrrrrrrrr",
-		"rrrrrrwrrrwr",
-		"..wwwwwwww..",
-		"..wwkwwkww..",
-		"..wwwwwwww..",
-		"...ww..ww...",
-	],
-	"boar": [
-		".....nn.........",
-		"....nNNnnnnnn...",
-		"...nNnnnnnnnnn..",
-		"..nnnnnnnnnnnnn.",
-		".nnknnnnnnnnnnn.",
-		"wnnnnnnnnnnnnnn.",
-		"NNnnnnnnnnnnnnN.",
-		".NnnnnnnnnnnnN..",
-		"..nn.nn..nn.nn..",
-		"..bb.bb..bb.bb..",
-	],
-	"bat": [
-		"p....pp....p",
-		"pp..pPPp..pp",
-		"pppppPPppppp",
-		".ppppppppp..",
-		"..pp.rr.pp..",
-		"......pp....",
-	],
-	"skeleton": [
-		"...wwwwww...",
-		"..wwwwwwww..",
-		"..wwwkwwkw..",
-		"..wwwwwwww..",
-		"...wkwkww...",
-		"....wwww....",
-		"...aaaaaa...",
-		"..wawawaww..",
-		"..w.aaaa.w..",
-		"....waaw....",
-		"....w..w....",
-		"....w..w....",
-		"....w..w....",
-		"...ww..ww...",
-	],
-	"imp": [
-		".y......y...",
-		".ry....yr...",
-		"..rrrrrr....",
-		".rrrkrrkrr..",
-		".rrrrrrrrr..",
-		"pp.rrRRrr.pp",
-		"ppprrrrrrppp",
-		".p.rrrrrr.p.",
-		"...rr..rr...",
-		"...y....y...",
-	],
-	"furnace": [
-		"..DDDDDDDDDDDDDD..",
-		".DaaaaAaaaaaAaaaD.",
-		".DaAaaaaaAaaaaaaD.",
-		".DaaaaaDDDDaaaAaD.",
-		".DaaaaDDDDDDaaaaD.",
-		".DaAaDoyyoyoDaaaD.",
-		".DaaaDoyRRyoDaAaD.",
-		".DaaaDrRrrRrDaaaD.",
-		".DaAaDDDDDDDDaaaD.",
-		".DaaaaaaAaaaaaaaD.",
-		".DaaAaaaaaaaAaaaD.",
-		"DDDDDDDDDDDDDDDDDD",
-	],
-	"torch": [
-		"..y..",
-		".yoy.",
-		".oRo.",
-		"..o..",
-		"..l..",
-		"..n..",
-		"..n..",
-		"..n..",
-		"..n..",
-		"..n..",
-	],
-	"wood_wall": [
-		"nlnnlnnl",
-		"nlnnlnnl",
-		"NNNNNNNN",
-		"lnnlnnln",
-		"lnnlnnln",
-		"NNNNNNNN",
-		"nlnnlnnl",
-		"nlnnlnnl",
-		"NNNNNNNN",
-		"lnnlnnln",
-		"lnnlnnln",
-		"NNNNNNNN",
-		"nlnnlnnl",
-		"nlnnlnnl",
-		"NNNNNNNN",
-		"lnnlnnln",
-	],
-	"stone_wall": [
-		"aaaAaaaa",
-		"aaaaaaAa",
-		"DDDDDDDD",
-		"AaaaDaaa",
-		"aaaaDaaA",
-		"DDDDDDDD",
-		"aaAaaaaa",
-		"aaaaaaDa",
-		"DDDDDDDD",
-		"aaaDaaAa",
-		"AaaDaaaa",
-		"DDDDDDDD",
-		"aaaaAaaa",
-		"aAaaaaaa",
-		"DDDDDDDD",
-		"aaaDaaaa",
-	],
-	"heart": [".rr.rr.", "rRrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."],
-	"coin": [".yyy.", "yYyyy", "yyYyy", "yyyYy", ".yyy."],
-}
-
-# ---------------------------------------------------------------- item icons (10x10, outlined to 12x12)
-const ICON_GRIDS := {
-	"log": ["..........", "......nnn.", ".....nlln.", "....nlnn..", "...nlnn...", "..nlnn....", ".nlnn.....", ".nnl......", "..........", ".........."],
-	"lump": ["..........", "..........", "...XXXX...", "..XxXXXX..", ".XXXXXxXX.", ".XxXXXXXx.", ".XXXXxXXx.", "..xxxxxx..", "..........", ".........."],
-	"ore": ["..........", "..........", "...aaaa...", "..aXaaAa..", ".aaaaXaaa.", ".aXaaaaXa.", ".aaaXaaaD.", "..DDDDDD..", "..........", ".........."],
-	"bar": ["..........", "..........", "..........", "....XXXXX.", "...XXXXXx.", "..XXXXXxx.", ".xxxxxxx..", "..........", "..........", ".........."],
-	"blob": ["..........", "....X.....", "...XXx....", "..XXXXx...", ".XXwXXXx..", ".XXXXXXx..", ".XXXXXxx..", "..xxxxx...", "..........", ".........."],
-	"orb": ["..........", "...XXXX...", "..XwXXXx..", ".XwXXXXXx.", ".XXXXXXXx.", ".XXXXXXxx.", "..XXXXxx..", "...xxxx...", "..........", ".........."],
-	"crystal": ["....X.....", "...XwX....", "..XwXXx...", "..XXXXx...", "..XXXxx...", "..XXXxx...", "...Xxx....", "....x.....", "..........", ".........."],
-	"herb": ["..........", "....g.....", "...gGg....", "..g.G.g...", ".gG.G.Gg..", "..g.G.g...", "....G.....", "....G.....", "..........", ".........."],
-	"fiber": ["..g.......", "..gG..g...", "...gG.gG..", "...yyyyy..", "....gG.g..", "...gG.gG..", "..gG...g..", "..g.......", "..........", ".........."],
-	"bone": ["..........", ".ww.......", ".www......", "..www.....", "...www....", "....www...", ".....www..", "......ww..", "..........", ".........."],
-	"scarab": ["..........", "...k..k...", "....kk....", "...uUUu...", "..uUuuUu..", "..uuUUuu..", "..uuuuuu..", "...u..u...", "..........", ".........."],
-	"snowball": ["..........", "..........", "...wwww...", "..wwwwCw..", "..wwCwww..", "..wwwwww..", "...CwwC...", "..........", "..........", ".........."],
-	"stinger": ["..........", "........k.", ".......kk.", "......yk..", ".....yy...", "....yk....", "...yy.....", "..yk......", "..........", ".........."],
-	"leather": ["..........", ".nn....nn.", ".nlnnnnln.", "..nlllln..", "..nlllln..", "..nlllln..", ".nlnnnnln.", ".nn....nn.", "..........", ".........."],
-	"wing": ["..........", "X.........", "XX......X.", "XxX....XX.", "XxxX..XxX.", ".XxxXXxxX.", "..XXxxXX..", "....XX....", "..........", ".........."],
-	"mushroom": ["..........", "...rrrr...", "..rwrrwr..", ".rrrrrrrr.", "...wwww...", "...wwww...", "...wwww...", "..........", "..........", ".........."],
-	"bandage": ["..........", "..........", ".wwwwwwww.", ".wwwrrwww.", ".wwrrrrww.", ".wwwrrwww.", ".wwwwwwww.", "..........", "..........", ".........."],
-	"beetle": ["..........", "...k..k...", "....kk....", "...yYYy...", "..yYyyYy..", "..yyYYyy..", "..yyyyyy..", "...y..y...", "..........", ".........."],
-	"bun": ["..........", "..........", "...oooo...", "..oyoyoo..", ".ooooyooo.", ".oyoooooo.", ".OOOOOOOO.", "..........", "..........", ".........."],
-	"potion": ["..........", "....nn....", "....AA....", "...AXXA...", "..AXwXXA..", "..AXXXXA..", "..AxxxxA..", "...AAAA...", "..........", ".........."],
-	"sword": [".........X", "........Xx", ".......Xx.", "......Xx..", ".....Xx...", ".k..Xx....", "..kXx.....", "..lk......", ".lk.k.....", "l........."],
-	"club": ["......XXX.", ".....XXXXx", ".....XXXxx", "....XXxxx.", "...nlx....", "...nl.....", "..nl......", "..nl......", ".nl.......", ".n........"],
-	"hammer": ["...XXXXX..", "..XwXXXXx.", "..XXXXXxx.", "...xxnxx..", ".....nl...", ".....nl...", "....nl....", "....nl....", "...nl.....", "...n......"],
-	"wand": [".......X..", "......XwX.", ".......Xx.", "......n...", ".....nl...", "....nl....", "...nl.....", "..nl......", ".nl.......", ".n........"],
-	"axe": ["....XXX...", "...XxXX...", "..nXxXX...", "..nlXX....", "..nl......", "..nl......", "..nl......", "..nl......", "..nl......", ".........."],
-	"pick": ["..XXXXX...", ".Xx.n.xX..", "X...nl..X.", "....nl....", "....nl....", "....nl....", "....nl....", "....nl....", "..........", ".........."],
-	"armor": ["..........", ".XX....XX.", ".XxXXXXxX.", "..XXXXXX..", "..XxXXxX..", "..XXXXXX..", "..XxxxxX..", "..........", "..........", ".........."],
-	"helmet": ["..........", "...XXXX...", "..XwXXXX..", ".XXXXXXXX.", ".XXxxxxXX.", ".XX....XX.", ".Xx....xX.", "..........", "..........", ".........."],
-	"crown": ["..........", ".X..X..X..", ".XX.XX.XX.", ".XXXXXXXX.", ".XwXXwXXX.", ".XXXXXXXX.", ".xxxxxxxx.", "..........", "..........", ".........."],
-	"shield": ["..........", ".XXXXXXXX.", ".XwXXXXxX.", ".XXXxXXxX.", ".XXXxXXxX.", "..XXxXxX..", "...XxxX...", "....XX....", "..........", ".........."],
-	"ring": ["..........", "....X.....", "...XwX....", "..xxXxx...", ".x.....x..", ".x.....x..", ".x.....x..", "..xxxxx...", "..........", ".........."],
-	"book": ["..........", ".XXXXXXX..", ".XwwwwwXw.", ".XXXyXXXw.", ".XXyyyXXw.", ".XXXyXXXw.", ".XXXXXXXw.", ".xxxxxxxw.", "..wwwwww..", ".........."],
-	"key": ["..........", "..XXX.....", ".X...X....", ".X...X....", "..XXXxxxxx", ".....x.x.x", ".......x.x", "..........", "..........", ".........."],
-	"wall": ["nlnnlnnlnn", "NNNNNNNNNN", "lnnlnnlnnl", "NNNNNNNNNN", "nlnnlnnlnn", "NNNNNNNNNN", "lnnlnnlnnl", "NNNNNNNNNN", "nlnnlnnlnn", ".........."],
-	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
-}
-
-# icon shape + colours for each item
-const ICONS := {
-	"wood": ["log", {}], "stone": ["lump", {"X": "9aa2ad", "x": "5c616b"}], "herb": ["herb", {}], "fiber": ["fiber", {}],
-	"jelly": ["blob", {"X": "5cbf3f", "x": "3e8a2e"}], "bone": ["bone", {}], "scarab": ["scarab", {}], "snowball": ["snowball", {}],
-	"stinger": ["stinger", {}], "leather": ["leather", {}], "coal": ["lump", {"X": "3e424a", "x": "1b1a24"}],
-	"iron_ore": ["ore", {"X": "e8b48a"}], "iron_bar": ["bar", {"X": "c8ced6", "x": "7a8290"}],
-	"gold_ore": ["ore", {"X": "f2cf5b"}], "gold_bar": ["bar", {"X": "f2cf5b", "x": "c99a2e"}],
-	"bat_wing": ["wing", {"X": "7b4fb8", "x": "a77ee0"}], "ectoplasm": ["blob", {"X": "8affc8", "x": "3ec88a"}],
-	"ember": ["orb", {"X": "f2a33a", "x": "d8433a"}], "obsidian": ["crystal", {"X": "4a3e66", "x": "2a2240"}],
-	"king_jelly": ["blob", {"X": "f2cf5b", "x": "c99a2e"}], "dark_flesh": ["blob", {"X": "a77ee0", "x": "5a3a8a"}],
-	"fire_essence": ["orb", {"X": "ff6a3a", "x": "a8241a"}], "dust": ["lump", {"X": "c8b89a", "x": "8a7a62"}],
-	"crystal": ["crystal", {"X": "a6e6f2", "x": "4fb6d0"}],
-	"mushroom": ["mushroom", {}], "bandage": ["bandage", {}], "honey_beetle": ["beetle", {}], "honey_bun": ["bun", {}],
-	"ice_jelly": ["blob", {"X": "a6e6f2", "x": "4fb6d0"}], "mana_potion": ["potion", {"X": "6b8ff0", "x": "3b5dc9"}],
-	"wood_club": ["club", {"X": "a8703f", "x": "6e4426"}], "stone_sword": ["sword", {"X": "c8ced6", "x": "7a8290"}],
-	"rusty_blade": ["sword", {"X": "d0905a", "x": "8a4a24"}], "iron_sword": ["sword", {"X": "e3ebf5", "x": "9fb0c8"}],
-	"jelly_hammer": ["hammer", {"X": "f2cf5b", "x": "c99a2e"}], "gold_sword": ["sword", {"X": "f2cf5b", "x": "c99a2e"}],
-	"dark_blade": ["sword", {"X": "a77ee0", "x": "5a3a8a"}], "cinder_blade": ["sword", {"X": "ff8a3a", "x": "d8433a"}],
-	"fire_wand": ["wand", {"X": "f2a33a", "x": "d8433a"}],
-	"wood_axe": ["axe", {"X": "a8703f", "x": "6e4426"}], "stone_axe": ["axe", {"X": "c8ced6", "x": "7a8290"}], "iron_axe": ["axe", {"X": "e3ebf5", "x": "9fb0c8"}],
-	"wood_pick": ["pick", {"X": "a8703f", "x": "6e4426"}], "stone_pick": ["pick", {"X": "c8ced6", "x": "7a8290"}],
-	"iron_pick": ["pick", {"X": "e3ebf5", "x": "9fb0c8"}], "gold_pick": ["pick", {"X": "f2cf5b", "x": "c99a2e"}],
-	"leather_armor": ["armor", {"X": "a8703f", "x": "6e4426"}], "iron_armor": ["armor", {"X": "c8ced6", "x": "7a8290"}],
-	"gold_armor": ["armor", {"X": "f2cf5b", "x": "c99a2e"}], "obsidian_armor": ["armor", {"X": "5a4a7a", "x": "2a2240"}],
-	"leather_cap": ["helmet", {"X": "a8703f", "x": "6e4426"}], "iron_helmet": ["helmet", {"X": "c8ced6", "x": "7a8290"}],
-	"gold_helmet": ["helmet", {"X": "f2cf5b", "x": "c99a2e"}], "jelly_crown": ["crown", {"X": "f2cf5b", "x": "5cbf3f"}],
-	"wood_shield": ["shield", {"X": "a8703f", "x": "6e4426"}], "iron_shield": ["shield", {"X": "c8ced6", "x": "7a8290"}],
-	"dark_shield": ["shield", {"X": "7b4fb8", "x": "3a2a5a"}],
-	"stamina_ring": ["ring", {"X": "5cbf3f", "x": "c99a2e"}], "mana_ring": ["ring", {"X": "6b8ff0", "x": "c99a2e"}], "power_ring": ["ring", {"X": "d8433a", "x": "c99a2e"}],
-	"wood_wall": ["wall", {}], "stone_wall": ["wall", {"n": "9aa2ad", "l": "c8ced6", "N": "5c616b"}], "torch": ["torch_i", {}],
-	"survival_book": ["book", {"X": "4f9a44", "x": "2e6a2a"}], "combo_book_1": ["book", {"X": "3b5dc9", "x": "2c4596"}],
-	"combo_book_2": ["book", {"X": "d8433a", "x": "8a1e1a"}], "combo_book_3": ["book", {"X": "1b1a24", "x": "4a3e66"}],
-	"grass_key": ["key", {"X": "5cbf3f", "x": "3e8a2e"}], "dark_key": ["key", {"X": "a77ee0", "x": "5a3a8a"}], "hell_key": ["key", {"X": "f2a33a", "x": "d8433a"}],
+	"wizard": {"h": "3b5dc9", "H": "2c4596", "s": "e8c8a8", "S": "c8a888", "c": "3b5dc9", "C": "6b8ff0", "q": "3b5dc9", "f": "2c4596", "e": "f2cf5b"},
+	"mummy": {"h": "e8e0c8", "H": "b8b098", "s": "e8e0c8", "S": "b8b098", "c": "e8e0c8", "C": "b8b098", "q": "e8e0c8", "f": "b8b098", "e": "d8433a"},
 }
 
 func _ready() -> void:
@@ -268,9 +64,7 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- helpers
 func col(v) -> Color:
-	if v is Color:
-		return v
-	return Color(String(v))
+	return v if v is Color else Color(String(v))
 
 func grid_image(rows: Array, map: Dictionary = {}, scale: int = 1) -> Image:
 	var w := 0
@@ -293,7 +87,6 @@ func grid_image(rows: Array, map: Dictionary = {}, scale: int = 1) -> Image:
 			img.fill_rect(Rect2i(x * scale, y * scale, scale, scale), c)
 	return img
 
-# Adds a 1px dark outline around every opaque pixel.
 func outline(src: Image, color: Color = OUTLINE) -> Image:
 	var w := src.get_width() + 2
 	var h := src.get_height() + 2
@@ -305,9 +98,9 @@ func outline(src: Image, color: Color = OUTLINE) -> Image:
 			if img.get_pixel(x, y).a > 0.5:
 				continue
 			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				var px: int = x + d.x
-				var py: int = y + d.y
-				if px >= 0 and py >= 0 and px < w and py < h and img.get_pixel(px, py).a > 0.5:
+				var px2: int = x + d.x
+				var py2: int = y + d.y
+				if px2 >= 0 and py2 >= 0 and px2 < w and py2 < h and img.get_pixel(px2, py2).a > 0.5:
 					out.set_pixel(x, y, color)
 					break
 	return out
@@ -328,263 +121,798 @@ func cached(key: String, maker: Callable) -> Texture2D:
 		_cache[key] = maker.call()
 	return _cache[key]
 
+func blank(w: int, h: int) -> Image:
+	return Image.create(maxi(w, 1), maxi(h, 1), false, Image.FORMAT_RGBA8)
+
+func px(img: Image, x: int, y: int, c: Color) -> void:
+	if x >= 0 and y >= 0 and x < img.get_width() and y < img.get_height():
+		img.set_pixel(x, y, c)
+
+func rect(img: Image, x: int, y: int, w: int, h: int, c: Color) -> void:
+	var r := Rect2i(x, y, w, h).intersection(Rect2i(0, 0, img.get_width(), img.get_height()))
+	if r.size.x > 0 and r.size.y > 0:
+		img.fill_rect(r, c)
+
 func ellipse(img: Image, cx: float, cy: float, rx: float, ry: float, c: Color) -> void:
 	for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
 		for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
-			if x < 0 or y < 0 or x >= img.get_width() or y >= img.get_height():
-				continue
-			var dx := (x + 0.5 - cx) / rx
-			var dy := (y + 0.5 - cy) / ry
+			var dx := (x + 0.5 - cx) / maxf(rx, 0.1)
+			var dy := (y + 0.5 - cy) / maxf(ry, 0.1)
 			if dx * dx + dy * dy <= 1.0:
-				img.set_pixel(x, y, c)
+				px(img, x, y, c)
+
+func eyes(img: Image, x1: int, x2: int, y: int, size: int = 1, c: Color = OUTLINE) -> void:
+	rect(img, x1, y, size, size + 1, c)
+	rect(img, x2, y, size, size + 1, c)
 
 # ---------------------------------------------------------------- characters
-func character_rows(legs: Array) -> Array:
-	return BODY_TOP + legs
-
 func character(look: String, frame: String = "stand", scale: int = 1) -> Texture2D:
 	return cached("char_%s_%s_%d" % [look, frame, scale], func():
-		var legs = {"stand": LEGS_STAND, "walk": LEGS_WALK, "jump": LEGS_JUMP}[frame]
-		var map: Dictionary = LOOKS[look].duplicate()
-		var img := grid_image(character_rows(legs), map, scale)
-		return to_tex(outline(img)))
+		return to_tex(outline(_char_img(look, frame, scale))))
 
 func character_flash(look: String) -> Texture2D:
 	return cached("charflash_" + look, func():
-		var img := outline(grid_image(character_rows(LEGS_STAND), LOOKS[look]))
-		return to_tex(flash_image(img)))
+		return to_tex(flash_image(outline(_char_img(look, "stand", 1)))))
 
-# ---------------------------------------------------------------- monsters
-func slime_image(body: Color, w: int, h: int, crown: bool = false, squash: bool = false) -> Image:
+func _char_img(look: String, frame: String, scale: int) -> Image:
+	var img := grid_image(BODY_TOP + LEGS[frame], LOOKS[look], scale)
+	if look == "wizard":
+		var hat := blank(img.get_width(), img.get_height() + 5)
+		hat.blit_rect(img, Rect2i(0, 0, img.get_width(), img.get_height()), Vector2i(0, 5))
+		var c := Color("2c4596")
+		for i in 6:
+			rect(hat, 5 - i / 2, i, 2 + i, 1, c)
+		rect(hat, 0, 5, 12, 2, c)
+		px(hat, 6, 1, Color("f2cf5b"))
+		return hat
+	if look == "miner":
+		rect(img, 2, 0, 9, 3, Color("f2cf5b"))
+		rect(img, 8, 1, 2, 2, Color("f2efe6"))
+	if look == "merchant" or look == "tools":
+		rect(img, 1, 0, 10, 3, col(LOOKS[look].h))
+		rect(img, 7, 2, 5, 1, col(LOOKS[look].H))
+	if look == "warden":
+		rect(img, 2, 0, 9, 2, Color("2a2a2a"))
+		px(img, 1, 6, Color("a8a8b0"))
+		px(img, 10, 6, Color("a8a8b0"))
+	if look == "mummy":
+		var clean := img.duplicate()
+		for y in range(0, img.get_height(), 3):
+			rect(img, 0, y, img.get_width(), 1, Color("b8b098"))
+		for y in img.get_height():
+			for x in img.get_width():
+				if clean.get_pixel(x, y).a < 0.5:
+					img.set_pixel(x, y, Color(0, 0, 0, 0))
+		px(img, 7, 4, Color("d8433a"))
+		px(img, 9, 4, Color("d8433a"))
+	return img
+
+# ---------------------------------------------------------------- monster shapes
+func blob(body: Color, w: int, h: int, squash: bool, face := true) -> Image:
 	var hh := h - 2 if squash else h
 	var ww := w + 2 if squash else w
-	var top := 6 if crown else 0
-	var img := Image.create(ww, hh + top, false, Image.FORMAT_RGBA8)
-	var light := body.lightened(0.35)
-	var dark := body.darkened(0.3)
-	ellipse(img, ww / 2.0, top + hh * 0.62, ww / 2.0, hh * 0.62, body)
-	img.fill_rect(Rect2i(1, top + hh - 2, ww - 2, 2), dark)
-	ellipse(img, ww * 0.32, top + hh * 0.38, ww * 0.12, hh * 0.12, light)
-	var ey := top + int(hh * 0.5)
-	var e1 := int(ww * 0.55)
-	var e2 := int(ww * 0.78)
-	var es := 2 if ww > 20 else 1
-	img.fill_rect(Rect2i(e1, ey, es, es + 1), OUTLINE)
-	img.fill_rect(Rect2i(e2, ey, es, es + 1), OUTLINE)
-	if crown:
-		var cx := ww / 2 - 6
+	var img := blank(ww, hh)
+	ellipse(img, ww / 2.0, hh * 0.62, ww / 2.0, hh * 0.62, body)
+	rect(img, 1, hh - 2, ww - 2, 2, body.darkened(0.3))
+	ellipse(img, ww * 0.32, hh * 0.38, ww * 0.12, hh * 0.12, body.lightened(0.4))
+	if face:
+		var s := 2 if ww > 20 else 1
+		eyes(img, int(ww * 0.55), int(ww * 0.78), int(hh * 0.5), s)
+	return img
+
+func eye_img(r: int, iris: Color, lashes: bool, crown: bool, feet: bool, alt: bool) -> Image:
+	var top := 7 if crown or lashes else 0
+	var foot := 4 if feet else 0
+	var img := blank(r * 2 + 4, r * 2 + top + foot + 2)
+	var cx := r + 2.0
+	var cy := r + top + 1.0
+	ellipse(img, cx, cy, r, r, Color("f2efe6"))
+	for i in 5:
+		var a := i * 1.3
+		rect(img, int(cx + cos(a) * r * 0.7), int(cy + sin(a) * r * 0.7), 2, 1, Color("e06a6a"))
+	var look := 2.0 if alt else 0.0
+	ellipse(img, cx + r * 0.25 + look, cy, r * 0.45, r * 0.5, iris)
+	ellipse(img, cx + r * 0.32 + look, cy, r * 0.22, r * 0.28, OUTLINE)
+	px(img, int(cx + r * 0.15), int(cy - r * 0.25), Color.WHITE)
+	if lashes:
 		var gold := Color("f2cf5b")
-		img.fill_rect(Rect2i(cx, top - 2, 12, 3), gold)
+		for i in 7:
+			var a := PI + 0.2 + i * (PI - 0.4) / 6.0
+			for k in range(r + 1, r + 6):
+				px(img, int(cx + cos(a) * k), int(cy + sin(a) * k), gold)
+	if crown:
+		var gold2 := Color("f2cf5b")
+		rect(img, int(cx) - 6, top - 3, 13, 3, gold2)
 		for i in 3:
-			img.fill_rect(Rect2i(cx + i * 5, top - 5, 2, 3), gold)
-		img.set_pixel(cx + 6, top - 1, Color("d8433a"))
+			rect(img, int(cx) - 6 + i * 5, top - 6, 3, 3, gold2)
+		px(img, int(cx), top - 2, Color("d8433a"))
+	if feet:
+		var y := int(cy + r) + 1
+		var off := 1 if alt else 0
+		rect(img, int(cx - r * 0.5) - off, y, 3, 3, Color("c8a888"))
+		rect(img, int(cx + r * 0.3) + off, y, 3, 3, Color("c8a888"))
 	return img
 
-func eye_image() -> Image:
-	var img := Image.create(24, 26, false, Image.FORMAT_RGBA8)
-	ellipse(img, 12, 11, 11, 11, Color("7b4fb8"))
-	ellipse(img, 12, 11, 8, 8, Color("f2efe6"))
-	ellipse(img, 14, 11, 4, 5, Color("d8433a"))
-	ellipse(img, 15, 11, 2, 3, OUTLINE)
-	img.set_pixel(13, 9, Color.WHITE)
+func ghost_img(w: int, h: int, body: Color, eye: Color, alt: bool, crown := false) -> Image:
+	var top := 6 if crown else 0
+	var img := blank(w, h + top)
+	ellipse(img, w / 2.0, top + w / 2.0, w / 2.0, w / 2.0, body)
+	rect(img, 0, top + w / 2, w, h - w / 2 - 3, body)
+	var n := 4
+	for i in n:
+		var x := i * w / n
+		var dip := 3 if (i % 2 == 0) != alt else 1
+		rect(img, x, top + h - 3, w / n, 3 - dip + 1, body)
+	ellipse(img, w * 0.3, top + w * 0.35, w * 0.08, w * 0.08, body.lightened(0.35))
+	var es := maxi(1, w / 10)
+	rect(img, int(w * 0.55), top + int(w * 0.45), es, es + 1, eye)
+	rect(img, int(w * 0.78), top + int(w * 0.45), es, es + 1, eye)
+	rect(img, int(w * 0.6), top + int(w * 0.7), int(w * 0.2), maxi(1, es), OUTLINE)
+	if crown:
+		var gold := Color("f2cf5b")
+		rect(img, int(w / 2.0) - 7, top - 2, 15, 3, gold)
+		for i in 4:
+			rect(img, int(w / 2.0) - 7 + i * 4, top - 5, 2, 3, gold)
+	return img
+
+func wings_img(w: int, h: int, wing: Color, body: Color, alt: bool, spots := Color(0, 0, 0, 0)) -> Image:
+	var img := blank(w, h)
+	var cx := w / 2.0
+	var lift := -2.0 if alt else 0.0
+	for side in [-1, 1]:
+		ellipse(img, cx + side * w * 0.26, h * 0.35 + lift, w * 0.24, h * 0.3, wing)
+		ellipse(img, cx + side * w * 0.2, h * 0.7, w * 0.16, h * 0.22, wing.darkened(0.15))
+		if spots.a > 0:
+			ellipse(img, cx + side * w * 0.28, h * 0.32 + lift, w * 0.07, h * 0.08, spots)
+	rect(img, int(cx) - 1, int(h * 0.15), 3, int(h * 0.75), body)
+	px(img, int(cx) - 2, int(h * 0.1), body)
+	px(img, int(cx) + 2, int(h * 0.1), body)
+	return img
+
+func bat_img(w: int, h: int, c: Color, alt: bool) -> Image:
+	var img := blank(w, h)
+	var cx := w / 2.0
+	ellipse(img, cx, h * 0.45, w * 0.13, h * 0.35, c)
+	for side in [-1, 1]:
+		for i in int(w * 0.38):
+			var x := int(cx + side * (w * 0.1 + i))
+			var y0 := int(h * 0.2 + (i * 0.25 if alt else -i * 0.1) + h * 0.15)
+			rect(img, x, y0, 1, maxi(1, int(h * 0.45) - absi(i % 4 - 2)), c.darkened(0.1))
+	px(img, int(cx) - 2, int(h * 0.4), Color("d8433a"))
+	px(img, int(cx) + 1, int(h * 0.4), Color("d8433a"))
+	rect(img, int(cx) - 2, int(h * 0.1), 1, 2, c)
+	rect(img, int(cx) + 1, int(h * 0.1), 1, 2, c)
+	return img
+
+func flame_img(c: Color, alt: bool) -> Image:
+	var img := blank(12, 15)
+	ellipse(img, 6, 10, 5, 5, c)
+	for i in 6:
+		rect(img, 3 + i / 2 + (1 if alt else 0), 2 + i, 6 - i, 1, c)
+	ellipse(img, 6, 11, 3, 3, c.lightened(0.5))
+	eyes(img, 5, 8, 9)
+	return img
+
+func trex_img(body: Color, belly: Color, alt: bool, spikes := false) -> Image:
+	var img := blank(26, 20)
+	ellipse(img, 11, 11, 8, 5, body)
+	for i in 8:
+		rect(img, 2 - i / 4, 9 + i / 3, 6, 2, body)
+	rect(img, 15, 2, 9, 7, body)
+	rect(img, 17, 7, 7, 2, body.darkened(0.25))
+	for i in 3:
+		px(img, 18 + i * 2, 7, Color.WHITE)
+	px(img, 20, 4, OUTLINE)
+	rect(img, 9, 12, 6, 3, belly)
+	rect(img, 17, 10, 3, 1, body.darkened(0.2))
+	var l := 1 if alt else 0
+	rect(img, 8 - l, 15, 3, 5, body.darkened(0.15))
+	rect(img, 13 + l, 15, 3, 5, body.darkened(0.15))
+	if spikes:
+		for i in 4:
+			px(img, 8 + i * 3, 5, Color("e8dccb"))
+			px(img, 15 + i * 2, 1, Color("e8dccb"))
+	return img
+
+func hand_img(c: Color, alt: bool) -> Image:
+	var img := blank(22, 24)
+	rect(img, 3, 11, 15, 11, c)
 	for i in 4:
-		var x := 5 + i * 4
-		img.fill_rect(Rect2i(x, 20, 2, 3 + (i % 2) * 3), Color("5a3a8a"))
+		var h := 9 + (i % 2) * 2 + (1 if alt and i == 1 else 0)
+		rect(img, 3 + i * 4, 11 - h + 1, 3, h, c)
+		rect(img, 3 + i * 4, 11 - h + 1, 3, 1, c.lightened(0.3))
+	rect(img, 17, 13, 4, 3, c)
+	rect(img, 19, 9, 3, 6, c)
+	rect(img, 4, 21, 13, 2, c.darkened(0.3))
+	rect(img, 5, 15, 9, 1, c.darkened(0.2))
 	return img
 
-func mob_frames(sprite: String) -> Array:
-	# returns [normal, alternate, flash]
-	return [mob_tex(sprite, false), mob_tex(sprite, true), mob_tex(sprite, false, true)]
+func bug_img(w: int, h: int, shell: Color, legs: Color, alt: bool, horn := false) -> Image:
+	var img := blank(w, h)
+	ellipse(img, w * 0.45, h * 0.45, w * 0.4, h * 0.35, shell)
+	ellipse(img, w * 0.35, h * 0.3, w * 0.15, h * 0.1, shell.lightened(0.35))
+	ellipse(img, w * 0.85, h * 0.5, w * 0.14, h * 0.2, legs)
+	px(img, int(w * 0.9), int(h * 0.45), OUTLINE)
+	for i in 3:
+		var x := int(w * 0.2 + i * w * 0.22)
+		var off := 1 if (i % 2 == 0) == alt else 0
+		rect(img, x + off, int(h * 0.72), 1, int(h * 0.28), legs)
+	if horn:
+		for i in 4:
+			px(img, int(w * 0.9) + i / 2, int(h * 0.3) - i, Color("e8dccb"))
+	return img
 
-func mob_tex(sprite: String, alt: bool, flash: bool = false) -> Texture2D:
-	return cached("mob_%s_%s_%s" % [sprite, alt, flash], func():
+func octo_img(c: Color, alt: bool) -> Image:
+	var img := blank(16, 16)
+	ellipse(img, 8, 6, 7, 6, c)
+	ellipse(img, 5, 4, 2, 2, c.lightened(0.35))
+	eyes(img, 8, 11, 6)
+	for i in 4:
+		var x := 2 + i * 3
+		var wig := 1 if (i % 2 == 0) == alt else -1
+		rect(img, x, 11, 2, 3, c)
+		rect(img, x + wig, 14, 2, 2, c.darkened(0.2))
+	return img
+
+func worm_img(c: Color, alt: bool) -> Image:
+	var img := blank(28, 11)
+	for i in 6:
+		var y := 6.0 + sin(i * 1.1 + (1.5 if alt else 0.0)) * 1.5
+		ellipse(img, 3 + i * 4.3, y, 3.2, 3.5, c if i % 2 == 0 else c.darkened(0.15))
+	ellipse(img, 25, 5, 3.5, 4, c.lightened(0.15))
+	eyes(img, 25, 27, 3)
+	rect(img, 25, 7, 3, 1, Color("d8433a"))
+	return img
+
+func ufo_img(alt: bool) -> Image:
+	var img := blank(18, 12)
+	ellipse(img, 9, 4, 4, 4, Color("a6e6f2"))
+	ellipse(img, 9, 7, 9, 3, Color("9aa2ad"))
+	rect(img, 2, 7, 14, 1, Color("5c616b"))
+	for i in 4:
+		px(img, 3 + i * 4, 7, Color("f2cf5b") if (i % 2 == 0) == alt else Color("d8433a"))
+	eyes(img, 8, 10, 3)
+	return img
+
+func cloud_img(alt: bool) -> Image:
+	var img := blank(24, 16)
+	var c := Color("c8ced6")
+	for e in [[7, 9, 6, 5], [13, 6, 7, 6], [18, 9, 6, 5], [12, 11, 9, 4]]:
+		ellipse(img, e[0], e[1], e[2], e[3], c)
+	ellipse(img, 10, 5, 3, 2, Color.WHITE)
+	eyes(img, 12, 16, 8)
+	if alt:
+		px(img, 8, 15, Color("6b8ff0"))
+		px(img, 15, 15, Color("6b8ff0"))
+	return img
+
+func tornado_img(alt: bool) -> Image:
+	var img := blank(20, 26)
+	for y in 26:
+		var w := 2 + int((26 - y) * 0.7)
+		var shift := int(sin(y * 0.5 + (1.0 if alt else 0.0)) * 2)
+		rect(img, 10 - w / 2 + shift, y, w, 1, Color("c8ced6") if (y / 3) % 2 == 0 else Color("9aa2ad"))
+	eyes(img, 9, 13, 6)
+	return img
+
+func tidal_img(alt: bool) -> Image:
+	var img := blank(22, 18)
+	var c := Color("3b8fd8")
+	ellipse(img, 11, 11, 10, 7, c)
+	for i in 6:
+		rect(img, 4 + i * 2, 4 - (i if i < 4 else 6 - i) + (1 if alt else 0), 3, 6, c)
+	rect(img, 2, 14, 18, 2, Color("a6e6f2"))
+	ellipse(img, 7, 8, 2, 2, c.lightened(0.4))
+	eyes(img, 12, 16, 10)
+	return img
+
+func crusher_img() -> Image:
+	var img := blank(18, 18)
+	rect(img, 0, 0, 18, 18, Color("8a9099"))
+	rect(img, 1, 1, 16, 2, Color("b8bec6"))
+	rect(img, 0, 15, 18, 3, Color("5c616b"))
+	rect(img, 3, 6, 4, 3, OUTLINE)
+	rect(img, 11, 6, 4, 3, OUTLINE)
+	rect(img, 2, 5, 5, 1, Color("3e424a"))
+	rect(img, 11, 5, 5, 1, Color("3e424a"))
+	rect(img, 5, 12, 8, 2, OUTLINE)
+	return img
+
+func chick_img(alt: bool) -> Image:
+	var img := blank(10, 10)
+	ellipse(img, 5, 6, 4.5, 4, Color("f2cf5b"))
+	ellipse(img, 4, 4, 2, 2, Color("ffe89a"))
+	px(img, 7, 4, OUTLINE)
+	px(img, 9, 5, Color("ea8a33"))
+	if alt:
+		px(img, 1, 5, Color("c99a2e"))
+	return img
+
+func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
+	return cached("mob_%s_%s_%s" % [look, alt, flash], func():
 		var img: Image
-		match sprite:
-			"slime":
-				img = slime_image(Color("5cbf3f"), 14, 11, false, alt)
-			"dark_slime":
-				img = slime_image(Color("7b4fb8"), 16, 12, false, alt)
-			"magma_slime":
-				img = slime_image(Color("e8602a"), 18, 13, false, alt)
-			"slime_king":
-				img = slime_image(Color("4fb04a"), 40, 30, true, alt)
-			"gloom_eye":
-				img = eye_image()
-				if alt:
-					img.fill_rect(Rect2i(0, 20, 24, 6), Color(0, 0, 0, 0))
-					for i in 4:
-						img.fill_rect(Rect2i(5 + i * 4, 20, 2, 6 - (i % 2) * 3), Color("5a3a8a"))
-			"zombie", "hell_knight":
-				img = grid_image(character_rows(LEGS_WALK if alt else LEGS_STAND), LOOKS[sprite])
-			"cinder_lord":
-				img = grid_image(character_rows(LEGS_WALK if alt else LEGS_STAND), LOOKS[sprite], 2)
-			_:
-				var rows: Array = GRIDS[sprite]
-				if alt and sprite in ["bee", "bat", "imp"]:
-					rows = rows.duplicate()
-					rows[0] = rows[0].replace("w", ".").replace("p", ".")
-				img = grid_image(rows)
+		match look:
+			"slime_pink": img = blob(Color("f06aa0"), 14, 11, alt)
+			"slime_dark": img = blob(Color("7b4fb8"), 16, 12, alt)
+			"small_stone": img = blob(Color("8a9099"), 16, 13, alt)
+			"farmland": img = blob(Color("ea8a33"), 15, 13, alt)
+			"golden_orb": img = blob(Color("f2cf5b"), 14, 14, false)
+			"snowball": img = blob(Color("f2efe6"), 10, 9, alt)
+			"waterball": img = blob(Color("4f8fe0"), 10, 9, alt)
+			"fireball": img = blob(Color("ea6a33"), 10, 9, alt)
+			"goldball": img = blob(Color("f2cf5b"), 10, 9, alt)
+			"wisp": img = flame_img(Color("ea8a33"), alt)
+			"mummy", "zombie", "wizard": img = _char_img(look, "walk" if alt else "stand", 1)
+			"shell": img = bug_img(18, 12, Color("5aa0a8"), Color("3e6a70"), alt, true)
+			"mantis": img = bug_img(16, 11, Color("3b6fd9"), Color("2c4596"), alt)
+			"octopus": img = octo_img(Color("8a4ac8"), alt)
+			"crusher": img = crusher_img()
+			"trex": img = trex_img(Color("5cbf3f"), Color("c8e89a"), alt)
+			"dark_trex": img = trex_img(Color("7a5a3a"), Color("c8a888"), alt, true)
+			"ufo": img = ufo_img(alt)
+			"worm": img = worm_img(Color("c8708a"), alt)
+			"hand": img = hand_img(Color("e8b48a"), alt)
+			"shadow": img = ghost_img(14, 16, Color("2a2240"), Color("d8433a"), alt)
+			"phantom": img = ghost_img(14, 16, Color("ea8a33"), OUTLINE, alt)
+			"ghost_1": img = ghost_img(16, 18, Color("e8eef2"), OUTLINE, alt)
+			"ghost_2": img = ghost_img(20, 22, Color("a8c8b8"), Color("d8433a"), alt)
+			"ghost_lord": img = ghost_img(40, 44, Color("d8d0f0"), Color("7b4fb8"), alt, true)
+			"eyeball": img = eye_img(7, Color("d8433a"), false, false, true, alt)
+			"king": img = eye_img(16, Color("5c616b"), false, true, true, alt)
+			"queen": img = eye_img(17, Color("7b4fb8"), true, false, true, alt)
+			"tornado": img = tornado_img(alt)
+			"tidal": img = tidal_img(alt)
+			"ice_bat": img = bat_img(20, 11, Color("a6e6f2"), alt)
+			"bat": img = bat_img(22, 12, Color("4a3a5a"), alt)
+			"cloud": img = cloud_img(alt)
+			"butterfly": img = wings_img(18, 14, Color("e06a9a"), OUTLINE, alt, Color("f2cf5b"))
+			"empress": img = wings_img(46, 36, Color("a77ee0"), Color("3a2a5a"), alt, Color("f2cf5b"))
+			"chicklet": img = chick_img(alt)
+			_: img = blob(Color("ff00ff"), 12, 10, alt)
 		img = outline(img)
 		if flash:
 			img = flash_image(img)
 		return to_tex(img))
 
-# ---------------------------------------------------------------- items
+# ---------------------------------------------------------------- item icons
+const ICON_GRIDS := {
+	"log": ["..........", "......nnn.", ".....nlln.", "....nlnn..", "...nlnn...", "..nlnn....", ".nlnn.....", ".nnl......", "..........", ".........."],
+	"stick": ["..........", "........n.", ".......nl.", "......nl..", ".....nl...", "....nlg...", "...nl.....", "..nl......", ".nl.......", ".........."],
+	"lump": ["..........", "..........", "...XXXX...", "..XxXXXX..", ".XXXXXxXX.", ".XxXXXXXx.", ".XXXXxXXx.", "..xxxxxx..", "..........", ".........."],
+	"ore": ["..........", "..........", "...aaaa...", "..aXaaAa..", ".aaaaXaaa.", ".aXaaaaXa.", ".aaaXaaaD.", "..DDDDDD..", "..........", ".........."],
+	"bar": ["..........", "..........", "..........", "....XXXXX.", "...XwXXXx.", "..XXXXXxx.", ".xxxxxxx..", "..........", "..........", ".........."],
+	"blob": ["..........", "....X.....", "...XXx....", "..XXXXx...", ".XXwXXXx..", ".XXXXXXx..", ".XXXXXxx..", "..xxxxx...", "..........", ".........."],
+	"crystal": ["....X.....", "...XwX....", "..XwXXx...", "..XXXXx...", "..XXXxx...", "..XXXxx...", "...Xxx....", "....x.....", "..........", ".........."],
+	"gem": ["..........", "..XXXXX...", ".XwXXXXx..", "XwXXXXXXx.", ".XXXXXXx..", "..XXXXx...", "...XXx....", "....x.....", "..........", ".........."],
+	"bug": ["..........", "...k..k...", "....kk....", "...XwwX...", "..XwXXwX..", "..XXxxXX..", "..XXXXXX..", "...k..k...", "..........", ".........."],
+	"leaf": ["..........", "....g.....", "...gGg....", "..g.G.g...", ".gG.G.Gg..", "..g.G.g...", "....G.....", "....G.....", "..........", ".........."],
+	"flower": ["..........", "...X.X....", "..XXwXX...", "...XXX....", "....g.....", "..g.g.....", "...gg.....", "....g.....", "..........", ".........."],
+	"root": ["..........", "....X.....", "...XXx....", "...Xx.....", "..X.x.X...", ".X..x..x..", "...x.x....", "..x...x...", "..........", ".........."],
+	"bone": ["..........", ".ww.......", ".www......", "..www.....", "...www....", "....www...", ".....www..", "......ww..", "..........", ".........."],
+	"hide": ["..........", ".XX....XX.", ".XxXXXXxX.", "..XxxxxX..", "..XxxxxX..", "..XxxxxX..", ".XxXXXXxX.", ".XX....XX.", "..........", ".........."],
+	"shell": ["..........", "..........", "...XXXX...", "..XxXxXX..", ".XXxXxXXX.", ".XxXxXxXx.", "..xxxxxx..", "..........", "..........", ".........."],
+	"horn": ["..........", "........X.", ".......Xx.", "......Xx..", ".....XXx..", "....XXx...", "...XXx....", "..XXx.....", "..........", ".........."],
+	"board": ["..........", "..........", ".XXXXXXXX.", ".XxXXXXxX.", ".XXXXXXXX.", ".xxxxxxxx.", "..........", "..........", "..........", ".........."],
+	"nail": ["..........", "...aaaa...", "....AA....", "....Aa....", "....Aa....", "....Aa....", "....Aa....", ".....a....", "..........", ".........."],
+	"apple": ["....n.....", "....ng....", "..XXXXX...", ".XwXXXXx..", ".XXXXXXx..", ".XXXXXXx..", "..XXXxx...", "...xxx....", "..........", ".........."],
+	"gadget": ["..........", "..aaaaa...", ".aXXXXXa..", ".aXwXXXa..", ".aXXXXXa..", ".aaaaaaa..", "..a...a...", "..........", "..........", ".........."],
+	"potion": ["..........", "....nn....", "....AA....", "...AXXA...", "..AXwXXA..", "..AXXXXA..", "..AxxxxA..", "...AAAA...", "..........", ".........."],
+	"food": ["..........", "..........", "...XXXX...", "..XwXXXX..", ".XXXXxXXX.", ".XXxXXXXX.", ".xxxxxxxx.", "..........", "..........", ".........."],
+	"sword": [".........X", "........Xx", ".......Xx.", "......Xx..", ".....Xx...", ".k..Xx....", "..kXx.....", "..lk......", ".lk.k.....", "l........."],
+	"long": [".........X", "........Xx", ".......Xx.", "......Xx..", ".....Xx...", "....Xx....", ".kkXx.....", "..lkk.....", ".lk.......", "l........."],
+	"club": ["......XXX.", ".....XXXXx", ".....XXXxx", "....XXxxx.", "...nlx....", "...nl.....", "..nl......", "..nl......", ".nl.......", ".n........"],
+	"mace": ["....X.X...", "...XXXXX..", "..XXwXXXX.", "...XXXXx..", "....Xxnl..", ".....nl...", "....nl....", "...nl.....", "..nl......", ".n........"],
+	"spike": ["X...X...X.", ".X..X..X..", "..XXXXX...", "..XXwXX...", "..XXXXX...", "...xnx....", "....nl....", "...nl.....", "..nl......", ".n........"],
+	"plunger": ["..XXXX....", ".XXXXXX...", "..xxxx....", "...nl.....", "...nl.....", "...nl.....", "...nl.....", "...nl.....", "...nl.....", ".........."],
+	"staff": [".......XX.", "......XwX.", "......XXx.", "......n...", ".....nl...", "....nl....", "...nl.....", "..nl......", ".nl.......", ".n........"],
+	"bow": ["....nn....", "...n..k...", "..n....k..", "..n.....k.", "..n.....k.", "..n....k..", "...n..k...", "....nn....", "..........", ".........."],
+	"arrow": ["..........", "........aA", ".......a..", "......n...", ".....n....", "....n.....", "...n......", ".ww.......", ".w........", ".........."],
+	"axe": ["....XXX...", "...XxXX...", "..nXxXX...", "..nlXX....", "..nl......", "..nl......", "..nl......", "..nl......", "..nl......", ".........."],
+	"pole": ["...XXX....", "..XxXX....", ".nXxXX....", ".nlXX.....", ".nl.......", ".nl.......", ".nl.......", ".nl.......", ".nl.......", ".nl......."],
+	"pick": ["..XXXXX...", ".Xx.n.xX..", "X...nl..X.", "....nl....", "....nl....", "....nl....", "....nl....", "....nl....", "..........", ".........."],
+	"armor": ["..........", ".XX....XX.", ".XxXXXXxX.", "..XXXXXX..", "..XxXXxX..", "..XXXXXX..", "..XxxxxX..", "..........", "..........", ".........."],
+	"helmet": ["..........", "...XXXX...", "..XwXXXX..", ".XXXXXXXX.", ".XXxxxxXX.", ".XX....XX.", ".Xx....xX.", "..........", "..........", ".........."],
+	"hat": ["....X.....", "...XXX....", "...XwX....", "..XXXXX...", "..XXXXX...", "XXXXXXXXX.", ".xxxxxxx..", "..........", "..........", ".........."],
+	"shield": ["..........", ".XXXXXXXX.", ".XwXXXXxX.", ".XXXxXXxX.", ".XXXxXXxX.", "..XXxXxX..", "...XxxX...", "....XX....", "..........", ".........."],
+	"ring": ["..........", "....X.....", "...XwX....", "..xxXxx...", ".x.....x..", ".x.....x..", ".x.....x..", "..xxxxx...", "..........", ".........."],
+	"book": ["..........", ".XXXXXXX..", ".XwwwwwXw.", ".XXXyXXXw.", ".XXyyyXXw.", ".XXXyXXXw.", ".XXXXXXXw.", ".xxxxxxxw.", "..wwwwww..", ".........."],
+	"scroll": ["..........", ".nwwwwwn..", "..wXXXw...", "..wwwww...", "..wXXXw...", "..wwwww...", ".nwwwwwn..", "..........", "..........", ".........."],
+	"key": ["..........", "..XXX.....", ".X...X....", ".X...X....", "..XXXxxxxx", ".....x.x.x", ".......x.x", "..........", "..........", ".........."],
+	"token": ["..........", "...XXXX...", "..XwXXXx..", ".XXxXXxXx.", ".XXXXXXXx.", ".XXxXXxXx.", "..XXXXxx..", "...xxxx...", "..........", ".........."],
+	"seed": ["..........", "..........", "....X.....", "...XwX....", "...XXx..X.", "..X.xx.XwX", ".XwX....Xx", ".XXx......", "..x.......", ".........."],
+	"egg": ["..........", "...ww.....", "..wXww....", ".wwwwXw...", ".wXwwww...", ".wwwXww...", "..wwww....", "..........", "..........", ".........."],
+	"wall": ["nlnnlnnlnn", "NNNNNNNNNN", "lnnlnnlnnl", "NNNNNNNNNN", "nlnnlnnlnn", "NNNNNNNNNN", "lnnlnnlnnl", "NNNNNNNNNN", "nlnnlnnlnn", ".........."],
+	"spikes": ["..........", "..........", "..........", ".A..A..A..", ".a..a..a..", "Aa.Aa.Aa..", "nnnnnnnnnn", "..........", "..........", ".........."],
+	"station": ["..........", "nnnnnnnnnn", "llllllllll", ".n..aa..n.", ".n.aAAa.n.", ".n......n.", ".n......n.", ".n......n.", "..........", ".........."],
+	"fire": ["..........", "....y.....", "...yoy....", "...oRo....", "..oRrRo...", ".nlnnlnl..", "nlnnlnnl..", "..........", "..........", ".........."],
+	"fire2": ["..........", ".....y....", "....yoy...", "...yoRo...", "..oRrRo...", ".nlnnlnl..", "nlnnlnnl..", "..........", "..........", ".........."],
+	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
+}
+
+const MATERIAL_COLORS := [
+	["volcanic", "ff5a2a", "a8241a"], ["erbium", "c83a6a", "7a1e4a"], ["copper", "e8864a", "a85a2a"], ["silver", "e3ebf5", "9fb0c8"],
+	["golden_knight", "f2cf5b", "c99a2e"], ["gold", "f2cf5b", "c99a2e"], ["iron", "8ab0d8", "5a7a9a"], ["light", "f2efe6", "c8c0b0"],
+	["dark", "7b4fb8", "3a2a5a"], ["hell", "d8433a", "8a1e1a"], ["evil", "5a2a6a", "2a1030"], ["fear", "5c616b", "2a2c32"],
+	["witch", "7b4fb8", "3a2a5a"], ["spectre", "d8d0f0", "8a80b0"], ["wooden", "a8703f", "6e4426"], ["wood", "a8703f", "6e4426"],
+	["timber", "a8703f", "6e4426"], ["stone", "9aa2ad", "5c616b"], ["rock", "9aa2ad", "5c616b"], ["leather", "a07a55", "6e4a2a"],
+	["jelly", "f06aa0", "b04a78"], ["brass", "d0a050", "8a6a2a"], ["blue", "6b8ff0", "2c4596"], ["azure", "6b8ff0", "2c4596"],
+	["knight", "c8ced6", "7a8290"], ["tank", "7a8290", "4a5260"], ["ivory", "f2ecd8", "c8bca0"], ["jade", "5cbf8a", "2e8a5a"],
+	["sandy", "e2cf8e", "b09a5a"], ["sage", "8fb07a", "5e7a52"], ["lavish", "d8a0e0", "9a5aa8"], ["chain", "aab0b8", "6a7078"],
+	["scale", "4fb6d0", "2a7a90"], ["seer", "a77ee0", "5a3a8a"], ["linen", "e8dccb", "b0a088"], ["rooster", "d8433a", "f2cf5b"],
+	["pumpkin", "ea8a33", "b85e1c"], ["faceguard", "9aa2ad", "5c616b"], ["blood", "c8302a", "7a1414"], ["ruby", "d8433a", "8a1e1a"],
+	["sapphire", "3b5dc9", "1e2a6a"], ["em_", "5cbf3f", "2e7a2a"], ["violet", "a77ee0", "5a3a8a"], ["fire", "f2a33a", "d8433a"],
+	["glow_blade_blue", "6bc8f0", "2c7ab0"], ["glow_blade_red", "f06a5a", "a82a22"], ["glow_blade_green", "7cf06a", "2e9a2a"],
+	["glow_blade_pink", "f08ac8", "b04a90"], ["moon", "e3ebf5", "8a9ab8"], ["holy", "f2efe6", "f2cf5b"], ["poison", "6ac83a", "2e7a1a"],
+	["excalibur", "e3ebf5", "6b8ff0"], ["twin", "f2cf5b", "ea8a33"], ["devil", "d8433a", "3a1a1a"], ["kings", "f2cf5b", "8a6a2a"],
+	["plunger", "d8433a", "8a1e1a"], ["short", "c8ced6", "7a8290"], ["gilded", "f2cf5b", "c99a2e"], ["combo", "c8a0e8", "7a5aa8"],
+	["long", "c8ced6", "7a8290"], ["cast", "a8a8b0", "6a6a72"], ["staff", "a77ee0", "5a3a8a"], ["healing", "5cbf3f", "2e7a2a"],
+	["magic", "a77ee0", "5a3a8a"], ["hallow", "8affc8", "3ec88a"], ["pole", "c8ced6", "7a8290"],
+]
+
+func material_colors(id: String) -> Dictionary:
+	for m in MATERIAL_COLORS:
+		if id.contains(m[0]):
+			return {"X": m[1], "x": m[2]}
+	return {"X": "c8ced6", "x": "7a8290"}
+
+func icon_spec(id: String) -> Array:
+	var it: Dictionary = Data.ITEMS.get(id, {})
+	var t: String = it.get("type", "material")
+	var mc := material_colors(id)
+	match id:
+		"wood": return ["log", {}]
+		"blue_wood": return ["log", {"l": "6b8ff0", "n": "2c4596"}]
+		"branch": return ["stick", {}]
+		"rock": return ["lump", {"X": "9aa2ad", "x": "5c616b"}]
+		"coal": return ["lump", {"X": "3e424a", "x": "1b1a24"}]
+		"dust": return ["lump", {"X": "c8b89a", "x": "8a7a62"}]
+		"jelly": return ["blob", {"X": "f06aa0", "x": "b04a78"}]
+		"sticky_balls": return ["blob", {"X": "a8e86a", "x": "5aa82a"}]
+		"snowball": return ["blob", {"X": "f2efe6", "x": "a6c6d8"}]
+		"bone": return ["bone", {}]
+		"sticky_bones": return ["bone", {"w": "c8e89a"}]
+		"herb": return ["leaf", {}]
+		"antidote_herb": return ["leaf", {"g": "4fb6d0", "G": "2a7a90"}]
+		"blue_moon": return ["flower", {"X": "6b8ff0"}]
+		"plant_roots": return ["root", {"X": "c8a070", "x": "8a6a40"}]
+		"old_roots": return ["root", {"X": "8a6a40", "x": "5a4020"}]
+		"legendary_roots": return ["root", {"X": "f2cf5b", "x": "c99a2e"}]
+		"crystal": return ["crystal", {"X": "a6e6f2", "x": "4fb6d0"}]
+		"fire_crystal": return ["crystal", {"X": "f2a33a", "x": "d8433a"}]
+		"water_crystal": return ["crystal", {"X": "6b8ff0", "x": "2c4596"}]
+		"earth_crystal": return ["crystal", {"X": "a8703f", "x": "5cbf3f"}]
+		"dark_crystal": return ["crystal", {"X": "7b4fb8", "x": "3a2a5a"}]
+		"evil_crystal", "small_evil_crystal": return ["crystal", {"X": "5a2a6a", "x": "d8433a"}]
+		"catalyst": return ["gem", {"X": "f2cf5b", "x": "4fb6d0"}]
+		"dongle": return ["gadget", {"X": "5cbf3f"}]
+		"monster_hide": return ["hide", {"X": "a07a55", "x": "6e4a2a"}]
+		"monster_leather": return ["hide", {"X": "8a5a32", "x": "5a3a1a"}]
+		"harden_leather": return ["hide", {"X": "5a3a1a", "x": "3a2010"}]
+		"monster_shell": return ["shell", {"X": "5aa0a8", "x": "3e6a70"}]
+		"monster_scale": return ["shell", {"X": "4fb6d0", "x": "2a7a90"}]
+		"monster_horn": return ["horn", {"X": "e8dccb", "x": "a89878"}]
+		"linen": return ["hide", {"X": "e8dccb", "x": "b0a088"}]
+		"wood_board": return ["board", {"X": "a8703f", "x": "6e4426"}]
+		"nail": return ["nail", {}]
+		"apple": return ["apple", {"X": "d8433a", "x": "8a1e1a"}]
+		"evil_apple": return ["apple", {"X": "5a2a6a", "x": "2a1030"}]
+		"living_flame": return ["blob", {"X": "f2a33a", "x": "d8433a"}]
+		"em_stone", "ruby_stone", "sapphire_stone": return ["gem", mc]
+		"scarab": return ["bug", {"X": "3b5dc9", "x": "2c4596"}]
+		"stink_bug": return ["bug", {"X": "8fb07a", "x": "5e7a52"}]
+		"honey_bug": return ["bug", {"X": "f2cf5b", "x": "c99a2e"}]
+		"fire_bug": return ["bug", {"X": "ea6a33", "x": "a83a1a"}]
+		"power_bug": return ["bug", {"X": "d8433a", "x": "8a1e1a"}]
+		"armor_bug": return ["bug", {"X": "9aa2ad", "x": "5c616b"}]
+		"hero_bug": return ["bug", {"X": "f2cf5b", "x": "7b4fb8"}]
+		"pretzel": return ["food", {"X": "c8865a", "x": "8a5a32"}]
+		"holy_banana": return ["food", {"X": "f2cf5b", "x": "c99a2e"}]
+		"torch_weapon": return ["torch_i", {}]
+		"pole_axe": return ["pole", mc]
+		"timber_club": return ["club", {"X": "a8703f", "x": "6e4426"}]
+		"kings_mace": return ["mace", mc]
+		"devil_spike": return ["spike", mc]
+		"plunger": return ["plunger", mc]
+		"arrow": return ["arrow", {}]
+		"wood_wall": return ["wall", {}]
+		"stone_wall": return ["wall", {"n": "9aa2ad", "l": "c8ced6", "N": "5c616b"}]
+		"wooden_spikes": return ["spikes", {}]
+		"work_station": return ["station", {}]
+		"campfire": return ["fire", {}]
+		"torch": return ["torch_i", {}]
+		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
+		"combination_scroll": return ["scroll", {"X": "a77ee0"}]
+	if id.ends_with("_ore") or id == "erbium":
+		return ["ore", {"X": mc.X}]
+	if id.ends_with("_bar"):
+		return ["bar", mc]
+	match t:
+		"food":
+			var c := "d8433a"
+			if id.contains("mana"): c = "3b6fd9"
+			elif id.contains("rejuvenate"): c = "a77ee0"
+			elif id == "antidote": c = "5cbf3f"
+			elif id == "fatigue_potion": c = "f2cf5b"
+			return ["potion", {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
+		"weapon":
+			return ["long" if id.contains("long") or id == "excalibur" else "sword", mc]
+		"staff": return ["staff", mc]
+		"bow": return ["bow", {}]
+		"axe": return ["axe", mc]
+		"pick": return ["pick", mc]
+		"armor": return ["armor", mc]
+		"helmet": return ["hat" if id.contains("hat") or id.contains("witch") or id.contains("hood") else "helmet", mc]
+		"shield": return ["shield", mc]
+		"ring": return ["ring", {"X": mc.X, "x": "c99a2e"}]
+		"book":
+			var bc := {"survival_book": "4f9a44", "combo_book_1": "3b5dc9", "combo_book_2": "d8433a", "combo_book_3": "f2a33a", "combo_book_4": "7b4fb8", "combo_book_5": "1b1a24"}
+			return ["book", {"X": bc.get(id, "3b5dc9"), "x": "1b1a24"}]
+		"key":
+			var kc := {"silver_key": "e3ebf5", "golden_key": "f2cf5b", "master_key": "d8433a"}
+			return ["key", {"X": kc.get(id, "f2cf5b"), "x": "8a8a8a"}]
+		"seed":
+			var sc := {"green_seeds": "5cbf3f", "red_seeds": "d8433a", "golden_seeds": "f2cf5b"}
+			return ["seed", {"X": sc.get(id, "5cbf3f"), "x": "1b1a24"}]
+		"egg":
+			var ec := {"green_egg": "5cbf3f", "pink_egg": "f06aa0", "purple_egg": "7b4fb8", "red_egg": "d8433a", "queen_egg": "f2cf5b", "king_egg": "5c616b"}
+			return ["egg", {"X": ec.get(id, "5cbf3f")}]
+	return ["lump", mc]
+
+func pet_look(id: String) -> String:
+	var look: String = Data.PETS[id].look
+	return look
+
 func icon(id: String) -> Texture2D:
 	return cached("icon_" + id, func():
-		var def = ICONS.get(id, ["lump", {"X": "ff00ff", "x": "880088"}])
-		return to_tex(outline(grid_image(ICON_GRIDS[def[0]], def[1]))))
+		var it: Dictionary = Data.ITEMS.get(id, {})
+		if it.get("type", "") == "pet":
+			var img: Image = mob_tex(pet_look(id), false).get_image()
+			var s := 12.0 / maxf(img.get_width(), img.get_height())
+			if s < 1.0:
+				img.resize(maxi(1, int(img.get_width() * s)), maxi(1, int(img.get_height() * s)), Image.INTERPOLATE_NEAREST)
+			return to_tex(img)
+		var spec := icon_spec(id)
+		return to_tex(outline(grid_image(ICON_GRIDS[spec[0]], spec[1]))))
 
-# ---------------------------------------------------------------- world
-func ground_tiles(zone: Dictionary) -> Array:
-	var key: String = "ground_" + zone.name
+# ---------------------------------------------------------------- world themes
+const THEMES := {
+	"grass": {"sky": ["6fb6dc", "bfe3ee"], "mount": "5a8c8a", "snow": "e8f2f2", "hills": "3f8a52", "top": "5cbf3f", "top2": "3e9a2e", "dirt": "8a5a32", "dirt2": "6e4426", "cave": "4a3020"},
+	"dark": {"sky": ["2a2340", "5a4a6e"], "mount": "4a3e6a", "snow": "9a8ab0", "hills": "2e2a3e", "top": "6a5a8a", "top2": "4a3e66", "dirt": "3e3040", "dirt2": "2c2230", "cave": "1e1624"},
+	"hell": {"sky": ["3a1020", "7a2a3a"], "mount": "5a1e3a", "snow": "c83a6a", "hills": "3a1028", "top": "8a3a6a", "top2": "5a2048", "dirt": "3a1a30", "dirt2": "2a1020", "cave": "1a0a14"},
+	"ice": {"sky": ["9ad0f0", "e3f2f8"], "mount": "8ab0d0", "snow": "ffffff", "hills": "a6c8e0", "top": "e3f2f8", "top2": "a6d0e8", "dirt": "5a8ab0", "dirt2": "4a7098", "cave": "2a4a6a"},
+	"dream": {"sky": ["f0a8d8", "fde2f2"], "mount": "c88ac8", "snow": "fff0fa", "hills": "a870c0", "top": "f08ac8", "top2": "c86aa8", "dirt": "7a4a8a", "dirt2": "5a3a6a", "cave": "3a2a4a"},
+	"ghost": {"sky": ["1a1a2e", "3a3a5a"], "mount": "2e2e4a", "snow": "8a8ab0", "hills": "24243a", "top": "4a5a4a", "top2": "34403a", "dirt": "2a2a34", "dirt2": "1e1e28", "cave": "121218"},
+}
+
+func theme(name: String) -> Dictionary:
+	var t: Dictionary = THEMES[name]
+	var d := {"name": name}
+	for k in t:
+		if k == "sky":
+			d.sky = [Color(t.sky[0]), Color(t.sky[1])]
+		else:
+			d[k] = Color(t[k])
+	return d
+
+## Tiles: [grass top, dirt, cave back wall]
+func ground_tiles(th: Dictionary) -> Array:
+	var key: String = "ground_" + th.name
 	if _cache.has(key):
 		return _cache[key]
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(zone.name)
-	var top := Image.create(16, 16, false, Image.FORMAT_RGBA8)
-	top.fill(zone.dirt)
+	rng.seed = hash(th.name)
+	var top := blank(16, 16)
+	top.fill(th.dirt)
 	for i in 10:
-		top.set_pixel(rng.randi_range(0, 15), rng.randi_range(6, 15), zone.dirt2)
-	top.fill_rect(Rect2i(0, 0, 16, 5), zone.top)
+		px(top, rng.randi_range(0, 15), rng.randi_range(6, 15), th.dirt2)
 	for x in 16:
 		var d := rng.randi_range(4, 7)
-		top.fill_rect(Rect2i(x, 0, 1, d), zone.top)
-		top.set_pixel(x, d, zone.top2)
+		rect(top, x, 0, 1, d, th.top)
+		px(top, x, d, th.top2)
 	for i in 4:
-		top.set_pixel(rng.randi_range(0, 15), rng.randi_range(0, 2), zone.top.lightened(0.25))
-	var fill := Image.create(16, 16, false, Image.FORMAT_RGBA8)
-	fill.fill(zone.dirt)
+		px(top, rng.randi_range(0, 15), rng.randi_range(0, 2), th.top.lightened(0.25))
+	var fill := blank(16, 16)
+	fill.fill(th.dirt)
 	for i in 14:
-		var c: Color = zone.dirt2 if i % 3 else zone.dirt.lightened(0.12)
-		fill.fill_rect(Rect2i(rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1), c)
-	var tex := [to_tex(top), to_tex(fill)]
+		rect(fill, rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1, th.dirt2 if i % 3 else th.dirt.lightened(0.12))
+	var back := blank(16, 16)
+	back.fill(th.cave)
+	for i in 8:
+		rect(back, rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1, th.cave.lightened(0.08))
+	var ledge := fill.duplicate()
+	rect(ledge, 0, 0, 16, 3, th.dirt.lightened(0.18))
+	for x in 16:
+		px(ledge, x, 3 + (x * 7) % 2, th.dirt2)
+	var tex := [to_tex(top), to_tex(fill), to_tex(back), to_tex(ledge)]
 	_cache[key] = tex
 	return tex
 
-func node_tex(kind: String, zone: Dictionary) -> Texture2D:
-	return cached("node_%s_%s" % [kind, zone.name], func():
+func node_tex(kind: String, th: Dictionary) -> Texture2D:
+	return cached("node_%s_%s" % [kind, th.name], func():
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(kind)
 		var img: Image
+		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2"}
 		match kind:
-			"tree", "ash_tree":
-				img = Image.create(26, 40, false, Image.FORMAT_RGBA8)
-				var trunk := Color("6e4426") if kind == "tree" else Color("2a2222")
-				img.fill_rect(Rect2i(11, 20, 5, 20), trunk)
-				img.fill_rect(Rect2i(12, 20, 1, 20), trunk.lightened(0.2))
-				var leaf := Color("3e9a3a") if kind == "tree" else Color("5a2a22")
-				var light := Color("6ccf4a") if kind == "tree" else Color("e8602a")
-				for c in [[13, 11, 11, 10], [7, 16, 7, 6], [19, 16, 7, 6], [13, 6, 8, 6]]:
-					ellipse(img, c[0], c[1], c[2], c[3], leaf)
-				for c in [[10, 8, 4, 3], [16, 12, 3, 2], [7, 14, 3, 2]]:
-					ellipse(img, c[0], c[1], c[2], c[3], light)
-				for i in 6:
-					img.set_pixel(rng.randi_range(4, 22), rng.randi_range(6, 20), leaf.darkened(0.3))
-			"dead_tree":
-				img = Image.create(22, 38, false, Image.FORMAT_RGBA8)
-				var t := Color("4a3e4a")
-				img.fill_rect(Rect2i(9, 8, 4, 30), t)
-				img.fill_rect(Rect2i(3, 12, 7, 2), t)
-				img.fill_rect(Rect2i(3, 6, 2, 7), t)
-				img.fill_rect(Rect2i(12, 16, 7, 2), t)
-				img.fill_rect(Rect2i(17, 9, 2, 8), t)
-				img.fill_rect(Rect2i(10, 2, 2, 7), t)
-			"rock", "iron_rock", "gold_rock", "obsidian_rock":
-				img = Image.create(18, 13, false, Image.FORMAT_RGBA8)
-				var base := Color("8a9099") if kind != "obsidian_rock" else Color("3a2e4a")
+			"tree", "blue_tree":
+				img = blank(18, 46)
+				var trunk := Color("6e4426") if kind == "tree" else Color("3b5dc9")
+				if th.name == "dark" and kind == "tree": trunk = Color("4a3e4a")
+				if th.name == "ice": trunk = Color("6a8aa8")
+				rect(img, 7, 10, 4, 36, trunk)
+				rect(img, 7, 10, 1, 36, trunk.lightened(0.2))
+				var leaf := Color("3e9a3a") if kind == "tree" else Color("7b4fb8")
+				if th.name == "dark" and kind == "tree": leaf = Color("5a4a7a")
+				if th.name == "ice": leaf = Color("e3f2f8")
+				ellipse(img, 9, 7, 8, 7, leaf)
+				ellipse(img, 7, 5, 3, 2, leaf.lightened(0.3))
+			"plant_yellow", "plant_pink":
+				img = blank(14, 14)
+				var bulb := Color("f2cf5b") if kind == "plant_yellow" else Color("d84a7a")
+				ellipse(img, 7, 10, 6, 4, bulb)
+				ellipse(img, 5, 9, 2, 1, bulb.lightened(0.35))
+				for i in 3:
+					rect(img, 4 + i * 3, 2 + (i % 2) * 2, 2, 6, Color("3e9a3a"))
+			"pot", "vase":
+				img = blank(14, 16)
+				var c := Color("c8865a") if kind == "pot" else Color("7b4fb8")
+				ellipse(img, 7, 10, 6, 6, c)
+				rect(img, 4, 1, 6, 4, c)
+				rect(img, 3, 1, 8, 1, c.darkened(0.3))
+				rect(img, 2, 9, 10, 1, c.lightened(0.25))
+			"rock_wall":
+				img = blank(20, 48)
+				for y in range(0, 48, 8):
+					for x in range(0 if (y / 8) % 2 == 0 else -5, 20, 10):
+						rect(img, x + 1, y + 1, 9, 7, Color("8a9099"))
+						rect(img, x + 1, y + 1, 9, 1, Color("b8bec6"))
+			_:
+				img = blank(18, 14)
+				var base := Color("8a9099")
+				if th.name == "ice": base = Color("a6c0d8")
+				if th.name == "hell": base = Color("6a4a5a")
 				ellipse(img, 9, 8, 9, 6, base)
 				ellipse(img, 7, 6, 5, 3, base.lightened(0.2))
-				img.fill_rect(Rect2i(2, 11, 14, 2), base.darkened(0.3))
-				var spec := {"iron_rock": Color("e8b48a"), "gold_rock": Color("f2cf5b"), "obsidian_rock": Color("a77ee0")}
-				if spec.has(kind):
-					for i in 7:
-						img.fill_rect(Rect2i(rng.randi_range(3, 13), rng.randi_range(4, 10), 2, 1), spec[kind])
-			"bush":
-				img = Image.create(18, 11, false, Image.FORMAT_RGBA8)
-				for c in [[5, 6, 5, 5], [12, 6, 6, 5], [9, 4, 5, 4]]:
-					ellipse(img, c[0], c[1], c[2], c[3], Color("3e9a3a"))
-				ellipse(img, 7, 4, 2, 2, Color("6ccf4a"))
-				for p in [[5, 6], [11, 5], [14, 8], [8, 8]]:
-					img.set_pixel(p[0], p[1], Color("f2efe6"))
-			"mushrooms":
-				img = Image.create(16, 10, false, Image.FORMAT_RGBA8)
-				for m in [[4, 4, 4], [11, 3, 5]]:
-					img.fill_rect(Rect2i(m[0] - 1, m[1] + 2, 2, 6 - m[1] + 2), Color("e8dccb"))
-					ellipse(img, m[0], m[1] + 1, m[2], 2.5, Color("a77ee0"))
-					img.set_pixel(m[0] - 1, m[1], Color("f2efe6"))
+				rect(img, 2, 12, 14, 2, base.darkened(0.3))
+				if ore.has(kind):
+					for i in 8:
+						rect(img, rng.randi_range(3, 13), rng.randi_range(4, 11), 2, 2, Color(ore[kind]))
 		return to_tex(outline(img)))
 
-func prop_tex(kind: String) -> Texture2D:
-	return cached("prop_" + kind, func():
-		if GRIDS.has(kind):
-			return to_tex(outline(grid_image(GRIDS[kind])))
-		return null)
-
-func house_tex(wall: Color, roof: Color) -> Texture2D:
-	return cached("house_%s_%s" % [wall.to_html(), roof.to_html()], func():
-		var img := Image.create(52, 46, false, Image.FORMAT_RGBA8)
-		img.fill_rect(Rect2i(4, 20, 44, 26), wall)
+# ---------------------------------------------------------------- village and props
+func house_tex(wall: Color, roof: Color, w: int = 52) -> Texture2D:
+	return cached("house_%s_%s_%d" % [wall.to_html(), roof.to_html(), w], func():
+		var img := blank(w, 46)
+		rect(img, 4, 20, w - 8, 26, wall)
 		for y in range(22, 46, 4):
-			img.fill_rect(Rect2i(4, y, 44, 1), wall.darkened(0.15))
+			rect(img, 4, y, w - 8, 1, wall.darkened(0.15))
 		for i in 20:
-			img.fill_rect(Rect2i(i, 20 - i, 52 - i * 2, 1), roof if i % 3 else roof.darkened(0.2))
-		img.fill_rect(Rect2i(21, 32, 10, 14), Color("6e4426"))
-		img.set_pixel(29, 39, Color("f2cf5b"))
-		img.fill_rect(Rect2i(8, 27, 8, 7), Color("a6e6f2"))
-		img.fill_rect(Rect2i(36, 27, 8, 7), Color("a6e6f2"))
-		img.fill_rect(Rect2i(11, 27, 1, 7), OUTLINE)
-		img.fill_rect(Rect2i(39, 27, 1, 7), OUTLINE)
+			rect(img, i, 20 - i, w - i * 2, 1, roof if i % 3 else roof.darkened(0.2))
+		rect(img, w / 2 - 5, 32, 10, 14, Color("6e4426"))
+		px(img, w / 2 + 3, 39, Color("f2cf5b"))
+		rect(img, 8, 27, 8, 7, Color("a6e6f2"))
+		rect(img, w - 16, 27, 8, 7, Color("a6e6f2"))
+		return to_tex(outline(img)))
+
+func prop_tex(kind: String, state: String = "") -> Texture2D:
+	return cached("prop_%s_%s" % [kind, state], func():
+		var img: Image = null
+		match kind:
+			"furnace":
+				img = blank(22, 26)
+				rect(img, 1, 4, 20, 22, Color("7a7f88"))
+				for y in range(5, 26, 4):
+					rect(img, 1, y, 20, 1, Color("5c616b"))
+				rect(img, 6, 0, 10, 5, Color("5c616b"))
+				rect(img, 6, 13, 10, 8, Color("1b1a24"))
+				if state == "busy" or state == "done":
+					rect(img, 7, 16, 8, 5, Color("ea8a33"))
+					rect(img, 9, 14, 4, 3, Color("f2cf5b"))
+				if state == "done":
+					rect(img, 8, 1, 6, 3, Color("5cbf3f"))
+			"chest":
+				img = blank(20, 16)
+				var c: Color = {"silver": Color("c8ced6"), "golden": Color("f2cf5b"), "master": Color("d8433a"), "reward": Color("a8703f")}.get(state, Color("a8703f"))
+				rect(img, 0, 4, 20, 12, Color("8a5a32"))
+				rect(img, 0, 0, 20, 6, Color("a8703f"))
+				rect(img, 0, 5, 20, 2, c)
+				rect(img, 0, 0, 2, 16, c)
+				rect(img, 18, 0, 2, 16, c)
+				rect(img, 8, 6, 4, 4, c)
+				px(img, 9, 8, OUTLINE)
+			"incubator":
+				img = blank(18, 22)
+				ellipse(img, 9, 8, 8, 8, Color(0.7, 0.9, 1.0, 0.85))
+				rect(img, 2, 14, 14, 8, Color("7a7f88"))
+				rect(img, 2, 14, 14, 2, Color("a8a8b0"))
+				if state != "":
+					ellipse(img, 9, 9, 3.5, 4.5, Color("f2efe6"))
+					px(img, 8, 8, Color("5cbf3f"))
+			"soil":
+				img = blank(18, 8)
+				rect(img, 0, 2, 18, 6, Color("5a3a1a"))
+				rect(img, 1, 2, 16, 1, Color("7a5a32"))
+				if state == "growing":
+					rect(img, 8, 0, 2, 3, Color("5cbf3f"))
+				elif state == "done":
+					rect(img, 8, 0, 2, 3, Color("5cbf3f"))
+					ellipse(img, 9, 1, 3, 2, Color("f2cf5b"))
+			"wall":
+				var brick := grid_image(ICON_GRIDS.wall, {} if state == "wood" else {"n": "9aa2ad", "l": "c8ced6", "N": "5c616b"})
+				img = blank(16, 32)
+				for y in range(0, 32, 9):
+					for x in range(0, 16, 10):
+						img.blit_rect(brick, Rect2i(0, 0, 10, 9), Vector2i(x, y))
+			"spikes":
+				var sp := grid_image(ICON_GRIDS.spikes)
+				img = blank(16, 8)
+				img.blit_rect(sp, Rect2i(0, 2, 10, 5), Vector2i(0, 2))
+				img.blit_rect(sp, Rect2i(0, 2, 10, 5), Vector2i(7, 2))
+			"work_station": img = grid_image(ICON_GRIDS.station, {}, 2)
+			"campfire": img = grid_image(ICON_GRIDS.fire2 if state == "b" else ICON_GRIDS.fire, {}, 2)
+			"torch": img = grid_image(ICON_GRIDS.torch_i)
+			"coin": img = grid_image([".yyy.", "yYyyy", "yyYyy", "yyyYy", ".yyy."])
+			"heart": img = grid_image([".rr.rr.", "rRrrrrr", "rrrrrrr", ".rrrrr.", "..rrr..", "...r..."])
+			"sign":
+				img = blank(16, 16)
+				rect(img, 7, 6, 2, 10, Color("6e4426"))
+				rect(img, 0, 0, 16, 8, Color("a8703f"))
+				rect(img, 2, 2, 12, 1, Color("6e4426"))
+				rect(img, 2, 5, 9, 1, Color("6e4426"))
+			"gate":
+				img = blank(12, 48)
+				for x in [0, 4, 8]:
+					rect(img, x, 0, 3, 48, Color("5c616b"))
+				for y in [4, 22, 40]:
+					rect(img, 0, y, 12, 2, Color("3e424a"))
+		if img == null:
+			img = blank(8, 8)
 		return to_tex(outline(img)))
 
 func portal_tex(frame: int, tint: Color) -> Texture2D:
 	return cached("portal_%d_%s" % [frame, tint.to_html()], func():
-		var img := Image.create(18, 34, false, Image.FORMAT_RGBA8)
+		var img := blank(18, 34)
 		ellipse(img, 9, 17, 9, 17, tint.darkened(0.4))
 		ellipse(img, 9, 17, 7, 14, tint)
 		ellipse(img, 9, 17, 4, 9, tint.lightened(0.4))
 		for i in 6:
 			var a := frame * 0.8 + i * 1.05
-			img.set_pixel(int(9 + cos(a) * 5), int(17 + sin(a) * 11), Color.WHITE)
+			px(img, int(9 + cos(a) * 5), int(17 + sin(a) * 11), Color.WHITE)
 		return to_tex(outline(img)))
 
-func mountains_tex(zone: Dictionary) -> Texture2D:
-	return cached("mount_" + zone.name, func():
+func mountains_tex(th: Dictionary) -> Texture2D:
+	return cached("mount_" + th.name, func():
 		var w := 512
 		var h := 150
-		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		var img := blank(w, h)
 		var peaks := [[40, 70], [120, 40], [200, 80], [270, 30], [350, 64], [430, 46], [500, 74]]
 		for x in w:
 			var top := h
 			for p in peaks:
 				for o in [-w, 0, w]:
-					var d := absf(x - (p[0] + o))
-					top = mini(top, int(p[1] + d * 0.9))
-			img.fill_rect(Rect2i(x, top, 1, h - top), zone.mount)
+					top = mini(top, int(p[1] + absf(x - (p[0] + o)) * 0.9))
+			rect(img, x, top, 1, h - top, th.mount)
 			for p in peaks:
 				for o in [-w, 0, w]:
 					var d2 := absf(x - (p[0] + o))
-					var py: int = p[1] + int(d2 * 0.9)
-					if py == top and d2 < 16:
-						var depth := 10 - int(d2 / 3) + (int(x * 7) % 3)
-						img.fill_rect(Rect2i(x, top, 1, maxi(depth, 2)), zone.snow)
+					if int(p[1] + d2 * 0.9) == top and d2 < 16:
+						rect(img, x, top, 1, maxi(10 - int(d2 / 3) + (x * 7) % 3, 2), th.snow)
 		return to_tex(img))
 
-func hills_tex(zone: Dictionary) -> Texture2D:
-	return cached("hills_" + zone.name, func():
+func hills_tex(th: Dictionary) -> Texture2D:
+	return cached("hills_" + th.name, func():
 		var w := 512
 		var h := 90
-		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+		var img := blank(w, h)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7
-		var c: Color = zone.hills
 		for i in 40:
 			var x := rng.randi_range(0, w)
 			var r := rng.randi_range(10, 22)
 			for o in [-w, 0, w]:
-				ellipse(img, x + o, h - 30 + rng.randi_range(-6, 6), r, r * 1.3, c)
-				ellipse(img, x + o - r * 0.3, h - 36, r * 0.4, r * 0.4, c.lightened(0.12))
-		img.fill_rect(Rect2i(0, h - 20, w, 20), c)
+				ellipse(img, x + o, h - 30 + rng.randi_range(-6, 6), r, r * 1.3, th.hills)
+				ellipse(img, x + o - r * 0.3, h - 36, r * 0.4, r * 0.4, th.hills.lightened(0.12))
+		rect(img, 0, h - 20, w, 20, th.hills)
 		return to_tex(img))
 
 func light_tex() -> Texture2D:
@@ -603,10 +931,10 @@ func light_tex() -> Texture2D:
 
 func button_tex(w: int, h: int, c: Color) -> Texture2D:
 	return cached("btn_%d_%d_%s" % [w, h, c.to_html()], func():
-		var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-		img.fill_rect(Rect2i(1, 0, w - 2, h), OUTLINE)
-		img.fill_rect(Rect2i(0, 1, w, h - 2), OUTLINE)
-		img.fill_rect(Rect2i(2, 2, w - 4, h - 4), c)
-		img.fill_rect(Rect2i(2, h - 5, w - 4, 3), c.darkened(0.3))
-		img.fill_rect(Rect2i(3, 3, w - 6, 2), c.lightened(0.25))
+		var img := blank(w, h)
+		rect(img, 1, 0, w - 2, h, OUTLINE)
+		rect(img, 0, 1, w, h - 2, OUTLINE)
+		rect(img, 2, 2, w - 4, h - 4, c)
+		rect(img, 2, h - 5, w - 4, 3, c.darkened(0.3))
+		rect(img, 3, 3, w - 6, 2, c.lightened(0.25))
 		return to_tex(img))
