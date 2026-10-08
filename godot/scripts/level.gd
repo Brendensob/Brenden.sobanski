@@ -13,6 +13,8 @@ const PlacedScript := preload("res://scripts/placed.gd")
 const StationScript := preload("res://scripts/station.gd")
 const FxScript := preload("res://scripts/fx.gd")
 const PetScript := preload("res://scripts/pet.gd")
+const PuppetScript := preload("res://scripts/remote_player.gd")
+const ProjectileScript := preload("res://scripts/projectile.gd")
 
 var id := ""
 var def: Dictionary
@@ -31,6 +33,13 @@ var modulate_node: CanvasModulate
 var parallax_items: Array = []
 var spawn_cell := Vector2i(4, 10)
 var rng := RandomNumberGenerator.new()
+var seed_used := 0
+# multiplayer: every shared thing gets a number so all games agree on it
+var netted := false # true when this map is shared with a room (everywhere but town)
+var live := false # set once the map is built; after that, new things are announced
+var net_objs := {} # nid -> node
+var next_nid := 1
+var puppets := {} # peer id -> remote player
 
 # arena
 var arena_time := 0.0
@@ -43,13 +52,16 @@ var s_night := false
 var s_boss_day := 0
 var regrow_timer := 20.0
 
-func setup(world_id: String, main_node: Node) -> void:
+## seed and net_state come from the room host when you're a guest in a room.
+func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}) -> void:
 	id = world_id
 	def = Data.WORLDS[id]
 	kind = def.kind
 	main = main_node
 	th = Art.theme(def.theme)
-	rng.seed = randi()
+	netted = Net.active and kind != "town"
+	rng.seed = seed if seed >= 0 else randi()
+	seed_used = rng.seed
 	match kind:
 		"town": _gen_town()
 		"explore": _gen_explore()
@@ -63,17 +75,25 @@ func setup(world_id: String, main_node: Node) -> void:
 	add_child(entities)
 	modulate_node = CanvasModulate.new()
 	add_child(modulate_node)
-	match kind:
-		"town": _populate_town()
-		"explore": _populate_explore()
-		"arena": _populate_arena()
-		"survival": _populate_survival()
+	if netted and Net.is_client():
+		_apply_net_state(net_state)
+	else:
+		match kind:
+			"town": _populate_town()
+			"explore": _populate_explore()
+			"arena": _populate_arena()
+			"survival": _populate_survival()
 	player = PlayerScript.new()
 	player.level = self
 	entities.add_child(player)
 	player.position = cell_pos(spawn_cell)
 	if GS.equip.pet != "":
 		spawn_pet()
+	for peer in Net.players:
+		var st: Dictionary = Net.players[peer].get("state", {})
+		if not st.is_empty():
+			update_puppet(peer, Net.players[peer].name, st)
+	live = true
 	queue_redraw()
 
 func spawn_pet() -> void:
@@ -331,6 +351,9 @@ func add_node(kind_id: String, c: Vector2i) -> Node:
 	n.setup(kind_id, self)
 	n.position = cell_pos(c)
 	props.add_child(n)
+	_register(n)
+	if live and netted and Net.is_host():
+		Net.node_spawned.rpc(id, _node_data(n))
 	return n
 
 func add_portal(c: Vector2i, target: String, label: String, color := Color("4fb6d0")) -> Node:
@@ -508,7 +531,15 @@ func spawn_mob_at(mob_id: String, pos: Vector2, hp_mul: float = 1.0, dmg_mul: fl
 	m.setup(mob_id, self, hp_mul, dmg_mul)
 	m.position = pos + (Vector2(0, -30) if Data.MOBS[mob_id].ai == "fly" else Vector2(0, -1))
 	entities.add_child(m)
+	_register(m)
+	if live and netted and Net.is_host():
+		# sent next frame so callers can set boss and aggro flags first
+		_announce_mob.call_deferred(m)
 	return m
+
+func _announce_mob(m: Node) -> void:
+	if is_instance_valid(m) and not m.dead:
+		Net.mob_spawned.rpc(id, _mob_data(m))
 
 func mobs_in_rect(r: Rect2) -> Array:
 	var out := []
@@ -575,6 +606,8 @@ func _process(delta: float) -> void:
 	var sky_dark := 0.5 if def.theme == "ghost" else d * 0.85
 	for p in parallax_items:
 		p.modulate = Color(1, 1, 1).lerp(Color(0.22, 0.24, 0.42), sky_dark)
+	if not Net.authority() and netted:
+		return
 	match kind:
 		"arena": _arena_tick(delta)
 		"survival": _survival_tick(delta)
@@ -604,7 +637,7 @@ func _arena_tick(delta: float) -> void:
 			m.arena_boss = true
 			if first == null:
 				first = m
-		main.hud.toast("The boss has arrived!", "danger")
+		announce("The boss has arrived!", "danger")
 		main.hud.set_boss(first)
 	if bosses_spawned:
 		var alive := false
@@ -616,7 +649,7 @@ func _arena_tick(delta: float) -> void:
 			for d in def.boss_drops:
 				if rng.randf() < d[1]:
 					drop(d[0], rng.randi_range(d[2], d[3]), player.position + Vector2(0, -20))
-			main.hud.toast("Arena cleared!", "good")
+			announce("Arena cleared!", "good")
 			add_portal(Vector2i(W / 2, 17), "town", "Home", Color("5cbf3f"))
 
 func arena_time_left() -> float:
@@ -626,7 +659,7 @@ func _survival_tick(delta: float) -> void:
 	var night := GS.is_night()
 	if night and not s_night:
 		s_night = true
-		main.hud.toast("Night %d. Here they come!" % s_day, "danger")
+		announce("Night %d. Here they come!" % s_day, "danger")
 		if s_day % 6 == 0 and s_boss_day != s_day:
 			s_boss_day = s_day
 			var b: String = Data.SURVIVAL_BOSSES[(s_day / 6 - 1) % Data.SURVIVAL_BOSSES.size()]
@@ -638,7 +671,9 @@ func _survival_tick(delta: float) -> void:
 		var tokens := Data.survival_tokens(s_day)
 		if tokens > 0:
 			GS.add_item("survival_token", tokens)
-		main.hud.toast("You survived night %d! +%d Survival Tokens" % [s_day, tokens], "good")
+		if netted and Net.is_host():
+			Net.night_survived.rpc(tokens)
+		announce("You survived night %d! +%d Survival Tokens" % [s_day, tokens], "good")
 		s_day += 1
 		GS.best_survival_day = maxi(GS.best_survival_day, s_day)
 	if night:
@@ -670,6 +705,9 @@ func drop(item: String, n: int, pos: Vector2) -> void:
 	p.setup(item, n, self)
 	p.position = pos + Vector2(randf_range(-4, 4), -6)
 	entities.add_child(p)
+	_register(p)
+	if live and netted and Net.is_host():
+		Net.pickup_spawned.rpc(id, [p.nid, item, n, p.position.x, p.position.y, p.vel.x, p.vel.y])
 
 func number(pos: Vector2, text: String, color: Color) -> void:
 	var f := FxScript.new()
@@ -696,8 +734,245 @@ func place(item: String, pos: Vector2, facing: int) -> bool:
 			return false
 	if item in ["wood_wall", "stone_wall", "work_station"] and absf(player.position.x - x) < 13:
 		return false
+	if netted and Net.is_client():
+		Net.request_place.rpc_id(1, id, item, x, (cy + 1) * T)
+		return true
+	place_at(item, Vector2(x, (cy + 1) * T))
+	return true
+
+func place_at(item: String, pos: Vector2) -> Node:
 	var p := PlacedScript.new()
 	p.setup(item, self)
-	p.position = Vector2(x, (cy + 1) * T)
+	p.position = pos
 	props.add_child(p)
-	return true
+	_register(p)
+	if netted and Net.is_host():
+		Net.placed_spawned.rpc(id, [p.nid, item, pos.x, pos.y, p.hp])
+	return p
+
+# ---------------------------------------------------------------- multiplayer
+## Says something to everyone in the room (or just you when playing alone).
+func announce(text: String, kind_name: String = "") -> void:
+	main.hud.toast(text, kind_name)
+	if netted and Net.is_host():
+		Net.announce.rpc(text, kind_name)
+
+func _register(obj: Node) -> void:
+	if obj.nid == 0:
+		obj.nid = next_nid
+		next_nid += 1
+	else:
+		next_nid = maxi(next_nid, obj.nid + 1)
+	net_objs[obj.nid] = obj
+
+func _node_data(n: Node) -> Array:
+	return [n.nid, n.kind, n.position.x, n.position.y, n.hits, n.alive]
+
+func _mob_data(m: Node) -> Array:
+	return [m.nid, m.id, m.position.x, m.position.y, m.hp, m.max_hp, m.dmg, m.arena_boss, m.aggro_forced]
+
+## Everything on this map, for a friend who's loading it.
+func net_state() -> Dictionary:
+	var st := {"nodes": [], "mobs": [], "pickups": [], "placed": [], "portals": [], "stations": [], "npcs": [], "tick": tick_state()}
+	for n in props.get_children():
+		if n is NodeScript:
+			st.nodes.append(_node_data(n))
+		elif n is PlacedScript:
+			st.placed.append([n.nid, n.item, n.position.x, n.position.y, n.hp])
+		elif n is PortalScript:
+			st.portals.append([n.position.x, n.position.y, n.target, n.label_text, n.tint])
+		elif n is StationScript:
+			st.stations.append([n.kind, n.index, n.position.x, n.position.y])
+		elif n is NpcScript:
+			st.npcs.append([n.npc_id, n.position.x, n.position.y])
+	for e in entities.get_children():
+		if e is MobScript and not e.dead:
+			st.mobs.append(_mob_data(e))
+		elif e is PickupScript and e.nid != 0 and not e.taken:
+			st.pickups.append([e.nid, e.item, e.n, e.position.x, e.position.y, 0.0, 0.0])
+	return st
+
+func _apply_net_state(st: Dictionary) -> void:
+	for d in st.get("nodes", []):
+		add_node_from(d)
+	for d in st.get("placed", []):
+		add_placed_from(d)
+	for d in st.get("portals", []):
+		var p := PortalScript.new()
+		p.setup(d[2], d[3], self, d[4])
+		p.position = Vector2(d[0], d[1])
+		props.add_child(p)
+	for d in st.get("stations", []):
+		var s := StationScript.new()
+		s.setup(d[0], d[1], self)
+		s.position = Vector2(d[2], d[3])
+		props.add_child(s)
+	for d in st.get("npcs", []):
+		var n := NpcScript.new()
+		n.setup(d[0], self)
+		n.position = Vector2(d[1], d[2])
+		props.add_child(n)
+	for d in st.get("mobs", []):
+		add_mob_from(d)
+	for d in st.get("pickups", []):
+		add_pickup_from(d)
+	apply_tick_state(st.get("tick", {}))
+
+func add_node_from(d: Array) -> void:
+	if net_objs.has(int(d[0])):
+		return
+	var n := NodeScript.new()
+	n.setup(d[1], self)
+	n.nid = int(d[0])
+	n.position = Vector2(d[2], d[3])
+	props.add_child(n)
+	_register(n)
+	net_node_changed(n.nid, int(d[4]), bool(d[5]))
+
+func add_mob_from(d: Array) -> void:
+	if net_objs.has(int(d[0])):
+		return
+	var m := MobScript.new()
+	m.setup(d[1], self)
+	m.nid = int(d[0])
+	m.puppet = true
+	m.position = Vector2(d[2], d[3])
+	m.net_target = m.position
+	m.hp = float(d[4])
+	m.max_hp = float(d[5])
+	m.dmg = int(d[6])
+	m.arena_boss = bool(d[7])
+	m.aggro_forced = bool(d[8])
+	entities.add_child(m)
+	_register(m)
+
+func add_pickup_from(d: Array) -> void:
+	if net_objs.has(int(d[0])):
+		return
+	var p := PickupScript.new()
+	p.setup(d[1], int(d[2]), self)
+	p.nid = int(d[0])
+	p.position = Vector2(d[3], d[4])
+	p.vel = Vector2(d[5], d[6])
+	entities.add_child(p)
+	_register(p)
+
+func add_placed_from(d: Array) -> void:
+	if net_objs.has(int(d[0])):
+		return
+	var p := PlacedScript.new()
+	p.setup(d[1], self)
+	p.nid = int(d[0])
+	p.position = Vector2(d[2], d[3])
+	p.hp = float(d[4])
+	props.add_child(p)
+	_register(p)
+
+func net_mob_died(nid: int) -> void:
+	var m: Node = net_objs.get(nid)
+	net_objs.erase(nid)
+	if m and is_instance_valid(m):
+		m.die_visual()
+
+func net_node_changed(nid: int, hits: int, alive: bool) -> void:
+	var n: Node = net_objs.get(nid)
+	if n == null or not is_instance_valid(n):
+		return
+	if alive and hits > n.hits:
+		n.shake()
+	if n.alive and not alive:
+		burst(n.position + Vector2(0, -8), Color(n.def.color), 10)
+	n.hits = hits
+	n.alive = alive
+	if n.sprite:
+		n.sprite.visible = alive
+
+func net_remove(nid: int, _placed: bool = false) -> void:
+	var o: Node = net_objs.get(nid)
+	net_objs.erase(nid)
+	if o and is_instance_valid(o):
+		if o is PlacedScript:
+			burst(o.position + Vector2(0, -16), Color("a8703f"), 10)
+		o.queue_free()
+
+func mob_snapshot() -> Array:
+	var out := []
+	if not netted:
+		return out
+	for e in entities.get_children():
+		if e is MobScript and not e.dead:
+			out.append([e.nid, e.position.x, e.position.y, e.hp, e.dir])
+	return out
+
+func apply_mob_snapshot(snap: Array) -> void:
+	if not netted:
+		return
+	for d in snap:
+		var m: Node = net_objs.get(int(d[0]))
+		if m and is_instance_valid(m) and m.puppet:
+			m.net_target = Vector2(d[1], d[2])
+			if float(d[3]) < m.hp:
+				m.show_bar = 4.0
+				m.flash = 0.1
+			m.hp = float(d[3])
+			m.dir = int(d[4])
+
+func tick_state() -> Dictionary:
+	return {"arena_time": arena_time, "bosses": bosses_spawned, "done": arena_done, "s_day": s_day, "s_night": s_night}
+
+func apply_tick_state(ts: Dictionary) -> void:
+	if ts.is_empty() or Net.authority():
+		return
+	arena_time = ts.get("arena_time", arena_time)
+	bosses_spawned = ts.get("bosses", bosses_spawned)
+	if kind == "arena" and ts.get("done", false) and not arena_done:
+		add_portal(Vector2i(W / 2, 17), "town", "Home", Color("5cbf3f"))
+	arena_done = ts.get("done", arena_done)
+	s_day = ts.get("s_day", s_day)
+	s_night = ts.get("s_night", s_night)
+
+## Other players: shown only while they're on the same map as you.
+func update_puppet(peer: int, pname: String, st: Dictionary) -> void:
+	if st.get("world", "") != id:
+		remove_puppet(peer)
+		return
+	var pp: Node = puppets.get(peer)
+	if pp == null or not is_instance_valid(pp):
+		pp = PuppetScript.new()
+		pp.setup(peer, pname)
+		entities.add_child(pp)
+		puppets[peer] = pp
+	pp.apply(st)
+
+func remove_puppet(peer: int) -> void:
+	var pp: Node = puppets.get(peer)
+	puppets.erase(peer)
+	if pp and is_instance_valid(pp):
+		pp.queue_free()
+
+## The player a monster should go after: the closest one still standing.
+func target_for(pos: Vector2) -> Node2D:
+	var best: Node2D = player
+	var bd := INF if player.dead else pos.distance_to(player.position)
+	for peer in puppets:
+		var pp: Node2D = puppets[peer]
+		if is_instance_valid(pp) and not pp.dead:
+			var d := pos.distance_to(pp.position)
+			if d < bd:
+				bd = d
+				best = pp
+	return best
+
+## Lets the rest of the room see a projectile that was just fired here.
+func share_projectile(p: Node) -> void:
+	if netted and Net.active:
+		Net.projectile_fx.rpc(id, p.position.x, p.position.y, p.vel.x, p.vel.y, p.gravity, p.color, p.radius, not p.friendly, p.dmg)
+
+func net_projectile(pos: Vector2, vel: Vector2, gravity: float, color: Color, radius: float, hostile: bool, dmg: int) -> void:
+	var p := ProjectileScript.new()
+	p.setup(self, vel, dmg, not hostile, color)
+	p.visual = not hostile # someone else's arrow: it flies, but their game does the damage
+	p.gravity = gravity
+	p.radius = radius
+	p.position = pos
+	entities.add_child(p)

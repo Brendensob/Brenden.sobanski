@@ -7,6 +7,7 @@ var level: Node
 var hp := 1.0
 var sprite: Sprite2D
 var t := 0.0
+var nid := 0
 
 func setup(id: String, lvl: Node) -> void:
 	item = id
@@ -72,4 +73,7 @@ func damage(amount: float) -> void:
 	level.burst(position + Vector2(0, -16), Color("a8703f") if item == "wood_wall" else Color("9aa2ad"), 3)
 	if hp <= 0:
 		level.burst(position + Vector2(0, -16), Color("a8703f"), 10)
+		if level.netted and Net.is_host():
+			Net.placed_gone.rpc(level.id, nid)
+			level.net_objs.erase(nid)
 		queue_free()

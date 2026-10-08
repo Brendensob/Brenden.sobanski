@@ -13,6 +13,7 @@ var regrow := 0.0
 var wobble := 0.0
 var sprite: Sprite2D
 var body: StaticBody2D
+var nid := 0
 
 func setup(k: String, lvl: Node) -> void:
 	kind = k
@@ -25,6 +26,7 @@ func _ready() -> void:
 	sprite.centered = false
 	var s: Vector2 = sprite.texture.get_size()
 	sprite.position = Vector2(-s.x / 2, -s.y + 1)
+	sprite.visible = alive
 	add_child(sprite)
 
 ## The village rock wall blocks the way until it's broken.
@@ -42,13 +44,15 @@ func make_solid() -> void:
 
 func _process(delta: float) -> void:
 	if not alive:
-		if level.kind != "survival":
+		if level.kind != "survival" or not Net.authority():
 			return
 		regrow -= delta
 		if regrow <= 0:
 			alive = true
 			hits = 0
 			sprite.visible = true
+			if level.netted and Net.is_host():
+				Net.node_changed.rpc(level.id, nid, hits, alive)
 		return
 	if wobble > 0:
 		wobble -= delta
@@ -63,13 +67,21 @@ func hit_rect() -> Rect2:
 func shake() -> void:
 	wobble = 0.15
 
-func hit(tier: int) -> void:
+func hit(tier: int, _from_net: bool = false) -> void:
+	if level.netted and Net.is_client():
+		# the host counts the hits and drops the loot
+		shake()
+		level.burst(position + Vector2(0, -8), Color(def.color), 3)
+		Net.hit_node.rpc_id(1, level.id, nid, tier)
+		return
 	var need := Data.hits_needed(kind, tier)
 	hits += 1
 	shake()
 	var c := Color(def.color)
 	level.burst(position + Vector2(0, -8), c, 3)
 	level.number(position + Vector2(0, -20), "%d/%d" % [hits, need], Color("e8dccb"))
+	if hits < need and level.netted and Net.is_host():
+		Net.node_changed.rpc(level.id, nid, hits, alive)
 	if hits >= need:
 		alive = false
 		regrow = REGROW
@@ -78,6 +90,8 @@ func hit(tier: int) -> void:
 		for d in def.drops:
 			if randf() < d[1]:
 				level.drop(d[0], randi_range(d[2], d[3]), position + Vector2(0, -6))
+		if level.netted and Net.is_host():
+			Net.node_changed.rpc(level.id, nid, hits, alive)
 		if def.get("wall", false):
 			GS.flags["rock_wall"] = true
 			level.main.hud.toast("The rock wall crumbles! The soils behind it are yours.", "good")

@@ -15,6 +15,7 @@ config/features=PackedStringArray("4.3", "GL Compatibility")
 Data="*res://scripts/data.gd"
 Art="*res://scripts/art.gd"
 GS="*res://scripts/game_state.gd"
+Net="*res://scripts/net.gd"
 
 [display]
 

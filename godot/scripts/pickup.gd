@@ -8,6 +8,8 @@ var vel := Vector2.ZERO
 var life := 0.0
 var landed := false
 var sprite: Sprite2D
+var nid := 0 # shared pickups in a room have a number; the host decides who gets them
+var taken := false
 
 func setup(id: String, count: int, lvl: Node) -> void:
 	item = id
@@ -23,7 +25,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	life += delta
-	if life > 180:
+	if life > 180 and not (nid != 0 and Net.is_client()):
+		if nid != 0 and Net.is_host() and level.netted:
+			Net.pickup_gone.rpc(level.id, nid)
+			level.net_objs.erase(nid)
 		queue_free()
 		return
 	var p: Node2D = level.player
@@ -46,6 +51,13 @@ func _process(delta: float) -> void:
 	sprite.position.y = (-6 - absf(sin(life * 3)) * 2) if landed else -6.0
 
 func _collect() -> void:
+	if nid != 0 and level.netted and Net.is_client():
+		Net.ask_pickup(nid)
+		return
+	if nid != 0 and level.netted and Net.is_host():
+		taken = true
+		Net.pickup_gone.rpc(level.id, nid)
+		level.net_objs.erase(nid)
 	if item == "coin":
 		GS.coins += n
 		GS.stats_changed.emit()

@@ -9,6 +9,7 @@ var color := Color.WHITE
 var life := 1.6
 var gravity := 0.0
 var radius := 2.0
+var visual := false # another player's shot: shows the hit, their game deals the damage
 
 func setup(lvl: Node, v: Vector2, damage: int, from_player: bool, c: Color) -> void:
 	level = lvl
@@ -39,7 +40,8 @@ func _process(delta: float) -> void:
 	if friendly:
 		var hit: Array = level.mobs_in_rect(r)
 		if hit.size() > 0:
-			hit[0].take_damage(dmg, position.x - signf(vel.x) * 10, true)
+			if not visual:
+				hit[0].take_damage(dmg, position.x - signf(vel.x) * 10, true)
 			level.burst(position, color, 6)
 			queue_free()
 	elif not level.player.dead and r.intersects(level.player.hit_rect()):

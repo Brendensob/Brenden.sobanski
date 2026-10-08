@@ -30,6 +30,7 @@ var name_label: Label
 ## Like the original: hold A and open the bag, and you keep attacking on your own
 ## until you press A again or faint.
 var auto_attack := false
+var cur_frame := "stand"
 
 func _ready() -> void:
 	collision_layer = 2
@@ -149,6 +150,7 @@ func _tick(delta: float, dir: float) -> void:
 		frame = "jump"
 	elif dir != 0 and int(anim * 8) % 2 == 1:
 		frame = "walk"
+	cur_frame = frame
 	body_sprite.texture = Art.character_flash(GS.look) if flash > 0 else Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""))
 	body_sprite.position.y = -body_sprite.texture.get_height() / 2.0
 	body_sprite.flip_h = facing < 0
@@ -279,6 +281,7 @@ func _cast(id: String, it: Dictionary) -> void:
 	p.setup(level, Vector2(facing * 170, 0), dmg, true, Color(it.color))
 	p.position = position + Vector2(facing * 8, -10)
 	level.entities.add_child(p)
+	level.share_projectile(p)
 
 func _shoot(id: String, it: Dictionary) -> void:
 	var ammo: String = it.get("ammo", "arrow")
@@ -299,6 +302,7 @@ func _shoot(id: String, it: Dictionary) -> void:
 		p.gravity = 120.0
 	p.position = position + Vector2(facing * 8, -10)
 	level.entities.add_child(p)
+	level.share_projectile(p)
 
 ## Snow Balls are thrown straight from the hand and used up.
 func _throw(id: String, it: Dictionary) -> void:
@@ -310,6 +314,7 @@ func _throw(id: String, it: Dictionary) -> void:
 	p.gravity = 300.0
 	p.position = position + Vector2(facing * 8, -10)
 	level.entities.add_child(p)
+	level.share_projectile(p)
 
 func _do_hit() -> void:
 	var id := GS.held()
@@ -375,3 +380,16 @@ func self_destruct() -> void:
 	level.burst(position + Vector2(0, -8), Color("3e424a"), 16)
 	level.main.shake(3.0)
 	_die()
+
+## What the rest of the room needs to draw you.
+func net_state() -> Dictionary:
+	return {"world": level.id, "x": position.x, "y": position.y, "f": facing, "frame": cur_frame, "look": GS.look,
+		"helmet": GS.equip.get("helmet", ""), "armor": GS.equip.get("armor", ""), "held": GS.held(), "dead": dead, "swing": swing > 0}
+
+## In a room you get back up where the map starts instead of going home.
+func revive() -> void:
+	dead = false
+	body_sprite.rotation = 0
+	position = level.cell_pos(level.spawn_cell)
+	velocity = Vector2.ZERO
+	invuln = 2.0

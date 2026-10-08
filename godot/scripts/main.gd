@@ -23,8 +23,14 @@ func _ready() -> void:
 	camera.position_smoothing_speed = 8.0
 	camera.zoom = Vector2(2, 2)
 	add_child(camera)
+	Net.main = self
+	Net.chat_received.connect(func(from: String, text: String): hud.add_chat(from, text))
 	_load_level("grass_1", true)
 	hud.open_panel("title")
+	if "--nettest" in OS.get_cmdline_user_args():
+		var nt: Node = load("res://tests/net_test.gd").new()
+		nt.main = self
+		add_child(nt)
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t: Node = load("res://tests/autotest.gd").new()
 		t.main = self
@@ -34,11 +40,13 @@ func on_title() -> bool:
 	return title_mode
 
 func set_paused(on: bool) -> void:
+	if Net.active and not title_mode:
+		on = false # the world keeps going for everyone else in the room
 	if level:
 		level.process_mode = Node.PROCESS_MODE_DISABLED if on or title_mode else Node.PROCESS_MODE_INHERIT
 
 func input_blocked() -> bool:
-	return title_mode or hud.any_open()
+	return title_mode or hud.any_open() or hud.chat_focused()
 
 ## Starts the character in GS.slot: loads it, or creates it with a look and name.
 func start_game(from_save: bool, character: String = "man_in_suit", pname: String = "") -> void:
@@ -53,6 +61,8 @@ func start_game(from_save: bool, character: String = "man_in_suit", pname: Strin
 
 func quit_to_title() -> void:
 	GS.save_game()
+	if Net.active:
+		Net.leave()
 	hud.menu_step = "slots"
 	title_mode = true
 	hud.set_boss(null)
@@ -60,11 +70,64 @@ func quit_to_title() -> void:
 	hud.open_panel("title")
 
 func change_level(id: String) -> void:
+	if Net.is_client():
+		# guests ask the room host; the whole room moves together
+		Net.request_level.rpc_id(1, id)
+		return
 	GS.world = id
 	_load_level(id, false)
 	hud.set_boss(null)
 	hud.toast(Data.WORLDS[id].name, "big")
 	GS.save_game()
+	if Net.is_host():
+		Net.send_world()
+
+# ---------------------------------------------------------------- rooms
+## Opens a room with the character in GS.slot and starts in Pixel Town.
+func host_game() -> void:
+	start_game(GS.has_save())
+	var err := Net.host_room()
+	if err != "":
+		hud.toast(err, "danger")
+		return
+	var addrs := Net.local_addresses()
+	hud.toast("Room open! Friends join with: %s" % (", ".join(addrs) if addrs.size() > 0 else "your IP address"), "big")
+
+## Joins a friend's room with the character in GS.slot.
+func join_game(address: String, character: String = "man_in_suit", pname: String = "") -> void:
+	if not (GS.has_save() and GS.load_game()):
+		GS.new_game(character, pname)
+		GS.save_game()
+	var err := Net.join_room(address)
+	if err != "":
+		net_join_failed(err)
+
+## The room host sent the map everyone's on.
+func net_load_world(world_id: String, seed: int, state: Dictionary) -> void:
+	var was_title := title_mode
+	title_mode = false
+	GS.world = world_id
+	if was_title:
+		hud.close_panels()
+	_load_level(world_id, false, seed, state)
+	hud.set_boss(null)
+	hud.toast(Data.WORLDS[world_id].name, "big")
+	GS.save_game()
+
+func net_join_failed(msg: String) -> void:
+	Net.leave()
+	hud.menu_step = "multi"
+	hud.open_panel("title")
+	hud.toast(msg, "danger")
+
+func net_host_left() -> void:
+	GS.save_game()
+	title_mode = true
+	hud.set_boss(null)
+	_load_level("grass_1", true)
+	hud.menu_step = "slots"
+	hud.open_panel("title")
+	hud.toast("The room was closed.", "warn")
 
 func reload_level() -> void:
 	var pos: Vector2 = level.player.position
@@ -72,12 +135,12 @@ func reload_level() -> void:
 	level.player.position = pos
 	camera.position = pos
 
-func _load_level(id: String, demo: bool) -> void:
+func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {}) -> void:
 	if level:
 		level.queue_free()
 		remove_child(level)
 	level = LevelScript.new()
-	level.setup(id, self)
+	level.setup(id, self, seed, state)
 	add_child(level)
 	move_child(level, 0)
 	var size: Vector2 = level.world_size()
@@ -108,7 +171,7 @@ func drop_from_player(id: String, n: int) -> void:
 
 func player_died() -> void:
 	var text := "You'll wake up in Pixel Town with everything still in your bag."
-	if level.kind == "survival":
+	if level.kind == "survival" and not Net.active: # keys are single player only, like the original
 		var d: int = level.s_day
 		var key := ""
 		if d >= 45:
@@ -131,6 +194,10 @@ func respawn() -> void:
 	GS.st = GS.max_st()
 	GS.status.clear()
 	hud.close_panels()
+	if Net.active:
+		level.player.revive()
+		GS.stats_changed.emit()
+		return
 	change_level("town")
 
 func shake(amount: float) -> void:
@@ -144,7 +211,7 @@ func _process(delta: float) -> void:
 		var w: float = level.world_size().x
 		camera.position = Vector2(140 + (sin(title_t * 0.08) * 0.5 + 0.5) * (w - 280), level.surface[10] * 16 - 40)
 		return
-	if not hud.any_open():
+	if Net.active or not hud.any_open():
 		GS.clock += delta / Data.DAY_LENGTH
 		if GS.clock >= 1.0:
 			GS.clock -= 1.0
@@ -161,7 +228,10 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if title_mode:
 		return
-	if event.is_action_pressed("bag"):
+	if Net.active and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_T and not hud.any_open():
+		hud.open_chat()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("bag"):
 		hud.toggle_bag()
 	elif event.is_action_pressed("pause"):
 		if hud.any_open():

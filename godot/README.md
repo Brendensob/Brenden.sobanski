@@ -32,7 +32,7 @@ Like the original, holding A while you open the bag turns on auto-attack until y
 - **Main menu:** Play, then three character slots (each shows the character, name and day,
   with Play and Delete). An empty slot creates a character: pick the Man in Suit or the
   Nurse and type a name (it starts as Player_ and nine numbers). Then Single Player or
-  Multiplayer (online play isn't built yet).
+  Multiplayer.
 - **Screen:** five peach hotbar slots top left (green border on the one you hold), the red,
   blue and green bars under them, the turning sky clock top centre with the day and your
   coins, the backpack, compass and bomb down the right side, grey ◀ ▶ bottom left and the
@@ -45,6 +45,35 @@ Like the original, holding A while you open the bag turns on auto-attack until y
 - **Crafter:** the same layout with weapon, helmet, armor, shield and ring tabs.
 - **Day and night:** 216 seconds a day: 99 s of daytime, 45 s of sunset, 72 s of night, then
   straight back to morning. Coming into Pixel Town from the menu always starts in the morning.
+
+## Playing with friends
+
+Pick a character slot, then **Multiplayer**:
+
+- **Create Room**: you're the host. The game shows the address your friends type in
+  (it's also in the compass menu). Up to 4 players.
+- **Join Room**: type the host's address and press Join Room.
+
+How it works, like the original's rooms:
+- Everyone keeps their own character, bag, gear, quests, furnaces, chests and seeds,
+  saved on their own device.
+- The host's game runs the shared world: the map, its monsters, trees and ores, drops,
+  walls and the time of day. When anyone takes a portal or picks a world at the
+  Gatekeeper, the whole room goes together.
+- Monsters chase whoever is closest. Whoever grabs a drop first gets it. Survival
+  Tokens go to everyone. Fainting in a room gets you back up at the start of the map.
+  Survival keys for dying are single player only, as in the original.
+- Tap **Chat..** under the bars (or press T) to talk to the room.
+
+Connecting:
+- **Same Wi-Fi:** use the address the host sees (like 192.168.1.5).
+- **Over the internet:** the host forwards UDP port 24565 on their router to their
+  computer, then friends use the host's public IP. Or, with no router setup, everyone
+  installs the same free VPN app (Tailscale, ZeroTier or Radmin VPN), joins one network,
+  and uses the host's address in that app.
+- **Steam later:** the networking uses Godot's standard multiplayer system, so a Steam
+  build can switch to Steam's own connections (GodotSteam) and join through friend
+  invites without changing the rest of the game.
 
 ## What's in it
 
@@ -132,15 +161,21 @@ best match.
 | `scripts/player.gd` | Movement, attacking, magic, bows, eating, building, status effects |
 | `scripts/mob.gd` | Monster and boss behaviour |
 | `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign |
-| `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu and every other menu |
+| `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu, chat and every other menu |
+| `scripts/net.gd` | Multiplayer rooms: hosting, joining, and keeping everyone's world in step |
+| `scripts/remote_player.gd` | How other players in the room appear on your screen |
 | `tests/autotest.gd` | Plays through the game and saves screenshots |
+| `tests/net_test.gd` | Two copies of the game play together over the network |
 
 Run the automatic test with `godot --path . -- --autotest` (add `--touch` to show the phone buttons).
 Screenshots are saved to Godot's user data folder under `shots/`.
+To test multiplayer, start two copies: `godot --path . -- --nettest host` and
+`godot --path . -- --nettest client`.
 
 ## Not built yet
 
-- Online multiplayer and trading with other players (needs a server, or GodotSteam for Steam)
+- Trading items directly between players, and joining rooms without typing an address
+  (that needs a matchmaking server or Steam)
 - Worlds after Ice Cavern and Ghost Arena (Modina Ruins, Nightmare Valley and later)
 - Event and gem-shop items, and characters from later updates (Ninja, the buns)
 - Phone app export (set it up from **Project → Export** in Godot)

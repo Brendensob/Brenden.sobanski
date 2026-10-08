@@ -36,6 +36,10 @@ var sprite: Sprite2D
 var size := Vector2(12, 10)
 var flying := false
 var through := false
+# multiplayer: on a guest's screen monsters are puppets that follow the host
+var nid := 0
+var puppet := false
+var net_target := Vector2.ZERO
 
 func setup(mob_id: String, lvl: Node, hp_mul: float = 1.0, dmg_mul: float = 1.0) -> void:
 	id = mob_id
@@ -76,12 +80,15 @@ func is_boss() -> bool:
 func _physics_process(delta: float) -> void:
 	if dead:
 		return
+	if puppet:
+		_puppet_tick(delta)
+		return
 	anim += delta
 	flash -= delta
 	contact_cd -= delta
 	show_bar -= delta
 	spike_cd -= delta
-	var p: CharacterBody2D = level.player
+	var p: Node2D = level.target_for(position)
 	var to := p.position - position
 	var dist := to.length()
 	var player_ok: bool = not p.dead
@@ -105,6 +112,9 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if position.y > level.H * 16 + 60:
 		dead = true
+		if level.netted and Net.is_host():
+			Net.mob_died.rpc(level.id, nid)
+			level.net_objs.erase(nid)
 		queue_free()
 		return
 	# walk into the player's walls: hit them
@@ -233,6 +243,7 @@ func _wizard(delta: float, to: Vector2, dist: float) -> void:
 		pr.setup(level, (to + Vector2(0, -8)).normalized() * 110, dmg, false, Color("6b8ff0") if id == "wizard" else Color("f2cf5b"))
 		pr.position = position + Vector2(0, -12)
 		level.entities.add_child(pr)
+		level.share_projectile(pr)
 
 func _stone(delta: float) -> void:
 	velocity = Vector2.ZERO
@@ -241,8 +252,29 @@ func _stone(delta: float) -> void:
 func hit_rect() -> Rect2:
 	return Rect2(position.x - size.x / 2 + 2, position.y - size.y + 2, size.x - 4, size.y - 2)
 
-func take_damage(amount: int, from_x: float, knock: bool) -> void:
+func _puppet_tick(delta: float) -> void:
+	anim += delta
+	flash -= delta
+	show_bar -= delta
+	var moving := position.distance_to(net_target) > 0.5
+	position = position.lerp(net_target, minf(1.0, delta * 12.0))
+	var alt := int(anim * (8 if flying else 5)) % 2 == 1 and (moving or flying)
+	sprite.texture = frames[2] if flash > 0 else frames[1 if alt else 0]
+	sprite.flip_h = dir < 0
+	queue_redraw()
+
+func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = false) -> void:
 	if dead:
+		return
+	if puppet:
+		# show the hit right away; the host's game does the real damage
+		if def.get("invulnerable", false):
+			level.number(position + Vector2(0, -size.y - 4), "0", Color("9aa2ad"))
+			return
+		flash = 0.1
+		show_bar = 4.0
+		level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
+		Net.hit_mob.rpc_id(1, level.id, nid, amount, from_x, knock)
 		return
 	if def.get("invulnerable", false):
 		level.number(position + Vector2(0, -size.y - 4), "0", Color("9aa2ad"))
@@ -259,6 +291,9 @@ func take_damage(amount: int, from_x: float, knock: bool) -> void:
 
 func die() -> void:
 	dead = true
+	if level.netted and Net.is_host():
+		Net.mob_died.rpc(level.id, nid)
+		level.net_objs.erase(nid)
 	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
 	for d in def.drops:
 		if randf() < d[1]:
@@ -266,7 +301,15 @@ func die() -> void:
 	if def.has("coins"):
 		level.drop("coin", randi_range(def.coins[0], def.coins[1]), position)
 	if is_boss():
-		level.main.hud.toast("%s defeated!" % def.name, "good")
+		level.announce("%s defeated!" % def.name, "good")
+		level.main.shake(6)
+	queue_free()
+
+## A guest's copy of a monster the host's game says has died.
+func die_visual() -> void:
+	dead = true
+	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
+	if is_boss():
 		level.main.shake(6)
 	queue_free()
 

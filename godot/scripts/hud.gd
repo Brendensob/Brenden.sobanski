@@ -44,6 +44,11 @@ var station_t := 0.0
 var menu_step := "title"
 var new_char := "man_in_suit"
 var name_edit: LineEdit
+var address_edit: LineEdit
+var chat_btn: Button
+var chat_edit: LineEdit
+var chat_log := [] # recent room chat, newest last
+var room_label: Label
 const MobScript := preload("res://scripts/mob.gd")
 
 const C_INK := Color("4a2410") # dark brown text on the peach panels
@@ -275,8 +280,28 @@ func _build_hud() -> void:
 	bars.draw.connect(_draw_bars)
 	hud_root.add_child(bars)
 	status_label = _outlined(_label("", 7, Color("8fd04a"), true))
-	status_label.position = Vector2(5, 77)
+	status_label.position = Vector2(5, 92)
 	hud_root.add_child(status_label)
+	# the "Chat.." box under the bars (rooms only); tap it to type
+	chat_btn = Button.new()
+	chat_btn.text = "Chat.."
+	chat_btn.focus_mode = Control.FOCUS_NONE
+	chat_btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	chat_btn.position = Vector2(5, 77)
+	chat_btn.custom_minimum_size = Vector2(92, 13)
+	chat_btn.size = Vector2(92, 13)
+	chat_btn.add_theme_font_size_override("font_size", 7)
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = Color(0, 0, 0, 0.45)
+	cs.set_content_margin_all(2)
+	for st_name in ["normal", "hover", "pressed"]:
+		chat_btn.add_theme_stylebox_override(st_name, cs)
+	chat_btn.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
+	chat_btn.add_theme_color_override("font_hover_color", C_WHITE)
+	chat_btn.pressed.connect(func(): open_chat())
+	chat_btn.visible = false
+	hud_root.add_child(chat_btn)
+	chat_btn.size = Vector2(92, 13) # after the small font is in place, or it keeps the default height
 	# the sky clock, with the day and your coins next to it
 	clock = Control.new()
 	clock.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -450,6 +475,9 @@ func _process(_d: float) -> void:
 	if lvl == null:
 		return
 	var town: bool = lvl.kind == "town"
+	chat_btn.visible = Net.active
+	if room_label and panels.pause.visible:
+		room_label.text = _room_text()
 	day_label.text = "Day %d" % (lvl.s_day if lvl.kind == "survival" else GS.day)
 	bomb_btn.visible = not town
 	gift_btn.visible = town and GS.gift_ready()
@@ -1032,20 +1060,42 @@ func _build_panels() -> void:
 	m.add_child(cols)
 	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 418, C_MUTED, 8), Vector2(10, 172)))
 
+	var ch := _panel("chat", Vector2(320, 150), "Chat")
+	var lines := _wrap("", 300, C_INK, 8)
+	lines.name = "Lines"
+	lines.position = Vector2(10, 26)
+	lines.size = Vector2(300, 90)
+	lines.max_lines_visible = 8
+	lines.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	ch.add_child(lines)
+	chat_edit = LineEdit.new()
+	chat_edit.max_length = 80
+	chat_edit.placeholder_text = "Type a message"
+	chat_edit.position = Vector2(10, 118)
+	chat_edit.size = Vector2(232, 24)
+	chat_edit.text_submitted.connect(func(_t: String): _send_chat())
+	ch.add_child(chat_edit)
+	var send := _button("Send", func(): _send_chat(), true)
+	send.position = Vector2(248, 118)
+	send.custom_minimum_size = Vector2(62, 24)
+	ch.add_child(send)
+
 	var info := _panel("info", Vector2(380, 140), "")
 	var itext := _wrap("", 360)
 	itext.name = "Text"
 	itext.position = Vector2(10, 26)
 	info.add_child(itext)
 
-	var pz := _panel("pause", Vector2(200, 110), "Menu", false)
+	var pz := _panel("pause", Vector2(260, 150), "Menu", false)
 	var pv := VBoxContainer.new()
-	pv.position = Vector2(30, 30)
-	pv.custom_minimum_size = Vector2(140, 0)
+	pv.position = Vector2(20, 28)
+	pv.custom_minimum_size = Vector2(220, 0)
 	pv.add_theme_constant_override("separation", 6)
 	pz.add_child(pv)
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): main.quit_to_title()))
+	room_label = _wrap("", 220, C_INK, 8)
+	pv.add_child(room_label)
 
 	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
 	var dtext := _wrap("", 240)
@@ -1053,6 +1103,7 @@ func _build_panels() -> void:
 	dtext.position = Vector2(10, 26)
 	dead.add_child(dtext)
 	var wake := _button("Wake up in Pixel Town", func(): main.respawn(), true)
+	wake.name = "Wake"
 	wake.position = Vector2(10, 78)
 	dead.add_child(wake)
 
@@ -1137,6 +1188,17 @@ func _refresh_title(_choosing := false) -> void:
 				_refresh_title(), true)
 			ok.custom_minimum_size = Vector2(80, 22)
 			screen.add_child(_at(ok, Vector2(250, 230)))
+		"multi":
+			_room_screen(screen)
+		"connecting":
+			var c := _heading("Connecting to the room...", 12)
+			c.size = Vector2(480, 16)
+			c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			screen.add_child(_at(c, Vector2(0, 110)))
+			screen.add_child(_at(_button("Cancel", func():
+				Net.leave()
+				menu_step = "multi"
+				_refresh_title()), Vector2(208, 140)))
 		"mode":
 			_logo(screen, 20)
 			var v := VBoxContainer.new()
@@ -1151,10 +1213,98 @@ func _refresh_title(_choosing := false) -> void:
 			var sp := _button("Single Player", func(): _start_from_menu(), true)
 			sp.custom_minimum_size = Vector2(160, 26)
 			v.add_child(sp)
-			var mp := _button("Multiplayer", func(): toast("Online play isn't built yet.", "warn"))
+			var mp := _button("Multiplayer", func(): menu_step = "multi"; _refresh_title())
 			mp.custom_minimum_size = Vector2(160, 26)
 			v.add_child(mp)
 			v.add_child(_button("Back", func(): menu_step = "slots"; _refresh_title()))
+
+func _room_screen(screen: Control) -> void:
+	var head := _heading("Multiplayer", 12)
+	head.size = Vector2(480, 16)
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	screen.add_child(_at(head, Vector2(0, 10)))
+	var box := _frame(Vector2(40, 30), Vector2(400, 200))
+	box.mouse_filter = Control.MOUSE_FILTER_PASS
+	screen.add_child(box)
+	box.add_child(_at(_heading("Create a room", 10), Vector2(14, 10)))
+	box.add_child(_at(_wrap("Up to 4 players. Your friends join your world; everyone keeps their own bag and quests.", 230, C_INK, 8), Vector2(14, 26)))
+	var cr := _button("Create Room", func(): _start_room(true), true)
+	cr.custom_minimum_size = Vector2(110, 24)
+	box.add_child(_at(cr, Vector2(270, 16)))
+	box.add_child(_at(_heading("Join a room", 10), Vector2(14, 66)))
+	box.add_child(_at(_label("Room address", 8, C_MUTED), Vector2(14, 84)))
+	var keep := address_edit.text if address_edit and is_instance_valid(address_edit) else _last_address()
+	address_edit = LineEdit.new()
+	address_edit.text = keep
+	address_edit.placeholder_text = "192.168.1.5"
+	address_edit.position = Vector2(14, 96)
+	address_edit.size = Vector2(240, 20)
+	box.add_child(address_edit)
+	var jb := _button("Join Room", func(): _start_room(false), true)
+	jb.custom_minimum_size = Vector2(110, 24)
+	box.add_child(_at(jb, Vector2(270, 94)))
+	box.add_child(_at(_wrap("On the same Wi-Fi, type the address the host sees when they create a room. Over the internet the host forwards UDP port %d on their router, or everyone joins the same free VPN (Tailscale, ZeroTier or Radmin VPN) and uses its address." % Net.PORT, 372, C_MUTED, 8), Vector2(14, 126)))
+	screen.add_child(_at(_button("Back", func(): menu_step = "mode"; _refresh_title()), Vector2(208, 238)))
+
+func _last_address() -> String:
+	var f := FileAccess.open("user://last_room.txt", FileAccess.READ)
+	return f.get_as_text().strip_edges() if f else ""
+
+func _start_room(create: bool) -> void:
+	var nm := name_edit.text.strip_edges() if name_edit and is_instance_valid(name_edit) else ""
+	if create:
+		if GS.slot_info(GS.slot).is_empty():
+			GS.new_game(new_char, nm)
+			GS.save_game()
+		main.host_game()
+		return
+	var addr := address_edit.text.strip_edges()
+	if addr == "":
+		toast("Type the room address first.", "warn")
+		return
+	var f := FileAccess.open("user://last_room.txt", FileAccess.WRITE)
+	if f:
+		f.store_string(addr)
+	menu_step = "connecting"
+	_refresh_title()
+	main.join_game(addr, new_char, nm)
+
+func _room_text() -> String:
+	if not Net.active:
+		return ""
+	var names := [GS.player_name + " (you)"]
+	for pid in Net.players:
+		names.append(Net.players[pid].name)
+	var t := "Room: %d/%d players\n%s" % [Net.player_count(), Net.MAX_PLAYERS, ", ".join(names)]
+	if Net.is_host():
+		var addrs := Net.local_addresses()
+		t += "\nFriends join with: %s" % (", ".join(addrs) if addrs.size() > 0 else "your IP address")
+	return t
+
+func chat_focused() -> bool:
+	return chat_edit != null and chat_edit.has_focus()
+
+func open_chat() -> void:
+	open_panel("chat")
+	_refresh_chat()
+	chat_edit.grab_focus()
+
+func add_chat(from: String, text: String) -> void:
+	chat_log.append("%s: %s" % [from, text])
+	while chat_log.size() > 8:
+		chat_log.pop_front()
+	toast("%s: %s" % [from, text], "good")
+	if panels.has("chat") and panels.chat.visible:
+		_refresh_chat()
+
+func _refresh_chat() -> void:
+	var lines: Label = panels.chat.get_node("Lines")
+	lines.text = "\n".join(chat_log) if chat_log.size() > 0 else "Say hi to the room!"
+
+func _send_chat() -> void:
+	Net.say(chat_edit.text)
+	chat_edit.text = ""
+	close_panels()
 
 func _slot_card(i: int, pos: Vector2) -> Control:
 	var card := _frame(pos, Vector2(136, 192))
@@ -1213,6 +1363,9 @@ func _start_from_menu() -> void:
 		main.start_game(true)
 
 func show_dead(text: String) -> void:
+	if Net.active:
+		text = "Your friends can keep going. Get back up at the start of this map."
+	panels.dead.get_node("Wake").text = "Get back up" if Net.active else "Wake up in Pixel Town"
 	panels.dead.get_node("Text").text = text
 	open_panel("dead")
 
