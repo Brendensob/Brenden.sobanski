@@ -159,6 +159,16 @@ func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {})
 		level.player.set_physics_process(false)
 	set_paused(false)
 
+## The Gatekeeper's list: in town she opens a portal on the street, like the
+## original; anywhere else it takes you straight there.
+func open_world(target: String) -> void:
+	if level and level.kind == "town":
+		level.open_town_portal(target)
+		hud.toast("A portal to %s opened on the street below." % Data.WORLDS[target].name, "good")
+		Sfx.play("portal", 0.0)
+	else:
+		change_level(target)
+
 func use_portal(target: String) -> void:
 	if target == "":
 		return

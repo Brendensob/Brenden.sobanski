@@ -256,31 +256,46 @@ func _gen_survival() -> void:
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(W / 2, 16)
 
+## Pixel Town has three floors, like the original:
+## - up top, from the left: the Trading Center (behind a wooden wall you burn),
+##   the chests and incubator, the Gatekeeper, then the furnaces on the hill;
+## - the street in the middle, where the Gatekeeper's portals open;
+## - the basement under everything, where the ninjas and robots live. You get
+##   down through a hole at the east end, behind the stone wall.
+const TOWN_TOP := 14
+const TOWN_MID := 24
+const TOWN_BASE := 34
+const TOWN_PORTAL := Vector2i(48, 23)
+
 func _gen_town() -> void:
-	_init_grid(142, 24)
+	_init_grid(100, 42)
 	for x in W:
-		var top := 17
-		if x >= 78:
-			top = 13
-		elif x >= 74:
-			top = 17 - (x - 73)
-		surface[x] = top
-		fill(x, top, 1, H - top)
-	# up and to the left behind the chests: two thin steps up to the Trading
-	# Center ledge. Each step overlaps the one above, so you jump up through it.
-	ledge(39, 15, 3)
-	ledge(37, 13, 3)
-	ledge(35, 11, 3)
-	fill(18, 11, 17, 1)
-	# far east, past the stone wall: a pit with stone steps 2 blocks high going
-	# down to a long hall under the hill, where the ninjas and robots live
-	carve(104, 13, 8, 9)
-	carve(112, 15, 28, 7)
-	for i in 4:
-		fill(104 + i * 2, 14 + i * 2, 2, 8 - i * 2)
+		surface[x] = TOWN_MID
+	fill(0, TOWN_MID, W, H - TOWN_MID)
+	# the basement, all the way across
+	carve(1, TOWN_MID + 1, W - 2, TOWN_BASE - TOWN_MID - 1)
+	# the Trading Center: a closed room, so the wooden wall is the only way in
+	fill(1, 7, 17, 2)
+	fill(17, 9, 1, 2) # above the wooden wall, so you can't jump over it
+	fill(1, TOWN_TOP, 17, 2)
+	# the upper floor: thin, so you can jump up through it from the street
+	ledge(18, TOWN_TOP, 68)
+	# a ladder of ledges from the street up to it
+	for r in [16, 18, 20, 22]:
+		ledge(41, r, 3)
+	# the furnace hill at the east end, with a low tunnel under it to the hole
+	fill(86, TOWN_TOP, W - 87, 7)
+	# the magic soils in a cave behind the rock wall
+	fill(1, TOWN_TOP + 2, 13, 5)
+	# the hole down to the basement, with ledges to climb back out
+	carve(92, TOWN_MID, 2, 1)
+	ledge(91, TOWN_MID, 1) # the hole's edges are thin, so from the top ledge
+	ledge(94, TOWN_MID, 1) # you jump up through them onto the street
+	for r in [26, 28, 30, 32]:
+		ledge(93, r, 1)
 	fill(0, 0, 1, H)
 	fill(W - 1, 0, 1, H)
-	spawn_cell = Vector2i(44, 16)
+	spawn_cell = Vector2i(24, TOWN_MID - 1)
 
 # ---------------------------------------------------------------- collision and drawing
 func _build_collision() -> void:
@@ -508,16 +523,17 @@ func _survival_resource() -> void:
 		return
 
 func _populate_town() -> void:
-	var y := 16
-	var houses := [[20, "e8dccb", "d8433a", 60], [44, "c8d6e8", "3b5dc9", 52], [56, "e8d8b0", "4f9a44", 52], [66, "d8c8e8", "7b4fb8", 60]]
+	var y := TOWN_MID - 1
+	var top := TOWN_TOP - 1
+	var houses := [[19, "e8dccb", "d8433a", 60], [37, "c8d6e8", "3b5dc9", 52], [57, "e8d8b0", "4f9a44", 52], [64, "d8c8e8", "7b4fb8", 60]]
 	for h in houses:
 		var s := Sprite2D.new()
 		s.texture = Art.house_tex(Color(h[1]), Color(h[2]), h[3])
 		s.centered = false
 		s.position = Vector2(h[0] * T - h[3] / 2, (y + 1) * T - 47)
 		props.add_child(s)
-	# west: magic soils behind the rock wall (break it with a gold pickaxe).
-	# The Miner and Brutus stand by the wall.
+	# the street: magic soils in the cave behind the rock wall (break it with a
+	# gold pickaxe), the Miner and Brutus, Miffie and the shops
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
 	if not GS.flags.get("rock_wall", false):
@@ -525,45 +541,54 @@ func _populate_town() -> void:
 		rw.make_solid()
 	add_npc("miner", Vector2i(15, y))
 	add_npc("gruff", Vector2i(18, y))
-	# the incubator and the three keg chests, each with a signboard showing its egg or key
-	add_board("green_egg", Vector2i(23, y))
-	add_station("incubator", 0, Vector2i(24, y))
-	add_board("silver_key", Vector2i(27, y))
-	add_station("chest_silver", 0, Vector2i(28, y))
-	add_board("golden_key", Vector2i(31, y))
-	add_station("chest_golden", 0, Vector2i(32, y))
-	add_board("master_key", Vector2i(35, y))
-	add_station("chest_master", 0, Vector2i(36, y))
-	# the Trading Center on the ledge, behind a wooden wall you burn with a Torch
-	add_npc("trader", Vector2i(20, 10))
-	add_board("coin", Vector2i(22, 10))
-	add_station("trade_table", 0, Vector2i(25, 10))
-	add_station("trade_table", 1, Vector2i(29, 10))
-	if not GS.flags.get("trade_wall", false):
-		var tw: Node = add_node("trade_wall", Vector2i(34, 10))
-		tw.make_solid()
-	# the middle of town: the Gatekeeper opens portals, Miffie stands to his right
-	add_npc("keeper", Vector2i(41, y))
-	add_npc("mira", Vector2i(47, y))
-	add_station("sign", 0, Vector2i(50, y))
-	add_npc("merchant", Vector2i(54, y))
-	add_npc("tools", Vector2i(59, y))
+	add_npc("mira", Vector2i(30, y))
+	add_station("sign", 0, Vector2i(33, y))
+	add_npc("merchant", Vector2i(37, y))
+	add_npc("tools", Vector2i(57, y))
 	add_npc("smith", Vector2i(64, y))
-	# up top: the green GateKeeper guards the furnaces, each with a signboard
-	add_npc("warden", Vector2i(79, 12))
+	# upstairs: the Trading Center behind its wooden wall (burn it with a Torch)
+	add_npc("trader", Vector2i(3, top))
+	add_board("coin", Vector2i(5, top))
+	add_station("trade_table", 0, Vector2i(9, top))
+	add_station("trade_table", 1, Vector2i(13, top))
+	if not GS.flags.get("trade_wall", false):
+		var tw: Node = add_node("trade_wall", Vector2i(17, top))
+		tw.make_solid()
+	# the incubator and the three keg chests, each with a signboard showing its egg or key
+	add_board("green_egg", Vector2i(20, top))
+	add_station("incubator", 0, Vector2i(21, top))
+	add_board("silver_key", Vector2i(25, top))
+	add_station("chest_silver", 0, Vector2i(26, top))
+	add_board("golden_key", Vector2i(30, top))
+	add_station("chest_golden", 0, Vector2i(31, top))
+	add_board("master_key", Vector2i(35, top))
+	add_station("chest_master", 0, Vector2i(36, top))
+	# the Gatekeeper opens portals; they open on the street below her
+	add_npc("keeper", Vector2i(50, top))
+	# the green GateKeeper guards the furnaces, each with a signboard
+	add_npc("warden", Vector2i(64, top))
 	if not GS.flags.get("furnaces", false):
-		add_station("gate", 0, Vector2i(82, 12))
+		add_station("gate", 0, Vector2i(67, top))
 	for i in Data.FURNACES:
-		add_station("furnace", i, Vector2i(84 + i * 4, 12))
-		add_station("furnace_board", i, Vector2i(86 + i * 4, 12))
-	# far east: the massive stone wall only the Wall Hammer breaks, and the
-	# ninjas and robots living under Pixel Town behind it
+		add_station("furnace", i, Vector2i(70 + i * 4, top))
+		add_station("furnace_board", i, Vector2i(72 + i * 4, top))
+	# east end of the street: the massive stone wall only the Wall Hammer breaks,
+	# closing the tunnel to the hole down to the basement
 	if not GS.flags.get("hammer_wall", false):
-		var hw: Node = add_node("hammer_wall", Vector2i(102, 12))
+		var hw: Node = add_node("hammer_wall", Vector2i(86, y))
 		hw.make_solid()
 	var under := ["nini", "nana", "nina", "fc_9912", "tt_1001", "oop_2219"]
 	for i in under.size():
-		add_npc(under[i], Vector2i(115 + i * 4, 21))
+		add_npc(under[i], Vector2i(62 + i * 5, TOWN_BASE - 1))
+
+## The Gatekeeper's portal: picking a world opens it on the street.
+func open_town_portal(target: String) -> void:
+	for n in props.get_children():
+		if n is PortalScript and n.get_meta("gate", false):
+			n.queue_free()
+	var p := add_portal(TOWN_PORTAL, target, Data.WORLDS[target].name, Color("a77ee0"))
+	p.set_meta("gate", true)
+	burst(cell_pos(TOWN_PORTAL) + Vector2(0, -16), Color("a77ee0"), 14)
 
 func add_board(item: String, c: Vector2i) -> void:
 	var s := Sprite2D.new()

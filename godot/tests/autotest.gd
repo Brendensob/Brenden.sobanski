@@ -156,6 +156,29 @@ func new_monsters() -> void:
 	check(mt.max_hp >= 250 and mt.max_hp <= 300 and mt.status_effect() == ["poison", 0.12] and wz.status_effect().is_empty(),
 		"Hell 1 Mantis has %d health (wiki: 250-300) and can poison; Wizards can't" % mt.max_hp)
 
+## Holds a direction without jumping.
+func walk(dir: String, done: Callable, timeout: float) -> bool:
+	Input.action_press(dir)
+	var t := 0.0
+	while not done.call() and t < timeout:
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+	Input.action_release(dir)
+	return done.call()
+
+## Jumps straight up whenever on the ground (through one-way ledges).
+func climb_up(done: Callable, timeout: float) -> bool:
+	var p: CharacterBody2D = main.level.player
+	var t := 0.0
+	while not done.call() and t < timeout:
+		if p.is_on_floor():
+			Input.action_press("jump")
+			await get_tree().physics_frame
+			Input.action_release("jump")
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+	return done.call()
+
 ## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
 func climb(dir: String, done: Callable, timeout: float) -> bool:
 	var lvl: Node = main.level
@@ -180,7 +203,7 @@ func climb(dir: String, done: Callable, timeout: float) -> bool:
 func jump_and_underground() -> void:
 	var lvl: Node = main.level
 	var p: CharacterBody2D = lvl.player
-	p.position = lvl.cell_pos(Vector2i(60, 16))
+	p.position = lvl.cell_pos(Vector2i(60, lvl.TOWN_MID - 1))
 	p.velocity = Vector2.ZERO
 	await wait(0.6)
 	var y0 := p.position.y
@@ -252,10 +275,16 @@ func jump_and_underground() -> void:
 	await get_tree().physics_frame
 	check(not p.is_on_floor(), "clicking the green B button jumps")
 	await until_floor(p)
-	# the Trading Center ledge is still in reach with the new jump
-	p.position = lvl.cell_pos(Vector2i(44, 16))
+	# three floors, like the original: the ladder of ledges goes from the street up top
+	p.position = lvl.cell_pos(Vector2i(42, lvl.TOWN_MID - 1))
 	await wait(0.4)
-	check(await climb("move_left", func(): return p.position.y <= 11 * 16 + 1, 8.0), "the steps up to the Trading Center can be jumped")
+	check(await climb_up(func(): return p.position.y <= lvl.TOWN_TOP * 16 + 1, 8.0), "the ladder goes from the street up to the chests and furnaces")
+	await shot("03a_upstairs")
+	# picking a world opens a portal on the street, and hitting it takes you there
+	main.open_world("grass_1")
+	var portal := find_prop(func(n): return n.get_meta("gate", false))
+	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
+	main.hud.close_panels()
 	# the stone wall needs the Wall Hammer
 	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
 	check(wall != null, "a massive stone wall stands east of the furnaces")
@@ -278,8 +307,8 @@ func jump_and_underground() -> void:
 		await tap("attack")
 		await wait(0.7)
 	check(GS.flags.get("hammer_wall", false), "the Wall Hammer breaks the stone wall")
-	# down the stone steps to the hall under the hill
-	check(await climb("move_right", func(): return p.position.x > 114 * 16 and p.is_on_floor(), 12.0), "down the steps into the hall under Pixel Town")
+	# through the tunnel and down the hole into the basement
+	check(await walk("move_right", func(): return p.position.y > (lvl.TOWN_BASE - 2) * 16 and p.is_on_floor(), 12.0), "down the hole into the basement under Pixel Town")
 	for id in ["nini", "nana", "nina", "fc_9912", "tt_1001", "oop_2219"]:
 		check(find_prop(func(n): return n.get("npc_id") == id) != null, "%s lives under Pixel Town" % Data.NPCS[id].name)
 	var nini := find_prop(func(n): return n.get("npc_id") == "nini")
@@ -290,13 +319,30 @@ func jump_and_underground() -> void:
 	check(main.hud.panels.npc.visible, "Nini the ninja talks to you")
 	await shot("03e_nini")
 	main.hud.close_panels()
-	# and back up the steps with the new jump
-	p.position = lvl.cell_pos(Vector2i(118, 21))
+	# and back up the ledges under the hole
+	p.position = lvl.cell_pos(Vector2i(93, lvl.TOWN_BASE - 1))
 	await wait(0.3)
-	check(await climb("move_left", func(): return p.position.y <= 13 * 16 + 1 and p.position.x < 104 * 16, 12.0), "the stone steps can be jumped back up to town")
+	await climb_up(func(): return p.position.y <= (lvl.TOWN_MID + 2) * 16 + 1 and p.is_on_floor(), 8.0)
+	var out: bool = await climb("move_right", func(): return p.position.y <= lvl.TOWN_MID * 16 + 1 and p.is_on_floor(), 4.0)
+	check(out, "the ledges under the hole climb back up to the street")
 	GS.inv[4] = null
 	GS.sel = 0
 	GS.inventory_changed.emit()
+	# the whole town in one picture
+	var cam: Camera2D = main.camera
+	var size: Vector2 = lvl.world_size()
+	var old_zoom := cam.zoom
+	main.hud.visible = false
+	main.set_process(false) # stop the camera following the player
+	cam.zoom = Vector2.ONE * minf(480.0 / size.x, 270.0 / size.y)
+	cam.position_smoothing_enabled = false
+	cam.global_position = size / 2
+	p.position = lvl.cell_pos(lvl.spawn_cell)
+	await wait(0.3)
+	await shot("03z_town_map")
+	cam.zoom = old_zoom
+	main.set_process(true)
+	main.hud.visible = true
 
 func run() -> void:
 	await wait(1.0)

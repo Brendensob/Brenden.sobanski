@@ -1581,7 +1581,7 @@ func _refresh_map() -> void:
 		for wid in section[1]:
 			var w: Dictionary = Data.WORLDS[wid]
 			var target: String = wid
-			var b := _button(w.name, func(): close_panels(); main.change_level(target), false)
+			var b := _button(w.name, func(): close_panels(); main.open_world(target), false)
 			if w.has("needs") and not GS.flags.get(w.needs, false):
 				b.disabled = true
 				b.tooltip_text = "Finish Brutus' quest first."

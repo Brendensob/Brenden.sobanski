@@ -162,22 +162,22 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
 
-**Pixel Town**, west to east
-- Five magic seed soils behind the rock wall (break it with a gold pickaxe), the Miner
-  (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and
-  Survival Grasslands) next to it.
-- The Incubator and the Silver, Golden and Master keg chests, each with a signboard
-  showing its egg or key.
-- The Gatekeeper in the middle (opens portals), Miffie to his right (her 27 quests in the
-  original's order), the Merchant in the red hat (Combo Book II for 1,500), the Plumber
-  (tools) and the Crafter.
-- Up top, the green GateKeeper guards the furnaces (Pretzel quest). Five furnaces with
-  signboards; a bubble with the bar pops up when one is done.
-- Far east, past the furnaces, a massive stone wall. Survive 10 nights in Survival
-  Grasslands to earn the Wall Hammer, then smash it: stone steps lead down to a hall under
-  the hill where the ninjas (Nini, Nana, Nina) sharpen the Tsurugi up to Tsurugi IV and the
-  robots (FC 9912, TT 1001, 2219 OOP) upgrade the Iron Fist staff up to Iron Fist IV, each
-  with the original's quest chain.
+**Pixel Town** has three floors:
+- **Up top**, west to east:
+  - the Trading Center, a closed room behind a wooden wall you burn with a Torch;
+  - the Incubator and the Silver, Golden and Master keg chests, each with a signboard;
+  - the Gatekeeper, who opens portals;
+  - the green GateKeeper guarding the five furnaces on the hill (Pretzel quest).
+- **The street in the middle:**
+  - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
+  - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
+  - Miffie (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools) and the Crafter.
+  - Picking a world from the Gatekeeper opens its portal on the street right below her. Hit the portal to go through.
+  - A ladder of thin ledges goes from the street up top; you can jump up through the upper floor anywhere.
+- **The basement**, under the whole town:
+  - At the east end of the street, a massive stone wall closes a low tunnel with a hole down to the basement. Survive 10 nights in Survival Grasslands to earn the Wall Hammer and smash it.
+  - Down there, the ninjas (Nini, Nana, Nina) sharpen the Tsurugi up to Tsurugi IV, and the robots (FC 9912, TT 1001, 2219 OOP) upgrade the Iron Fist up to Iron Fist IV.
+  - Ledges under the hole climb back up.
 - Jumpie, the girl who looks like Miffie, is in Grasslands 1 (10 Jellies for a Pixel Coin).
   The GateKeeper turns up in Hell 2 missing his mask: bring a Green Face and he sells Em
   Stones for 92,500 coins.
