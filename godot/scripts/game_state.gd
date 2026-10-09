@@ -143,11 +143,21 @@ func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
 	return {"dmg": maxi(1, hit - blocked), "crit": crit}
 
 func add_status(effect: String) -> void:
+	if immune_to(effect):
+		return
 	var had := status.has(effect)
 	status[effect] = STATUS_TIME
 	if not had:
 		message.emit({"poison": "You've been poisoned!", "fatigue": "Fatigue! Your stamina won't recover.", "slow": "You've been slowed!", "cold": "Brr! You're freezing."}.get(effect, effect), "warn")
 	stats_changed.emit()
+
+## The Jade Ring stops poison.
+func immune_to(effect: String) -> bool:
+	for slot in ["ring_l", "ring_r"]:
+		var id: String = equip[slot]
+		if id != "" and Data.ITEMS[id].get("immune", "") == effect:
+			return true
+	return false
 
 func has_status(effect: String) -> bool:
 	return status.has(effect)
@@ -159,8 +169,15 @@ func stack_size(id: String) -> int:
 		return 1
 	if t in ["ammo", "token", "throw"]:
 		return 999
-	if id == "hero_bug":
+	# the wiki's stack sizes for the rarer things
+	if id in ["dark_heart", "em_stone", "ruby_stone", "sapphire_stone", "topaz_stone", "dark_stone", "sky_stone", "forbidden_stone"]:
+		return 1
+	if id == "nightmare_ore":
+		return 10
+	if id == "hero_bug" or id == "living_flame":
 		return 25
+	if id == "legendary_roots":
+		return 50
 	return 99
 
 func held() -> String:
@@ -449,6 +466,10 @@ func next_quest(npc: String) -> Dictionary:
 	for q in Data.QUESTS:
 		if q.npc == npc and not q.id in quests_done:
 			return q
+	if npc == "mira":
+		var b := Data.bounty_quest(today())
+		if not b.id in quests_done:
+			return b
 	return {}
 
 func quest_ready(q: Dictionary) -> bool:

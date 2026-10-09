@@ -191,6 +191,9 @@ func player_died() -> void:
 			else:
 				text += " Your bag was full, so the %s was lost." % Data.ITEMS[key].name
 	await get_tree().create_timer(1.0).timeout
+	# already back up (woken early or moved to another map): no faint screen
+	if level == null or not is_instance_valid(level.player) or not level.player.dead:
+		return
 	hud.show_dead(text)
 
 func respawn() -> void:
