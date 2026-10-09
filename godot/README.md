@@ -42,7 +42,8 @@ attacking. Holding A while you open the bag turns on auto-attack until you press
 
 **Jumping and swinging, timed from the official trailer frame by frame.** B shoots you up
 about two blocks in a tenth of a second while your character does one full flip, then you
-float down slowly (about 0.8 seconds in the air). Press B again in the air to jump again:
+come back down (about half a second in the air; the trailer's fall is slower, about 0.8 s,
+but a faster fall plays better). Press B again in the air to jump again:
 each jump in the air uses one point of the green bar, so a full bar is that many extra jumps
 (double, triple and up). Thin ledges can be jumped up through from below.
 
@@ -169,18 +170,17 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
 
-**Pixel Town** has three floors:
+**Pixel Town** is closed in on all sides, with three floors:
 - **Up top**, west to east:
   - the Trading Center, a closed room behind a wooden wall you burn with a Torch;
   - the Incubator and the Silver, Golden and Master keg chests, each with a signboard;
-  - the Gatekeeper, who opens portals;
   - the green GateKeeper guarding the five furnaces on the hill (Pretzel quest).
 - **The street in the middle:**
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
   - Miffie (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools) and the Crafter.
-  - Picking a world from the Gatekeeper opens its portal on the street right below her. Hit the portal to go through.
-  - A ladder of thin ledges goes from the street up top; you can jump up through the upper floor anywhere.
+  - The Gatekeeper stands right next to where her portals open. Pick a world and its portal opens there; hit it to go through.
+  - The way up is an opening in the middle of the upper floor: jump up through it (a jump and two jumps in the air).
 - **The basement**, under the whole town:
   - At the east end of the street, a massive stone wall closes a low tunnel with a hole down to the basement. Survive 10 nights in Survival Grasslands to earn the Wall Hammer and smash it.
   - Down there, the ninjas (Nini, Nana, Nina) sharpen the Tsurugi up to Tsurugi IV, and the robots (FC 9912, TT 1001, 2219 OOP) upgrade the Iron Fist up to Iron Fist IV.

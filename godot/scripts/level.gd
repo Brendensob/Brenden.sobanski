@@ -335,37 +335,40 @@ func _gen_survival() -> void:
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(W / 2, 16)
 
-## Pixel Town has three floors, like the original:
+## Pixel Town is closed in on all sides, with three floors like the original:
 ## - up top, from the left: the Trading Center (behind a wooden wall you burn),
-##   the chests and incubator, the Gatekeeper, then the furnaces on the hill;
-## - the street in the middle, where the Gatekeeper's portals open;
+##   the chests and incubator, then the furnaces on the hill;
+## - the street in the middle, where the Gatekeeper stands and her portals open.
+##   An opening in the upper floor above the portal is the way up: jump;
 ## - the basement under everything, where the ninjas and robots live. You get
 ##   down through a hole at the east end, behind the stone wall.
-const TOWN_TOP := 14
+const TOWN_CEIL := 7
+const TOWN_TOP := 18
 const TOWN_MID := 24
 const TOWN_BASE := 34
 const TOWN_PORTAL := Vector2i(48, 23)
+const TOWN_OPENING := [41, 46] # the gap in the upper floor, from x to x (exclusive)
 
 func _gen_town() -> void:
 	_init_grid(100, 42)
 	for x in W:
 		surface[x] = TOWN_MID
 	fill(0, TOWN_MID, W, H - TOWN_MID)
+	# closed in: a roof over the whole town
+	fill(0, 0, W, TOWN_CEIL)
 	# the basement, all the way across
 	carve(1, TOWN_MID + 1, W - 2, TOWN_BASE - TOWN_MID - 1)
-	# the Trading Center: a closed room, so the wooden wall is the only way in
-	fill(1, 7, 17, 2)
-	fill(17, 9, 1, 2) # above the wooden wall, so you can't jump over it
-	fill(1, TOWN_TOP, 17, 2)
-	# the upper floor: thin, so you can jump up through it from the street
-	ledge(18, TOWN_TOP, 68)
-	# a ladder of ledges from the street up to it
-	for r in [16, 18, 20, 22]:
-		ledge(41, r, 3)
+	# the upper floor, with one opening in the middle to jump up through
+	fill(1, TOWN_TOP, W - 2, 1)
+	carve(TOWN_OPENING[0], TOWN_TOP, TOWN_OPENING[1] - TOWN_OPENING[0], 1)
+	# the Trading Center's wall goes up to the roof; the wooden wall closes the bottom
+	fill(17, TOWN_CEIL, 1, TOWN_TOP - TOWN_CEIL - 3)
+	# a short wall hanging from the roof between the chests and the furnaces
+	fill(69, TOWN_CEIL, 1, 3)
 	# the furnace hill at the east end, with a low tunnel under it to the hole
-	fill(86, TOWN_TOP, W - 87, 7)
+	fill(86, TOWN_TOP, W - 87, 3)
 	# the magic soils in a cave behind the rock wall
-	fill(1, TOWN_TOP + 2, 13, 5)
+	fill(1, TOWN_TOP + 1, 13, 2)
 	# the hole down to the basement, with ledges to climb back out
 	carve(92, TOWN_MID, 2, 1)
 	ledge(91, TOWN_MID, 1) # the hole's edges are thin, so from the top ledge
@@ -648,8 +651,8 @@ func _populate_town() -> void:
 	add_station("chest_golden", 0, Vector2i(31, top))
 	add_board("master_key", Vector2i(35, top))
 	add_station("chest_master", 0, Vector2i(36, top))
-	# the Gatekeeper opens portals; they open on the street below her
-	add_npc("keeper", Vector2i(50, top))
+	# the Gatekeeper stands on the street, right next to where her portals open
+	add_npc("keeper", TOWN_PORTAL + Vector2i(3, 0))
 	# the green GateKeeper guards the furnaces, each with a signboard
 	add_npc("warden", Vector2i(64, top))
 	if not GS.flags.get("furnaces", false):
