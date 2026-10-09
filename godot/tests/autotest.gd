@@ -509,7 +509,7 @@ func climb(dir: String, done: Callable, timeout: float) -> bool:
 func jump_and_underground() -> void:
 	var lvl: Node = main.level
 	var p: CharacterBody2D = lvl.player
-	p.position = lvl.cell_pos(Vector2i(60, lvl.TOWN_MID - 1))
+	p.position = lvl.cell_pos(Vector2i(43, lvl.TOWN_MID - 1)) # under the opening
 	p.velocity = Vector2.ZERO
 	await wait(0.6)
 	var y0 := p.position.y
@@ -532,7 +532,7 @@ func jump_and_underground() -> void:
 	var apex := y0 - top
 	check(apex > 34 and apex < 44, "a jump goes up about 2 blocks (%.1f px)" % apex)
 	check(t_top <= 0.13, "the jump reaches the top in about a tenth of a second (%.2f s)" % t_top)
-	check(t > 0.7 and t < 0.95, "the fall is slow: about 0.8 s in the air (%.2f s)" % t)
+	check(t > 0.35 and t < 0.6, "a jump is about half a second in the air (%.2f s)" % t)
 	check(spun > PI and p.body_sprite.rotation == 0.0, "the player does a full flip and lands upright")
 	await tap("jump")
 	await wait(0.1)
@@ -581,10 +581,20 @@ func jump_and_underground() -> void:
 	await get_tree().physics_frame
 	check(not p.is_on_floor(), "clicking the green B button jumps")
 	await until_floor(p)
-	# three floors, like the original: the ladder of ledges goes from the street up top
-	p.position = lvl.cell_pos(Vector2i(42, lvl.TOWN_MID - 1))
+	# three floors, like the original: jump up through the opening in the upper floor
+	p.position = lvl.cell_pos(Vector2i(43, lvl.TOWN_MID - 1))
+	GS.st = GS.max_st()
 	await wait(0.4)
-	check(await climb_up(func(): return p.position.y <= lvl.TOWN_TOP * 16 + 1, 8.0), "the ladder goes from the street up to the chests and furnaces")
+	await tap("jump")
+	for k in 5:
+		for f in 8:
+			await get_tree().physics_frame
+		if p.position.y < lvl.TOWN_TOP * 16 + 16:
+			Input.action_press("move_left") # above the floor: steer onto it
+		await tap("jump")
+	Input.action_release("move_left")
+	check(await walk("move_left", func(): return p.is_on_floor(), 2.0) and p.position.y <= lvl.TOWN_TOP * 16 + 1,
+		"jumping up through the opening reaches the chests and furnaces")
 	await shot("03a_upstairs")
 	# picking a world opens a portal on the street, and hitting it takes you there
 	main.open_world("grass_1")
