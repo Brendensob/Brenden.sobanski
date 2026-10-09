@@ -149,6 +149,12 @@ func new_monsters() -> void:
 	check(took >= 41 - GS.stat("def") and took <= 41, "Snow Valley adds 40 damage under 160 defense (a 1-attack hit took %d)" % took)
 	GS.hp = hp0
 	main.level.player.invuln = 9999.0
+	# Hell 1 uses the Hell page's health, and everything but wizards and bosses can poison
+	await goto("hell_1")
+	var mt: Node = main.level.spawn_mob_at("mantis", main.level.player.position + Vector2(60, 0))
+	var wz: Node = main.level.spawn_mob_at("wizard", main.level.player.position + Vector2(90, 0))
+	check(mt.max_hp >= 250 and mt.max_hp <= 300 and mt.status_effect() == ["poison", 0.12] and wz.status_effect().is_empty(),
+		"Hell 1 Mantis has %d health (wiki: 250-300) and can poison; Wizards can't" % mt.max_hp)
 
 ## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
 func climb(dir: String, done: Callable, timeout: float) -> bool:
