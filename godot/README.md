@@ -70,7 +70,9 @@ or on from the Menu (compass button).
   the 5 x 5 bag (top row is the hotbar), the item box under it, and three tabs on the
   right: your character and stats, combining (big result slot, scroll slot, slots I, II,
   III and Combine), and the menu. Tapping items fills the green combination slot.
-- **Crafter:** the same layout with weapon, helmet, armor, shield and ring tabs.
+- **Crafter:** the bag on the left and five tabs on the right (weapons and tools, helmets,
+  armor, shields, rings). Each tab shows everything he makes; pick one to see it big with its
+  stats, the three things it takes (have / need, green when you have enough) and Craft.
 - **Day and night:** 216 seconds a day: 99 s of daytime, 45 s of sunset, 72 s of night, then
   straight back to morning. Coming into Pixel Town from the menu always starts in the morning.
 
@@ -190,6 +192,20 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 - The Crafter turns characters into hats: Bear Head, Dark Night, Green Face, Soldier Helmet,
   SPY Mask, The Fly, Trooper Pro, Bad Mask, Chuu Hat, Pirate Hat, Cool Hat, Roman Hat and
   Storm Hat. Helmets and armor show on your character.
+
+**The Crafter's recipes** follow the wiki's Equipment and weapon pages: every tool, weapon,
+helmet, armor, shield and ring the wiki lists a Crafter cost for. That includes the Hell Armor
+line (Hell Armor from 99 Fira, 99 Legendary Roots and 50 Hero Bugs, then II, III and IV), the
+Nightmare Dress I and II, Emperor Dress I to IV, Skull Dress II to IV, Snow Dress I and II,
+Dragon Dress II, Nightmare Helmet I to III, Volcan Axe, Sky Pole Axe, Unlawful, Nightmare Blade,
+Blue Fluorescent, Golden Faceguard and the Gold, Silver, Orb, Ruby, Armor, Attack and Magic
+rings. Dark Stones come from the Eggcellence boss, Sky Stones, Dragon Spines and Skull Dresses
+from the Master Chest, and the Dragon Dress from the Dream Arena bosses (those chances are
+placeholders). Two wiki rows read like typos and were read the sensible way: Hell Armor IV takes
+Hell Armor III, and the Iron Bar, Sticky Bones and Crystal cost on the Long Sword Shield row is
+the Long Sword's. Gear that needs Sailor Moons or Backstreet Boys (Crown, Royal Mask, Thors,
+W Cap, Rooster Hat), event items (Snowman Hat II), and the Combo Book Z chains (Robo Masks,
+Ghost Dress, Ice Devil Swords) aren't in yet.
 
 **Systems**
 - Health, mana and stamina (red, blue, green). Attacks use stamina, staffs use mana.

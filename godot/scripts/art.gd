@@ -875,6 +875,8 @@ const ICON_GRIDS := {
 }
 
 const MATERIAL_COLORS := [
+	["emperor", "f2cf5b", "d8433a"], ["snow_dress", "f2efe6", "a6c6d8"], ["dragon", "5cbf3f", "2e7a2a"], ["volcan_", "ff5a2a", "a8241a"],
+	["sky", "a6e6f2", "4fb6d0"], ["unlawful", "8fb07a", "5e7a52"], ["dark_stone", "3e424a", "7b4fb8"],
 	["modina", "ea8a33", "8a4a1a"], ["nightmare", "8a1e3a", "2a0a14"], ["long_lance", "e3ebf5", "6b8ff0"],
 	["hazard", "f2cf5b", "3a3a48"], ["santa", "d8433a", "f2efe6"], ["lich", "8a4ac8", "3a1a5a"], ["fortune", "f2cf5b", "d8433a"],
 	["blue_blade", "6b8ff0", "2c4596"], ["dark_heart", "8a1e2a", "2a0a14"], ["forbidden", "d8433a", "f2cf5b"],
@@ -951,7 +953,11 @@ func icon_spec(id: String) -> Array:
 		"apple": return ["apple", {"X": "d8433a", "x": "8a1e1a"}]
 		"evil_apple": return ["apple", {"X": "5a2a6a", "x": "2a1030"}]
 		"living_flame": return ["blob", {"X": "f2a33a", "x": "d8433a"}]
-		"em_stone", "ruby_stone", "sapphire_stone": return ["gem", mc]
+		"em_stone", "ruby_stone", "sapphire_stone", "dark_stone", "sky_stone": return ["gem", mc]
+		"dragon_spine": return ["bone", {"w": "a8e86a"}]
+		"volcan_axe": return ["axe", mc]
+		"sky_pole_axe": return ["pole", mc]
+		"unlawful": return ["plunger", mc]
 		"scarab": return ["bug", {"X": "3b5dc9", "x": "2c4596"}]
 		"stink_bug": return ["bug", {"X": "8fb07a", "x": "5e7a52"}]
 		"honey_bug": return ["bug", {"X": "f2cf5b", "x": "c99a2e"}]

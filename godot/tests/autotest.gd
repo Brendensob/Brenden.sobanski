@@ -519,6 +519,37 @@ func run() -> void:
 	main.hud.close_panels()
 	var r: Dictionary = Data.SMITH[0]
 	check(GS.smith(r) and GS.count("copper_axe") == 1, "the Crafter makes a Copper Axe")
+	# every Crafter tab has something on it, and the Hell Armor line works all the way up
+	var tabs := {}
+	for r1 in Data.SMITH:
+		tabs[main.hud._crafter_tab(r1.out)] = true
+	check(tabs.keys().size() == 5 and tabs.has("ring"), "the Crafter has weapons, helmets, armor, shields and rings %s" % [tabs.keys()])
+	var made := []
+	for id in ["hell_armor", "hell_armor_2", "hell_armor_3", "hell_armor_4"]:
+		for r1 in Data.SMITH:
+			if r1.out == id:
+				for k in r1.cost:
+					if not k.begins_with("hell_armor"):
+						GS.add_item(k, r1.cost[k])
+				if GS.smith(r1):
+					made.append(id)
+	check(made.size() == 4 and GS.count("hell_armor_4") == 1 and GS.count("hell_armor") == 0, "the Crafter makes Hell Armor, then II, III and IV %s" % [made])
+	GS.remove_item("hell_armor_4", 1)
+	GS.add_item("hell_armor", 1)
+	GS.add_item("dark_stone", 1)
+	main.hud.open_smith()
+	main.hud.bag_tab = "armor"
+	for i in Data.SMITH.size():
+		if Data.SMITH[i].out == "hell_armor_2":
+			main.hud.craft_sel = i
+	main.hud._refresh_bag()
+	await wait(0.1)
+	var go: Button = main.hud.page.find_child("Go", true, false)
+	check(go != null and go.disabled, "Hell Armor II can't be crafted with 1 of its 3 Dark Stones")
+	await shot("11b_crafter_hell_armor")
+	main.hud.close_panels()
+	GS.remove_item("hell_armor", 1)
+	GS.remove_item("dark_stone", 1)
 	main.hud.open_book("survival")
 	await shot("12_book")
 	main.hud.close_panels()

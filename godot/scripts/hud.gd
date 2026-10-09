@@ -36,6 +36,7 @@ var use_scroll := false
 var bag_mode := "bag" # "bag" when opened from the backpack, "craft" at the Crafter
 var bag_tab := "combine" # bag: character, combine, menu. craft: weapon, helmet, armor, shield, ring
 var craft_sel := -1
+var craft_scroll := 0 # where the Crafter's list is scrolled to
 var info_box: VBoxContainer
 var tab_row: HBoxContainer
 var page: Control
@@ -839,7 +840,7 @@ func _refresh_bag() -> void:
 		else:
 			b.icon = Art.ui_icon({"character": "backpack", "combine": "hammer", "menu": "compass"}[key], 2)
 		b.tooltip_text = key.capitalize()
-		b.pressed.connect(func(): bag_tab = key; craft_sel = -1; _refresh_bag())
+		b.pressed.connect(func(): bag_tab = key; craft_sel = -1; craft_scroll = 0; _refresh_bag())
 		if key == bag_tab:
 			b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 3))
 			b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 3))
@@ -967,9 +968,11 @@ func _page_craft() -> void:
 	for i in Data.SMITH.size():
 		if _crafter_tab(Data.SMITH[i].out) == bag_tab:
 			list.append(i)
+	# top: everything the Crafter makes on this tab
 	var scroll := ScrollContainer.new()
+	scroll.name = "List"
 	scroll.position = Vector2(4, 4)
-	scroll.size = Vector2(208, 210)
+	scroll.size = Vector2(208, 112)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	page.add_child(scroll)
 	var grid := GridContainer.new()
@@ -988,20 +991,97 @@ func _page_craft() -> void:
 		grid.add_child(b)
 	if list.is_empty():
 		page.add_child(_at(_wrap("Nothing to craft here yet.", 200, C_MUTED), Vector2(8, 8)))
+	# the page is rebuilt on every change, so put the list back where it was
+	var keep := craft_scroll
+	var ref: WeakRef = weakref(scroll)
+	get_tree().process_frame.connect(func():
+		var sc: ScrollContainer = ref.get_ref()
+		if sc and not sc.is_queued_for_deletion():
+			sc.scroll_vertical = keep
+			sc.get_v_scroll_bar().value_changed.connect(func(v: float): craft_scroll = int(v)), CONNECT_ONE_SHOT)
+	# bottom: the picked item, what it takes (I, II, III, like combining) and Craft
+	var line := ColorRect.new()
+	line.color = C_MUTED
+	line.position = Vector2(4, 119)
+	line.size = Vector2(206, 1)
+	page.add_child(line)
+	if craft_sel < 0 or not craft_sel in list:
+		var h := _wrap("Pick something to craft. The Crafter never fails.", 200, C_MUTED, 8)
+		h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		page.add_child(_at(h, Vector2(7, 160)))
+		return
+	var r: Dictionary = Data.SMITH[craft_sel]
+	var out := _slot(40)
+	out.name = "Result"
+	out.position = Vector2(4, 124)
+	out.disabled = true
+	out.add_theme_stylebox_override("disabled", _tex_box(Art.ui_frame("button"), 3, 1))
+	_fill_slot(out, {"id": r.out, "n": 1})
+	page.add_child(out)
+	var title := _heading(Data.ITEMS[r.out].name, 10)
+	title.size = Vector2(164, 12)
+	title.clip_text = true
+	page.add_child(_at(title, Vector2(48, 123)))
+	var stats := _wrap(_stat_text(r.out), 164, C_INK, 8)
+	stats.max_lines_visible = 2
+	page.add_child(_at(stats, Vector2(48, 137)))
+	var ids: Array = r.cost.keys()
+	for i in 3:
+		var b := _slot(30)
+		b.name = "Need%d" % i
+		b.position = Vector2(4 + i * 36, 168)
+		b.disabled = true
+		page.add_child(b)
+		if i >= ids.size():
+			continue
+		var id: String = ids[i]
+		_fill_slot(b, {"id": id, "n": 1})
+		var have := GS.count(id)
+		var need: int = r.cost[id]
+		var c := _label("%d/%d" % [mini(have, 999), need], 8, C_GOOD if have >= need else C_BAD, true)
+		c.size = Vector2(34, 10)
+		c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		page.add_child(_at(c, Vector2(2 + i * 36, 200)))
+	var go := _button("Craft", func():
+		if GS.smith(r):
+			toast("%s obtained" % Data.ITEMS[r.out].name)
+		_refresh_bag(), true)
+	go.name = "Go"
+	go.position = Vector2(118, 172)
+	go.custom_minimum_size = Vector2(90, 22)
+	go.disabled = not GS.has_all(r.cost)
+	page.add_child(go)
+
+## One line on what an item does: attack and speed for weapons, stats for gear.
+func _stat_text(id: String) -> String:
+	var it: Dictionary = Data.ITEMS[id]
+	if it.has("stats"):
+		var parts := []
+		for k in ["atk", "def", "mag", "hp", "mp", "st"]:
+			if it.stats[k] != 0:
+				parts.append("%s %d" % [{"atk": "Atk", "def": "Def", "mag": "Mag", "hp": "HP", "mp": "MP", "st": "ST"}[k], it.stats[k]])
+		return "  ".join(parts)
+	if it.has("heal") and not it.has("dmg"):
+		return "Heals %d for %d mana" % [it.heal, it.mana_cost]
+	if it.has("dmg"):
+		var s := "Attack %d, %.2fs" % [it.dmg, it.spd]
+		if it.has("tier"):
+			s += ", tier %d" % it.tier
+		if it.has("axe"):
+			s += ", chops trees"
+		if it.has("pick"):
+			s += ", mines"
+		return s
+	return it.desc
 
 func _refresh_info() -> void:
 	_clear(info_box)
 	if bag_mode == "craft" and craft_sel >= 0 and bag_sel < 0:
 		var r: Dictionary = Data.SMITH[craft_sel]
 		info_box.add_child(_label(Data.ITEMS[r.out].name, 10, C_EMBER))
-		info_box.add_child(_cost_row(r.cost))
-		var b := _button("Craft", func():
-			if GS.smith(r):
-				toast("%s obtained" % Data.ITEMS[r.out].name)
-			_refresh_bag(), true)
-		b.disabled = not GS.has_all(r.cost)
-		b.custom_minimum_size = Vector2(70, 18)
-		info_box.add_child(b)
+		var d := _wrap(Data.ITEMS[r.out].desc, 156, C_INK, 8)
+		d.max_lines_visible = 4
+		info_box.add_child(d)
 		return
 	if move_from >= 0:
 		info_box.add_child(_wrap("Tap a slot to move the item there.", 156, C_MUTED))
@@ -1543,6 +1623,7 @@ func open_smith() -> void:
 	bag_mode = "craft"
 	bag_tab = "weapon"
 	craft_sel = -1
+	craft_scroll = 0
 	open_panel("bag")
 
 # books

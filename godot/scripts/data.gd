@@ -67,7 +67,9 @@ func _items_materials() -> void:
 		["erbium_bar", "Erbium Bar", 220, "Smelted erbium."], ["volcanic_bar", "Volcanic Bar", 2200, "Smelted volcanic ore."],
 		["light_bar", "Light Bar", 400, "Water crystals and silver, smelted."], ["dark_bar", "Dark Bar", 450, "Dark crystals and gold, smelted."],
 		["hell_bar", "Hell Bar", 900, "Earth crystals and erbium, smelted."], ["evil_bar", "Evil Bar", 2000, "The strongest common metal."],
-		["em_stone", "Em Stone", 500, "A green gem stone."], ["ruby_stone", "Ruby Stone", 500, "A red gem stone."],
+		["em_stone", "Em Stone", 500, "A green gem stone."], ["dark_stone", "Dark Stone", 1500, "A black stone. Used for Hell, Emperor, Skull and Dragon gear."],
+		["sky_stone", "Sky Stone", 4000, "A pale blue stone. Used for the Emperor Dress IV."],
+		["dragon_spine", "Dragon Spine", 4000, "A spine from a dragon. Used for the Nightmare Dress II."], ["ruby_stone", "Ruby Stone", 500, "A red gem stone."],
 		["sapphire_stone", "Sapphire Stone", 500, "A blue gem stone."],
 		# from the later worlds
 		["blue_blade", "Blue Blade", 800, "A blue blade from Modina Ruins. Used for Modina gear."],
@@ -114,12 +116,13 @@ func _items_weapons() -> void:
 		["gold_sword_cast", "Gold Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword."],
 		["torch_weapon", "Torch", 5, 1.0, 22, true, 1, "Long reach, slow swing."],
 		["timber_club", "Wood King", 5, 0.75, 18, true, 15, "A heavy wooden club."],
-		["short_blade", "Short Blade", 5, 0.45, 16, true, 20, "Small but quick. Slimes sometimes drop it. Used to craft Golden Night."],
+		["short_blade", "Gradius", 5, 0.45, 16, true, 20, "Small but quick. Slimes sometimes drop it. Used to craft Golden Night."],
 		["gilded_blade", "Golden Night", 6, 0.5, 18, true, 30, "A short blade with a gold finish."],
 		["azure_blade", "Blue Night", 9, 0.55, 20, true, 45, "A blue steel blade."],
 		["fire_brand", "Fire Brand", 13, 0.55, 20, true, 45, "Warm to hold."],
 		["violet_edge", "Purple Mist", 19, 0.55, 20, true, 60, "A purple-glinting sword."],
-		["plunger", "Plunger", 4, 0.4, 16, true, 10, "For the bravest of plumbers."],
+		["plunger", "Plunger", 4, 0.4, 16, true, 10, "Wielded only by the master poopers."],
+		["unlawful", "Unlawful", 13, 0.55, 18, true, 45, "A plunger made into something worse."],
 		["knights_blade", "Knights Mantle", 15, 0.6, 22, true, 70, "A proper knight's sword."],
 		["kings_mace", "Kings Mace", 27, 0.55, 22, true, 120, "Heavy and royal."],
 		["excalibur", "Excalibur", 23, 0.9, 24, true, 120, "Slow, but long and strong."],
@@ -137,6 +140,8 @@ func _items_weapons() -> void:
 		["long_sword", "Long Sword", 20, 0.6, 28, true, 150, "Long reach."],
 		["golden_long_sword", "Golden Long Sword", 28, 0.6, 28, true, 300, "Long reach, golden edge."],
 		["pole_axe", "Pole Axe", 15, 1.0, 26, true, 25, "A slow, heavy axe on a pole. Also chops trees.", {"axe": 2}],
+		["sky_pole_axe", "Sky Pole Axe", 28, 1.0, 26, true, 60, "The next Pole Axe. Also chops trees.", {"axe": 3}],
+		["volcan_axe", "Volcan Axe", 86, 1.0, 22, true, 300, "Slow, with strong knockback. Also chops trees, blue ones too.", {"axe": 4}],
 		["twin_sun", "Twin Sun", 14, 0.55, 22, true, 300, "Two suns on one hilt."],
 		["devil_spike", "Devil Spike", 45, 0.9, 26, true, 500, "A wicked spiked weapon."],
 		["hell_sword", "Hell Sword", 105, 0.55, 26, true, 1500, "Forged from evil itself."],
@@ -244,7 +249,7 @@ func _items_gear() -> void:
 	_gear("fear_helmet", "Fear Helmet", "helmet", [0, 7, 0, 7, 0, 0], 300)
 	_gear("fear_helmet_2", "Fear Helmet II", "helmet", [0, 15, 0, 15, 5, 0], 900)
 	_gear("hell_helmet", "Hell Helmet", "helmet", [0, 4, 0, 7, 7, 0], 300)
-	_gear("hell_helmet_2", "Hell Helmet II", "helmet", [0, 5, 0, 7, 10, 10], 900)
+	_gear("hell_helmet_2", "Hell Helmet II", "helmet", [5, 7, 0, 10, 10, 0], 900)
 	_gear("witch_helmet", "Witch Helmet", "helmet", [0, 5, 5, 5, 5, 0], 300)
 	_gear("witch_helmet_2", "Witch Helmet II", "helmet", [0, 7, 5, 10, 10, 0], 900)
 	_gear("spectre_hood", "Ghost Hat", "helmet", [3, 12, 3, 5, 5, 2], 1200, "Rare Ghost Boss drop.")
@@ -270,13 +275,31 @@ func _items_gear() -> void:
 	_gear("sage_armor", "Sage Armor", "armor", [0, 0, 0, 14, 14, 0], 900)
 	_gear("lavish_armor", "Lavish Armor", "armor", [0, 3, 0, 25, 0, 0], 900)
 	_gear("hell_armor", "Hell Armor", "armor", [0, 26, 0, 10, 10, 0], 3000)
+	_gear("hell_armor_2", "Hell Armor II", "armor", [0, 34, 0, 20, 20, 0], 6000)
+	_gear("hell_armor_3", "Hell Armor III", "armor", [0, 35, 0, 23, 23, 0], 9000)
+	_gear("hell_armor_4", "Hell Armor IV", "armor", [1, 40, 0, 28, 28, 0], 12000)
+	_gear("emperor_dress", "Emperor Dress", "armor", [0, 26, 0, 15, 15, 5], 3000)
+	_gear("emperor_dress_2", "Emperor Dress II", "armor", [0, 30, 0, 30, 30, 5], 6000)
+	_gear("emperor_dress_3", "Emperor Dress III", "armor", [0, 32, 0, 35, 35, 5], 9000)
+	_gear("emperor_dress_4", "Emperor Dress IV", "armor", [0, 37, 0, 45, 45, 9], 12000)
+	_gear("snow_dress", "Snow Dress", "armor", [2, 4, 0, 10, 4, 0], 500, "Merry Christmas!")
+	_gear("snow_dress_2", "Snow Dress II", "armor", [2, 40, 0, 8, 2, 0], 5000, "Merry Christmas!")
+	_gear("skull_dress", "Skull Dress", "armor", [2, 25, 0, 8, 8, 0], 2500)
+	_gear("skull_dress_2", "Skull Dress II", "armor", [3, 30, 0, 10, 10, 0], 5000)
+	_gear("skull_dress_3", "Skull Dress III", "armor", [5, 35, 0, 10, 10, 0], 8000)
+	_gear("skull_dress_4", "Skull Dress IV", "armor", [7, 40, 0, 12, 12, 0], 11000)
+	_gear("dragon_dress", "Dragon Dress", "armor", [0, 28, 0, 11, 11, 0], 3000)
+	_gear("dragon_dress_2", "Dragon Dress II", "armor", [0, 29, 0, 15, 15, 0], 6000)
 	# the later worlds (Modina Dress I-III and the nightmare gear from the wiki; the rest are guesses)
 	_gear("modina_dress", "Modina Dress", "armor", [2, 35, 2, 20, 5, 2], 2000)
 	_gear("modina_dress_2", "Modina Dress II", "armor", [1, 37, 4, 23, 6, 4], 4000)
 	_gear("modina_dress_3", "Modina Dress III", "armor", [5, 42, 8, 27, 8, 6], 8000)
 	_gear("nightmare_dress", "Nightmare Dress", "armor", [2, 45, 2, 15, 7, 2], 6000)
+	_gear("nightmare_dress_2", "Nightmare Dress II", "armor", [3, 50, 3, 20, 10, 5], 15000)
 	_gear("dress_of_lich_king", "Dress of Lich King", "armor", [4, 48, 6, 25, 8, 4], 9000, "Very rare, from Snow Valley.")
 	_gear("nightmare_helmet", "Nightmare Helmet", "helmet", [6, 5, 5, 5, 1, 1], 3000)
+	_gear("nightmare_helmet_2", "Nightmare Helmet II", "helmet", [3, 13, 3, 6, 2, 2], 6000)
+	_gear("nightmare_helmet_3", "Nightmare Helmet III", "helmet", [4, 15, 5, 8, 4, 4], 12000)
 	_gear("modina_face", "Modina Face", "helmet", [3, 6, 3, 6, 2, 1], 3000, "Modina's orange mask.")
 	_gear("fortune_mask", "Fortune Mask", "helmet", [5, 8, 5, 8, 3, 2], 6000, "A childish mask with a lot of luck in it.")
 	_gear("modina_ring", "Modina Ring", "ring", [0, 0, 0, 5, 1, 0], 3000, "Modina's ring.")
@@ -296,18 +319,21 @@ func _items_gear() -> void:
 	_gear("gold_shield", "Gold Shield", "shield", [0, 6, 0, 6, 0, 0], 300)
 	_gear("faceguard", "Faceguard", "shield", [0, 3, 0, 2, 0, 0], 60)
 	_gear("copper_faceguard", "Copper Faceguard", "shield", [0, 4, 0, 4, 0, 1], 120)
+	_gear("golden_faceguard", "Golden Faceguard", "shield", [0, 5, 0, 5, 0, 2], 250)
 	# rings (two ring slots)
 	_gear("silver_ring", "Silver Ring", "ring", [1, 1, 0, 1, 0, 0], 80)
 	_gear("gold_ring", "Gold Ring", "ring", [1, 0, 1, 0, 1, 0], 80)
 	_gear("jade_ring", "Jade Ring", "ring", [0, 0, 0, 3, 0, 3], 150)
 	_gear("ruby_silver_ring", "Ruby Silver Ring", "ring", [0, 1, 0, 5, 0, 0], 200)
 	_gear("orb_gold_ring", "Orb Gold Ring", "ring", [0, 0, 1, 0, 5, 0], 200)
-	_gear("armor_ring", "Armor Ring I", "ring", [0, 3, 0, 0, 0, 0], 150)
-	_gear("armor_ring_2", "Armor Ring II", "ring", [0, 6, 0, 0, 0, 0], 400)
-	_gear("armor_ring_3", "Armor Ring III", "ring", [0, 10, 0, 0, 0, 0], 900)
-	_gear("armor_ring_4", "Armor Ring IV", "ring", [0, 15, 0, 0, 0, 0], 2000)
+	_gear("armor_ring", "Armor Ring I", "ring", [0, 5, 0, 0, 0, 0], 150)
+	_gear("armor_ring_2", "Armor Ring II", "ring", [0, 10, 0, 0, 0, 0], 400)
+	_gear("armor_ring_3", "Armor Ring III", "ring", [0, 15, 0, 0, 0, 0], 900)
+	_gear("armor_ring_4", "Armor Ring IV", "ring", [0, 20, 0, 0, 0, 0], 2000)
 	_gear("ring_of_attack", "Ring of Attack", "ring", [8, 0, 0, 0, 0, 0], 2000)
+	_gear("ring_of_attack_2", "Ring of Attack II", "ring", [16, 0, 0, 0, 0, 0], 4000)
 	_gear("ring_of_magic", "Ring of Magic", "ring", [0, 0, 8, 0, 0, 0], 2000)
+	_gear("ring_of_magic_2", "Ring of Magic II", "ring", [0, 0, 16, 0, 0, 0], 4000)
 
 func _items_misc() -> void:
 	_item("survival_book", "Survival Book", "book", 0, "+50% success on its combinations. Keep it in your bag.", {"book": "survival"})
@@ -495,12 +521,16 @@ func find_recipe(items: Array) -> Dictionary:
 
 # ---------------------------------------------------------------- blacksmith
 # Crafted by the Crafter in Pixel Town (or at a Work Station). Always succeeds.
+# Grouped by the Crafter's tabs, in the order the wiki's tables list them. Recipes
+# from the wiki unless marked; "guess" means the wiki doesn't say.
 var SMITH := [
-	# tools
+	# tools (under the weapon tab)
 	{"out": "copper_axe", "cost": {"copper_bar": 20, "wooden_axe": 1}},
 	{"out": "iron_axe", "cost": {"iron_bar": 20, "copper_axe": 1}},
 	{"out": "gold_axe", "cost": {"gold_bar": 20, "iron_axe": 1}},
-	{"out": "copper_pick", "cost": {"copper_bar": 20, "wooden_pick": 1}},
+	{"out": "volcan_axe", "cost": {"gold_axe": 1, "erbium_bar": 75, "power_bug": 75}},
+	{"out": "sky_pole_axe", "cost": {"pole_axe": 1, "silver_bar": 50, "monster_horn": 50}},
+	{"out": "copper_pick", "cost": {"copper_bar": 5, "wooden_pick": 1}},
 	{"out": "iron_pick", "cost": {"iron_bar": 20, "copper_pick": 1}},
 	{"out": "gold_pick", "cost": {"gold_bar": 20, "iron_pick": 1}},
 	{"out": "erbium_pick", "cost": {"erbium_bar": 20, "gold_pick": 1}},
@@ -513,22 +543,34 @@ var SMITH := [
 	{"out": "violet_edge", "cost": {"azure_blade": 1, "jelly": 50, "stink_bug": 25}},
 	{"out": "excalibur", "cost": {"violet_edge": 1, "monster_scale": 75, "monster_shell": 75}},
 	{"out": "plunger", "cost": {"jelly": 15, "monster_shell": 5}},
+	{"out": "unlawful", "cost": {"plunger": 1, "stink_bug": 25, "monster_hide": 25}},
 	{"out": "knights_blade", "cost": {"timber_club": 1, "azure_blade": 1, "bone": 75}},
 	{"out": "kings_mace", "cost": {"knights_blade": 1, "dongle": 25, "gold_bar": 50}},
 	{"out": "holy_knight", "cost": {"kings_mace": 1, "gold_bar": 75, "crystal": 75}},
 	{"out": "poison_ivy", "cost": {"excalibur": 1, "gold_bar": 75, "dark_crystal": 75}},
 	{"out": "hellfire_blade", "cost": {"excalibur": 1, "gold_bar": 75, "fire_crystal": 75}},
+	{"out": "glow_blade_blue", "cost": {"water_crystal": 50, "iron_bar": 25}},
+	# the wiki puts this cost on the Long Sword Shield row; it reads as the Long Sword's own
+	{"out": "long_sword", "cost": {"iron_bar": 25, "sticky_bones": 25, "crystal": 25}},
 	{"out": "combo_sword", "cost": {"copper_sword_cast": 1, "iron_sword_cast": 1, "gold_sword_cast": 1}},
+	{"out": "nightmare_blade", "cost": {"living_flame": 75, "evil_bar": 100, "power_bug": 15}},
 	{"out": "staff_cast", "cost": {"wood": 50, "branch": 50, "copper_ore": 5}},
 	{"out": "magic_wand", "cost": {"wood": 25, "branch": 25, "copper_ore": 25}},
+	# the later worlds' weapons (guesses)
+	{"out": "modina_2", "cost": {"modina_1": 2, "blue_blade": 2, "gold_bar": 20}},
+	{"out": "modina_3", "cost": {"modina_2": 2, "blue_blade": 4, "erbium_bar": 20}},
+	{"out": "modina_4", "cost": {"modina_3": 2, "blue_blade": 8, "nightmare_ingot": 10}},
+	{"out": "long_lance_2", "cost": {"long_lance": 2, "gold_bar": 30}},
+	{"out": "long_lance_3", "cost": {"long_lance_2": 2, "erbium_bar": 30}},
+	{"out": "hell_spike_2", "cost": {"hell_spike": 1, "volcanic_bar": 10, "hell_bar": 20}},
+	{"out": "hell_spike_3", "cost": {"hell_spike_2": 1, "volcanic_bar": 25, "nightmare_ingot": 10}},
+	{"out": "nightmare_blade_2", "cost": {"nightmare_blade": 1, "nightmare_ingot": 20, "dark_heart": 2}},
+	{"out": "nightmare_blade_3", "cost": {"nightmare_blade_2": 1, "nightmare_ingot": 40, "dark_heart": 5}},
 	# helmets
 	{"out": "wooden_helmet", "cost": {"wood_board": 25}},
 	{"out": "copper_helmet", "cost": {"copper_bar": 25, "armor_bug": 5, "wooden_helmet": 1}},
 	{"out": "brass_helmet", "cost": {"iron_bar": 25, "armor_bug": 5, "copper_helmet": 1}},
 	{"out": "pumpkin_hat", "cost": {"gold_bar": 25, "armor_bug": 5, "silver_bar": 25}},
-	{"out": "fear_helmet_2", "cost": {"dark_bar": 65, "fear_helmet": 1}},
-	{"out": "hell_helmet_2", "cost": {"hell_bar": 65, "hell_helmet": 1}},
-	{"out": "witch_helmet_2", "cost": {"light_bar": 65, "witch_helmet": 1}},
 	{"out": "bear_head", "cost": {"cavemun": 10}},
 	{"out": "dark_night", "cost": {"dark_knight": 10}},
 	{"out": "green_face", "cost": {"cavemun": 5, "school_girl": 5}},
@@ -542,6 +584,12 @@ var SMITH := [
 	{"out": "cool_hat", "cost": {"bad_man": 15, "the_spi": 15}},
 	{"out": "roman_hat", "cost": {"soldier": 15, "drone": 15}},
 	{"out": "storm_hat", "cost": {"pirate": 15, "chuchu": 15}},
+	{"out": "fear_helmet_2", "cost": {"dark_bar": 65, "fear_helmet": 1}},
+	{"out": "hell_helmet_2", "cost": {"hell_bar": 65, "hell_helmet": 1}},
+	{"out": "witch_helmet_2", "cost": {"light_bar": 65, "witch_helmet": 1}},
+	{"out": "nightmare_helmet", "cost": {"hell_bar": 50, "dark_bar": 50, "dark_knight": 1}},
+	{"out": "nightmare_helmet_2", "cost": {"nightmare_helmet": 1, "volcanic_bar": 45, "armor_bug": 30}},
+	{"out": "nightmare_helmet_3", "cost": {"nightmare_helmet_2": 1, "nightmare_ingot": 30, "dark_heart": 5}},
 	# armor
 	{"out": "wooden_armor", "cost": {"wood": 50}},
 	{"out": "stone_armor", "cost": {"rock": 50, "wooden_armor": 1, "scarab": 50}},
@@ -564,18 +612,23 @@ var SMITH := [
 	{"out": "sage_armor", "cost": {"seer_armor": 1, "erbium_bar": 75, "armor_bug": 75}},
 	{"out": "lavish_armor", "cost": {"scale_armor": 1, "erbium_bar": 75, "armor_bug": 35}},
 	{"out": "hell_armor", "cost": {"living_flame": 99, "legendary_roots": 99, "hero_bug": 50}},
+	{"out": "hell_armor_2", "cost": {"hell_armor": 1, "dark_stone": 3, "evil_crystal": 50}},
+	{"out": "hell_armor_3", "cost": {"hell_armor_2": 1, "evil_bar": 50, "volcanic_bar": 25}},
+	# the wiki lists Hell Armor here, which would skip II and III; read as Hell Armor III
+	{"out": "hell_armor_4", "cost": {"hell_armor_3": 1, "nightmare_ingot": 25, "dark_heart": 5}},
+	{"out": "nightmare_dress", "cost": {"hell_armor_2": 1, "nightmare_ingot": 50, "dark_heart": 5}},
+	{"out": "nightmare_dress_2", "cost": {"nightmare_dress": 1, "dragon_spine": 1, "dress_of_lich_king": 1}},
+	{"out": "emperor_dress", "cost": {"rooster_dress": 1, "legendary_roots": 99, "evil_bar": 99}},
+	{"out": "emperor_dress_2", "cost": {"emperor_dress": 1, "dark_stone": 3, "evil_crystal": 50}},
+	{"out": "emperor_dress_3", "cost": {"emperor_dress_2": 1, "volcanic_bar": 20, "nightmare_ingot": 10}},
+	{"out": "emperor_dress_4", "cost": {"emperor_dress_3": 1, "dark_heart": 10, "sky_stone": 10}},
+	{"out": "snow_dress", "cost": {"snow_ball": 99, "water_crystal": 99, "linen": 99}},
+	{"out": "snow_dress_2", "cost": {"snow_dress": 1, "volcanic_bar": 50, "evil_crystal": 50}},
+	{"out": "skull_dress_2", "cost": {"skull_dress": 1, "evil_bar": 50, "dark_stone": 5}},
+	{"out": "skull_dress_3", "cost": {"skull_dress_2": 1, "volcanic_bar": 25, "hero_bug": 35}},
+	{"out": "skull_dress_4", "cost": {"skull_dress_3": 1, "nightmare_ingot": 1, "dark_heart": 2}},
 	{"out": "modina_dress_3", "cost": {"modina_dress_2": 2, "nightmare_ingot": 40, "blue_blade": 1}},
-	{"out": "nightmare_dress", "cost": {"hell_armor": 1, "nightmare_ingot": 50, "dark_heart": 5}},
-	{"out": "nightmare_helmet", "cost": {"hell_bar": 50, "dark_bar": 50, "dark_knight": 1}},
-	{"out": "modina_2", "cost": {"modina_1": 2, "blue_blade": 2, "gold_bar": 20}},
-	{"out": "modina_3", "cost": {"modina_2": 2, "blue_blade": 4, "erbium_bar": 20}},
-	{"out": "modina_4", "cost": {"modina_3": 2, "blue_blade": 8, "nightmare_ingot": 10}},
-	{"out": "long_lance_2", "cost": {"long_lance": 2, "gold_bar": 30}},
-	{"out": "long_lance_3", "cost": {"long_lance_2": 2, "erbium_bar": 30}},
-	{"out": "hell_spike_2", "cost": {"hell_spike": 1, "volcanic_bar": 10, "hell_bar": 20}},
-	{"out": "hell_spike_3", "cost": {"hell_spike_2": 1, "volcanic_bar": 25, "nightmare_ingot": 10}},
-	{"out": "nightmare_blade_2", "cost": {"nightmare_blade": 1, "nightmare_ingot": 20, "dark_heart": 2}},
-	{"out": "nightmare_blade_3", "cost": {"nightmare_blade_2": 1, "nightmare_ingot": 40, "dark_heart": 5}},
+	{"out": "dragon_dress_2", "cost": {"dragon_dress": 1, "volcanic_bar": 15, "dark_stone": 5}},
 	# shields
 	{"out": "wooden_shield", "cost": {"wood": 40, "branch": 10}},
 	{"out": "leather_shield", "cost": {"monster_leather": 15, "scarab": 10}},
@@ -589,6 +642,16 @@ var SMITH := [
 	{"out": "tank_shield", "cost": {"knight_shield": 1, "iron_bar": 35}},
 	{"out": "gold_shield", "cost": {"iron_shield": 1, "gold_bar": 35}},
 	{"out": "copper_faceguard", "cost": {"faceguard": 1, "copper_bar": 25}},
+	{"out": "golden_faceguard", "cost": {"copper_faceguard": 1, "gold_bar": 25}},
+	# rings
+	{"out": "gold_ring", "cost": {"gold_bar": 5, "copper_bar": 5}},
+	{"out": "silver_ring", "cost": {"silver_bar": 5, "copper_bar": 5}},
+	{"out": "orb_gold_ring", "cost": {"gold_ring": 1, "power_bug": 15, "water_crystal": 50}},
+	{"out": "ruby_silver_ring", "cost": {"silver_ring": 1, "power_bug": 15, "water_crystal": 50}},
+	{"out": "armor_ring", "cost": {"ruby_silver_ring": 1, "iron_bar": 50, "small_evil_crystal": 5}},
+	{"out": "armor_ring_2", "cost": {"armor_ring": 1, "erbium_bar": 50, "small_evil_crystal": 5}},
+	{"out": "ring_of_attack_2", "cost": {"ring_of_attack": 1, "volcanic_bar": 25, "evil_bar": 15}},
+	{"out": "ring_of_magic_2", "cost": {"ring_of_magic": 1, "volcanic_bar": 25, "evil_bar": 15}},
 ]
 
 # ---------------------------------------------------------------- furnaces
@@ -786,7 +849,7 @@ var WORLDS := {
 	"dream_arena": {"name": "Dream Arena", "kind": "arena", "theme": "dream", "cap": 10,
 		"mobs": [["mantis", 2], ["shadow", 2, 1.0, 1.7], ["worm", 2, 1.0, 1.6], ["eyeball", 1, 1.0, 1.5], ["wizard", 2, 1.0, 1.5], ["hand", 2, 0.45, 8.0]],
 		"bosses": [["king", 2.0, 1.48], ["queen", 1.25, 1.47], ["empress", 0.93, 0.74]], "bosses_pick": 2,
-		"boss_drops": [["pirate", 0.05, 1, 1], ["bad_man", 0.05, 1, 1], ["school_girl", 0.05, 1, 1], ["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.06, 1, 1], ["glow_blade_blue", 0.04, 1, 1], ["bow", 0.05, 1, 1], ["big_rejuvenate_potion", 0.1, 1, 1], ["devil_spike", 0.02, 1, 1], ["volcanic_ore", 0.1, 1, 1], ["em_stone", 0.04, 1, 1], ["ruby_stone", 0.04, 1, 1], ["sapphire_stone", 0.04, 1, 1]]},
+		"boss_drops": [["pirate", 0.05, 1, 1], ["bad_man", 0.05, 1, 1], ["school_girl", 0.05, 1, 1], ["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.06, 1, 1], ["glow_blade_blue", 0.04, 1, 1], ["bow", 0.05, 1, 1], ["big_rejuvenate_potion", 0.1, 1, 1], ["devil_spike", 0.02, 1, 1], ["volcanic_ore", 0.1, 1, 1], ["em_stone", 0.04, 1, 1], ["ruby_stone", 0.04, 1, 1], ["sapphire_stone", 0.04, 1, 1], ["dragon_dress", 0.005, 1, 1]]},
 	"ghost_arena": {"name": "Ghost Arena", "kind": "arena", "theme": "ghost", "cap": 8,
 		"mobs": [["ghost_1", 3], ["ghost_2", 2]],
 		"bosses": [["ghost_lord", 1.0, 1.0]],
@@ -816,7 +879,7 @@ var WORLDS := {
 	"eggcellence": {"name": "Eggcellence", "kind": "arena", "theme": "egg", "cap": 10, "def_penalty": [99999, 40],
 		"mobs": [["egg_orange", 3], ["egg_blue", 2], ["egg_purple", 2], ["egg_clutch", 2], ["chick", 2], ["giant_chick", 1]],
 		"bosses": [["harakattu", 1.0, 1.0]],
-		"boss_drops": [["eggency", 0.5, 1, 3]]},
+		"boss_drops": [["eggency", 0.5, 1, 3], ["dark_stone", 0.1, 1, 1]]},
 	"survival": {"name": "Survival Grasslands", "kind": "survival", "theme": "grass", "needs": "survival_access"},
 }
 # The Gatekeeper offers these. Deeper levels are reached through portals inside each world.
@@ -1001,7 +1064,10 @@ var CHESTS := {
 		["fear_helmet_2", 1, 1], ["hell_helmet", 1, 1], ["hell_helmet_2", 1, 1], ["witch_helmet", 1, 1], ["witch_helmet_2", 1, 1], ["golden_seeds", 1, 1],
 		["healing_staff", 1, 1], ["healing_staff_2", 1, 1], ["healing_staff_3", 1, 1], ["sapphire_stone", 1, 1], ["em_stone", 1, 1], ["green_egg", 1, 1], ["gold_sword_cast", 1, 1],
 		["crazy_cannon_2", 1, 1], ["waazookaa_2", 1, 1], ["crazy_cannon_3", 1, 1, 0.5], ["waazookaa_3", 1, 1, 0.5], ["dark_knight", 1, 1],
-		["ninja", 1, 1, 0.3], ["iron_bot", 1, 1, 0.3]]},
+		["ninja", 1, 1, 0.3], ["iron_bot", 1, 1, 0.3],
+		# Crafter materials and gear the wiki lists in the Master Chest (Sky Stone's source is a guess)
+		["sky_pole_axe", 1, 1], ["golden_faceguard", 1, 1], ["skull_dress", 1, 1], ["skull_dress_2", 1, 1], ["skull_dress_3", 1, 1],
+		["emperor_dress", 1, 1], ["emperor_dress_2", 1, 1], ["dragon_spine", 1, 1], ["sky_stone", 1, 1]]},
 }
 var REWARD_CHEST := "silver" # chests found inside worlds use the silver loot table
 
