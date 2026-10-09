@@ -426,6 +426,8 @@ func _do_hit() -> void:
 		tier = int(it.tier)
 	elif need == "axe" and it.has("axe"):
 		tier = int(it.axe)
+	elif need == "pick" and it.has("pick"):
+		tier = int(it.pick) # the Hell Spikes mine too
 	if tier <= 0:
 		_say("You need %s for that." % ("an axe" if need == "axe" else "a pickaxe"))
 		n.shake()
@@ -445,6 +447,10 @@ static func bump(n: Node2D) -> void:
 func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if dead or invuln > 0:
 		return
+	# Snow Valley and Eggcellence: monsters hit 40 harder unless your defense is high enough
+	var pen: Array = level.def.get("def_penalty", [])
+	if pen.size() == 2 and GS.stat("def") < int(pen[0]):
+		dmg += int(pen[1])
 	var r := GS.roll_monster_hit(dmg, crit_chance)
 	GS.hp -= r.dmg
 	GS.stats_changed.emit()

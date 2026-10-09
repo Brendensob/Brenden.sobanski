@@ -1103,7 +1103,8 @@ func _build_panels() -> void:
 	cols.position = Vector2(10, 28)
 	cols.add_theme_constant_override("separation", 8)
 	m.add_child(cols)
-	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 418, C_MUTED, 8), Vector2(10, 172)))
+	# the note sits in the Survival column, under its one button
+	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 134, C_MUTED, 8), Vector2(294, 96)))
 
 	var ch := _panel("chat", Vector2(320, 150), "Chat")
 	var lines := _wrap("", 300, C_INK, 8)

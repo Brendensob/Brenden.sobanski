@@ -117,6 +117,11 @@ const LOOKS := {
 	# monsters that are drawn as people
 	"zombie": {"h": "3a3a2a", "H": "2a2a1e", "s": "8fb07a", "S": "5e7a52", "c": "6e5a3e", "C": "4a3e2a", "q": "3e4a5a", "f": "2a2230", "e": "d8433a"},
 	"wizard": {"h": "3b5dc9", "H": "2c4596", "s": "e8c8a8", "S": "c8a888", "c": "3b5dc9", "C": "6b8ff0", "q": "3b5dc9", "f": "2c4596", "e": "f2cf5b"},
+	"lich": {"h": "3a2a5a", "H": "2a1e44", "s": "e8e8f0", "S": "b8b8c8", "c": "5a2a8a", "C": "3a1a5a", "q": "3a1a5a", "f": "2a1e44", "e": "8affc8", "m": "2a1e44"},
+	"grinch": {"h": "4a8a2a", "H": "2e6a1a", "s": "6ac83a", "S": "4a9a2a", "c": "d8433a", "C": "f2efe6", "q": "4a8a2a", "f": "2e6a1a", "e": "f2cf5b", "m": "2e6a1a"},
+	"modina": {"h": "1b1a24", "H": "1b1a24", "long": true, "s": "ea8a33", "S": "b85e1c", "c": "c8a060", "C": "8a6a3a", "v": "d8433a", "t": "d8433a", "q": "c8a060", "f": "6e4426", "e": "1b1a24", "m": "8a1e1a"},
+	"modina_2": {"h": "e3ebf5", "H": "a8b0bc", "long": true, "s": "6b8ff0", "S": "2c4596", "c": "3b5dc9", "C": "2c4596", "v": "f2cf5b", "t": "f2cf5b", "q": "3b5dc9", "f": "1e2a6a", "e": "1b1a24", "m": "1e2a6a"},
+	"evil_santa": {"h": "f2efe6", "H": "c8c0b0", "s": "f2c29a", "S": "c8a080", "c": "c8202a", "C": "f2efe6", "v": "f2efe6", "t": "1b1a24", "q": "c8202a", "f": "1b1a24", "e": "d8433a", "m": "f2efe6"},
 	"mummy": {"h": "e8e0c8", "H": "b8b098", "s": "e8e0c8", "S": "b8b098", "c": "e8e0c8", "C": "b8b098", "q": "e8e0c8", "f": "b8b098", "e": "d8433a"},
 }
 # Character hats show the matching character's headwear when worn.
@@ -563,6 +568,165 @@ func chick_img(alt: bool) -> Image:
 		px(img, 1, 5, Color("c99a2e"))
 	return img
 
+# ---------------------------------------------------------------- the later worlds' monsters
+func slug_img(c: Color, alt: bool) -> Image:
+	var img := blank(24, 12)
+	var sq := 1.0 if alt else 0.0
+	ellipse(img, 11, 8 + sq * 0.5, 10 + sq, 3.5 - sq * 0.5, c)
+	ellipse(img, 17, 5, 4, 4, c)
+	ellipse(img, 8, 6.5, 4, 1.5, c.lightened(0.35))
+	for sx in [16, 20]:
+		rect(img, sx, 0, 1, 4, c.darkened(0.2))
+		px(img, sx, 0, OUTLINE)
+	px(img, 19, 5, OUTLINE)
+	rect(img, 2, 10, 18, 2, c.darkened(0.3))
+	return img
+
+## The Forbidden City's dance lions (An An, Ji Ji, He He).
+func lion_img(body: Color, mane: Color, alt: bool) -> Image:
+	var img := blank(26, 18)
+	var l := 1 if alt else 0
+	ellipse(img, 10, 10, 9, 5, body)
+	rect(img, 3 + l, 13, 3, 5, body.darkened(0.2))
+	rect(img, 13 - l, 13, 3, 5, body.darkened(0.2))
+	ellipse(img, 19, 7, 7, 7, mane)
+	ellipse(img, 20, 8, 4.5, 4.5, body.lightened(0.15))
+	rect(img, 19, 6, 2, 2, Color.WHITE)
+	px(img, 20, 7, OUTLINE)
+	rect(img, 21, 10, 4, 2, Color("d8433a"))
+	rect(img, 18, 1, 3, 2, Color("f2cf5b"))
+	rect(img, 0, 6 - l, 3, 2, mane)
+	return img
+
+func bird_img(c: Color, alt: bool) -> Image:
+	var img := blank(20, 14)
+	ellipse(img, 9, 8, 6, 4, c)
+	ellipse(img, 15, 6, 3, 3, c)
+	rect(img, 17, 6, 3, 1, Color("f2cf5b"))
+	px(img, 16, 5, Color("d8433a"))
+	if alt:
+		ellipse(img, 8, 3, 5, 2.5, c.lightened(0.15))
+	else:
+		ellipse(img, 8, 12, 5, 2, c.lightened(0.15))
+	rect(img, 1, 7, 4, 2, c)
+	return img
+
+## Fruit Loop's fruits, dressed for summer with little legs.
+func fruit_img(kind: String, alt: bool) -> Image:
+	var img := blank(18, 20)
+	var l := 1 if alt else 0
+	var leaf := Color("5cbf3f")
+	match kind:
+		"mango":
+			ellipse(img, 9, 11, 7, 6, Color("f2a33a"))
+			ellipse(img, 7, 9, 3, 2, Color("f2cf5b"))
+			rect(img, 9, 3, 1, 3, Color("6e4426"))
+			ellipse(img, 12, 4, 3, 1.5, leaf)
+		"cherry":
+			ellipse(img, 6, 12, 4.5, 4.5, Color("d8233a"))
+			ellipse(img, 12, 12, 4.5, 4.5, Color("c81a2a"))
+			for i in 6:
+				px(img, 6 + i / 2, 7 - i, Color("3e8a2e"))
+				px(img, 12 - i / 3, 7 - i, Color("3e8a2e"))
+		"pineapple":
+			ellipse(img, 9, 12, 6, 6, Color("f2cf5b"))
+			for y in range(8, 18, 3):
+				for x in range(4, 15, 3):
+					px(img, x + (y / 3) % 2, y, Color("c99a2e"))
+			for i in 4:
+				rect(img, 6 + i * 2, 1 + (i % 2) * 2, 1, 6 - (i % 2) * 2, leaf)
+		_:
+			ellipse(img, 9, 11, 7, 6, Color("e83a4a"))
+			for i in 7:
+				px(img, 4 + (i * 5) % 11, 8 + (i * 3) % 7, Color("f2cf5b"))
+			rect(img, 5, 4, 8, 2, leaf)
+			rect(img, 8, 2, 2, 2, leaf)
+	eyes(img, 9, 12, 10, 1)
+	rect(img, 6 - l, 17, 2, 3, Color("3a3a48"))
+	rect(img, 11 + l, 17, 2, 3, Color("3a3a48"))
+	return img
+
+## Eggcellence's cracked eggs: a white egg, the top shell broken, eyes peeking out.
+func egg_img(spot: Color, alt: bool, legs := true) -> Image:
+	var img := blank(16, 20)
+	var l := 1 if alt else 0
+	ellipse(img, 8, 11, 7, 8, Color("f8f4ea"))
+	for i in 4:
+		ellipse(img, 4 + i * 3, 6 + (i % 2) * 6, 1.5, 1.5, spot)
+	for x in range(1, 16, 2):
+		px(img, x, 6 + (x / 2) % 2, OUTLINE)
+	rect(img, 3, 3, 10, 3, Color(0, 0, 0, 0))
+	eyes(img, 7, 10, 8, 1, Color("d8433a"))
+	if legs:
+		rect(img, 4 - l, 18, 2, 2, Color("f2a33a"))
+		rect(img, 10 + l, 18, 2, 2, Color("f2a33a"))
+	return img
+
+func turtle_img(shell: Color, skin: Color, alt: bool) -> Image:
+	var img := blank(24, 14)
+	var l := 1 if alt else 0
+	ellipse(img, 11, 8, 9, 6, shell)
+	for i in 3:
+		ellipse(img, 6 + i * 5, 7, 2, 2, shell.lightened(0.3))
+	ellipse(img, 20, 9, 3.5, 3, skin)
+	px(img, 21, 8, OUTLINE)
+	rect(img, 5 + l, 12, 3, 2, skin)
+	rect(img, 14 - l, 12, 3, 2, skin)
+	return img
+
+func imp_img(alt: bool) -> Image:
+	var img := blank(20, 18)
+	var red := Color("c83a2a")
+	for side in [-1, 1]:
+		ellipse(img, 10 + side * 6, 7 - (2 if alt else 0), 4, 3, Color("5a1a2a"))
+	ellipse(img, 10, 9, 4, 5, red)
+	rect(img, 7, 2, 1, 3, red)
+	rect(img, 12, 2, 1, 3, red)
+	eyes(img, 9, 11, 7, 1, Color("f2cf5b"))
+	for side in [-1, 1]:
+		ellipse(img, 10 + side * 6, 12, 2, 2, Color("f2a33a"))
+		px(img, 10 + side * 6, 10, Color("f2cf5b"))
+	rect(img, 8, 14, 1, 3, red.darkened(0.3))
+	rect(img, 11, 14, 1, 3, red.darkened(0.3))
+	return img
+
+func bunny_img(c: Color, alt: bool) -> Image:
+	var img := blank(20, 22)
+	var l := 1 if alt else 0
+	rect(img, 6, 0, 3, 8, c)
+	rect(img, 11, 1 + l, 3, 7, c)
+	rect(img, 7, 2, 1, 5, Color("f0a0b0"))
+	ellipse(img, 10, 15, 8, 7, c)
+	ellipse(img, 10, 10, 5, 4, c)
+	eyes(img, 8, 12, 9, 1, Color("d8433a"))
+	rect(img, 9, 12, 3, 1, Color("f0a0b0"))
+	rect(img, 4 - l, 20, 4, 2, c.darkened(0.2))
+	rect(img, 12 + l, 20, 4, 2, c.darkened(0.2))
+	return img
+
+func big(img: Image, k: int) -> Image:
+	img.resize(img.get_width() * k, img.get_height() * k, Image.INTERPOLATE_NEAREST)
+	return img
+
+## The boss version of a character: three times as big, with extras.
+func boss_char(look: String, alt: bool) -> Image:
+	var img := _char_img(look, "walk" if alt else "stand", 3)
+	match look:
+		"modina", "modina_2":
+			# four swords, two on each side
+			for side in [0, 1]:
+				for k in 2:
+					var x: int = 2 + side * 28 + k * 3
+					rect(img, x, 22 + k * 6, 2, 22, Color("e3ebf5"))
+					rect(img, x - 1, 40 + k * 6, 4, 2, Color("f2cf5b"))
+		"evil_santa":
+			rect(img, 6, 6, 26, 6, Color("c8202a"))
+			rect(img, 30, 2, 6, 6, Color("c8202a"))
+			rect(img, 34, 0, 4, 4, Color("f2efe6"))
+			rect(img, 6, 12, 26, 3, Color("f2efe6"))
+			rect(img, 9, 36, 20, 12, Color("f2efe6"))
+	return img
+
 func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 	return cached("mob_%s_%s_%s" % [look, alt, flash], func():
 		var img: Image
@@ -603,6 +767,46 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 			"butterfly": img = wings_img(18, 14, Color("e06a9a"), OUTLINE, alt, Color("f2cf5b"))
 			"empress": img = wings_img(46, 36, Color("a77ee0"), Color("3a2a5a"), alt, Color("f2cf5b"))
 			"chicklet": img = chick_img(alt)
+			"slug": img = slug_img(Color("f2cf5b"), alt)
+			"phantom_butterfly": img = wings_img(20, 16, Color("b8903a"), OUTLINE, alt, Color("1b1a24"))
+			"demon_eye": img = eye_img(9, Color("8a1e2a"), false, false, true, alt)
+			"imp": img = imp_img(alt)
+			"demon_bat": img = bat_img(24, 13, Color("5a1a2a"), alt)
+			"an_an": img = lion_img(Color("8a4ac8"), Color("f2cf5b"), alt)
+			"ji_ji": img = lion_img(Color("5cbf3f"), Color("d8433a"), alt)
+			"he_he": img = lion_img(Color("f2a33a"), Color("d8433a"), alt)
+			"raven": img = bird_img(Color("2a2a3a"), alt)
+			"grinch", "lich": img = _char_img(look, "walk" if alt else "stand", 1)
+			"snow_turtle": img = turtle_img(Color("a6c8e0"), Color("e3f2f8"), alt)
+			"fairy": img = wings_img(16, 14, Color("f0a8e8"), Color("f2efe6"), alt, Color("8affc8"))
+			"mango", "cherry", "pineapple", "strawberry": img = fruit_img(look, alt)
+			"egg_orange": img = egg_img(Color("f2a33a"), alt)
+			"egg_blue": img = egg_img(Color("6b8ff0"), alt)
+			"egg_purple": img = egg_img(Color("8a4ac8"), alt, false)
+			"egg_clutch":
+				img = blank(26, 18)
+				for i in 3:
+					var e := egg_img([Color("f2a33a"), Color("6b8ff0"), Color("8a4ac8")][i], alt, false)
+					e.resize(10, 12, Image.INTERPOLATE_NEAREST)
+					img.blend_rect(e, Rect2i(0, 0, 10, 12), Vector2i(i * 8, 3 + (i % 2) * 3 - (2 if alt else 0)))
+			"chick": img = big(chick_img(alt), 2)
+			"giant_chick": img = big(chick_img(alt), 3)
+			"modina", "modina_2", "evil_santa": img = boss_char(look, alt)
+			"doom": img = eye_img(22, Color("5a1e5a"), true, false, true, alt)
+			"fortune_boss":
+				var li := lion_img(Color("f2cf5b"), Color("d8433a"), alt)
+				ellipse(li, 20, 8, 3.5, 3.5, Color("f8d8e8"))
+				px(li, 19, 7, OUTLINE)
+				px(li, 21, 7, OUTLINE)
+				rect(li, 19, 9, 3, 1, Color("d8433a"))
+				img = big(li, 3)
+			"pineapple_killer":
+				var pk := fruit_img("pineapple", alt)
+				rect(pk, 1, 10, 3, 2, Color("3a3a48"))
+				rect(pk, 14, 10 - (1 if alt else 0), 3, 2, Color("3a3a48"))
+				eyes(pk, 8, 11, 10, 1, Color("d8433a"))
+				img = big(pk, 3)
+			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 3)
 			_: img = blob(Color("ff00ff"), 12, 10, alt)
 		img = outline(img)
 		if flash:
@@ -671,6 +875,9 @@ const ICON_GRIDS := {
 }
 
 const MATERIAL_COLORS := [
+	["modina", "ea8a33", "8a4a1a"], ["nightmare", "8a1e3a", "2a0a14"], ["long_lance", "e3ebf5", "6b8ff0"],
+	["hazard", "f2cf5b", "3a3a48"], ["santa", "d8433a", "f2efe6"], ["lich", "8a4ac8", "3a1a5a"], ["fortune", "f2cf5b", "d8433a"],
+	["blue_blade", "6b8ff0", "2c4596"], ["dark_heart", "8a1e2a", "2a0a14"], ["forbidden", "d8433a", "f2cf5b"],
 	["tsurugi", "c8d8f0", "4a5a7a"],
 	["bear", "8a5a32", "5a3a1a"], ["pirate", "d8433a", "8a1e1a"], ["soldier", "6a8a4a", "4a6a2a"], ["spy", "3a3a48", "1b1a24"],
 	["the_fly", "3a3a48", "1b1a24"], ["bad_mask", "3a3a44", "1b1a24"], ["chuu", "f08ac8", "c05a98"], ["trooper", "a8b0bc", "5c616b"],
@@ -759,7 +966,15 @@ func icon_spec(id: String) -> Array:
 		"timber_club": return ["club", {"X": "a8703f", "x": "6e4426"}]
 		"wall_hammer": return ["bighammer", {"X": "9aa2ad", "x": "5c616b"}]
 		"kings_mace": return ["mace", mc]
-		"devil_spike": return ["spike", mc]
+		"devil_spike", "hell_spike", "hell_spike_2", "hell_spike_3": return ["spike", mc]
+		"long_lance", "long_lance_2", "long_lance_3": return ["pole", mc]
+		"blue_blade": return ["sword", mc]
+		"dark_heart": return ["apple", {"X": "8a1e2a", "x": "2a0a14"}]
+		"forbidden_stone": return ["gem", mc]
+		"fortune_nugget": return ["lump", {"X": "f2cf5b", "x": "c99a2e"}]
+		"honey": return ["blob", {"X": "f2b83a", "x": "c8802a"}]
+		"eggency": return ["egg", {"X": "f2a33a"}]
+		"nightmare_ingot": return ["bar", mc]
 		"plunger": return ["plunger", mc]
 		"arrow": return ["arrow", {}]
 		"snow_ball": return ["balls", {"X": "f4fbff", "x": "a6c6d8"}]
@@ -848,6 +1063,13 @@ const THEMES := {
 	"hell": {"sky": ["3a1020", "7a2a3a"], "mount": "5a1e3a", "snow": "c83a6a", "hills": "3a1028", "top": "8a3a6a", "top2": "5a2048", "dirt": "3a1a30", "dirt2": "2a1020", "cave": "1a0a14"},
 	"ice": {"sky": ["9ad0f0", "e3f2f8"], "mount": "8ab0d0", "snow": "ffffff", "hills": "a6c8e0", "top": "e3f2f8", "top2": "a6d0e8", "dirt": "5a8ab0", "dirt2": "4a7098", "cave": "2a4a6a"},
 	"dream": {"sky": ["f0a8d8", "fde2f2"], "mount": "c88ac8", "snow": "fff0fa", "hills": "a870c0", "top": "f08ac8", "top2": "c86aa8", "dirt": "7a4a8a", "dirt2": "5a3a6a", "cave": "3a2a4a"},
+	"modina": {"sky": ["2a3a2a", "6a8a4a"], "mount": "3a4a36", "snow": "8ac85a", "hills": "2a3a28", "top": "7ab83a", "top2": "4a7a2a", "dirt": "4a3a3a", "dirt2": "3a2a2a", "cave": "1a1414"},
+	"nightmare": {"sky": ["120a14", "4a1424"], "mount": "2a0e1a", "snow": "8a1e2a", "hills": "1e0a12", "top": "6a1e30", "top2": "3a1420", "dirt": "2a1218", "dirt2": "1e0c10", "cave": "0e060a"},
+	"forbidden": {"sky": ["c8503a", "f2c27a"], "mount": "8a2a2a", "snow": "f2cf5b", "hills": "6a1e1e", "top": "c83a2a", "top2": "8a2a1e", "dirt": "5a2a1e", "dirt2": "3e1e14", "cave": "2a120c"},
+	"snow": {"sky": ["1e2a4a", "5a7aa8"], "mount": "3a4a6a", "snow": "ffffff", "hills": "2a3a5a", "top": "f2f6fa", "top2": "c8d8e8", "dirt": "4a5a7a", "dirt2": "3a4a68", "cave": "1e2638"},
+	"mushroom": {"sky": ["4a2a5a", "a86ac8"], "mount": "6a3a7a", "snow": "f2a33a", "hills": "4a2a5a", "top": "c86ac8", "top2": "8a4a9a", "dirt": "4a3040", "dirt2": "3a2030", "cave": "1e1220"},
+	"fruit": {"sky": ["3ab8e0", "bff0f8"], "mount": "5ac8a8", "snow": "fff2a0", "hills": "3aa86a", "top": "f2e08a", "top2": "d8c06a", "dirt": "c8a060", "dirt2": "a8804a", "cave": "6a4a2a"},
+	"egg": {"sky": ["a8e0f8", "fff6e0"], "mount": "c8e8a8", "snow": "fff0f8", "hills": "a8d88a", "top": "8ad86a", "top2": "6ab84a", "dirt": "d8b890", "dirt2": "b89870", "cave": "6a5040"},
 	"ghost": {"sky": ["1a1a2e", "3a3a5a"], "mount": "2e2e4a", "snow": "8a8ab0", "hills": "24243a", "top": "4a5a4a", "top2": "34403a", "dirt": "2a2a34", "dirt2": "1e1e28", "cave": "121218"},
 }
 
@@ -899,7 +1121,7 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(kind)
 		var img: Image
-		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2"}
+		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2", "volcanic_rock": "ff5a2a"}
 		match kind:
 			"tree", "blue_tree":
 				img = blank(18, 46)
@@ -959,6 +1181,7 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 				var base := Color("8a9099")
 				if th.name == "ice": base = Color("a6c0d8")
 				if th.name == "hell": base = Color("6a4a5a")
+				if kind == "volcanic_rock": base = Color("3a2a2e")
 				ellipse(img, 9, 8, 9, 6, base)
 				ellipse(img, 7, 6, 5, 3, base.lightened(0.2))
 				rect(img, 2, 12, 14, 2, base.darkened(0.3))

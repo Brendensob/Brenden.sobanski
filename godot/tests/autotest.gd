@@ -114,6 +114,42 @@ func click(at: Vector2) -> void:
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 
+## Lines up every monster from the later worlds for a picture.
+func new_monsters() -> void:
+	await goto("eggcellence")
+	var lvl: Node = main.level
+	for e in lvl.entities.get_children():
+		if e.has_method("die") and not e == lvl.player:
+			e.queue_free()
+	var ids := ["slug", "phantom_butterfly", "demon_eye", "imp", "demon_bat", "an_an", "ji_ji", "he_he", "raven", "grinch", "snow_turtle", "lich",
+		"fairy", "mango", "cherry", "pineapple", "strawberry", "egg_orange", "egg_blue", "egg_purple", "egg_clutch", "chick", "giant_chick"]
+	var p: Node2D = lvl.player
+	var base := p.position + Vector2(-200, -40)
+	for i in ids.size():
+		var m: Node = lvl.spawn_mob_at(ids[i], base + Vector2((i % 12) * 34, (i / 12) * 44))
+		m.set_physics_process(false)
+	await wait(0.3)
+	await shot("31_new_monsters")
+	for e in lvl.entities.get_children():
+		if e.has_method("die") and not e == lvl.player:
+			e.queue_free()
+	var bosses := ["modina", "modina_2", "doom", "fortune_boss", "evil_santa", "pineapple_killer", "harakattu"]
+	for i in bosses.size():
+		var m: Node = lvl.spawn_mob_at(bosses[i], p.position + Vector2(-210 + i * 70, -10))
+		m.set_physics_process(false)
+	await wait(0.3)
+	await shot("32_new_bosses")
+	# Snow Valley's monsters hit 40 harder below 160 defense
+	await goto("snow_valley")
+	main.level.player.invuln = 0.0
+	var hp0: float = GS.max_hp()
+	GS.hp = 9999
+	main.level.player.hurt(1, 0.0, main.level.player.position.x - 5)
+	var took := int(9999 - GS.hp)
+	check(took >= 41 - GS.stat("def") and took <= 41, "Snow Valley adds 40 damage under 160 defense (a 1-attack hit took %d)" % took)
+	GS.hp = hp0
+	main.level.player.invuln = 9999.0
+
 ## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
 func climb(dir: String, done: Callable, timeout: float) -> bool:
 	var lvl: Node = main.level
@@ -497,16 +533,17 @@ func run() -> void:
 	var loot := GS.open_chest("silver")
 	check(loot.size() == 2, "a silver chest gives two items")
 	# worlds
-	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern"]:
+	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley"]:
 		await goto(w)
 		check(main.level.count_mobs() > 10, "%s has monsters (%d)" % [w, main.level.count_mobs()])
 		await shot("20_" + w)
-	for w in ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena"]:
+	for w in ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]:
 		await goto(w)
 		main.level.arena_time = 179.0
 		await wait(1.6)
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
+	await new_monsters()
 	# survival at night
 	await goto("survival")
 	GS.clock = 0.85
