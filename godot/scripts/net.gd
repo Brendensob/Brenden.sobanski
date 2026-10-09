@@ -309,6 +309,11 @@ func night_survived(tokens: int) -> void:
 	if tokens > 0:
 		GS.add_item("survival_token", tokens)
 
+@rpc("authority", "reliable")
+func wall_hammer() -> void:
+	if main and main.level:
+		main.level._give_wall_hammer()
+
 ## A monster on the host's screen hit you.
 @rpc("authority", "reliable")
 func hurt_me(dmg: int, crit: float, from_x: float, status: Array) -> void:

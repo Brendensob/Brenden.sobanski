@@ -95,6 +95,105 @@ func check_data() -> void:
 	for id in Data.ITEMS:
 		Art.icon(id)
 
+## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
+func climb(dir: String, done: Callable, timeout: float) -> bool:
+	var lvl: Node = main.level
+	var p: CharacterBody2D = lvl.player
+	var t := 0.0
+	var from_y := p.position.y
+	while not done.call() and t < timeout:
+		if p.is_on_floor():
+			from_y = p.position.y
+			Input.action_press(dir)
+			Input.action_press("jump")
+			await get_tree().physics_frame
+			Input.action_release("jump")
+		elif p.velocity.y > 0 and lvl.floor_y(p.position.x, p.position.y) < from_y - 8 and lvl.floor_y(p.position.x, p.position.y) >= p.position.y - 1:
+			Input.action_release(dir) # over a higher step: drop onto it
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+	Input.action_release(dir)
+	return done.call()
+
+## The PSG2 jump, and the ninjas and robots behind the stone wall east of town.
+func jump_and_underground() -> void:
+	var lvl: Node = main.level
+	var p: CharacterBody2D = lvl.player
+	p.position = lvl.cell_pos(Vector2i(60, 16))
+	p.velocity = Vector2.ZERO
+	await wait(0.6)
+	var y0 := p.position.y
+	var top := y0
+	var t_top := 0.0
+	var spun := 0.0
+	var t := 0.0
+	Input.action_press("jump")
+	await get_tree().physics_frame
+	Input.action_release("jump")
+	while t < 2.0:
+		await get_tree().physics_frame
+		t += 1.0 / 60.0
+		if p.position.y < top:
+			top = p.position.y
+			t_top = t
+		spun = maxf(spun, absf(p.body_sprite.rotation))
+		if t > 0.1 and p.is_on_floor():
+			break
+	var apex := y0 - top
+	check(apex > 34 and apex < 44, "a jump goes up about 2 blocks (%.1f px)" % apex)
+	check(t_top <= 0.13, "the jump reaches the top in about a tenth of a second (%.2f s)" % t_top)
+	check(t > 0.7 and t < 0.95, "the fall is slow: about 0.8 s in the air (%.2f s)" % t)
+	check(spun > PI and p.body_sprite.rotation == 0.0, "the player does a full flip and lands upright")
+	await tap("jump")
+	await wait(0.1)
+	await shot("03b_jump_flip")
+	await wait(1.0)
+	# the Trading Center ledge is still in reach with the new jump
+	p.position = lvl.cell_pos(Vector2i(44, 16))
+	await wait(0.4)
+	check(await climb("move_left", func(): return p.position.y <= 11 * 16 + 1, 8.0), "the steps up to the Trading Center can be jumped")
+	# the stone wall needs the Wall Hammer
+	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
+	check(wall != null, "a massive stone wall stands east of the furnaces")
+	await stand_by(wall)
+	await shot("03c_stone_wall")
+	GS.sel = 0
+	GS.inventory_changed.emit()
+	p.cooldown = 0
+	await tap("attack")
+	await wait(0.6)
+	check(not GS.flags.get("hammer_wall", false), "a sword can't break the stone wall")
+	GS.inv[4] = {"id": "wall_hammer", "n": 1}
+	GS.sel = 4
+	GS.inventory_changed.emit()
+	for i in 14:
+		if GS.flags.get("hammer_wall", false):
+			break
+		p.cooldown = 0
+		GS.st = GS.max_st()
+		await tap("attack")
+		await wait(0.7)
+	check(GS.flags.get("hammer_wall", false), "the Wall Hammer breaks the stone wall")
+	# down the stone steps to the hall under the hill
+	check(await climb("move_right", func(): return p.position.x > 114 * 16 and p.is_on_floor(), 12.0), "down the steps into the hall under Pixel Town")
+	for id in ["nini", "nana", "nina", "fc_9912", "tt_1001", "oop_2219"]:
+		check(find_prop(func(n): return n.get("npc_id") == id) != null, "%s lives under Pixel Town" % Data.NPCS[id].name)
+	var nini := find_prop(func(n): return n.get("npc_id") == "nini")
+	await stand_by(nini)
+	await shot("03d_underground")
+	await tap("attack")
+	await wait(0.2)
+	check(main.hud.panels.npc.visible, "Nini the ninja talks to you")
+	await shot("03e_nini")
+	main.hud.close_panels()
+	# and back up the steps with the new jump
+	p.position = lvl.cell_pos(Vector2i(118, 21))
+	await wait(0.3)
+	check(await climb("move_left", func(): return p.position.y <= 13 * 16 + 1 and p.position.x < 104 * 16, 12.0), "the stone steps can be jumped back up to town")
+	GS.inv[4] = null
+	GS.sel = 0
+	GS.inventory_changed.emit()
+
 func run() -> void:
 	await wait(1.0)
 	await shot("01_title")
@@ -127,12 +226,26 @@ func run() -> void:
 	var keeper := find_prop(func(n): return n.get("npc_id") == "keeper")
 	await stand_by(keeper)
 	await tap("attack")
+	var early: bool = main.hud.panels.npc.visible
 	await wait(0.2)
-	check(main.hud.panels.npc.visible, "talking to the Gatekeeper opens a dialog")
+	check(not early and main.hud.panels.npc.visible, "hitting the Gatekeeper opens his dialog when the swing lands")
+	var PlayerScript := preload("res://scripts/player.gd")
+	check(PlayerScript.swing_angle(0.0) > 0 and PlayerScript.swing_angle(0.2) < 0 and PlayerScript.swing_angle(0.55) > 1.0 and PlayerScript.swing_angle(1.0) == PlayerScript.swing_angle(0.0),
+		"the swing goes up, slams down, holds low and comes back like PSG2")
+	var silent := []
+	for id in Sfx.sounds:
+		if Sfx.sounds[id].data.size() < 400:
+			silent.append(id)
+	check(Sfx.sounds.size() >= 25 and silent.is_empty(), "%d sound effects are made (%s empty)" % [Sfx.sounds.size(), silent])
 	await shot("03_keeper")
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	await jump_and_underground()
+	if OS.has_environment("AT_QUICK"): # set AT_QUICK=1 to stop here
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
 	# Grasslands 1
 	await goto("grass_1")
 	await shot("05_grasslands")
@@ -194,6 +307,10 @@ func run() -> void:
 		GS.hp = GS.max_hp()
 	check(not is_instance_valid(slime) or slime.dead, "a slime dies to the starter sword")
 	await shot("06_fight")
+	p.cooldown = 0
+	GS.st = GS.max_st()
+	await tap("attack")
+	await shot("06b_swing")
 	# chop a tree with the wooden axe: 8 hits
 	var tree := find_prop(func(n): return n.get("kind") == "tree" and n.position.y < 20 * 16)
 	if tree:

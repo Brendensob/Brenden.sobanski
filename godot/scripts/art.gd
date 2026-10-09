@@ -82,6 +82,22 @@ const LOOKS := {
 		"over": [[6, 0, ["A", "a", "a"]], [4, 3, ["aaaaa"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
 	"dark_knight": {"h": "3a2a5a", "H": "2a1e40", "s": "4a3a6a", "S": "2a1e40", "e": "d8433a", "c": "4a3a6a", "C": "2a1e40", "v": "7b4fb8", "t": "7b4fb8", "j": "2a1e40", "q": "2a1e40", "f": "1b1a24", "hair": "bald",
 		"over": [[3, 0, [".rr.", "rRr.", "rr..", "PPPPPPPP"]], [2, 8, ["PPPPPPPPPP"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
+	"ninja": {"h": "1b1a24", "H": "1b1a24", "s": "1b1a24", "S": "1b1a24", "m": "1b1a24", "c": "1b1a24", "C": "1b1a24", "v": "1b1a24", "t": "d8433a", "j": "d8433a", "q": "1b1a24", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
+		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
+	"ninja_npc": {"h": "2a2a48", "H": "2a2a48", "s": "2a2a48", "S": "2a2a48", "m": "2a2a48", "c": "2a2a48", "C": "2a2a48", "v": "2a2a48", "t": "d8433a", "j": "d8433a", "q": "2a2a48", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
+		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
+	"ninja_npc2": {"h": "5a1e2a", "H": "5a1e2a", "s": "5a1e2a", "S": "5a1e2a", "m": "5a1e2a", "c": "5a1e2a", "C": "5a1e2a", "v": "5a1e2a", "t": "f2cf5b", "j": "f2cf5b", "q": "5a1e2a", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
+		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
+	"ninja_npc3": {"h": "3a2a5a", "H": "3a2a5a", "s": "3a2a5a", "S": "3a2a5a", "m": "3a2a5a", "c": "3a2a5a", "C": "3a2a5a", "v": "3a2a5a", "t": "f06aa0", "j": "f06aa0", "q": "3a2a5a", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
+		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
+	"robot_npc": {"h": "5c616b", "H": "5c616b", "s": "a8b0bc", "S": "5c616b", "e": "4fd0f0", "m": "5c616b", "c": "a8b0bc", "C": "5c616b", "v": "a8b0bc", "t": "4fd0f0", "q": "5c616b", "f": "3e424a", "hair": "bald",
+		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
+	"robot_npc2": {"h": "c99a2e", "H": "c99a2e", "s": "f2cf5b", "S": "c99a2e", "e": "d8433a", "m": "c99a2e", "c": "f2cf5b", "C": "c99a2e", "v": "f2cf5b", "t": "d8433a", "q": "c99a2e", "f": "3e424a", "hair": "bald",
+		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
+	"robot_npc3": {"h": "2e8a7a", "H": "2e8a7a", "s": "5cc8b0", "S": "2e8a7a", "e": "f2efe6", "m": "2e8a7a", "c": "5cc8b0", "C": "2e8a7a", "v": "5cc8b0", "t": "f2cf5b", "q": "2e8a7a", "f": "3e424a", "hair": "bald",
+		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
+	"iron_bot": {"h": "2c4596", "H": "2c4596", "s": "6b8ff0", "S": "2c4596", "e": "f2cf5b", "m": "2c4596", "c": "6b8ff0", "C": "2c4596", "v": "6b8ff0", "t": "f2a33a", "q": "2c4596", "f": "3e424a", "hair": "bald",
+		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
 	# villagers
 	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
 		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
@@ -649,10 +665,13 @@ const ICON_GRIDS := {
 	"missile": ["..........", "......XX..", ".....XwXr.", "....XXXr..", "...XXXX...", "..XXXX....", ".rXXX.....", "rrr.......", ".r........", ".........."],
 	"balls": ["..........", "..........", "...XX.....", "..XwXx....", "..XXxx.XX.", "...xx.XwXx", ".XX...XXxx", "XwXx...xx.", "XXxx......", ".xx......."],
 	"mask": ["..........", "..XXXXXX..", ".XXXXXXXX.", ".XkkXXkkX.", ".XkkXXkkX.", ".XXXXXXXX.", "..XXxxXX..", "...XXXX...", "..........", ".........."],
+	"bighammer": ["XXXXX.....", "XwXXXx....", "XXXXXx....", "XXXXXx....", ".xxnlx....", "....nl....", ".....nl...", "......nl..", ".......nl.", "........nl"],
+	"fist": ["..........", "..XXXX....", ".XwXXXX...", ".XXXXXXk..", ".XxXxXXo..", ".XXXXXXk..", "..XXXXx...", "...xxx....", "..........", ".........."],
 	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
 }
 
 const MATERIAL_COLORS := [
+	["tsurugi", "c8d8f0", "4a5a7a"],
 	["bear", "8a5a32", "5a3a1a"], ["pirate", "d8433a", "8a1e1a"], ["soldier", "6a8a4a", "4a6a2a"], ["spy", "3a3a48", "1b1a24"],
 	["the_fly", "3a3a48", "1b1a24"], ["bad_mask", "3a3a44", "1b1a24"], ["chuu", "f08ac8", "c05a98"], ["trooper", "a8b0bc", "5c616b"],
 	["green_face", "5cbf3f", "2e7a2a"], ["skull", "f2ecd8", "a89878"], ["cool", "3a3a48", "1b1a24"], ["roman", "f2cf5b", "d8433a"],
@@ -738,6 +757,7 @@ func icon_spec(id: String) -> Array:
 		"torch_weapon": return ["torch_i", {}]
 		"pole_axe": return ["pole", mc]
 		"timber_club": return ["club", {"X": "a8703f", "x": "6e4426"}]
+		"wall_hammer": return ["bighammer", {"X": "9aa2ad", "x": "5c616b"}]
 		"kings_mace": return ["mace", mc]
 		"devil_spike": return ["spike", mc]
 		"plunger": return ["plunger", mc]
@@ -766,7 +786,10 @@ func icon_spec(id: String) -> Array:
 			return ["potion", {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
 		"weapon":
 			return ["long" if id.contains("long") or id == "excalibur" else "sword", mc]
-		"staff": return ["staff", mc]
+		"staff":
+			if id.begins_with("iron_fist"):
+				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else "e3ebf5")), "x": "6a1e14"}]
+			return ["staff", mc]
 		"bow": return ["cannon", mc] if it.get("cannon", false) else ["bow", {}]
 		"ammo": return ["balls", mc] if id.begins_with("cc_") else ["missile", mc]
 		"axe": return ["axe", mc]
@@ -904,6 +927,16 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 				rect(img, 4, 1, 6, 4, c)
 				rect(img, 3, 1, 8, 1, c.darkened(0.3))
 				rect(img, 2, 9, 10, 1, c.lightened(0.25))
+			"hammer_wall":
+				# the massive stone wall in the east of Pixel Town
+				img = blank(20, 48)
+				rect(img, 0, 0, 20, 48, Color("4e535c"))
+				for y in range(0, 48, 6):
+					for x in range(0 if (y / 6) % 2 == 0 else -4, 20, 8):
+						rect(img, x + 1, y + 1, 7, 5, Color("6e737c"))
+						rect(img, x + 1, y + 1, 7, 1, Color("8a9099"))
+				for k in 5:
+					px(img, rng.randi_range(2, 17), rng.randi_range(2, 45), Color("2e3138"))
 			"trade_wall":
 				# rough wooden planks with vines, in front of the Trading Center
 				img = blank(18, 48)

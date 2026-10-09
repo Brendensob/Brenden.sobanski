@@ -162,6 +162,7 @@ func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {})
 func use_portal(target: String) -> void:
 	if target == "":
 		return
+	Sfx.play("portal", 0.0)
 	change_level(target)
 
 func drop_from_player(id: String, n: int) -> void:

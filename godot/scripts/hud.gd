@@ -632,6 +632,8 @@ func any_open() -> bool:
 func open_panel(key: String) -> void:
 	if main.on_title() and not key in ["title", "friends", "trade_invite"]:
 		return
+	if not panels[key].visible:
+		Sfx.play("open", 0.0)
 	for k in panels:
 		panels[k].visible = k == key
 	main.set_paused(true)
@@ -649,6 +651,8 @@ func open_panel(key: String) -> void:
 		"pause": _refresh_room_box()
 
 func close_panels() -> void:
+	if any_open() and not main.on_title():
+		Sfx.play("close", 0.0)
 	for k in panels:
 		panels[k].visible = false
 	station = null
@@ -1129,6 +1133,11 @@ func _build_panels() -> void:
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): main.quit_to_title()))
 	pv.add_child(_button("Friends", func(): open_friends()))
+	var snd := _button("Sound: On" if Sfx.on else "Sound: Off", func(): pass)
+	snd.pressed.connect(func():
+		Sfx.set_on(not Sfx.on)
+		snd.text = "Sound: On" if Sfx.on else "Sound: Off")
+	pv.add_child(snd)
 	room_label = _wrap("", 220, C_INK, 8)
 	pv.add_child(room_label)
 	room_box = VBoxContainer.new()

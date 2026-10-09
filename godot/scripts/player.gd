@@ -6,9 +6,21 @@ extends CharacterBody2D
 const ProjectileScript := preload("res://scripts/projectile.gd")
 
 const SPEED := 82.0
-const JUMP := -240.0
-const GRAVITY := 720.0
+## The PSG2 jump, timed from the trailer frame by frame: you shoot up about
+## 2 blocks in a tenth of a second while doing one full flip, then float down
+## slowly. About 0.8 seconds in the air in all.
+const JUMP := -660.0
+const RISE_GRAVITY := 6600.0
+const FALL_GRAVITY := 1500.0
+const MAX_FALL := 58.0
+const FLIP_TIME := 0.33
 const STAMINA_COST := 0.5
+## The PSG2 swing, timed from the trailer: the blade snaps up, slams down
+## past level, holds low for a moment and comes back up. Same for every
+## weapon and tool; only the wait before the next swing changes.
+const SWING_TIME := 0.23
+const SWING_KEYS := [[0.0, 0.35], [0.2, -0.44], [0.42, 1.13], [0.72, 1.13], [1.0, 0.35]]
+const SWING_HIT_AT := 0.4
 
 var level: Node
 var facing := 1
@@ -31,6 +43,13 @@ var name_label: Label
 ## until you press A again or faint.
 var auto_attack := false
 var cur_frame := "stand"
+## Time since the last jump, for the flip (stays big when not flipping).
+var flip_t := 99.0
+var jumps := 0
+var swings := 0
+## What this swing will open when it lands: like PSG2, you talk to people and
+## use chests, furnaces and the rest by hitting them.
+var interact_target: Node = null
 
 func _ready() -> void:
 	collision_layer = 2
@@ -83,13 +102,16 @@ func _physics_process(delta: float) -> void:
 		dir = Input.get_axis("move_left", "move_right")
 		if Input.is_action_just_pressed("jump") and is_on_floor():
 			velocity.y = JUMP
+			flip_t = 0.0
+			Sfx.play("jump")
+			jumps += 1
 		if Input.is_action_just_pressed("attack"):
 			auto_attack = false
 			use_held(true)
 		elif (Input.is_action_pressed("attack") or auto_attack) and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
 			use_held(false)
 	if not is_on_floor():
-		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
+		velocity.y = minf(velocity.y + (RISE_GRAVITY if velocity.y < 0 else FALL_GRAVITY) * delta, MAX_FALL)
 	var speed := SPEED
 	if GS.has_status("slow"):
 		speed *= 0.55
@@ -142,7 +164,7 @@ func _tick(delta: float, dir: float) -> void:
 	# swing animation and hit
 	if swing > 0:
 		swing -= delta
-		if not swing_hit and swing <= swing_len * 0.6:
+		if not swing_hit and swing <= swing_len * (1.0 - SWING_HIT_AT):
 			swing_hit = true
 			_do_hit()
 	var frame := "stand"
@@ -158,14 +180,26 @@ func _tick(delta: float, dir: float) -> void:
 	held_sprite.position = Vector2(facing * 5, -7)
 	held_sprite.flip_h = facing < 0
 	held_sprite.offset = Vector2(4 * facing, -5)
-	var ang := -0.5
+	var ang: float = SWING_KEYS[0][1]
 	if swing > 0:
-		var k := 1.0 - swing / swing_len
-		ang = lerpf(-2.0, 1.4, minf(k * 2.0, 1.0))
+		ang = swing_angle(1.0 - swing / swing_len)
 	held_sprite.rotation = ang * facing
+	# the flip: one full turn forward, the held item spinning along
+	flip_t += delta
+	var spin := flip_rotation()
+	body_sprite.rotation = spin
+	if spin != 0.0:
+		var mid := Vector2(0, body_sprite.position.y)
+		held_sprite.position = mid + (held_sprite.position - mid).rotated(spin)
+		held_sprite.rotation += spin
 	var glow := 1.0 if GS.held() == "torch_weapon" else 0.35
 	var gloom := 1.0 if level.modulate_node.color.r < 0.9 else 0.0
 	light.energy = maxf(GS.darkness(), gloom) * glow
+
+func flip_rotation() -> float:
+	if flip_t >= FLIP_TIME:
+		return 0.0
+	return facing * TAU * ease(flip_t / FLIP_TIME, 0.6)
 
 func _regen(stat: String, delta: float, every: float) -> void:
 	var cur: float = GS.get(stat)
@@ -191,8 +225,8 @@ func use_held(pressed: bool) -> void:
 	if pressed:
 		var near: Node = level.interactable_near(position, facing)
 		if near:
-			near.interact(self)
-			cooldown = 0.25
+			_start_swing(0.3)
+			interact_target = near
 			return
 	var id := GS.held()
 	var it: Dictionary = Data.ITEMS[id] if id != "" else {}
@@ -200,6 +234,7 @@ func use_held(pressed: bool) -> void:
 	match type:
 		"food":
 			if pressed and GS.consume(GS.sel):
+				Sfx.play("eat")
 				level.number(position + Vector2(0, -22), "Yum", Color("f2cf5b"))
 				cooldown = 0.3
 			return
@@ -209,6 +244,7 @@ func use_held(pressed: bool) -> void:
 			if level.kind == "town":
 				_say("You can't build in town.")
 			elif level.place(id, position, facing):
+				Sfx.play("place")
 				GS.remove_at(GS.sel)
 			else:
 				_say("No room to place that. Face flat, open ground.")
@@ -253,11 +289,25 @@ func _swing(id: String, it: Dictionary) -> void:
 		return
 	GS.st -= STAMINA_COST
 	GS.stats_changed.emit()
-	var spd: float = it.get("spd", 0.5)
-	cooldown = spd
-	swing_len = minf(0.3, spd * 0.8)
+	_start_swing(it.get("spd", 0.5))
+	Sfx.play("swing")
+
+func _start_swing(wait: float) -> void:
+	cooldown = wait
+	swing_len = minf(SWING_TIME, wait * 0.9)
 	swing = swing_len
 	swing_hit = false
+	swings += 1
+	interact_target = null
+
+## Where the held item points, k going 0 to 1 through a swing.
+static func swing_angle(k: float) -> float:
+	for i in range(1, SWING_KEYS.size()):
+		if k <= SWING_KEYS[i][0]:
+			var a: Array = SWING_KEYS[i - 1]
+			var b: Array = SWING_KEYS[i]
+			return lerpf(a[1], b[1], (k - a[0]) / (b[0] - a[0]))
+	return SWING_KEYS[-1][1]
 
 func _cast(id: String, it: Dictionary) -> void:
 	var cost: int = it.mana_cost
@@ -270,6 +320,8 @@ func _cast(id: String, it: Dictionary) -> void:
 	swing_len = 0.25
 	swing = swing_len
 	swing_hit = true
+	swings += 1
+	Sfx.play("cast")
 	if it.has("heal"):
 		GS.hp = minf(GS.max_hp(), GS.hp + it.heal)
 		GS.stats_changed.emit()
@@ -292,6 +344,7 @@ func _shoot(id: String, it: Dictionary) -> void:
 	cooldown = float(it.spd)
 	var r := GS.attack_range(id)
 	var p := ProjectileScript.new()
+	Sfx.play("boom" if it.get("cannon", false) else "shoot", 0.05, -6.0 if it.get("cannon", false) else 0.0)
 	if it.get("cannon", false):
 		p.setup(level, Vector2(facing * 200, -40), randi_range(r.x, r.y), true, Color("3a3540") if ammo.begins_with("cc") else Color("d9542c"))
 		p.radius = 4.0
@@ -308,6 +361,7 @@ func _shoot(id: String, it: Dictionary) -> void:
 func _throw(id: String, it: Dictionary) -> void:
 	GS.remove_at(GS.sel, 1)
 	cooldown = float(it.spd)
+	Sfx.play("shoot")
 	var r := GS.attack_range(id)
 	var p := ProjectileScript.new()
 	p.setup(level, Vector2(facing * 180, -60), randi_range(r.x, r.y), true, Color("f4fbff"))
@@ -317,6 +371,14 @@ func _throw(id: String, it: Dictionary) -> void:
 	level.share_projectile(p)
 
 func _do_hit() -> void:
+	if interact_target != null:
+		var n := interact_target
+		interact_target = null
+		if is_instance_valid(n) and n.is_inside_tree():
+			bump(n)
+			Sfx.play("tap")
+			n.interact(self)
+		return
 	var id := GS.held()
 	var it: Dictionary = Data.ITEMS[id] if id != "" else {}
 	var reach: float = it.get("reach", 14)
@@ -332,6 +394,14 @@ func _do_hit() -> void:
 		return
 	var need: String = n.def.tool
 	var tier := 0
+	Sfx.play({"axe": "chop", "pick": "mine", "hammer": "hammer", "torch": "burn"}.get(need, "thud"))
+	if need == "hammer":
+		if id != "wall_hammer":
+			_say("This wall is massive. Only a Wall Hammer could break it.")
+			n.shake()
+			return
+		n.hit(1)
+		return
 	if need == "torch":
 		if id != "torch_weapon":
 			_say("It's an old wooden wall. A Torch would burn it down.")
@@ -354,6 +424,12 @@ func _do_hit() -> void:
 		return
 	n.hit(tier)
 
+## The little squash something does when your swing hits it.
+static func bump(n: Node2D) -> void:
+	var tw := n.create_tween()
+	n.scale = Vector2(1.18, 0.84)
+	tw.tween_property(n, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
 func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if dead or invuln > 0:
 		return
@@ -363,7 +439,8 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	invuln = 0.6
 	flash = 0.12
 	since_hurt = 0
-	velocity = Vector2(signf(position.x - from_x) * 140, -130)
+	Sfx.play("crit" if r.crit else "hurt")
+	velocity = Vector2(signf(position.x - from_x) * 140, -360)
 	level.number(position + Vector2(0, -24), ("CRIT -%d" if r.crit else "-%d") % r.dmg, Color("f06a5a"))
 	level.main.shake(4 if r.crit else 2)
 	if status.size() == 2 and randf() < status[1]:
@@ -376,6 +453,7 @@ func _die() -> void:
 	GS.hp = 0
 	dead = true
 	body_sprite.rotation = PI / 2 * facing
+	Sfx.play("die", 0.0)
 	level.main.player_died()
 
 func hit_rect() -> Rect2:
@@ -392,11 +470,12 @@ func self_destruct() -> void:
 ## What the rest of the room needs to draw you.
 func net_state() -> Dictionary:
 	return {"world": level.id, "x": position.x, "y": position.y, "f": facing, "frame": cur_frame, "look": GS.look,
-		"helmet": GS.equip.get("helmet", ""), "armor": GS.equip.get("armor", ""), "held": GS.held(), "dead": dead, "swing": swing > 0}
+		"helmet": GS.equip.get("helmet", ""), "armor": GS.equip.get("armor", ""), "held": GS.held(), "dead": dead, "swings": swings, "jumps": jumps}
 
 ## In a room you get back up where the map starts instead of going home.
 func revive() -> void:
 	dead = false
+	flip_t = 99.0
 	body_sprite.rotation = 0
 	position = level.cell_pos(level.spawn_cell)
 	velocity = Vector2.ZERO

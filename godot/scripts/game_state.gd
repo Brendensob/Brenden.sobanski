@@ -350,8 +350,10 @@ func combine(slots: Array, use_scroll: bool) -> Dictionary:
 	if p.known and randi_range(1, 100) <= p.chance:
 		var n: int = p.recipe.get("n", 1)
 		add_item(p.recipe.out, n)
+		Sfx.play("craft", 0.0)
 		return {"ok": true, "success": true, "out": p.recipe.out, "n": n}
 	add_item("dust", 1)
+	Sfx.play("fail", 0.0)
 	return {"ok": true, "success": false, "known": p.known}
 
 # ---------------------------------------------------------------- smith and furnaces
@@ -360,6 +362,7 @@ func smith(recipe: Dictionary) -> bool:
 		return false
 	take_all(recipe.cost)
 	add_item(recipe.out, 1)
+	Sfx.play("craft", 0.0)
 	return true
 
 func start_smelt(f: int, recipe: Dictionary) -> String:
@@ -460,6 +463,7 @@ func complete_quest(q: Dictionary) -> void:
 	if q.has("unlock"):
 		flags[q.unlock] = true
 	quests_done.append(q.id)
+	Sfx.play("quest", 0.0)
 	inventory_changed.emit()
 	stats_changed.emit()
 
@@ -597,6 +601,7 @@ func open_gift() -> Array:
 		return []
 	flags["gift_day"] = today()
 	var got: Array = Data.pick_loot(Data.DAILY_GIFT)
+	Sfx.play("quest", 0.0)
 	if add_item(got[0], got[1], true) > 0:
 		message.emit("Your bag is full.", "warn")
 	inventory_changed.emit()

@@ -131,6 +131,11 @@ func _items_weapons() -> void:
 		["twin_sun", "Twin Sun", 14, 0.55, 22, true, 300, "Two suns on one hilt."],
 		["devil_spike", "Devil Spike", 45, 0.9, 26, true, 500, "A wicked spiked weapon."],
 		["hell_sword", "Hell Sword", 105, 0.55, 26, true, 1500, "Forged from evil itself."],
+		["wall_hammer", "Wall Hammer", 9, 0.55, 30, true, 0, "Used to destroy massive walls..? A Survival Grasslands reward."],
+		["tsurugi", "Tsurugi", 33, 0.55, 22, true, 0, "The Ninja's sword. The ninjas under Pixel Town can sharpen it."],
+		["tsurugi_2", "Tsurugi II", 67, 0.55, 22, true, 0, "Sharpened by Nini."],
+		["tsurugi_3", "Tsurugi III", 128, 0.55, 24, true, 0, "Sharpened by Nana."],
+		["tsurugi_4", "Tsurugi IV", 178, 0.55, 24, true, 0, "Sharpened by Nina."],
 	]
 	for r in w:
 		var extra := {"dmg": r[2], "spd": r[3], "reach": r[4], "kb": r[5]}
@@ -145,6 +150,11 @@ func _items_weapons() -> void:
 	_item("healing_staff", "Healing Staff", "staff", 80, "Uses 3 mana to heal you for 6.", {"heal": 6, "spd": 1.0, "mana_cost": 3, "color": "5cbf3f"})
 	_item("healing_staff_2", "Healing Staff II", "staff", 200, "Uses 4 mana to heal you for 12.", {"heal": 12, "spd": 1.0, "mana_cost": 4, "color": "5cbf3f"})
 	_item("healing_staff_3", "Healing Staff III", "staff", 400, "Uses 5 mana to heal you for 20.", {"heal": 20, "spd": 1.0, "mana_cost": 5, "color": "5cbf3f"})
+	# the Iron Bot's fist fires bolts and uses mana (wiki numbers)
+	_item("iron_fist", "Iron Fist", "staff", 0, "The Iron Bot's fist. Uses 1 mana. The robots under Pixel Town can upgrade it.", {"dmg": 39, "spd": 0.55, "mana_cost": 1, "color": "f2a33a"})
+	_item("iron_fist_2", "Iron Fist II", "staff", 0, "Upgraded by FC 9912. Uses 2 mana.", {"dmg": 81, "spd": 0.55, "mana_cost": 2, "color": "f2a33a"})
+	_item("iron_fist_3", "Iron Fist III", "staff", 0, "Upgraded by TT 1001. Uses 3 mana.", {"dmg": 137, "spd": 0.55, "mana_cost": 3, "color": "f2cf5b"})
+	_item("iron_fist_4", "Iron Fist IV", "staff", 0, "Upgraded by 2219 OOP. Uses 5 mana.", {"dmg": 231, "spd": 0.55, "mana_cost": 5, "color": "ff6a3a"})
 	# ranged, uses arrows
 	_item("weak_bow", "Weak Bow", "bow", 15, "Uses arrows.", {"dmg": 13, "spd": 0.65, "ammo": "arrow"})
 	_item("bow", "Bow", "bow", 40, "Uses arrows.", {"dmg": 19, "spd": 0.65, "ammo": "arrow"})
@@ -313,6 +323,8 @@ var CHARACTERS := {
 	"cavemun": {"name": "Cavemun", "gives": "timber_club"}, "pirate": {"name": "Pirate", "gives": "gilded_blade"},
 	"the_spi": {"name": "The Spi", "gives": "azure_blade"}, "bad_man": {"name": "Bad Man"}, "school_girl": {"name": "School Girl"},
 	"soldier": {"name": "Soldier"}, "chuchu": {"name": "ChuChu"}, "drone": {"name": "Drone"}, "dark_knight": {"name": "Dark Knight"},
+	# in the original these two were gem-shop only; here they come from Master Chests
+	"ninja": {"name": "Ninja", "gives": "tsurugi"}, "iron_bot": {"name": "Iron Bot", "gives": "iron_fist"},
 }
 const START_CHARACTERS := ["man_in_suit", "nurse"]
 
@@ -567,6 +579,9 @@ var NODES := {
 	"ice_rock": {"tool": "pick", "min": 3, "hits": 6, "drops": [["water_crystal", 0.3, 1, 1], ["silver_ore", 0.6, 1, 1], ["crystal", 0.4, 1, 1]], "color": "a6e6f2"},
 	"rock_wall": {"tool": "pick", "min": 4, "hits": 30, "step": 0, "drops": [], "color": "8a9099", "wall": true},
 	# the wooden wall in front of the Trading Center: hit it with a Torch to burn it down
+	# the stone wall in the east of Pixel Town: only the Wall Hammer breaks it
+	"hammer_wall": {"tool": "hammer", "min": 1, "hits": 10, "step": 0, "drops": [], "color": "8a9099", "wall": true, "flag": "hammer_wall",
+		"opened": "The stone wall crumbles! There's a way down under Pixel Town."},
 	"trade_wall": {"tool": "torch", "min": 1, "hits": 3, "step": 0, "drops": [], "color": "f2a33a", "wall": true, "flag": "trade_wall",
 		"opened": "The wall burns down! The Trading Center is open."},
 }
@@ -702,6 +717,9 @@ var SURVIVAL_WAVES := [
 	[25, ["eyeball", "shadow"]],
 ]
 const SURVIVAL_BOSSES := ["dark_trex", "hand", "king", "queen"]
+# Surviving this many nights in Survival Grasslands earns the Wall Hammer (the wiki
+# says it's a Survival reward but not which day, so the day is an estimate).
+const WALL_HAMMER_DAY := 10
 
 func survival_tokens(day: int) -> int:
 	if day <= 1: return 0
@@ -723,6 +741,13 @@ var NPCS := {
 	"miner": {"name": "Miner", "look": "miner", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
 	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
 	"warden_hell": {"name": "GateKeeper", "look": "warden", "talk": "Em Stones, for those who helped me."},
+	# under Pixel Town, behind the east stone wall
+	"nini": {"name": "Nini", "look": "ninja_npc", "talk": "Shh... the Tsurugi can be made sharper. Help me first."},
+	"nana": {"name": "Nana", "look": "ninja_npc2", "talk": "Bring me what I ask, and your blade will sing."},
+	"nina": {"name": "Nina", "look": "ninja_npc3", "talk": "Only the strongest Tsurugi reaches me."},
+	"fc_9912": {"name": "FC 9912", "look": "robot_npc", "talk": "BEEP. IRON FIST UPGRADE PROTOCOL READY."},
+	"tt_1001": {"name": "TT 1001", "look": "robot_npc2", "talk": "BOOP. MORE MATERIALS REQUIRED."},
+	"oop_2219": {"name": "2219 OOP", "look": "robot_npc3", "talk": "ERROR 2219. JUST KIDDING. UPGRADES AVAILABLE."},
 	"trader": {"name": "Trader", "look": "trader", "talk": "Welcome to the Trading Center! Stand at a trading table to swap items with a friend in your room. Both of you put up your items, both press Ready, and the trade happens."},
 }
 
@@ -762,6 +787,50 @@ var QUESTS := [
 	{"id": "mira_26", "npc": "mira", "need": {"hell_bar": 50}, "reward": {"master_key": 3}, "text": "50 Hell Bars."},
 	{"id": "mira_27", "npc": "mira", "need": {"evil_bar": 50}, "reward": {"master_key": 3}, "text": "50 Evil Bars."},
 	{"id": "jumpie_1", "npc": "jumpie", "need": {"jelly": 10}, "reward": {}, "coins": 1, "text": "Could you bring me 10 Jellies? I'll give you a Pixel Coin!"},
+	# the ninjas under Pixel Town (Tsurugi upgrades; the last quest of each upgrades the blade)
+	{"id": "nini_1", "npc": "nini", "need": {"monster_scale": 99}, "reward": {"iron_bar": 1}, "text": "99 Monster Scales."},
+	{"id": "nini_2", "npc": "nini", "need": {"monster_horn": 99}, "reward": {"iron_bar": 1}, "text": "99 Monster Horns."},
+	{"id": "nini_3", "npc": "nini", "need": {"monster_leather": 99}, "reward": {"iron_bar": 1}, "text": "99 Monster Leathers."},
+	{"id": "nini_4", "npc": "nini", "need": {"antidote_herb": 99}, "reward": {"iron_bar": 1}, "text": "99 Antidote Herbs."},
+	{"id": "nini_5", "npc": "nini", "need": {"old_roots": 99}, "reward": {"iron_bar": 1}, "text": "99 Old Roots."},
+	{"id": "nini_6", "npc": "nini", "need": {"tsurugi": 1}, "reward": {"tsurugi_2": 1}, "text": "Now give me your Tsurugi."},
+	{"id": "nana_1", "npc": "nana", "need": {"copper_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Copper Bars."},
+	{"id": "nana_2", "npc": "nana", "need": {"iron_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Iron Bars."},
+	{"id": "nana_3", "npc": "nana", "need": {"silver_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Silver Bars."},
+	{"id": "nana_4", "npc": "nana", "need": {"gold_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Gold Bars."},
+	{"id": "nana_5", "npc": "nana", "need": {"erbium_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Erbium Bars."},
+	{"id": "nana_6", "npc": "nana", "need": {"dark_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Dark Bars."},
+	{"id": "nana_7", "npc": "nana", "need": {"light_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Light Bars."},
+	{"id": "nana_8", "npc": "nana", "need": {"hell_bar": 99}, "reward": {"survival_token": 5}, "text": "99 Hell Bars."},
+	{"id": "nana_9", "npc": "nana", "need": {"evil_crystal": 99}, "reward": {"survival_token": 5}, "text": "99 Evil Crystals."},
+	{"id": "nana_10", "npc": "nana", "need": {"tsurugi_2": 1}, "reward": {"tsurugi_3": 1}, "text": "Now give me your Tsurugi II."},
+	{"id": "nina_1", "npc": "nina", "need": {"em_stone": 9}, "reward": {"survival_token": 5}, "text": "9 Em Stones."},
+	{"id": "nina_2", "npc": "nina", "need": {"ruby_stone": 9}, "reward": {"survival_token": 5}, "text": "9 Ruby Stones."},
+	{"id": "nina_3", "npc": "nina", "need": {"sapphire_stone": 9}, "reward": {"survival_token": 5}, "text": "9 Sapphire Stones."},
+	{"id": "nina_4", "npc": "nina", "need": {"volcanic_bar": 25}, "reward": {"survival_token": 5}, "text": "25 Volcanic Bars."},
+	{"id": "nina_5", "npc": "nina", "need": {"tsurugi_3": 1}, "reward": {"tsurugi_4": 1}, "text": "Now give me your Tsurugi III."},
+	# the robots under Pixel Town (Iron Fist upgrades)
+	{"id": "fc_1", "npc": "fc_9912", "need": {"bone": 99}, "reward": {"iron_bar": 1}, "text": "REQUIRE 99 BONES."},
+	{"id": "fc_2", "npc": "fc_9912", "need": {"scarab": 99}, "reward": {"iron_bar": 1}, "text": "REQUIRE 99 SCARABS."},
+	{"id": "fc_3", "npc": "fc_9912", "need": {"blue_moon": 99}, "reward": {"iron_bar": 1}, "text": "REQUIRE 99 BLUE MOONS."},
+	{"id": "fc_4", "npc": "fc_9912", "need": {"branch": 99}, "reward": {"iron_bar": 1}, "text": "REQUIRE 99 BRANCHES."},
+	{"id": "fc_5", "npc": "fc_9912", "need": {"jelly": 99}, "reward": {"iron_bar": 1}, "text": "REQUIRE 99 JELLIES."},
+	{"id": "fc_6", "npc": "fc_9912", "need": {"iron_fist": 1}, "reward": {"iron_fist_2": 1}, "text": "INSERT IRON FIST."},
+	{"id": "tt_1", "npc": "tt_1001", "need": {"copper_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 COPPER BARS."},
+	{"id": "tt_2", "npc": "tt_1001", "need": {"iron_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 IRON BARS."},
+	{"id": "tt_3", "npc": "tt_1001", "need": {"silver_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 SILVER BARS."},
+	{"id": "tt_4", "npc": "tt_1001", "need": {"gold_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 GOLD BARS."},
+	{"id": "tt_5", "npc": "tt_1001", "need": {"erbium_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 ERBIUM BARS."},
+	{"id": "tt_6", "npc": "tt_1001", "need": {"dark_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 DARK BARS."},
+	{"id": "tt_7", "npc": "tt_1001", "need": {"light_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 LIGHT BARS."},
+	{"id": "tt_8", "npc": "tt_1001", "need": {"hell_bar": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 HELL BARS."},
+	{"id": "tt_9", "npc": "tt_1001", "need": {"living_flame": 99}, "reward": {"survival_token": 5}, "text": "REQUIRE 99 FIRA."},
+	{"id": "tt_10", "npc": "tt_1001", "need": {"iron_fist_2": 1}, "reward": {"iron_fist_3": 1}, "text": "INSERT IRON FIST II."},
+	{"id": "oop_1", "npc": "oop_2219", "need": {"em_stone": 9}, "reward": {"survival_token": 5}, "text": "REQUIRE 9 EM STONES."},
+	{"id": "oop_2", "npc": "oop_2219", "need": {"ruby_stone": 9}, "reward": {"survival_token": 5}, "text": "REQUIRE 9 RUBY STONES."},
+	{"id": "oop_3", "npc": "oop_2219", "need": {"sapphire_stone": 9}, "reward": {"survival_token": 5}, "text": "REQUIRE 9 SAPPHIRE STONES."},
+	{"id": "oop_4", "npc": "oop_2219", "need": {"volcanic_bar": 25}, "reward": {"survival_token": 5}, "text": "REQUIRE 25 VOLCANIC BARS."},
+	{"id": "oop_5", "npc": "oop_2219", "need": {"iron_fist_3": 1}, "reward": {"iron_fist_4": 1}, "text": "INSERT IRON FIST III."},
 	# the GateKeeper turns up again in Hell 2, missing his mask
 	{"id": "mask_1", "npc": "warden_hell", "need": {"green_face": 1}, "reward": {"silver_key": 1}, "unlock": "em_shop",
 		"text": "I lost my mask somewhere down here... Bring me a Green Face and I'll sell you Em Stones."},
@@ -814,7 +883,8 @@ var CHESTS := {
 		["seer_armor", 1, 1], ["ivory_armor", 1, 1], ["scale_armor", 1, 1], ["copper_helmet", 1, 1], ["brass_helmet", 1, 1], ["fear_helmet", 1, 1],
 		["fear_helmet_2", 1, 1], ["hell_helmet", 1, 1], ["hell_helmet_2", 1, 1], ["witch_helmet", 1, 1], ["witch_helmet_2", 1, 1], ["golden_seeds", 1, 1],
 		["healing_staff", 1, 1], ["healing_staff_2", 1, 1], ["healing_staff_3", 1, 1], ["sapphire_stone", 1, 1], ["em_stone", 1, 1], ["green_egg", 1, 1], ["gold_sword_cast", 1, 1],
-		["crazy_cannon_2", 1, 1], ["waazookaa_2", 1, 1], ["crazy_cannon_3", 1, 1, 0.5], ["waazookaa_3", 1, 1, 0.5], ["dark_knight", 1, 1]]},
+		["crazy_cannon_2", 1, 1], ["waazookaa_2", 1, 1], ["crazy_cannon_3", 1, 1, 0.5], ["waazookaa_3", 1, 1, 0.5], ["dark_knight", 1, 1],
+		["ninja", 1, 1, 0.3], ["iron_bot", 1, 1, 0.3]]},
 }
 var REWARD_CHEST := "silver" # chests found inside worlds use the silver loot table
 

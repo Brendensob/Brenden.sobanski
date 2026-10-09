@@ -12,6 +12,11 @@ var body: Sprite2D
 var held: Sprite2D
 var name_label: Label
 var swing := 0.0
+var flip_t := 99.0
+var jumps := 0
+var swings := 0
+
+const Player := preload("res://scripts/player.gd")
 
 func setup(peer_id: int, pname: String) -> void:
 	peer = peer_id
@@ -39,8 +44,17 @@ func apply(state: Dictionary) -> void:
 		position = target
 	facing = int(state.get("f", 1))
 	dead = bool(state.get("dead", false))
-	if state.get("swing", false):
-		swing = 0.25
+	var sw := int(state.get("swings", 0))
+	if sw != swings:
+		if not first:
+			swing = Player.SWING_TIME
+		swings = sw
+	# a new jump: do the same flip they did
+	var j := int(state.get("jumps", 0))
+	if j != jumps:
+		if not first:
+			flip_t = 0.0
+		jumps = j
 	var h: String = state.get("held", "")
 	held.texture = Art.icon(h) if h != "" and Data.ITEMS.has(h) else null
 
@@ -53,10 +67,18 @@ func _process(delta: float) -> void:
 	body.texture = Art.character(look, st.get("frame", "stand"), 1, st.get("helmet", ""), st.get("armor", ""))
 	body.position.y = -body.texture.get_height() / 2.0
 	body.flip_h = facing < 0
-	body.rotation = PI / 2 * facing if dead else 0.0
+	flip_t += delta
+	var spin := 0.0
+	if flip_t < Player.FLIP_TIME:
+		spin = facing * TAU * ease(flip_t / Player.FLIP_TIME, 0.6)
+	body.rotation = PI / 2 * facing if dead else spin
 	held.position = Vector2(facing * 5, -7)
+	held.offset = Vector2(4 * facing, -5)
 	held.flip_h = facing < 0
-	held.rotation = (-1.2 + (0.25 - maxf(swing, 0)) * 8.0) * facing if swing > 0 else 0.0
+	var ang: float = Player.SWING_KEYS[0][1]
+	if swing > 0:
+		ang = Player.swing_angle(1.0 - swing / Player.SWING_TIME)
+	held.rotation = ang * facing
 	held.visible = not dead
 
 func hit_rect() -> Rect2:

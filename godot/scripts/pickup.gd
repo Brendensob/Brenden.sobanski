@@ -59,6 +59,7 @@ func _collect() -> void:
 		Net.pickup_gone.rpc(level.id, nid)
 		level.net_objs.erase(nid)
 	if item == "coin":
+		Sfx.play("coin")
 		GS.coins += n
 		GS.stats_changed.emit()
 		level.number(position + Vector2(0, -10), "+%d coins" % n, Color("f2cf5b"))
@@ -66,6 +67,7 @@ func _collect() -> void:
 		return
 	var left := GS.add_item(item, n, true)
 	if left < n:
+		Sfx.play("pickup")
 		level.main.hud.toast("%s obtained" % Data.ITEMS[item].name + (" x%d" % (n - left) if n - left > 1 else ""), "")
 	n = left
 	if n <= 0:

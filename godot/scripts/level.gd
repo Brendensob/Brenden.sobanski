@@ -116,7 +116,11 @@ func solid(x: int, y: int) -> bool:
 		return true
 	if y < 0:
 		return false
-	return grid[idx(x, y)] == 1
+	return grid[idx(x, y)] != 0
+
+## A thin ledge: you stand on it, but jump up through it from below.
+func is_ledge(x: int, y: int) -> bool:
+	return x >= 0 and y >= 0 and x < W and y < H and grid[idx(x, y)] == 2
 
 func set_cell(x: int, y: int, v: int) -> void:
 	if x >= 0 and y >= 0 and x < W and y < H:
@@ -132,6 +136,10 @@ func fill(x: int, y: int, w: int, h: int) -> void:
 	for yy in range(y, y + h):
 		for xx in range(x, x + w):
 			set_cell(xx, yy, 1)
+
+func ledge(x: int, y: int, w: int) -> void:
+	for xx in range(x, x + w):
+		set_cell(xx, y, 2)
 
 func cell_pos(c: Vector2i) -> Vector2:
 	return Vector2(c.x * T + T / 2.0, c.y * T + T)
@@ -216,7 +224,7 @@ func _gen_explore() -> void:
 		# climbing ledges every two rows, alternating sides
 		var side := 0
 		for ly in range(bottom - 2, top + 1, -2):
-			fill(sx + (0 if side == 0 else 2), ly, 2, 1)
+			ledge(sx + (0 if side == 0 else 2), ly, 2)
 			side = 1 - side
 	for x in W:
 		fill(x, H - 2, 1, 2)
@@ -233,7 +241,7 @@ func _gen_arena() -> void:
 	fill(0, 0, 1, 22)
 	fill(W - 1, 0, 1, 22)
 	for p in [[10, 14, 8], [46, 14, 8], [27, 10, 10]]:
-		fill(p[0], p[1], p[2], 1)
+		ledge(p[0], p[1], p[2])
 	spawn_cell = Vector2i(W / 2, 17)
 
 func _gen_survival() -> void:
@@ -249,7 +257,7 @@ func _gen_survival() -> void:
 	spawn_cell = Vector2i(W / 2, 16)
 
 func _gen_town() -> void:
-	_init_grid(112, 24)
+	_init_grid(142, 24)
 	for x in W:
 		var top := 17
 		if x >= 78:
@@ -258,10 +266,18 @@ func _gen_town() -> void:
 			top = 17 - (x - 73)
 		surface[x] = top
 		fill(x, top, 1, H - top)
-	# up and to the left behind the chests: two steps and the Trading Center ledge
-	fill(39, 15, 2, 1)
-	fill(36, 13, 2, 1)
-	fill(18, 11, 18, 1)
+	# up and to the left behind the chests: two thin steps up to the Trading
+	# Center ledge. Each step overlaps the one above, so you jump up through it.
+	ledge(39, 15, 3)
+	ledge(37, 13, 3)
+	ledge(35, 11, 3)
+	fill(18, 11, 17, 1)
+	# far east, past the stone wall: a pit with stone steps 2 blocks high going
+	# down to a long hall under the hill, where the ninjas and robots live
+	carve(104, 13, 8, 9)
+	carve(112, 15, 28, 7)
+	for i in 4:
+		fill(104 + i * 2, 14 + i * 2, 2, 8 - i * 2)
 	fill(0, 0, 1, H)
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(44, 16)
@@ -278,9 +294,9 @@ func _build_collision() -> void:
 		if y < H:
 			var x := 0
 			while x < W:
-				if solid(x, y):
+				if solid(x, y) and not is_ledge(x, y):
 					var x0 := x
-					while x < W and solid(x, y):
+					while x < W and solid(x, y) and not is_ledge(x, y):
 						x += 1
 					runs["%d,%d" % [x0, x]] = true
 				else:
@@ -301,6 +317,24 @@ func _build_collision() -> void:
 		for key in runs:
 			if not active.has(key):
 				active[key] = y
+	# ledges: one-way, so a jump goes up through them and lands on top
+	for y in H:
+		var x := 0
+		while x < W:
+			if not is_ledge(x, y):
+				x += 1
+				continue
+			var x0 := x
+			while x < W and is_ledge(x, y):
+				x += 1
+			var shape := CollisionShape2D.new()
+			var r := RectangleShape2D.new()
+			r.size = Vector2((x - x0) * T, T)
+			shape.shape = r
+			shape.position = Vector2(x0 * T, y * T) + r.size / 2
+			shape.one_way_collision = true
+			body.add_child(shape)
+
 
 func _draw() -> void:
 	var tiles := Art.ground_tiles(th)
@@ -309,11 +343,11 @@ func _draw() -> void:
 			var p := Vector2(x * T, y * T)
 			if solid(x, y):
 				var open_above := y > 0 and not solid(x, y - 1)
-				if open_above and kind == "explore" and y > surface[x]:
+				if open_above and (kind == "explore" or kind == "town") and y > surface[x]:
 					draw_texture(tiles[3], p)
 				else:
 					draw_texture(tiles[0] if open_above else tiles[1], p)
-			elif kind == "explore" and y > surface[x]:
+			elif (kind == "explore" or kind == "town") and y > surface[x]:
 				draw_texture(tiles[2], p)
 
 func _make_background() -> void:
@@ -520,8 +554,16 @@ func _populate_town() -> void:
 	if not GS.flags.get("furnaces", false):
 		add_station("gate", 0, Vector2i(82, 12))
 	for i in Data.FURNACES:
-		add_station("furnace", i, Vector2i(85 + i * 5, 12))
-		add_station("furnace_board", i, Vector2i(87 + i * 5, 12))
+		add_station("furnace", i, Vector2i(84 + i * 4, 12))
+		add_station("furnace_board", i, Vector2i(86 + i * 4, 12))
+	# far east: the massive stone wall only the Wall Hammer breaks, and the
+	# ninjas and robots living under Pixel Town behind it
+	if not GS.flags.get("hammer_wall", false):
+		var hw: Node = add_node("hammer_wall", Vector2i(102, 12))
+		hw.make_solid()
+	var under := ["nini", "nana", "nina", "fc_9912", "tt_1001", "oop_2219"]
+	for i in under.size():
+		add_npc(under[i], Vector2i(115 + i * 4, 21))
 
 func add_board(item: String, c: Vector2i) -> void:
 	var s := Sprite2D.new()
@@ -608,9 +650,9 @@ func structures_near(pos: Vector2, radius: float, kind_id: String) -> bool:
 func _process(delta: float) -> void:
 	var d := GS.darkness()
 	var under := 0.0
-	if kind == "explore" and player:
+	if (kind == "explore" or kind == "town") and player:
 		var cx := clampi(int(player.position.x / T), 0, W - 1)
-		under = clampf((player.position.y / T - surface[cx]) / 6.0, 0, 0.5)
+		under = clampf((player.position.y / T - surface[cx]) / 6.0, 0, 0.5 if kind == "explore" else 0.3)
 	var dark := maxf(d * 0.85, under)
 	if def.theme == "ghost":
 		dark = maxf(dark, 0.45)
@@ -686,6 +728,10 @@ func _survival_tick(delta: float) -> void:
 		if netted and Net.is_host():
 			Net.night_survived.rpc(tokens)
 		announce("You survived night %d! +%d Survival Tokens" % [s_day, tokens], "good")
+		if s_day == Data.WALL_HAMMER_DAY:
+			_give_wall_hammer()
+			if netted and Net.is_host():
+				Net.wall_hammer.rpc()
 		s_day += 1
 		GS.best_survival_day = maxi(GS.best_survival_day, s_day)
 	if night:
@@ -988,3 +1034,13 @@ func net_projectile(pos: Vector2, vel: Vector2, gravity: float, color: Color, ra
 	p.radius = radius
 	p.position = pos
 	entities.add_child(p)
+
+## Surviving enough nights in Survival Grasslands earns the Wall Hammer, which
+## breaks the stone wall in the east of Pixel Town.
+func _give_wall_hammer() -> void:
+	if GS.count("wall_hammer") > 0:
+		return
+	if GS.add_item("wall_hammer", 1, true) == 0:
+		main.hud.toast("You earned the Wall Hammer! Try it on the big stone wall in the east of Pixel Town.", "big")
+	else:
+		main.hud.toast("You earned the Wall Hammer, but your bag was full.", "warn")

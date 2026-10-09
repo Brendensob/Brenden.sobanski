@@ -273,6 +273,7 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 			return
 		flash = 0.1
 		show_bar = 4.0
+		Sfx.play("hit")
 		level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
 		Net.hit_mob.rpc_id(1, level.id, nid, amount, from_x, knock)
 		return
@@ -281,6 +282,8 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 		return
 	hp -= amount
 	flash = 0.1
+	if not _from_net:
+		Sfx.play("hit")
 	show_bar = 4.0
 	aggro_forced = true
 	level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
@@ -291,6 +294,7 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 
 func die() -> void:
 	dead = true
+	Sfx.play("mob_die")
 	if level.netted and Net.is_host():
 		Net.mob_died.rpc(level.id, nid)
 		level.net_objs.erase(nid)
@@ -308,6 +312,7 @@ func die() -> void:
 ## A guest's copy of a monster the host's game says has died.
 func die_visual() -> void:
 	dead = true
+	Sfx.play("mob_die")
 	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
 	if is_boss():
 		level.main.shake(6)

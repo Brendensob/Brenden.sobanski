@@ -84,6 +84,7 @@ func hit(tier: int, _from_net: bool = false) -> void:
 		Net.node_changed.rpc(level.id, nid, hits, alive)
 	if hits >= need:
 		alive = false
+		Sfx.play("break")
 		regrow = REGROW
 		sprite.visible = false
 		level.burst(position + Vector2(0, -8), c, 10)

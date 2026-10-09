@@ -23,9 +23,21 @@ with all art redrawn in code, and nothing for sale.
 | Go back to town | | Bomb (right side, outside town) |
 
 A does whatever fits what you're holding: swing a weapon or tool, cast with a staff,
-shoot a bow, eat or drink, place a wall or campfire, or read a book. Standing next to
-a villager, portal, chest or furnace, A talks or uses it. Hold A to keep attacking.
-Like the original, holding A while you open the bag turns on auto-attack until you press A again.
+shoot a bow, eat or drink, place a wall or campfire, or read a book. Like the original,
+you talk to villagers and use portals, chests, furnaces, the incubator and the rest by
+**hitting them**: face them and press A, and they open when your swing lands. Hold A to keep
+attacking. Holding A while you open the bag turns on auto-attack until you press A again.
+
+**Jumping and swinging, timed from the official trailer frame by frame.** B shoots you up
+about two blocks in a tenth of a second while your character does one full flip, then you
+float down slowly (about 0.8 seconds in the air). Thin ledges can be jumped up through from
+below. A swing snaps the blade up, slams it down past level, holds it low for a moment and
+brings it back; the body stays still.
+
+**Sound.** 8-bit sound effects for swings, hits, chopping, mining, jumping, pickups, coins,
+hurting, fainting, crafting, quests, portals and menus. They're made in code in the same
+chiptune style; the original's sound files are Cobalt's and aren't copied. Turn sound off
+or on from the Menu (compass button).
 
 ## Menus and screen, laid out like the original
 
@@ -134,6 +146,11 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   (tools) and the Crafter.
 - Up top, the green GateKeeper guards the furnaces (Pretzel quest). Five furnaces with
   signboards; a bubble with the bar pops up when one is done.
+- Far east, past the furnaces, a massive stone wall. Survive 10 nights in Survival
+  Grasslands to earn the Wall Hammer, then smash it: stone steps lead down to a hall under
+  the hill where the ninjas (Nini, Nana, Nina) sharpen the Tsurugi up to Tsurugi IV and the
+  robots (FC 9912, TT 1001, 2219 OOP) upgrade the Iron Fist staff up to Iron Fist IV, each
+  with the original's quest chain.
 - Jumpie, the girl who looks like Miffie, is in Grasslands 1 (10 Jellies for a Pixel Coin).
   The GateKeeper turns up in Hell 2 missing his mask: bring a Green Face and he sells Em
   Stones for 92,500 coins.
@@ -173,8 +190,11 @@ list something (most drop chances, potion strength, the solo boss fights), the v
 estimates. All of it lives in `scripts/data.gd`, so it's easy to adjust.
 
 Item, character, villager and monster names match the original. Characters based on
-other companies' properties (Backstreet Boy, Sailor Moon, Iron Man) and the items that
-need them were left out, and the Green Face uses School Girls in place of Backstreet Boys.
+other companies' properties (Backstreet Boy, Sailor Moon) and the items that need them
+were left out, Iron Man is the Iron Bot here, and the Green Face uses School Girls in place
+of Backstreet Boys. The Ninja and Iron Bot were gem-shop characters in the original; here
+they come out of Master Chests. The wiki doesn't say which night gives the Wall Hammer, so
+night 10 is a guess.
 No sprites were copied: every sprite is drawn in code to look like the original's style.
 Gems and the gem shop were left out on purpose: quests that gave gems give that many
 Silver Keys instead.
@@ -200,6 +220,7 @@ best match.
 | `scripts/hud.gd` | HUD, touch buttons, the bag, the Crafter, the main menu, chat and every other menu |
 | `scripts/net.gd` | Multiplayer rooms: hosting, joining, and keeping everyone's world in step |
 | `scripts/relay_peer.gd` | Sends room traffic through the server's relay so IPs stay private |
+| `scripts/sfx.gd` | Every sound effect, made in code when the game starts |
 | `scripts/remote_player.gd` | How other players in the room appear on your screen |
 | `scripts/online.gd` | Talks to the online server: claiming names, friends, who's online |
 | `server/pixel_server.py` | The online server: names, friends lists and the room relay |
@@ -215,7 +236,7 @@ and `godot --path . -- --nettest client`.
 
 - Public rooms for strangers (rooms are friends-only)
 - Worlds after Ice Cavern and Ghost Arena (Modina Ruins, Nightmare Valley and later)
-- Event and gem-shop items, and characters from later updates (Ninja, the buns)
+- Event and gem-shop items, and characters from later updates (the buns)
 - Phone app export (set it up from **Project → Export** in Godot)
 
 Fonts: Pixelify Sans and Silkscreen, under the SIL Open Font License (see `fonts/`).
