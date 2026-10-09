@@ -17,6 +17,7 @@ var inv: Array = []
 var equip := {}
 var sel := 0
 var coins := 0
+var gems := 0 # the rare currency, spent in the Gem Shop
 var hp := 5.0
 var mp := 2.0
 var st := 4.0
@@ -78,6 +79,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 		equip[s] = ""
 	sel = 0
 	coins = 0
+	gems = 0
 	status = {}
 	flags = {}
 	quests_done = []
@@ -100,7 +102,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 
 # ---------------------------------------------------------------- stats
 func stat(k: String) -> int:
-	var total: int = BASE[k]
+	var total: int = BASE[k] + int(Data.CHARACTERS.get(look, {}).get("stats", {}).get(k, 0))
 	for slot in EQUIP_SLOTS:
 		var id: String = equip[slot]
 		if id != "" and Data.ITEMS[id].has("stats"):
@@ -143,11 +145,21 @@ func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
 	return {"dmg": maxi(1, hit - blocked), "crit": crit}
 
 func add_status(effect: String) -> void:
+	if immune_to(effect):
+		return
 	var had := status.has(effect)
 	status[effect] = STATUS_TIME
 	if not had:
 		message.emit({"poison": "You've been poisoned!", "fatigue": "Fatigue! Your stamina won't recover.", "slow": "You've been slowed!", "cold": "Brr! You're freezing."}.get(effect, effect), "warn")
 	stats_changed.emit()
+
+## The Jade Ring stops poison.
+func immune_to(effect: String) -> bool:
+	for slot in ["ring_l", "ring_r"]:
+		var id: String = equip[slot]
+		if id != "" and Data.ITEMS[id].get("immune", "") == effect:
+			return true
+	return false
 
 func has_status(effect: String) -> bool:
 	return status.has(effect)
@@ -159,8 +171,15 @@ func stack_size(id: String) -> int:
 		return 1
 	if t in ["ammo", "token", "throw"]:
 		return 999
-	if id == "hero_bug":
+	# the wiki's stack sizes for the rarer things
+	if id in ["dark_heart", "em_stone", "ruby_stone", "sapphire_stone", "topaz_stone", "dark_stone", "sky_stone", "forbidden_stone"]:
+		return 1
+	if id == "nightmare_ore":
+		return 10
+	if id == "hero_bug" or id == "living_flame":
 		return 25
+	if id == "legendary_roots":
+		return 50
 	return 99
 
 func held() -> String:
@@ -168,6 +187,8 @@ func held() -> String:
 	return s.id if s else ""
 
 func count(id: String) -> int:
+	if id == "gem":
+		return gems
 	var n := 0
 	for s in inv:
 		if s and s.id == id:
@@ -175,7 +196,7 @@ func count(id: String) -> int:
 	return n
 
 func has_room(id: String) -> bool:
-	if id == "coin":
+	if id == "coin" or id == "gem":
 		return true
 	for s in inv:
 		if s == null or (s.id == id and s.n < stack_size(id)):
@@ -186,6 +207,10 @@ func has_room(id: String) -> bool:
 func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 	if id == "coin":
 		coins += n
+		stats_changed.emit()
+		return 0
+	if id == "gem":
+		gems += n
 		stats_changed.emit()
 		return 0
 	var m := stack_size(id)
@@ -209,6 +234,10 @@ func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 	return n
 
 func remove_item(id: String, n: int = 1) -> void:
+	if id == "gem":
+		gems = maxi(0, gems - n)
+		stats_changed.emit()
+		return
 	for i in range(BAG - 1, -1, -1):
 		if n <= 0:
 			break
@@ -449,6 +478,10 @@ func next_quest(npc: String) -> Dictionary:
 	for q in Data.QUESTS:
 		if q.npc == npc and not q.id in quests_done:
 			return q
+	if npc == "mira":
+		var b := Data.bounty_quest(today())
+		if not b.id in quests_done:
+			return b
 	return {}
 
 func quest_ready(q: Dictionary) -> bool:
@@ -484,7 +517,7 @@ func is_night() -> bool:
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
-		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "hp": hp, "mp": mp, "st": st,
+		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
@@ -550,6 +583,7 @@ func load_game() -> bool:
 		equip[slot] = id if Data.ITEMS.has(id) else ""
 	sel = int(d.get("sel", 0))
 	coins = int(d.get("coins", 0))
+	gems = int(d.get("gems", 0))
 	flags = d.get("flags", {})
 	quests_done = d.get("quests", [])
 	var fs: Array = d.get("furnaces", [])
@@ -583,6 +617,8 @@ func use_character(i: int) -> String:
 	var it: Dictionary = Data.ITEMS[s.id]
 	remove_at(i, 1)
 	look = it.look
+	clamp_stats()
+	stats_changed.emit()
 	var msg := "You're now the %s!" % it.name
 	if it.gives != "":
 		if add_item(it.gives, 1, true) == 0:

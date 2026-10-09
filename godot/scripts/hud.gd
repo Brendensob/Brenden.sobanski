@@ -13,6 +13,7 @@ var hotbar_slots: Array = []
 var bars: Control
 var clock: Control
 var coin_label: Label
+var gem_label: Label
 var day_label: Label
 var info_label: Label
 var status_label: Label
@@ -36,6 +37,7 @@ var use_scroll := false
 var bag_mode := "bag" # "bag" when opened from the backpack, "craft" at the Crafter
 var bag_tab := "combine" # bag: character, combine, menu. craft: weapon, helmet, armor, shield, ring
 var craft_sel := -1
+var craft_scroll := 0 # where the Crafter's list is scrolled to
 var info_box: VBoxContainer
 var tab_row: HBoxContainer
 var page: Control
@@ -332,6 +334,22 @@ func _build_hud() -> void:
 	coin_label = _outlined(_label("0", 9, Color("5ce0d0"), true))
 	coin_box.add_child(coin_label)
 	hud_root.add_child(coin_box)
+	# gems under the coins; tap them for the Gem Shop
+	var gem_box := HBoxContainer.new()
+	gem_box.name = "GemBox"
+	gem_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	gem_box.position = Vector2(37, 26)
+	gem_box.add_theme_constant_override("separation", 2)
+	var gem_btn := _icon_button(Art.icon("gem"), Vector2(9, 9), func(): open_gem_shop())
+	gem_btn.name = "GemButton"
+	gem_box.add_child(gem_btn)
+	gem_label = _outlined(_label("0", 9, Color("f08aa0"), true))
+	gem_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	gem_label.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			open_gem_shop())
+	gem_box.add_child(gem_label)
+	hud_root.add_child(gem_box)
 	info_label = _outlined(_label("", 8, C_YELLOW, true))
 	info_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	info_label.position = Vector2(-80, 36)
@@ -510,6 +528,7 @@ func _process(_d: float) -> void:
 func _refresh_stats() -> void:
 	bars.queue_redraw()
 	coin_label.text = str(GS.coins)
+	gem_label.text = str(GS.gems)
 
 func _refresh() -> void:
 	for i in GS.HOTBAR:
@@ -839,7 +858,7 @@ func _refresh_bag() -> void:
 		else:
 			b.icon = Art.ui_icon({"character": "backpack", "combine": "hammer", "menu": "compass"}[key], 2)
 		b.tooltip_text = key.capitalize()
-		b.pressed.connect(func(): bag_tab = key; craft_sel = -1; _refresh_bag())
+		b.pressed.connect(func(): bag_tab = key; craft_sel = -1; craft_scroll = 0; _refresh_bag())
 		if key == bag_tab:
 			b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 3))
 			b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 3))
@@ -960,6 +979,8 @@ func _crafter_tab(id: String) -> String:
 	var t: String = Data.ITEMS[id].type
 	if t in ["weapon", "staff", "bow", "axe", "pick"]:
 		return "weapon"
+	if t == "material":
+		return "ring" # the Dark Stone sits with the rings and their gem stones
 	return t
 
 func _page_craft() -> void:
@@ -967,9 +988,11 @@ func _page_craft() -> void:
 	for i in Data.SMITH.size():
 		if _crafter_tab(Data.SMITH[i].out) == bag_tab:
 			list.append(i)
+	# top: everything the Crafter makes on this tab
 	var scroll := ScrollContainer.new()
+	scroll.name = "List"
 	scroll.position = Vector2(4, 4)
-	scroll.size = Vector2(208, 210)
+	scroll.size = Vector2(208, 112)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	page.add_child(scroll)
 	var grid := GridContainer.new()
@@ -988,20 +1011,97 @@ func _page_craft() -> void:
 		grid.add_child(b)
 	if list.is_empty():
 		page.add_child(_at(_wrap("Nothing to craft here yet.", 200, C_MUTED), Vector2(8, 8)))
+	# the page is rebuilt on every change, so put the list back where it was
+	var keep := craft_scroll
+	var ref: WeakRef = weakref(scroll)
+	get_tree().process_frame.connect(func():
+		var sc: ScrollContainer = ref.get_ref()
+		if sc and not sc.is_queued_for_deletion():
+			sc.scroll_vertical = keep
+			sc.get_v_scroll_bar().value_changed.connect(func(v: float): craft_scroll = int(v)), CONNECT_ONE_SHOT)
+	# bottom: the picked item, what it takes (I, II, III, like combining) and Craft
+	var line := ColorRect.new()
+	line.color = C_MUTED
+	line.position = Vector2(4, 119)
+	line.size = Vector2(206, 1)
+	page.add_child(line)
+	if craft_sel < 0 or not craft_sel in list:
+		var h := _wrap("Pick something to craft. The Crafter never fails.", 200, C_MUTED, 8)
+		h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		page.add_child(_at(h, Vector2(7, 160)))
+		return
+	var r: Dictionary = Data.SMITH[craft_sel]
+	var out := _slot(40)
+	out.name = "Result"
+	out.position = Vector2(4, 124)
+	out.disabled = true
+	out.add_theme_stylebox_override("disabled", _tex_box(Art.ui_frame("button"), 3, 1))
+	_fill_slot(out, {"id": r.out, "n": 1})
+	page.add_child(out)
+	var title := _heading(Data.ITEMS[r.out].name, 10)
+	title.size = Vector2(164, 12)
+	title.clip_text = true
+	page.add_child(_at(title, Vector2(48, 123)))
+	var stats := _wrap(_stat_text(r.out), 164, C_INK, 8)
+	stats.max_lines_visible = 2
+	page.add_child(_at(stats, Vector2(48, 137)))
+	var ids: Array = r.cost.keys()
+	for i in 3:
+		var b := _slot(30)
+		b.name = "Need%d" % i
+		b.position = Vector2(4 + i * 36, 168)
+		b.disabled = true
+		page.add_child(b)
+		if i >= ids.size():
+			continue
+		var id: String = ids[i]
+		_fill_slot(b, {"id": id, "n": 1})
+		var have := GS.count(id)
+		var need: int = r.cost[id]
+		var c := _label("%d/%d" % [mini(have, 999), need], 8, C_GOOD if have >= need else C_BAD, true)
+		c.size = Vector2(34, 10)
+		c.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		page.add_child(_at(c, Vector2(2 + i * 36, 200)))
+	var go := _button("Craft", func():
+		if GS.smith(r):
+			toast("%s obtained" % Data.ITEMS[r.out].name)
+		_refresh_bag(), true)
+	go.name = "Go"
+	go.position = Vector2(118, 172)
+	go.custom_minimum_size = Vector2(90, 22)
+	go.disabled = not GS.has_all(r.cost)
+	page.add_child(go)
+
+## One line on what an item does: attack and speed for weapons, stats for gear.
+func _stat_text(id: String) -> String:
+	var it: Dictionary = Data.ITEMS[id]
+	if it.has("stats"):
+		var parts := []
+		for k in ["atk", "def", "mag", "hp", "mp", "st"]:
+			if it.stats[k] != 0:
+				parts.append("%s %d" % [{"atk": "Atk", "def": "Def", "mag": "Mag", "hp": "HP", "mp": "MP", "st": "ST"}[k], it.stats[k]])
+		return "  ".join(parts)
+	if it.has("heal") and not it.has("dmg"):
+		return "Heals %d for %d mana" % [it.heal, it.mana_cost]
+	if it.has("dmg"):
+		var s := "Attack %d, %.2fs" % [it.dmg, it.spd]
+		if it.has("tier"):
+			s += ", tier %d" % it.tier
+		if it.has("axe"):
+			s += ", chops trees"
+		if it.has("pick"):
+			s += ", mines"
+		return s
+	return it.desc
 
 func _refresh_info() -> void:
 	_clear(info_box)
 	if bag_mode == "craft" and craft_sel >= 0 and bag_sel < 0:
 		var r: Dictionary = Data.SMITH[craft_sel]
 		info_box.add_child(_label(Data.ITEMS[r.out].name, 10, C_EMBER))
-		info_box.add_child(_cost_row(r.cost))
-		var b := _button("Craft", func():
-			if GS.smith(r):
-				toast("%s obtained" % Data.ITEMS[r.out].name)
-			_refresh_bag(), true)
-		b.disabled = not GS.has_all(r.cost)
-		b.custom_minimum_size = Vector2(70, 18)
-		info_box.add_child(b)
+		var d := _wrap(Data.ITEMS[r.out].desc, 156, C_INK, 8)
+		d.max_lines_visible = 4
+		info_box.add_child(d)
 		return
 	if move_from >= 0:
 		info_box.add_child(_wrap("Tap a slot to move the item there.", 156, C_MUTED))
@@ -1085,7 +1185,9 @@ func _build_panels() -> void:
 	_scroll(sh, Vector2(10, 40), Vector2(206, 190)).name = "Buy"
 	sh.add_child(_at(_label("Buy", 9, C_MUTED, true), Vector2(12, 26)))
 	_scroll(sh, Vector2(224, 40), Vector2(206, 190)).name = "Sell"
-	sh.add_child(_at(_label("Sell", 9, C_MUTED, true), Vector2(226, 26)))
+	var sell_head := _label("Sell", 9, C_MUTED, true)
+	sell_head.name = "SellHead"
+	sh.add_child(_at(sell_head, Vector2(226, 26)))
 
 	var bk := _panel("book", Vector2(440, 240), "Book")
 	_scroll(bk, Vector2(10, 28), Vector2(420, 202))
@@ -1477,12 +1579,22 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 	p.get_node("Text").text = text
 
 # shops
+func open_gem_shop() -> void:
+	if main.on_title():
+		return
+	open_shop("gem_shop")
+
+## Things bought in a stack that didn't all fit land at your feet.
+func _drop_extra(id: String, n: int) -> void:
+	if main.level and main.level.player:
+		main.level.drop(id, n, main.level.player.position)
+
 func open_shop(npc_id: String) -> void:
 	open_panel("shop")
 	_refresh_shop(npc_id)
 
 func _refresh_shop(npc_id: String) -> void:
-	var shop: Dictionary = Data.SHOPS[npc_id]
+	var shop: Dictionary = Data.gem_shop() if npc_id == "gem_shop" else Data.SHOPS[npc_id]
 	var p: Panel = panels.shop
 	p.get_node("Title").text = shop.title
 	var buy: VBoxContainer = p.find_child("Buy", true, false)
@@ -1490,12 +1602,15 @@ func _refresh_shop(npc_id: String) -> void:
 	_clear(buy)
 	_clear(sell)
 	var currency: String = shop.get("currency", "coins")
+	(p.get_node("SellHead") as Label).text = "Buy Gems" if shop.has("buy_gems") else "Sell"
 	for e in shop.sells:
 		var id: String = e[0]
 		var price: int = e[1]
+		var qty: int = e[2] if e.size() > 2 else 1
 		var have: int = GS.coins if currency == "coins" else GS.count(currency)
-		var unit := "c" if currency == "coins" else " tokens"
-		buy.add_child(_row(id, "%s  %d%s" % [Data.ITEMS[id].name, price, unit], "Buy", have >= price, func():
+		var unit: String = {"coins": "c", "gem": " gems", "survival_token": " tokens"}.get(currency, "")
+		var label: String = ("%s x%d" % [Data.ITEMS[id].name, qty]) if qty > 1 else Data.ITEMS[id].name
+		buy.add_child(_row(id, "%s  %d%s" % [label, price, unit], "Buy", have >= price, func():
 			if not GS.has_room(id):
 				toast("Inventory full.", "warn")
 				return
@@ -1503,10 +1618,25 @@ func _refresh_shop(npc_id: String) -> void:
 				GS.coins -= price
 			else:
 				GS.remove_item(currency, price)
-			GS.add_item(id)
+			var left := GS.add_item(id, qty, true)
+			if left > 0:
+				_drop_extra(id, left)
 			GS.stats_changed.emit()
-			toast("%s obtained" % Data.ITEMS[id].name)
+			toast(("%s x%d obtained" % [Data.ITEMS[id].name, qty]) if qty > 1 else "%s obtained" % Data.ITEMS[id].name)
 			_refresh_shop(npc_id)))
+	if shop.has("buy_gems"):
+		# gems for Pixel Coins, in place of the original's real-money gem packs
+		var gp: int = shop.buy_gems
+		sell.add_child(_wrap("You have %d gems. Buy gems with Pixel Coins:" % GS.gems, 190, C_MUTED))
+		for n in [1, 5, 20]:
+			var cost: int = gp * n
+			sell.add_child(_row("gem", "%d Gem%s  %dc" % [n, "" if n == 1 else "s", cost], "Buy", GS.coins >= cost, func():
+				GS.coins -= cost
+				GS.add_item("gem", n, true)
+				Sfx.play("coin")
+				toast("+%d Gem%s" % [n, "" if n == 1 else "s"])
+				_refresh_shop(npc_id)))
+		return
 	if not shop.get("buys", false):
 		sell.add_child(_wrap("This shop doesn't buy anything.", 190, C_MUTED))
 		return
@@ -1543,6 +1673,7 @@ func open_smith() -> void:
 	bag_mode = "craft"
 	bag_tab = "weapon"
 	craft_sel = -1
+	craft_scroll = 0
 	open_panel("bag")
 
 # books
@@ -1581,12 +1712,21 @@ func _refresh_map() -> void:
 		for wid in section[1]:
 			var w: Dictionary = Data.WORLDS[wid]
 			var target: String = wid
-			var b := _button(w.name, func(): close_panels(); main.open_world(target), false)
+			var b := _button(w.name, func(): _enter_world(target), false)
 			if w.has("needs") and not GS.flags.get(w.needs, false):
 				b.disabled = true
 				b.tooltip_text = "Finish Brutus' quest first."
 			v.add_child(b)
 		cols.add_child(v)
+
+func _enter_world(wid: String) -> void:
+	var w: Dictionary = Data.WORLDS[wid]
+	# the Tomb of Makara needs at least 8 stamina
+	if GS.max_st() < float(w.get("min_st", 0)):
+		toast("You need at least %d stamina to enter the %s." % [w.min_st, w.name], "warn")
+		return
+	close_panels()
+	main.open_world(wid) # in town this opens the portal on the street
 
 # stations
 func open_station(s: Node) -> void:

@@ -98,6 +98,17 @@ const LOOKS := {
 		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
 	"iron_bot": {"h": "2c4596", "H": "2c4596", "s": "6b8ff0", "S": "2c4596", "e": "f2cf5b", "m": "2c4596", "c": "6b8ff0", "C": "2c4596", "v": "6b8ff0", "t": "f2a33a", "q": "2c4596", "f": "3e424a", "hair": "bald",
 		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
+	"backstreet_boy": {"h": "f2cf5b", "H": "c99a2e", "c": "f2efe6", "C": "c8c0b0", "v": "f2efe6", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "f2efe6",
+		"over": [[2, 1, ["..hhhhhhh..", ".hhHhhhHhhh", "hhh......hh"]]]},
+	"sailor_moons": {"h": "f2cf5b", "H": "c99a2e", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "d8433a",
+		"over": [[0, 2, ["hh........hh", "hHh......hHh", "hh........hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [0, 11, ["hh"]], [10, 9, ["hh"]], [10, 10, ["hh"]], [10, 11, ["hh"]]]},
+	# the buns: bunny ears over a furry head
+	"q_bun": {"p": "f5a0b8", "h": "f2efe6", "H": "d8d0c0", "s": "f2efe6", "S": "d8d0c0", "e": "1b1a24", "c": "f08ac8", "C": "c05a98", "v": "f2efe6", "t": "f08ac8", "q": "f2efe6", "f": "f08ac8", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 10, ["pp"]]]},
+	"mad_bun": {"h": "8a8f99", "H": "5c616b", "s": "a8b0bc", "S": "8a8f99", "e": "d8433a", "c": "2a2a30", "C": "1b1a24", "v": "d8433a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hr..hr.", ".hr..hr.", ".hH..hH."]], [4, 8, ["kk..kk"]]]},
+	"nerd_bun": {"p": "f5a0b8", "h": "c8865a", "H": "8a5a32", "s": "e2b08a", "S": "c8865a", "e": "1b1a24", "c": "3b5dc9", "C": "2c4596", "v": "f2efe6", "t": "f2cf5b", "q": "4a4a5a", "f": "3a2a22", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 9, ["kkkkkk"]]]},
 	# villagers
 	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
 		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
@@ -122,6 +133,8 @@ const LOOKS := {
 	"modina": {"h": "1b1a24", "H": "1b1a24", "long": true, "s": "ea8a33", "S": "b85e1c", "c": "c8a060", "C": "8a6a3a", "v": "d8433a", "t": "d8433a", "q": "c8a060", "f": "6e4426", "e": "1b1a24", "m": "8a1e1a"},
 	"modina_2": {"h": "e3ebf5", "H": "a8b0bc", "long": true, "s": "6b8ff0", "S": "2c4596", "c": "3b5dc9", "C": "2c4596", "v": "f2cf5b", "t": "f2cf5b", "q": "3b5dc9", "f": "1e2a6a", "e": "1b1a24", "m": "1e2a6a"},
 	"evil_santa": {"h": "f2efe6", "H": "c8c0b0", "s": "f2c29a", "S": "c8a080", "c": "c8202a", "C": "f2efe6", "v": "f2efe6", "t": "1b1a24", "q": "c8202a", "f": "1b1a24", "e": "d8433a", "m": "f2efe6"},
+	"vampire": {"h": "2a1e30", "H": "1b1a24", "s": "c8b8e8", "S": "a898c8", "c": "6a2a8a", "C": "3a1a5a", "v": "d8433a", "t": "f2efe6", "q": "2a1e30", "f": "1b1a24", "e": "d8433a", "m": "d8433a",
+		"over": [[0, 6, ["kk........kk", "kkk......kkk", ".kk......kk."]]]},
 	"mummy": {"h": "e8e0c8", "H": "b8b098", "s": "e8e0c8", "S": "b8b098", "c": "e8e0c8", "C": "b8b098", "q": "e8e0c8", "f": "b8b098", "e": "d8433a"},
 }
 # Character hats show the matching character's headwear when worn.
@@ -704,6 +717,52 @@ func bunny_img(c: Color, alt: bool) -> Image:
 	rect(img, 12 + l, 20, 4, 2, c.darkened(0.2))
 	return img
 
+## The Tomb of Makara's coffins: an upright brown slab with a cross and red eyes.
+func tombstone_img(alt: bool) -> Image:
+	var img := blank(14, 22)
+	var c := Color("8a5a32")
+	rect(img, 1, 2, 12, 20, c)
+	rect(img, 3, 0, 8, 2, c)
+	rect(img, 2, 2, 2, 20, c.lightened(0.15))
+	rect(img, 6, 4, 2, 8, Color("e2cf8e"))
+	rect(img, 4, 6, 6, 2, Color("e2cf8e"))
+	eyes(img, 5, 9, 14 + (1 if alt else 0), 1, Color("d8433a"))
+	rect(img, 1, 20, 12, 2, c.darkened(0.3))
+	return img
+
+## Makara: a red-brown pyramid with a toothy grin.
+func makara_img(alt: bool) -> Image:
+	var img := blank(48, 40)
+	var c := Color("a8482a")
+	for y in 36:
+		var hw := int(y * 0.66) + 1
+		rect(img, 24 - hw, y + 2, hw * 2, 1, c if y % 6 else c.darkened(0.2))
+	for y in 36:
+		var hw := int(y * 0.66) + 1
+		rect(img, 24 - hw, y + 2, mini(3, hw), 1, c.lightened(0.18))
+	ellipse(img, 18, 20, 3, 3, Color("f2cf5b"))
+	ellipse(img, 30, 20, 3, 3, Color("f2cf5b"))
+	px(img, 18, 20, OUTLINE)
+	px(img, 30, 20, OUTLINE)
+	var g := 1 if alt else 0
+	rect(img, 13, 27, 22, 6 + g, OUTLINE)
+	for x in range(14, 34, 3):
+		rect(img, x, 27, 2, 2, Color("f2efe6"))
+		rect(img, x + 1, 31 + g, 2, 2, Color("f2efe6"))
+	rect(img, 21, 0, 6, 3, Color("f2cf5b"))
+	return img
+
+func snowman_img(alt: bool) -> Image:
+	var img := blank(14, 18)
+	ellipse(img, 7, 12, 6, 5.5, Color("f2f6fa"))
+	ellipse(img, 7, 5, 4.5, 4, Color("f2f6fa"))
+	eyes(img, 5, 8, 4, 1)
+	px(img, 7, 6, Color("ea8a33"))
+	rect(img, 2, 8 + (1 if alt else 0), 10, 2, Color("d8433a"))
+	px(img, 7, 11, OUTLINE)
+	px(img, 7, 14, OUTLINE)
+	return img
+
 func big(img: Image, k: int) -> Image:
 	img.resize(img.get_width() * k, img.get_height() * k, Image.INTERPOLATE_NEAREST)
 	return img
@@ -807,6 +866,28 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 				eyes(pk, 8, 11, 10, 1, Color("d8433a"))
 				img = big(pk, 3)
 			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 3)
+			# Tomb of Makara
+			"sand_mantis": img = bug_img(18, 12, Color("e8a0a8"), Color("b06a7a"), alt)
+			"tombstone": img = tombstone_img(alt)
+			"vampire": img = _char_img(look, "walk" if alt else "stand", 1)
+			"makara": img = makara_img(alt)
+			# pets
+			"grrr": img = trex_img(Color("8a4ac8"), Color("c8a0e8"), alt)
+			"mini_ball": img = blob(Color("5a5a6a"), 10, 9, alt)
+			"chick_aiai", "chick_cici", "chick_bibi", "chick_dede", "chick_fofo":
+				img = chick_img(alt)
+				var tint: Color = {"chick_aiai": Color("f06a5a"), "chick_cici": Color("5cbf3f"), "chick_bibi": Color("6b8ff0"), "chick_dede": Color("f2cf5b"), "chick_fofo": Color("a77ee0")}[look]
+				for y in img.get_height():
+					for x in img.get_width():
+						var c := img.get_pixel(x, y)
+						if c.a > 0.5 and c.is_equal_approx(Color("f2cf5b")):
+							img.set_pixel(x, y, tint)
+			"pet_bunny": img = bunny_img(Color("c8a070"), alt)
+			"snowman": img = snowman_img(alt)
+			"ne_ne": img = lion_img(Color("6b8ff0"), Color("f2efe6"), alt)
+			"bunny_ghost": img = ghost_img(14, 16, Color("f8e8f0"), Color("e06a9a"), alt)
+			"reaper": img = ghost_img(14, 16, Color("2a2a3a"), Color("8affc8"), alt)
+			"moonwisp": img = flame_img(Color("a6e6f2"), alt)
 			_: img = blob(Color("ff00ff"), 12, 10, alt)
 		img = outline(img)
 		if flash:
@@ -875,6 +956,19 @@ const ICON_GRIDS := {
 }
 
 const MATERIAL_COLORS := [
+	["topaz", "f2cf5b", "c98a2e"], ["sandnite", "f2e0a0", "c8a060"], ["makara", "a8482a", "6a2a14"], ["moonclipse", "f2cf5b", "8a9ab8"],
+	["robo", "a8b0bc", "4fd0f0"], ["candy", "f06aa0", "f2efe6"], ["pops", "c8865a", "f06aa0"], ["popstick", "f2e08a", "c8a060"], ["carrot", "ea8a33", "5cbf3f"],
+	["christmas", "3e9a3a", "d8433a"], ["ultimate", "f2cf5b", "d8433a"], ["pumpkin", "ea8a33", "3a2a22"], ["rainbow", "f06aa0", "6bc8f0"],
+	["heartstone", "d8433a", "f2cf5b"], ["manastone", "3b6fd9", "f2cf5b"], ["muscle", "ea6a33", "8a1e1a"], ["shattered", "a77ee0", "3a2a5a"],
+	["crown", "f2cf5b", "c99a2e"], ["royal", "a77ee0", "f2cf5b"], ["thors", "c8ced6", "d8433a"], ["w_cap", "3b5dc9", "f2efe6"], ["snowman", "f2f6fa", "d8433a"],
+	["halloween", "ea8a33", "1b1a24"], ["ghost_dress", "e8eef2", "8a80b0"], ["x_wings", "c8ced6", "3b5dc9"], ["x_shield", "c8ced6", "3b5dc9"],
+	["mithril", "c8e0f0", "7a90a8"], ["titan", "8a9099", "f2cf5b"], ["phase", "a77ee0", "4fb6d0"], ["lava", "ff5a2a", "3a1a1a"], ["firey", "f2a33a", "d8433a"],
+	["yellow_fluor", "f2e05a", "c9a02e"], ["red_fluor", "f06a5a", "a82a22"], ["blue_fluor", "6bc8f0", "2c7ab0"], ["green_fluor", "7cf06a", "2e9a2a"], ["pink_fluor", "f08ac8", "b04a90"],
+	["frost", "a6e6f2", "4fb6d0"], ["ice", "a6e6f2", "4fb6d0"], ["shadow", "3a3a48", "7b4fb8"], ["dream", "f06a5a", "f2cf5b"], ["chocolate", "6e4426", "3a2010"],
+	["laser", "a8b0bc", "f06a5a"], ["pistol", "5c616b", "8a5a32"], ["rolva", "c8ced6", "4fb6d0"], ["firecracker", "d8433a", "f2cf5b"], ["ninja_star", "5c616b", "1b1a24"],
+	["sun_extractor", "f2cf5b", "ea8a33"], ["devilween", "ea8a33", "5a2a6a"], ["refined", "c8a0e8", "7a5aa8"], ["mooncake", "c8865a", "f2cf5b"],
+	["emperor", "f2cf5b", "d8433a"], ["snow_dress", "f2efe6", "a6c6d8"], ["dragon", "5cbf3f", "2e7a2a"], ["volcan_", "ff5a2a", "a8241a"],
+	["sky", "a6e6f2", "4fb6d0"], ["unlawful", "8fb07a", "5e7a52"], ["dark_stone", "3e424a", "7b4fb8"],
 	["modina", "ea8a33", "8a4a1a"], ["nightmare", "8a1e3a", "2a0a14"], ["long_lance", "e3ebf5", "6b8ff0"],
 	["hazard", "f2cf5b", "3a3a48"], ["santa", "d8433a", "f2efe6"], ["lich", "8a4ac8", "3a1a5a"], ["fortune", "f2cf5b", "d8433a"],
 	["blue_blade", "6b8ff0", "2c4596"], ["dark_heart", "8a1e2a", "2a0a14"], ["forbidden", "d8433a", "f2cf5b"],
@@ -951,7 +1045,11 @@ func icon_spec(id: String) -> Array:
 		"apple": return ["apple", {"X": "d8433a", "x": "8a1e1a"}]
 		"evil_apple": return ["apple", {"X": "5a2a6a", "x": "2a1030"}]
 		"living_flame": return ["blob", {"X": "f2a33a", "x": "d8433a"}]
-		"em_stone", "ruby_stone", "sapphire_stone": return ["gem", mc]
+		"em_stone", "ruby_stone", "sapphire_stone", "dark_stone", "sky_stone": return ["gem", mc]
+		"dragon_spine": return ["bone", {"w": "a8e86a"}]
+		"volcan_axe": return ["axe", mc]
+		"sky_pole_axe": return ["pole", mc]
+		"unlawful": return ["plunger", mc]
 		"scarab": return ["bug", {"X": "3b5dc9", "x": "2c4596"}]
 		"stink_bug": return ["bug", {"X": "8fb07a", "x": "5e7a52"}]
 		"honey_bug": return ["bug", {"X": "f2cf5b", "x": "c99a2e"}]
@@ -986,7 +1084,20 @@ func icon_spec(id: String) -> Array:
 		"torch": return ["torch_i", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
 		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
+		"gem": return ["gem", {"X": "f0507a", "x": "a8284a"}]
 		"combination_scroll": return ["scroll", {"X": "a77ee0"}]
+		"missing_page": return ["scroll", {"X": "1b1a24"}]
+		"missing_page_u": return ["scroll", {"X": "d8433a"}]
+		"topaz_stone": return ["gem", {"X": "f2cf5b", "x": "c98a2e"}]
+		"blue_board": return ["board", {"X": "6b8ff0", "x": "2c4596"}]
+		"mooncake": return ["food", {"X": "c8865a", "x": "f2cf5b"}]
+		"dragon_handle": return ["stick", {"n": "5cbf3f", "l": "2e7a2a", "g": "f2cf5b"}]
+		"bone_of_makara": return ["bone", {"w": "e2cf8e"}]
+		"skin_of_makara": return ["hide", {"X": "a8482a", "x": "6a2a14"}]
+		"treasure_of_makara": return ["gem", {"X": "f2cf5b", "x": "a8482a"}]
+		"evil_axe", "evil_axe_2", "evil_axe_u": return ["axe", mc]
+		"hell_pole_axe": return ["pole", mc]
+		"devil_spike_2", "devil_spike_3", "devil_spike_u": return ["spike", mc]
 	if id.ends_with("_ore") or id == "erbium":
 		return ["ore", {"X": mc.X}]
 	if id.ends_with("_bar"):
@@ -1006,7 +1117,7 @@ func icon_spec(id: String) -> Array:
 				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else "e3ebf5")), "x": "6a1e14"}]
 			return ["staff", mc]
 		"bow": return ["cannon", mc] if it.get("cannon", false) else ["bow", {}]
-		"ammo": return ["balls", mc] if id.begins_with("cc_") else ["missile", mc]
+		"ammo": return ["balls", mc] if id.begins_with("cc_") or id == "devil_cannon_ball" else ["missile", mc]
 		"axe": return ["axe", mc]
 		"pick": return ["pick", mc]
 		"armor": return ["armor", mc]
@@ -1017,7 +1128,8 @@ func icon_spec(id: String) -> Array:
 		"shield": return ["shield", mc]
 		"ring": return ["ring", {"X": mc.X, "x": "c99a2e"}]
 		"book":
-			var bc := {"survival_book": "4f9a44", "combo_book_1": "3b5dc9", "combo_book_2": "d8433a", "combo_book_3": "f2a33a", "combo_book_4": "7b4fb8", "combo_book_5": "1b1a24"}
+			var bc := {"survival_book": "4f9a44", "combo_book_1": "3b5dc9", "combo_book_2": "d8433a", "combo_book_3": "f2a33a", "combo_book_4": "7b4fb8", "combo_book_5": "1b1a24",
+				"combo_book_z": "5c616b", "combo_book_zx": "8a1e2a", "combo_book_u": "f2cf5b"}
 			return ["book", {"X": bc.get(id, "3b5dc9"), "x": "1b1a24"}]
 		"key":
 			var kc := {"silver_key": "e3ebf5", "golden_key": "f2cf5b", "master_key": "d8433a"}
@@ -1026,7 +1138,8 @@ func icon_spec(id: String) -> Array:
 			var sc := {"green_seeds": "5cbf3f", "red_seeds": "d8433a", "golden_seeds": "f2cf5b"}
 			return ["seed", {"X": sc.get(id, "5cbf3f"), "x": "1b1a24"}]
 		"egg":
-			var ec := {"green_egg": "5cbf3f", "pink_egg": "f06aa0", "purple_egg": "7b4fb8", "red_egg": "d8433a", "queen_egg": "f2cf5b", "king_egg": "5c616b"}
+			var ec := {"green_egg": "5cbf3f", "pink_egg": "f06aa0", "purple_egg": "7b4fb8", "red_egg": "d8433a", "queen_egg": "f2cf5b", "king_egg": "5c616b",
+				"blue_egg": "3b5dc9", "lunar_egg": "f2a33a", "easter_egg": "f08ac8", "christmas_egg": "d8433a", "halloween_egg": "ea8a33"}
 			return ["egg", {"X": ec.get(id, "5cbf3f")}]
 	return ["lump", mc]
 
@@ -1070,6 +1183,7 @@ const THEMES := {
 	"mushroom": {"sky": ["4a2a5a", "a86ac8"], "mount": "6a3a7a", "snow": "f2a33a", "hills": "4a2a5a", "top": "c86ac8", "top2": "8a4a9a", "dirt": "4a3040", "dirt2": "3a2030", "cave": "1e1220"},
 	"fruit": {"sky": ["3ab8e0", "bff0f8"], "mount": "5ac8a8", "snow": "fff2a0", "hills": "3aa86a", "top": "f2e08a", "top2": "d8c06a", "dirt": "c8a060", "dirt2": "a8804a", "cave": "6a4a2a"},
 	"egg": {"sky": ["a8e0f8", "fff6e0"], "mount": "c8e8a8", "snow": "fff0f8", "hills": "a8d88a", "top": "8ad86a", "top2": "6ab84a", "dirt": "d8b890", "dirt2": "b89870", "cave": "6a5040"},
+	"tomb": {"sky": ["5a3a1e", "a8803a"], "mount": "6a4a2a", "snow": "e2cf8e", "hills": "4a3018", "top": "e2cf8e", "top2": "c8a060", "dirt": "c8a060", "dirt2": "a87a3a", "cave": "4a2e18"},
 	"ghost": {"sky": ["1a1a2e", "3a3a5a"], "mount": "2e2e4a", "snow": "8a8ab0", "hills": "24243a", "top": "4a5a4a", "top2": "34403a", "dirt": "2a2a34", "dirt2": "1e1e28", "cave": "121218"},
 }
 
@@ -1108,6 +1222,11 @@ func ground_tiles(th: Dictionary) -> Array:
 	back.fill(th.cave)
 	for i in 8:
 		rect(back, rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1, th.cave.lightened(0.08))
+	if th.name == "tomb":
+		# the tomb's sandy walls have a zig-zag pattern
+		for x in 16:
+			px(fill, x, 4 + absi((x % 8) - 4), th.dirt2)
+			px(fill, x, 12 + absi((x % 8) - 4) - 4, th.dirt.lightened(0.15))
 	var ledge := fill.duplicate()
 	rect(ledge, 0, 0, 16, 3, th.dirt.lightened(0.18))
 	for x in 16:
@@ -1116,12 +1235,25 @@ func ground_tiles(th: Dictionary) -> Array:
 	_cache[key] = tex
 	return tex
 
+## A wall in the Tomb of Makara that kills on touch: dark red stone with spikes.
+func deadly_tile(th: Dictionary) -> Texture2D:
+	return cached("deadly_" + th.name, func():
+		var img := blank(16, 16)
+		img.fill(Color("5a1414"))
+		for y in range(0, 16, 4):
+			for x in range(0, 16, 4):
+				px(img, x + 1, y + 1, Color("d8433a"))
+				px(img, x + 2, y + 2, Color("f06a5a"))
+		rect(img, 0, 0, 16, 1, Color("f06a5a"))
+		rect(img, 0, 15, 16, 1, Color("2a0a0a"))
+		return to_tex(img))
+
 func node_tex(kind: String, th: Dictionary) -> Texture2D:
 	return cached("node_%s_%s" % [kind, th.name], func():
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(kind)
 		var img: Image
-		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2", "volcanic_rock": "ff5a2a"}
+		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2", "volcanic_rock": "ff5a2a", "sandnite_rock": "f2e0a0"}
 		match kind:
 			"tree", "blue_tree":
 				img = blank(18, 46)
@@ -1181,6 +1313,7 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 				var base := Color("8a9099")
 				if th.name == "ice": base = Color("a6c0d8")
 				if th.name == "hell": base = Color("6a4a5a")
+				if th.name == "tomb": base = Color("8a6a4a")
 				if kind == "volcanic_rock": base = Color("3a2a2e")
 				ellipse(img, 9, 8, 9, 6, base)
 				ellipse(img, 7, 6, 5, 3, base.lightened(0.2))

@@ -1,6 +1,7 @@
 extends Node2D
-## One map. The ground is a tile grid (1 = solid). Builds Pixel Town,
-## exploration worlds with caves, arenas and the Survival Grasslands corridor.
+## One map. The ground is a tile grid (1 = solid, 2 = ledge, 3 = a wall that kills
+## on touch). Builds Pixel Town, exploration worlds with caves, the Tomb of
+## Makara's maze, arenas and the Survival Grasslands corridor.
 
 const T := 16
 const PlayerScript := preload("res://scripts/player.gd")
@@ -32,6 +33,7 @@ var props: Node2D
 var modulate_node: CanvasModulate
 var parallax_items: Array = []
 var spawn_cell := Vector2i(4, 10)
+var home_cell := Vector2i(-1, -1) # where the portal back to town stands
 var rng := RandomNumberGenerator.new()
 var seed_used := 0
 # multiplayer: every shared thing gets a number so all games agree on it
@@ -64,7 +66,7 @@ func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Diction
 	seed_used = rng.seed
 	match kind:
 		"town": _gen_town()
-		"explore": _gen_explore()
+		"explore": _gen_maze() if def.get("maze", false) else _gen_explore()
 		"arena": _gen_arena()
 		"survival": _gen_survival()
 	_build_collision()
@@ -169,6 +171,14 @@ func floor_cells(min_x: int = 2, max_x: int = -1) -> Array:
 				out.append(Vector2i(x, y))
 	return out
 
+## True when the rectangle (in pixels) overlaps a wall that kills on touch.
+func touches_deadly(r: Rect2) -> bool:
+	for y in range(maxi(0, int(r.position.y / T)), mini(H, int(r.end.y / T) + 1)):
+		for x in range(maxi(0, int(r.position.x / T)), mini(W, int(r.end.x / T) + 1)):
+			if grid[idx(x, y)] == 3 and r.intersects(Rect2(x * T, y * T, T, T)):
+				return true
+	return false
+
 func world_size() -> Vector2:
 	return Vector2(W * T, H * T)
 
@@ -232,6 +242,75 @@ func _gen_explore() -> void:
 		set_cell(0, y, 1)
 		set_cell(W - 1, y, 1)
 	spawn_cell = Vector2i(5, surface[5] - 1)
+
+## The Tomb of Makara: an enclosed maze of sandy rooms under the ground, four rows of
+## them joined by corridors and climbing shafts. Some of the walls left standing
+## between rooms are deadly.
+func _gen_maze() -> void:
+	_init_grid(150, 54)
+	fill(0, 0, W, H)
+	for x in W:
+		surface[x] = 0
+	var cw := 11
+	var ch := 11
+	var cols := (W - 4) / cw
+	var rows := 4
+	var ox := 2
+	var oy := 2
+	var floor_of := func(r: int) -> int: return oy + r * ch + ch - 1
+	for r in rows:
+		for c in cols:
+			carve(ox + c * cw, floor_of.call(r) - 4, cw - 2, 4)
+	# a random spanning tree over the rooms, plus a few extra openings
+	var open := {}
+	var seen := {Vector2i(0, 0): true}
+	var stack := [Vector2i(0, 0)]
+	while not stack.is_empty():
+		var cur: Vector2i = stack[-1]
+		var next := []
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = cur + d
+			if n.x >= 0 and n.y >= 0 and n.x < cols and n.y < rows and not seen.has(n):
+				next.append(n)
+		if next.is_empty():
+			stack.pop_back()
+			continue
+		var n: Vector2i = next[rng.randi() % next.size()]
+		seen[n] = true
+		open[_pair(cur, n)] = true
+		stack.append(n)
+	for r in rows:
+		for c in cols - 1:
+			if rng.randf() < 0.2:
+				open[_pair(Vector2i(c, r), Vector2i(c + 1, r))] = true
+	for r in rows:
+		for c in cols:
+			var a := Vector2i(c, r)
+			var right := Vector2i(c + 1, r)
+			var down := Vector2i(c, r + 1)
+			var wx := ox + c * cw + cw - 2
+			if c < cols - 1:
+				if open.has(_pair(a, right)):
+					carve(wx, floor_of.call(r) - 4, 2, 4)
+				elif c > 1 and rng.randf() < 0.35:
+					# a wall that kills on touch
+					for y in range(floor_of.call(r) - 4, floor_of.call(r)):
+						for x in range(wx, wx + 2):
+							set_cell(x, y, 3)
+			if r < rows - 1 and open.has(_pair(a, down)):
+				var sx := ox + c * cw + 2 + rng.randi_range(0, cw - 8)
+				var top: int = floor_of.call(r) - 4
+				var bottom: int = floor_of.call(r + 1) - 1
+				carve(sx, top, 4, bottom - top + 1)
+				var side := 0
+				for ly in range(bottom - 2, top + 1, -2):
+					ledge(sx + (0 if side == 0 else 2), ly, 2)
+					side = 1 - side
+	spawn_cell = Vector2i(ox + 3, floor_of.call(0) - 1)
+	home_cell = Vector2i(ox, floor_of.call(0) - 1)
+
+static func _pair(a: Vector2i, b: Vector2i) -> String:
+	return "%s%s" % [a, b] if a < b else "%s%s" % [b, a]
 
 func _gen_arena() -> void:
 	_init_grid(64, 22)
@@ -356,7 +435,9 @@ func _draw() -> void:
 	for y in H:
 		for x in W:
 			var p := Vector2(x * T, y * T)
-			if solid(x, y):
+			if grid[idx(x, y)] == 3:
+				draw_texture(Art.deadly_tile(th), p)
+			elif solid(x, y):
 				var open_above := y > 0 and not solid(x, y - 1)
 				if open_above and (kind == "explore" or kind == "town") and y > surface[x]:
 					draw_texture(tiles[3], p)
@@ -441,10 +522,12 @@ func _weighted(list: Array) -> Array:
 	return list[0]
 
 func _populate_explore() -> void:
-	add_portal(Vector2i(2, surface[2] - 1), "town", "Town", Color("5cbf3f"))
+	if home_cell.x < 0:
+		home_cell = Vector2i(2, surface[2] - 1)
+	add_portal(home_cell, "town", "Town", Color("5cbf3f"))
 	var cells := floor_cells(10)
 	cells.shuffle()
-	var used := {}
+	var used := {home_cell: true}
 	var deep := []
 	for c in cells:
 		if c.y > 40 and c.x > W * 0.55:
@@ -487,6 +570,8 @@ func _populate_explore() -> void:
 		if placed >= int(def.count):
 			break
 		if absi(c.x - spawn_cell.x) < 14 and absi(c.y - spawn_cell.y) < 6:
+			continue
+		if touches_deadly(Rect2(c.x * T - 4, c.y * T - 8, T + 8, T + 8)):
 			continue
 		var m: Array = _weighted(def.mobs)
 		var hpm: float = (float(m[2]) if m.size() > 2 else 1.0) * mult

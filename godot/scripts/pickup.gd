@@ -65,6 +65,12 @@ func _collect() -> void:
 		level.number(position + Vector2(0, -10), "+%d coins" % n, Color("f2cf5b"))
 		queue_free()
 		return
+	if item == "gem":
+		Sfx.play("coin")
+		GS.add_item("gem", n, true)
+		level.number(position + Vector2(0, -10), "+%d gem%s" % [n, "" if n == 1 else "s"], Color("f0507a"))
+		queue_free()
+		return
 	var left := GS.add_item(item, n, true)
 	if left < n:
 		Sfx.play("pickup")

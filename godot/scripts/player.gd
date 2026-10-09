@@ -34,6 +34,8 @@ var invuln := 0.0
 var flash := 0.0
 var since_hurt := 99.0
 var regen := {"hp": 0.0, "mp": 0.0, "st": 0.0, "poison": 0.0}
+## Time on each ring's cooldown (Heartstone, Manastone and the rest restore a little now and then).
+var ring_t := {"ring_l": 0.0, "ring_r": 0.0}
 var msg_cd := 0.0
 var dead := false
 var body_sprite: Sprite2D
@@ -145,6 +147,12 @@ func _tick(delta: float, dir: float) -> void:
 		if GS.status[k] <= 0:
 			GS.status.erase(k)
 			GS.stats_changed.emit()
+	# the Tomb of Makara's deadly walls
+	if level.touches_deadly(hit_rect().grow(2.0)):
+		invuln = 0.0
+		hurt(9999, 0.0, position.x - facing)
+		if dead:
+			return
 	# poison: 1 damage + 1 more per 15 max health, every 2 seconds
 	if GS.has_status("poison"):
 		regen.poison += delta
@@ -164,6 +172,7 @@ func _tick(delta: float, dir: float) -> void:
 	_regen("mp", delta, 5.0)
 	if since_hurt > 8.0:
 		_regen("hp", delta, 12.0)
+	_ring_regen(delta)
 	# campfires heal
 	if level.structures_near(position, 40, "campfire"):
 		_regen("hp", delta, 2.0)
@@ -224,6 +233,28 @@ func _regen(stat: String, delta: float, every: float) -> void:
 		regen[stat] = 0.0
 		GS.set(stat, minf(mx, cur + 1))
 		GS.stats_changed.emit()
+
+func _ring_regen(delta: float) -> void:
+	if GS.has_status("poison") and GS.immune_to("poison"):
+		GS.status.erase("poison")
+		GS.stats_changed.emit()
+	for slot in ring_t:
+		var rid: String = GS.equip[slot]
+		var rg: Array = Data.ITEMS[rid].get("regen", []) if rid != "" else []
+		if rg.is_empty():
+			ring_t[slot] = 0.0
+			continue
+		ring_t[slot] += delta
+		if ring_t[slot] < float(rg[2]):
+			continue
+		ring_t[slot] = 0.0
+		var stat: String = rg[0]
+		var mx: float = GS.call("max_" + stat)
+		if GS.get(stat) < mx:
+			GS.set(stat, minf(mx, GS.get(stat) + int(rg[1])))
+			if stat == "hp":
+				level.number(position + Vector2(0, -26), "+%d" % int(rg[1]), Color("5cbf3f"))
+			GS.stats_changed.emit()
 
 func _say(text: String) -> void:
 	if msg_cd <= 0:
