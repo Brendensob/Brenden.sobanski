@@ -6,6 +6,18 @@ with all art redrawn in code, and nothing for sale.
 
 ## How to open it
 
+**On a Windows PC, the easy way:** open PowerShell (Start menu, type "PowerShell") and paste
+
+```
+irm https://raw.githubusercontent.com/Brendensob/Brenden.sobanski/main/setup-windows.ps1 | iex
+```
+
+It installs Git if needed, downloads Godot 4.3 and the game into a `PixelWilds` folder in
+your user folder, adds a **Pixel Wilds** shortcut to the desktop and opens the game in Godot.
+Press F5 to play. From then on, the desktop shortcut gets the newest version first.
+
+**By hand:**
+
 1. Install **Godot 4.3** or newer from https://godotengine.org (free, no account needed).
 2. Open Godot, click **Import**, and pick `project.godot` in this folder.
 3. Press **F5** (or the ▶ button) to play.
