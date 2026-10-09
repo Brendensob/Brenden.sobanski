@@ -1185,7 +1185,9 @@ func _build_panels() -> void:
 	_scroll(sh, Vector2(10, 40), Vector2(206, 190)).name = "Buy"
 	sh.add_child(_at(_label("Buy", 9, C_MUTED, true), Vector2(12, 26)))
 	_scroll(sh, Vector2(224, 40), Vector2(206, 190)).name = "Sell"
-	sh.add_child(_at(_label("Sell", 9, C_MUTED, true), Vector2(226, 26)))
+	var sell_head := _label("Sell", 9, C_MUTED, true)
+	sell_head.name = "SellHead"
+	sh.add_child(_at(sell_head, Vector2(226, 26)))
 
 	var bk := _panel("book", Vector2(440, 240), "Book")
 	_scroll(bk, Vector2(10, 28), Vector2(420, 202))
@@ -1600,6 +1602,7 @@ func _refresh_shop(npc_id: String) -> void:
 	_clear(buy)
 	_clear(sell)
 	var currency: String = shop.get("currency", "coins")
+	(p.get_node("SellHead") as Label).text = "Buy Gems" if shop.has("buy_gems") else "Sell"
 	for e in shop.sells:
 		var id: String = e[0]
 		var price: int = e[1]

@@ -254,6 +254,7 @@ func gems_and_characters() -> void:
 	await wait(0.1)
 	check(GS.gems == 0 and GS.count("silver_key") == sk + 3, "5 gems buy 3 Silver Keys")
 	GS.coins = Data.GEM_PRICE
+	main.hud._refresh_shop("gem_shop")
 	var gem_btn: Button = null
 	for row in main.hud.panels.shop.find_child("Sell", true, false).get_children():
 		if row is HBoxContainer and (row.get_child(1) as Label).text.begins_with("1 Gem"):
@@ -284,6 +285,7 @@ func gems_and_characters() -> void:
 	check(GS.look == "ninja" and GS.stat("atk") == atk0 + 9 and GS.stat("hp") == hp0 + 16, "the Ninja adds his attack and health (atk %d, hp %d)" % [GS.stat("atk"), GS.stat("hp")])
 	check(Data.ITEMS.ninja.desc.contains("Attack +9"), "a character's item lists its stats")
 	# the buns and the Ninja in game
+	main.level.player.invuln = 0.0 # no blinking in the pictures
 	for c in ["q_bun", "mad_bun", "nerd_bun"]:
 		GS.look = c
 		await wait(0.2)
