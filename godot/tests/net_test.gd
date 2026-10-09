@@ -229,7 +229,7 @@ func run_client() -> void:
 		await tap("attack")
 		await wait(1.1)
 	check(GS.flags.get("trade_wall", false), "the Torch burned the wall down")
-	p.position = lvl.cell_pos(Vector2i(26, 10))
+	p.position = lvl.cell_pos(Vector2i(9, lvl.TOWN_TOP - 1)) # inside the Trading Center
 	GS.add_item("rock", 3)
 	GS.coins = 100
 	Net.say("ready to trade")

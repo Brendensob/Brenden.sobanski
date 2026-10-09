@@ -1726,7 +1726,7 @@ func _enter_world(wid: String) -> void:
 		toast("You need at least %d stamina to enter the %s." % [w.min_st, w.name], "warn")
 		return
 	close_panels()
-	main.change_level(wid)
+	main.open_world(wid) # in town this opens the portal on the street
 
 # stations
 func open_station(s: Node) -> void:
