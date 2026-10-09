@@ -200,6 +200,100 @@ func new_monsters() -> void:
 
 ## The rest of Pixel Survival Game 2: the Tomb of Makara, Combo Books Z, ZX and U,
 ## the rings that restore health or mana, the Jade Ring, and Miffie's Daily Bounty.
+## Gems (the third currency), the Gem Shop and the characters' stats.
+func gems_and_characters() -> void:
+	await goto("town")
+	# gems are a currency like coins: they don't take a bag slot
+	var free0 := GS.inv.count(null)
+	var g0 := GS.gems
+	GS.add_item("gem", 3)
+	check(GS.gems == g0 + 3 and GS.inv.count(null) == free0 and GS.count("gem") == GS.gems, "gems are a currency and don't use bag space")
+	# where gems come from
+	var bosses_ok := true
+	for m in Data.MOBS:
+		var d: Dictionary = Data.MOBS[m]
+		if d.get("boss", false) and not d.drops.any(func(e): return e[0] == "gem"):
+			bosses_ok = false
+	check(bosses_ok, "every boss can drop gems")
+	var chest_gems: bool = Data.CHESTS.golden.loot.any(func(e): return e[0] == "gem") and Data.CHESTS.master.loot.any(func(e): return e[0] == "gem")
+	var seed_gems: bool = Data.SEED_LOOT.red_seeds.any(func(e): return e[0] == "gem") and Data.SEED_LOOT.golden_seeds.any(func(e): return e[0] == "gem")
+	check(chest_gems and seed_gems, "Golden and Master Chests and Red and Golden seeds give gems")
+	var quest_gems := 0
+	for q in Data.QUESTS:
+		quest_gems += int(q.reward.get("gem", 0))
+	check(quest_gems == 15, "Miffie's and the GateKeeper's quests give the original's 15 gems (%d)" % quest_gems)
+	# a boss drop lands as gems
+	main.level.drop("gem", 2, main.level.player.position + Vector2(0, -4))
+	await wait(1.0)
+	check(GS.gems == g0 + 5, "picking up a gem drop adds gems (%d)" % GS.gems)
+	# the Gem Shop opens from the gem next to the coins
+	var gb: TextureButton = main.hud.find_child("GemButton", true, false)
+	check(gb != null and gb.is_visible_in_tree(), "the gem counter is on screen")
+	gb.pressed.emit()
+	await wait(0.3)
+	check(main.hud.panels.shop.visible and main.hud.panels.shop.get_node("Title").text == "Gem Shop", "tapping the gem opens the Gem Shop")
+	await shot("24_gem_shop")
+	# keys come in threes for 5, 15 and 40 gems, like the original
+	var shop := Data.gem_shop()
+	var prices := {}
+	for e in shop.sells:
+		prices[e[0]] = [e[1], e[2]]
+	check(prices.silver_key == [5, 3] and prices.golden_key == [15, 3] and prices.master_key == [40, 3], "3 keys cost 5, 15 or 40 gems")
+	check(prices.ninja[0] == 2000 and prices.iron_bot[0] == 2000 and prices.cavemun[0] == 100 and prices.q_bun[0] == 300, "characters cost 100, 300, 800 or 2000 gems")
+	# buying with gems, and gems with coins
+	GS.gems = 5
+	var sk := GS.count("silver_key")
+	var buy_btn: Button = null
+	main.hud._refresh_shop("gem_shop")
+	for row in main.hud.panels.shop.find_child("Buy", true, false).get_children():
+		if row.get_child_count() > 2 and (row.get_child(1) as Label).text.begins_with("Silver Key"):
+			buy_btn = row.get_child(2)
+	check(buy_btn != null and not buy_btn.disabled, "the Silver Keys can be bought")
+	if buy_btn:
+		buy_btn.pressed.emit()
+	await wait(0.1)
+	check(GS.gems == 0 and GS.count("silver_key") == sk + 3, "5 gems buy 3 Silver Keys")
+	GS.coins = Data.GEM_PRICE
+	main.hud._refresh_shop("gem_shop")
+	var gem_btn: Button = null
+	for row in main.hud.panels.shop.find_child("Sell", true, false).get_children():
+		if row is HBoxContainer and (row.get_child(1) as Label).text.begins_with("1 Gem"):
+			gem_btn = row.get_child(2)
+	check(gem_btn != null and not gem_btn.disabled, "gems can be bought with Pixel Coins")
+	if gem_btn:
+		gem_btn.pressed.emit()
+	await wait(0.1)
+	check(GS.gems == 1 and GS.coins == 0, "1 gem costs %d coins" % Data.GEM_PRICE)
+	main.hud.close_panels()
+	# every character has art, an item, a gem price and stats
+	var chars_ok := true
+	for c in Data.CHARACTERS:
+		if not Art.LOOKS.has(c) or not Data.ITEMS.has(c) or not Data.CHARACTERS[c].has("gems"):
+			chars_ok = false
+	check(chars_ok and Data.CHARACTERS.size() >= 18, "all %d characters have art, an item and a price" % Data.CHARACTERS.size())
+	check(Data.CHARACTERS.has("q_bun") and Data.CHARACTERS.has("mad_bun") and Data.CHARACTERS.has("nerd_bun"), "the Q, Mad and Nerd Buns are in")
+	# a character's stats count on top of your gear
+	var look0 := GS.look
+	GS.look = "man_in_suit"
+	var atk0 := GS.stat("atk")
+	var hp0 := GS.stat("hp")
+	for i in GS.BAG:
+		if GS.inv[i] == null:
+			GS.inv[i] = {"id": "ninja", "n": 1}
+			GS.use_character(i)
+			break
+	check(GS.look == "ninja" and GS.stat("atk") == atk0 + 9 and GS.stat("hp") == hp0 + 16, "the Ninja adds his attack and health (atk %d, hp %d)" % [GS.stat("atk"), GS.stat("hp")])
+	check(Data.ITEMS.ninja.desc.contains("Attack +9"), "a character's item lists its stats")
+	# the buns and the Ninja in game
+	main.level.player.invuln = 0.0 # no blinking in the pictures
+	for c in ["q_bun", "mad_bun", "nerd_bun"]:
+		GS.look = c
+		await wait(0.2)
+		await shot("25_%s" % c)
+	GS.look = look0
+	GS.clamp_stats()
+	await wait(0.1)
+
 func psg2_complete() -> void:
 	# the Tomb of Makara needs 8 stamina
 	GS.equip.ring_l = ""
@@ -355,9 +449,9 @@ func psg2_complete() -> void:
 	check(bq.get("id", "").begins_with("bounty_") and bq.need.size() == 1, "Miffie gives a Daily Bounty Quest once her questline is done (%s)" % bq.get("text", ""))
 	for id in bq.need:
 		GS.add_item(id, 1)
-	var keys0 := GS.count("master_key") + GS.count("silver_key")
+	var keys0 := GS.count("master_key") + GS.gems
 	GS.complete_quest(bq)
-	check(GS.count("master_key") + GS.count("silver_key") > keys0 and GS.next_quest("mira").is_empty(), "the bounty pays keys, once a day")
+	check(GS.count("master_key") + GS.gems > keys0 and GS.next_quest("mira").is_empty(), "the bounty pays gems or a Master Key, once a day")
 	# the Topaz steps in Nina's and 2219 OOP's quests
 	var topaz := 0
 	for q in Data.QUESTS:
@@ -794,6 +888,7 @@ func run() -> void:
 		await shot("30_" + w)
 	await new_monsters()
 	await psg2_complete()
+	await gems_and_characters()
 	# survival at night
 	await goto("survival")
 	GS.clock = 0.85

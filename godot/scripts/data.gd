@@ -547,6 +547,7 @@ func _items_misc() -> void:
 	_item("golden_key", "Golden Key", "key", 0, "Opens a Golden Chest in Pixel Town.")
 	_item("master_key", "Master Key", "key", 0, "Opens the Master Chest in Pixel Town.")
 	_item("coin", "Pixel Coin", "coin", 0, "Money for the shops in Pixel Town.")
+	_item("gem", "Gem", "gem", 0, "The rare currency. Spend gems in the Gem Shop (the gem next to your coins). Bosses, Golden and Master Chests, Red and Golden Magic Seeds and Miffie's quests give them.")
 	_item("survival_token", "Survival Token", "token", 0, "Earned by surviving nights in Survival Grasslands. Trade them with the Miner.")
 	_item("green_seeds", "Magic Seeds (Green)", "seed", 20, "Plant in the soil behind the rock wall. Grows in 6 minutes.", {"grow": 360})
 	_item("red_seeds", "Magic Seeds (Red)", "seed", 60, "Plant in the soil behind the rock wall. Grows in 1 hour.", {"grow": 3600})
@@ -567,8 +568,9 @@ func _items_misc() -> void:
 	# characters: use one to change how you look (some come with a weapon)
 	for c in CHARACTERS:
 		var gives: String = CHARACTERS[c].get("gives", "")
-		var d := "A character. Use it to look like the %s" % CHARACTERS[c].name
+		var d := "A character. Use it to become the %s" % CHARACTERS[c].name
 		d += (" and get a %s." % ITEMS[gives].name) if gives != "" else "."
+		d += " " + character_stats_text(c)
 		_item(c, CHARACTERS[c].name, "character", 50, d + " The Crafter also makes hats from them.", {"look": c, "gives": gives})
 	# things you can place
 	_item("wood_wall", "Wood Wall", "place", 2, "Blocks monsters. Place it in front of you.", {"hp": 60})
@@ -579,16 +581,32 @@ func _items_misc() -> void:
 	_item("torch", "Torch Stand", "place", 2, "Lights up the night.")
 
 # ---------------------------------------------------------------- characters
+# Each character adds its own stats on top of your gear, and the Gem Shop sells
+# them in the original's price tiers (100, 300, 800 and 2000 gems). Nobody has
+# published Pixel Survival Game 2's character stats, so these follow the same
+# characters in Cowbeans' Pixel Survival Game 2.o (Badmun, Cavemun, Hook, Spi,
+# Da Ninja, Ironmun...), counted on top of its starting character; the rest are
+# estimates in the same tiers.
 # Man in Suit and Nurse are the starting choices. The others are unlocked from
 # quests, chests and monsters, and the Crafter turns them into hats.
 var CHARACTERS := {
-	"man_in_suit": {"name": "Man in Suit"}, "nurse": {"name": "Nurse"},
-	"cavemun": {"name": "Cavemun", "gives": "timber_club"}, "pirate": {"name": "Pirate", "gives": "gilded_blade"},
-	"the_spi": {"name": "The Spi", "gives": "azure_blade"}, "bad_man": {"name": "Bad Man"}, "school_girl": {"name": "School Girl"},
-	"soldier": {"name": "Soldier"}, "chuchu": {"name": "ChuChu"}, "drone": {"name": "Drone"}, "dark_knight": {"name": "Dark Knight"},
-	# in the original these two were gem-shop only; here they come from Master Chests
-	"ninja": {"name": "Ninja", "gives": "tsurugi"}, "iron_bot": {"name": "Iron Bot", "gives": "iron_fist"},
-	"backstreet_boy": {"name": "Backstreet Boy"}, "sailor_moons": {"name": "Sailor Moons"},
+	"man_in_suit": {"name": "Man in Suit", "gems": 0}, "nurse": {"name": "Nurse", "gems": 0},
+	"cavemun": {"name": "Cavemun", "gives": "timber_club", "gems": 100, "stats": {"def": 3, "mp": 1}},
+	"pirate": {"name": "Pirate", "gives": "gilded_blade", "gems": 100, "stats": {"atk": 4, "def": 1, "mp": 2}},
+	"bad_man": {"name": "Bad Man", "gems": 100, "stats": {"atk": 2, "def": 2, "mp": 3}},
+	"school_girl": {"name": "School Girl", "gems": 100, "stats": {"atk": 1, "def": 2, "mp": 12}},
+	"backstreet_boy": {"name": "Backstreet Boy", "gems": 100, "stats": {"atk": 3, "def": 3, "hp": 6, "mp": 3}},
+	"the_spi": {"name": "The Spi", "gives": "azure_blade", "gems": 300, "stats": {"atk": 1, "def": 1, "hp": 8, "mp": 4}},
+	"soldier": {"name": "Soldier", "gems": 300, "stats": {"def": 5, "hp": 4, "mp": 6}},
+	"chuchu": {"name": "ChuChu", "gems": 300, "stats": {"atk": 2, "def": 3, "hp": 4, "mp": 8}},
+	"sailor_moons": {"name": "Sailor Moons", "gems": 300, "stats": {"atk": 1, "def": 2, "hp": 4, "mp": 12}},
+	"q_bun": {"name": "Q Bun", "gems": 300, "stats": {"atk": 2, "def": 2, "hp": 6, "mp": 6}},
+	"mad_bun": {"name": "Mad Bun", "gems": 300, "stats": {"atk": 4, "def": 1, "hp": 4, "mp": 4}},
+	"nerd_bun": {"name": "Nerd Bun", "gems": 300, "stats": {"atk": 1, "def": 2, "hp": 4, "mp": 10}},
+	"drone": {"name": "Drone", "gems": 800, "stats": {"atk": 2, "def": 5, "hp": 10, "mp": 10}},
+	"dark_knight": {"name": "Dark Knight", "gems": 800, "stats": {"atk": 6, "def": 3, "hp": 8, "mp": 10}},
+	"ninja": {"name": "Ninja", "gives": "tsurugi", "gems": 2000, "stats": {"atk": 9, "def": 5, "hp": 16, "mp": 14}},
+	"iron_bot": {"name": "Iron Bot", "gives": "iron_fist", "gems": 2000, "stats": {"atk": 5, "def": 9, "hp": 16, "mp": 14}},
 }
 const START_CHARACTERS := ["man_in_suit", "nurse"]
 
@@ -1098,6 +1116,9 @@ var MOBS := {}
 func _mob(id: String, name: String, look: String, hp: Array, dmg: int, ai: String, drops: Array, extra: Dictionary = {}) -> void:
 	var d := {"name": name, "look": look, "hp": hp, "dmg": dmg, "ai": ai, "drops": drops, "speed": 34.0}
 	d.merge(extra, true)
+	# the wiki lists "Gem (1 or 2)" in most bosses' drops (the chance is a placeholder)
+	if d.get("boss", false) and not drops.any(func(e): return e[0] == "gem"):
+		d.drops = drops + [["gem", 0.1, 1, 2]]
 	MOBS[id] = d
 
 func _ready() -> void:
@@ -1338,27 +1359,26 @@ var QUESTS := [
 		"text": "Make a Wood Wall (Wood + Rock in the combination slots) and give it to me. You'll get the Survival Book and access to Survival Grasslands."},
 	{"id": "warden_1", "npc": "warden", "need": {"pretzel": 1}, "reward": {}, "unlock": "furnaces",
 		"text": "Bring me a Pretzel (Honey Bug + Herb, from Combo Book I) and I'll open the gate to the furnaces."},
-	# Miffie's questline in the original's order. Gems don't exist here, so quests
-	# that gave gems give that many Silver Keys instead.
+	# Miffie's questline in the original's order, with the original's gem rewards.
 	{"id": "mira_1", "npc": "mira", "need": {"jelly": 10}, "reward": {"combo_book_1": 1}, "text": "Could you bring me 10 Jellies? Slimes in the Grasslands drop them."},
 	{"id": "mira_2", "npc": "mira", "need": {"jelly": 50}, "reward": {"combo_book_2": 1}, "text": "More jelly! 50 this time."},
 	{"id": "mira_3", "npc": "mira", "need": {"copper_bar": 10}, "take": {"copper_bar": 5}, "reward": {"gilded_blade": 1}, "text": "Bring me 10 Copper Bars from the furnace."},
 	{"id": "mira_4", "npc": "mira", "need": {"iron_bar": 10}, "take": {"iron_bar": 5}, "reward": {"azure_blade": 1}, "text": "Now 10 Iron Bars, please."},
-	{"id": "mira_5", "npc": "mira", "need": {"nail": 50}, "reward": {"silver_key": 1}, "text": "I need 50 Nails."},
-	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"silver_key": 1}, "text": "Could I have a Golden Night?"},
-	{"id": "mira_7", "npc": "mira", "need": {"catalyst": 10}, "reward": {"silver_key": 1}, "text": "10 Catalysts, please."},
+	{"id": "mira_5", "npc": "mira", "need": {"nail": 50}, "reward": {"gem": 1}, "text": "I need 50 Nails."},
+	{"id": "mira_6", "npc": "mira", "need": {"gilded_blade": 1}, "reward": {"gem": 1}, "text": "Could I have a Golden Night?"},
+	{"id": "mira_7", "npc": "mira", "need": {"catalyst": 10}, "reward": {"gem": 1}, "text": "10 Catalysts, please."},
 	{"id": "mira_8", "npc": "mira", "need": {"crystal": 10}, "reward": {"brass_helmet": 1}, "text": "Bring me 10 Crystals."},
 	{"id": "mira_9", "npc": "mira", "need": {"scarab": 99}, "reward": {"pirate": 1}, "text": "99 Scarabs. I know, I know."},
 	{"id": "mira_10", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"bad_man": 1}, "text": "99 Stink Bugs. Hold your nose."},
 	{"id": "mira_11", "npc": "mira", "need": {"honey_bug": 99}, "reward": {"pirate": 1}, "text": "99 Honey Bugs."},
 	{"id": "mira_12", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"soldier": 1}, "text": "99 Fire Bugs."},
-	{"id": "mira_13", "npc": "mira", "need": {"gold_shield": 1}, "reward": {"silver_key": 1}, "text": "I'd love a Gold Shield."},
-	{"id": "mira_14", "npc": "mira", "need": {"dust": 1000}, "reward": {"silver_key": 5}, "text": "Dust! I need 1000 Dust."},
+	{"id": "mira_13", "npc": "mira", "need": {"gold_shield": 1}, "reward": {"gem": 1}, "text": "I'd love a Gold Shield."},
+	{"id": "mira_14", "npc": "mira", "need": {"dust": 1000}, "reward": {"gem": 5}, "text": "Dust! I need 1000 Dust."},
 	{"id": "mira_15", "npc": "mira", "need": {"silver_bar": 25}, "reward": {"master_key": 1}, "text": "25 Silver Bars."},
 	{"id": "mira_16", "npc": "mira", "need": {"jelly": 99}, "reward": {"alien_hat": 1}, "text": "99 Jellies, for old times' sake."},
 	{"id": "mira_17", "npc": "mira", "need": {"living_flame": 10}, "reward": {"purple_egg": 1}, "text": "10 Firas from the furnace."},
-	{"id": "mira_18", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"silver_key": 2}, "text": "99 Stink Bugs again."},
-	{"id": "mira_19", "npc": "mira", "need": {"scarab": 99}, "reward": {"silver_key": 3}, "text": "99 Scarabs again."},
+	{"id": "mira_18", "npc": "mira", "need": {"stink_bug": 99}, "reward": {"gem": 2}, "text": "99 Stink Bugs again."},
+	{"id": "mira_19", "npc": "mira", "need": {"scarab": 99}, "reward": {"gem": 3}, "text": "99 Scarabs again."},
 	{"id": "mira_20", "npc": "mira", "need": {"fire_bug": 99}, "reward": {"combo_book_3": 1}, "text": "99 more Fire Bugs and you'll get Combo Book III."},
 	{"id": "mira_21", "npc": "mira", "need": {"dust": 1000}, "reward": {"master_key": 3}, "text": "1000 Dust, one more time."},
 	{"id": "mira_22", "npc": "mira", "need": {"gold_bar": 50}, "reward": {"master_key": 3}, "text": "50 Gold Bars."},
@@ -1415,7 +1435,7 @@ var QUESTS := [
 	{"id": "oop_4", "npc": "oop_2219", "need": {"volcanic_bar": 25}, "reward": {"survival_token": 5}, "text": "REQUIRE 25 VOLCANIC BARS."},
 	{"id": "oop_5", "npc": "oop_2219", "need": {"iron_fist_3": 1}, "reward": {"iron_fist_4": 1}, "text": "INSERT IRON FIST III."},
 	# the GateKeeper turns up again in Hell 2, missing his mask
-	{"id": "mask_1", "npc": "warden_hell", "need": {"green_face": 1}, "reward": {"silver_key": 1}, "unlock": "em_shop",
+	{"id": "mask_1", "npc": "warden_hell", "need": {"green_face": 1}, "reward": {"gem": 1}, "unlock": "em_shop",
 		"text": "I lost my mask somewhere down here... Bring me a Green Face and I'll sell you Em Stones."},
 ]
 
@@ -1434,9 +1454,31 @@ func bounty_quest(day: int) -> Dictionary:
 	rng.seed = day * 7919 + 17
 	var want: String = pool[rng.randi() % pool.size()]
 	var early: bool = int(ITEMS[want].sell) < 200
-	_bounty[day] = {"id": "bounty_%d" % day, "npc": "mira", "need": {want: 1}, "reward": {"silver_key": 5} if early else {"master_key": 1},
-		"text": "For today's Bounty Quest... Please bring me 1 %s! Reward will be %s!" % [ITEMS[want].name, "5 Silver Keys" if early else "1 Master Key"]}
+	_bounty[day] = {"id": "bounty_%d" % day, "npc": "mira", "need": {want: 1}, "reward": {"gem": 5} if early else {"master_key": 1},
+		"text": "For today's Bounty Quest... Please bring me 1 %s! Reward will be %s!" % [ITEMS[want].name, "5 Gems" if early else "1 Master Key"]}
 	return _bounty[day]
+
+## "Attack +9, Defense +5, ..." for a character, or that it has the starting stats.
+func character_stats_text(c: String) -> String:
+	var st: Dictionary = CHARACTERS[c].get("stats", {})
+	var parts := []
+	for k in ["atk", "def", "hp", "mp"]:
+		if st.get(k, 0) > 0:
+			parts.append("%s +%d" % [{"atk": "Attack", "def": "Defense", "hp": "Health", "mp": "Mana"}[k], st[k]])
+	return ("Character stats: " + ", ".join(parts) + ".") if parts.size() > 0 else "Starting stats."
+
+## The Gem Shop: keys in threes like the original (5, 15 and 40 gems), every
+## character at its tier price, and gems for Pixel Coins.
+func gem_shop() -> Dictionary:
+	var sells := [["silver_key", 5, 3], ["golden_key", 15, 3], ["master_key", 40, 3], ["combination_scroll", 10, 1], ["red_seeds", 20, 1], ["golden_seeds", 50, 1]]
+	var chars := CHARACTERS.keys().filter(func(c): return CHARACTERS[c].gems > 0)
+	chars.sort_custom(func(a, b): return CHARACTERS[a].gems < CHARACTERS[b].gems)
+	for c in chars:
+		sells.append([c, CHARACTERS[c].gems, 1])
+	return {"title": "Gem Shop", "currency": "gem", "sells": sells, "buys": false, "buy_gems": GEM_PRICE}
+
+## What one gem costs in Pixel Coins at the Gem Shop.
+const GEM_PRICE := 2500
 
 # Shops: what each villager sells, and for how many coins (or tokens).
 var SHOPS := {
@@ -1468,6 +1510,7 @@ var CHESTS := {
 		["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["soldier", 1, 1, 0.2], ["pirate", 1, 1, 0.2],
 		["cc_ball_1", 3, 8], ["wk_missile_1", 3, 8], ["snow_ball", 5, 10], ["pistol", 1, 1, 0.3], ["backstreet_boy", 1, 1, 0.2]]},
 	"golden": {"name": "Golden Chest", "key": "golden_key", "rolls": 2, "loot": [
+		["gem", 1, 3, 2],
 		["timber_club", 1, 1], ["gilded_blade", 1, 1], ["azure_blade", 1, 1], ["fire_brand", 1, 1], ["violet_edge", 1, 1], ["excalibur", 1, 1],
 		["bow", 1, 1], ["long_sword", 1, 1], ["plunger", 1, 1], ["magic_wand", 1, 1], ["fire_staff", 1, 1, 0.5], ["knights_blade", 1, 1],
 		["kings_mace", 1, 1, 0.3], ["moon_blade", 1, 1, 0.3], ["poison_ivy", 1, 1, 0.3], ["glow_blade_red", 1, 1], ["glow_blade_blue", 1, 1],
@@ -1481,6 +1524,7 @@ var CHESTS := {
 		["blue_staff", 1, 1, 0.5], ["laser_gun", 1, 1, 0.5], ["pistol", 1, 1], ["rolva", 1, 1, 0.5], ["long_sword_shield", 1, 1, 0.5], ["sapphire_long_sword", 1, 1, 0.3],
 		["firecracker_blade", 1, 1, 0.3], ["steel_bow", 1, 1, 0.3], ["backstreet_boy", 1, 1, 0.3]]},
 	"master": {"name": "Master Chest", "key": "master_key", "rolls": 1, "loot": [
+		["gem", 2, 5, 3],
 		["pole_axe", 1, 1], ["combo_sword", 1, 1], ["moon_blade", 1, 1], ["moon_blade_2", 1, 1], ["moon_blade_3", 1, 1], ["twin_sun", 1, 1],
 		["devil_spike", 1, 1], ["golden_long_sword", 1, 1], ["copper_faceguard", 1, 1], ["tank_shield", 1, 1], ["iron_armor", 1, 1], ["golden_armor", 1, 1],
 		["gold_shield", 1, 1], ["blue_shield", 1, 1], ["armor_ring_2", 1, 1], ["armor_ring_3", 1, 1], ["jade_ring", 1, 1], ["blood_diamond_armor", 1, 1],
@@ -1515,13 +1559,13 @@ var SEED_LOOT := {
 		["coin", 200, 800], ["survival_token", 1, 3], ["silver_ore", 3, 6]],
 	"red_seeds": [["green_seeds", 1, 3], ["red_seeds", 1, 1], ["silver_key", 1, 2], ["golden_key", 1, 1], ["master_key", 1, 1, 0.2], ["armor_bug", 1, 2],
 		["power_bug", 1, 2], ["hero_bug", 1, 1, 0.3], ["small_evil_crystal", 1, 2], ["evil_crystal", 1, 1, 0.3], ["purple_egg", 1, 1, 0.3],
-		["queen_egg", 1, 1, 0.1], ["gold_bar", 1, 3], ["erbium_bar", 1, 2], ["survival_token", 2, 5]],
-	"golden_seeds": [["golden_seeds", 1, 1, 0.3], ["red_seeds", 1, 2], ["master_key", 1, 1], ["golden_key", 1, 2], ["erbium", 3, 6], ["volcanic_ore", 1, 1, 0.3]],
+		["queen_egg", 1, 1, 0.1], ["gold_bar", 1, 3], ["erbium_bar", 1, 2], ["survival_token", 2, 5], ["gem", 1, 2, 0.5]],
+	"golden_seeds": [["golden_seeds", 1, 1, 0.3], ["red_seeds", 1, 2], ["master_key", 1, 1], ["golden_key", 1, 2], ["erbium", 3, 6], ["volcanic_ore", 1, 1, 0.3], ["gem", 1, 3]],
 }
 
 # The Daily Free Gift in Pixel Town (one roll a day): seeds, keys, potions and characters.
 var DAILY_GIFT := [["green_seeds", 1, 1, 2], ["red_seeds", 1, 1, 0.5], ["silver_key", 1, 1, 1.5], ["golden_key", 1, 1, 0.4],
-	["small_potion", 3, 5, 2], ["potion", 2, 3, 1], ["combination_scroll", 1, 1, 0.5], ["coin", 100, 500, 2],
+	["small_potion", 3, 5, 2], ["potion", 2, 3, 1], ["combination_scroll", 1, 1, 0.5], ["coin", 100, 500, 2], ["gem", 1, 2, 0.5],
 	["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["pirate", 1, 1, 0.2], ["soldier", 1, 1, 0.2]]
 
 func pick_loot(table: Array) -> Array:

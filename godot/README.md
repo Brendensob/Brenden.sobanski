@@ -192,9 +192,20 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 **Characters**
 - A new game starts as the Man in Suit or the Nurse.
 - Cavemun, Pirate, The Spi, Bad Man, School Girl, Soldier, ChuChu, Drone, Dark Knight,
-  Backstreet Boy and Sailor Moons
-  drop from monsters, bosses and chests. Use one to look like that character. Cavemun,
-  Pirate and The Spi also give their weapon (Wood King, Golden Night, Blue Night).
+  Backstreet Boy and Sailor Moons drop from monsters, bosses and chests. Every character,
+  including the Ninja, the Iron Bot and the Q, Mad and Nerd Buns, is also in the Gem Shop.
+  Use one to become that character. Each character adds its own attack, defense, health and
+  mana on top of your gear (the item's description lists them). Cavemun, Pirate and The Spi
+  also give their weapon (Wood King, Golden Night, Blue Night), the Ninja the Tsurugi and the
+  Iron Bot the Iron Fist.
+
+**Currencies**: Pixel Coins, Survival Tokens and Gems. Gems show under your coins; tap them
+for the Gem Shop, which sells 3 Silver, Golden or Master Keys for 5, 15 or 40 gems, every
+character (100, 300, 800 or 2,000 gems, the original's tiers), Combination Scrolls and Magic
+Seeds. Gems come from bosses (1 or 2, rarely), Golden and Master Chests, Red and Golden Magic
+Seeds, the Daily Free Gift, Miffie's quests and her daily bounty, and the GateKeeper's mask
+quest. In place of the original's real-money gem packs, the Gem Shop sells gems for 2,500
+Pixel Coins each.
 - The Crafter turns characters into hats: Bear Head, Dark Night, Green Face, Soldier Helmet,
   SPY Mask, The Fly, Trooper Pro, Bad Mask, Chuu Hat, Pirate Hat, Cool Hat, Roman Hat and
   Storm Hat. Helmets and armor show on your character.
@@ -270,12 +281,13 @@ separate Pixel Survival Game 2.o.
 Item, character, villager and monster names match the original. Iron Man is the Iron Bot
 here. Tomb of Makara monster health, the shields and upgrades the wiki lists without
 numbers, the Missing Page recipe, which egg each new pet hatches from, and the tier V
-Tsurugi and Iron Fist are estimates. The Ninja and Iron Bot were gem-shop characters in the original; here
-they come out of Master Chests. The wiki doesn't say which night gives the Wall Hammer, so
+Tsurugi and Iron Fist are estimates. The Ninja and Iron Bot also come out of Master Chests. Nobody
+has published Pixel Survival Game 2's character stats, so they follow the same characters in
+Cowbeans' Pixel Survival Game 2.o (Badmun, Cavemun, Hook, Spi, Skull Knight, Da Ninja, Ironmun...),
+counted on top of its starting character. The other characters' stats, the Gem Shop's seed and
+scroll prices and the coin price of a gem are estimates. The wiki doesn't say which night gives the Wall Hammer, so
 night 10 is a guess.
 No sprites were copied: every sprite is drawn in code to look like the original's style.
-Gems and the gem shop were left out on purpose: quests that gave gems give that many
-Silver Keys instead.
 
 The screen layout, bag, combining panel, Crafter tabs, sky clock, furnace row and chest
 signboards follow the game's official trailer and App Store screenshots. The main menu's
@@ -313,7 +325,6 @@ and `godot --path . -- --nettest client`.
 ## Not built yet
 
 - Public rooms for strangers (rooms are friends-only)
-- Characters from later updates (the buns)
 - The "Halloween?" Combo Book Z recipe (the wiki doesn't say what it makes)
 - Phone app export (set it up from **Project → Export** in Godot)
 

@@ -102,6 +102,13 @@ const LOOKS := {
 		"over": [[2, 1, ["..hhhhhhh..", ".hhHhhhHhhh", "hhh......hh"]]]},
 	"sailor_moons": {"h": "f2cf5b", "H": "c99a2e", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "d8433a",
 		"over": [[0, 2, ["hh........hh", "hHh......hHh", "hh........hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [0, 11, ["hh"]], [10, 9, ["hh"]], [10, 10, ["hh"]], [10, 11, ["hh"]]]},
+	# the buns: bunny ears over a furry head
+	"q_bun": {"p": "f5a0b8", "h": "f2efe6", "H": "d8d0c0", "s": "f2efe6", "S": "d8d0c0", "e": "1b1a24", "c": "f08ac8", "C": "c05a98", "v": "f2efe6", "t": "f08ac8", "q": "f2efe6", "f": "f08ac8", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 10, ["pp"]]]},
+	"mad_bun": {"h": "8a8f99", "H": "5c616b", "s": "a8b0bc", "S": "8a8f99", "e": "d8433a", "c": "2a2a30", "C": "1b1a24", "v": "d8433a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hr..hr.", ".hr..hr.", ".hH..hH."]], [4, 8, ["kk..kk"]]]},
+	"nerd_bun": {"p": "f5a0b8", "h": "c8865a", "H": "8a5a32", "s": "e2b08a", "S": "c8865a", "e": "1b1a24", "c": "3b5dc9", "C": "2c4596", "v": "f2efe6", "t": "f2cf5b", "q": "4a4a5a", "f": "3a2a22", "hair": "bald",
+		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 9, ["kkkkkk"]]]},
 	# villagers
 	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
 		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
@@ -1077,6 +1084,7 @@ func icon_spec(id: String) -> Array:
 		"torch": return ["torch_i", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
 		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
+		"gem": return ["gem", {"X": "f0507a", "x": "a8284a"}]
 		"combination_scroll": return ["scroll", {"X": "a77ee0"}]
 		"missing_page": return ["scroll", {"X": "1b1a24"}]
 		"missing_page_u": return ["scroll", {"X": "d8433a"}]

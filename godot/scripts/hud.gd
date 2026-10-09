@@ -13,6 +13,7 @@ var hotbar_slots: Array = []
 var bars: Control
 var clock: Control
 var coin_label: Label
+var gem_label: Label
 var day_label: Label
 var info_label: Label
 var status_label: Label
@@ -333,6 +334,22 @@ func _build_hud() -> void:
 	coin_label = _outlined(_label("0", 9, Color("5ce0d0"), true))
 	coin_box.add_child(coin_label)
 	hud_root.add_child(coin_box)
+	# gems under the coins; tap them for the Gem Shop
+	var gem_box := HBoxContainer.new()
+	gem_box.name = "GemBox"
+	gem_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	gem_box.position = Vector2(37, 26)
+	gem_box.add_theme_constant_override("separation", 2)
+	var gem_btn := _icon_button(Art.icon("gem"), Vector2(9, 9), func(): open_gem_shop())
+	gem_btn.name = "GemButton"
+	gem_box.add_child(gem_btn)
+	gem_label = _outlined(_label("0", 9, Color("f08aa0"), true))
+	gem_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	gem_label.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			open_gem_shop())
+	gem_box.add_child(gem_label)
+	hud_root.add_child(gem_box)
 	info_label = _outlined(_label("", 8, C_YELLOW, true))
 	info_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	info_label.position = Vector2(-80, 36)
@@ -511,6 +528,7 @@ func _process(_d: float) -> void:
 func _refresh_stats() -> void:
 	bars.queue_redraw()
 	coin_label.text = str(GS.coins)
+	gem_label.text = str(GS.gems)
 
 func _refresh() -> void:
 	for i in GS.HOTBAR:
@@ -1167,7 +1185,9 @@ func _build_panels() -> void:
 	_scroll(sh, Vector2(10, 40), Vector2(206, 190)).name = "Buy"
 	sh.add_child(_at(_label("Buy", 9, C_MUTED, true), Vector2(12, 26)))
 	_scroll(sh, Vector2(224, 40), Vector2(206, 190)).name = "Sell"
-	sh.add_child(_at(_label("Sell", 9, C_MUTED, true), Vector2(226, 26)))
+	var sell_head := _label("Sell", 9, C_MUTED, true)
+	sell_head.name = "SellHead"
+	sh.add_child(_at(sell_head, Vector2(226, 26)))
 
 	var bk := _panel("book", Vector2(440, 240), "Book")
 	_scroll(bk, Vector2(10, 28), Vector2(420, 202))
@@ -1559,12 +1579,22 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 	p.get_node("Text").text = text
 
 # shops
+func open_gem_shop() -> void:
+	if main.on_title():
+		return
+	open_shop("gem_shop")
+
+## Things bought in a stack that didn't all fit land at your feet.
+func _drop_extra(id: String, n: int) -> void:
+	if main.level and main.level.player:
+		main.level.drop(id, n, main.level.player.position)
+
 func open_shop(npc_id: String) -> void:
 	open_panel("shop")
 	_refresh_shop(npc_id)
 
 func _refresh_shop(npc_id: String) -> void:
-	var shop: Dictionary = Data.SHOPS[npc_id]
+	var shop: Dictionary = Data.gem_shop() if npc_id == "gem_shop" else Data.SHOPS[npc_id]
 	var p: Panel = panels.shop
 	p.get_node("Title").text = shop.title
 	var buy: VBoxContainer = p.find_child("Buy", true, false)
@@ -1572,12 +1602,15 @@ func _refresh_shop(npc_id: String) -> void:
 	_clear(buy)
 	_clear(sell)
 	var currency: String = shop.get("currency", "coins")
+	(p.get_node("SellHead") as Label).text = "Buy Gems" if shop.has("buy_gems") else "Sell"
 	for e in shop.sells:
 		var id: String = e[0]
 		var price: int = e[1]
+		var qty: int = e[2] if e.size() > 2 else 1
 		var have: int = GS.coins if currency == "coins" else GS.count(currency)
-		var unit := "c" if currency == "coins" else " tokens"
-		buy.add_child(_row(id, "%s  %d%s" % [Data.ITEMS[id].name, price, unit], "Buy", have >= price, func():
+		var unit: String = {"coins": "c", "gem": " gems", "survival_token": " tokens"}.get(currency, "")
+		var label: String = ("%s x%d" % [Data.ITEMS[id].name, qty]) if qty > 1 else Data.ITEMS[id].name
+		buy.add_child(_row(id, "%s  %d%s" % [label, price, unit], "Buy", have >= price, func():
 			if not GS.has_room(id):
 				toast("Inventory full.", "warn")
 				return
@@ -1585,10 +1618,25 @@ func _refresh_shop(npc_id: String) -> void:
 				GS.coins -= price
 			else:
 				GS.remove_item(currency, price)
-			GS.add_item(id)
+			var left := GS.add_item(id, qty, true)
+			if left > 0:
+				_drop_extra(id, left)
 			GS.stats_changed.emit()
-			toast("%s obtained" % Data.ITEMS[id].name)
+			toast(("%s x%d obtained" % [Data.ITEMS[id].name, qty]) if qty > 1 else "%s obtained" % Data.ITEMS[id].name)
 			_refresh_shop(npc_id)))
+	if shop.has("buy_gems"):
+		# gems for Pixel Coins, in place of the original's real-money gem packs
+		var gp: int = shop.buy_gems
+		sell.add_child(_wrap("You have %d gems. Buy gems with Pixel Coins:" % GS.gems, 190, C_MUTED))
+		for n in [1, 5, 20]:
+			var cost: int = gp * n
+			sell.add_child(_row("gem", "%d Gem%s  %dc" % [n, "" if n == 1 else "s", cost], "Buy", GS.coins >= cost, func():
+				GS.coins -= cost
+				GS.add_item("gem", n, true)
+				Sfx.play("coin")
+				toast("+%d Gem%s" % [n, "" if n == 1 else "s"])
+				_refresh_shop(npc_id)))
+		return
 	if not shop.get("buys", false):
 		sell.add_child(_wrap("This shop doesn't buy anything.", 190, C_MUTED))
 		return
