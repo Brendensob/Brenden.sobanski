@@ -564,10 +564,46 @@ func _build_touch() -> void:
 		add_child(t)
 		touch_nodes.append(t)
 	force_touch = "--touch" in OS.get_cmdline_user_args()
-	hint_label.visible = not _touch()
+	hint_label.visible = not DisplayServer.is_touchscreen_available() and not force_touch
+	hint_label.text = "Click or J: hit (A)   Space or K: jump (B)   A/D: move   E: bag   1-5: hotbar"
 
+## The A, B and arrow buttons show on every screen, like the original.
 func _touch() -> bool:
-	return force_touch or DisplayServer.is_touchscreen_available()
+	return true
+
+# ---------------------------------------------------------------- mouse
+var _mouse_action := ""
+
+## On a computer the on-screen buttons work with the mouse too, and clicking
+## anywhere in the world hits (A). Touches on a phone already press the buttons,
+## so the mouse clicks a phone makes up from them are skipped.
+func _input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton) or event.button_index != MOUSE_BUTTON_LEFT or event.device == InputEvent.DEVICE_ID_EMULATION:
+		return
+	if event.pressed:
+		for t in touch_nodes:
+			if t.visible and _touch_rect(t).has_point(event.position):
+				_mouse_press(t.action)
+				get_viewport().set_input_as_handled()
+				return
+	elif _mouse_action != "":
+		Input.action_release(_mouse_action)
+		_mouse_action = ""
+
+func _unhandled_input(event: InputEvent) -> void:
+	# a click that no menu or button took: hit
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed \
+			and event.device != InputEvent.DEVICE_ID_EMULATION and not main.on_title() and not main.input_blocked():
+		_mouse_press("attack")
+
+func _mouse_press(action: String) -> void:
+	if _mouse_action != "":
+		Input.action_release(_mouse_action)
+	_mouse_action = action
+	Input.action_press(action)
+
+func _touch_rect(t: TouchScreenButton) -> Rect2:
+	return Rect2(t.global_position, t.texture_normal.get_size() * t.global_scale)
 
 func _layout_touch() -> void:
 	var vs := get_viewport().get_visible_rect().size
@@ -1067,7 +1103,8 @@ func _build_panels() -> void:
 	cols.position = Vector2(10, 28)
 	cols.add_theme_constant_override("separation", 8)
 	m.add_child(cols)
-	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 418, C_MUTED, 8), Vector2(10, 172)))
+	# the note sits in the Survival column, under its one button
+	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 134, C_MUTED, 8), Vector2(294, 96)))
 
 	var ch := _panel("chat", Vector2(320, 150), "Chat")
 	var lines := _wrap("", 300, C_INK, 8)

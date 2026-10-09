@@ -28,7 +28,7 @@ Press F5 to play. From then on, the desktop shortcut gets the newest version fir
 |---|---|---|
 | Move | A / D or arrow keys | ◀ ▶ buttons |
 | Jump (B) | K, Space, W or Up | B button |
-| Use what you hold (A) | J, X or Enter | A button |
+| Use what you hold (A) | Click, J, X or Enter | A button |
 | Bag and combining | E | Backpack (top right) |
 | Pick hotbar slot | 1 to 5 | Tap the slot |
 | Menu (save and leave) | Esc | Compass (right side) |
@@ -42,8 +42,12 @@ attacking. Holding A while you open the bag turns on auto-attack until you press
 
 **Jumping and swinging, timed from the official trailer frame by frame.** B shoots you up
 about two blocks in a tenth of a second while your character does one full flip, then you
-float down slowly (about 0.8 seconds in the air). Thin ledges can be jumped up through from
-below. A swing snaps the blade up, slams it down past level, holds it low for a moment and
+float down slowly (about 0.8 seconds in the air). Press B again in the air to jump again:
+each jump in the air uses one point of the green bar, so a full bar is that many extra jumps
+(double, triple and up). Thin ledges can be jumped up through from below.
+
+The red A, green B and grey arrow buttons show on every screen, like the original. On a
+computer you can click them, and clicking anywhere in the world hits. A swing snaps the blade up, slams it down past level, holds it low for a moment and
 brings it back; the body stays still.
 
 **Sound.** 8-bit sound effects for swings, hits, chopping, mining, jumping, pickups, coins,
@@ -138,11 +142,22 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 ## What's in it
 
 **Worlds** (opened by the Gatekeeper in Pixel Town)
-- Exploration: Grasslands 1–3, Darklands 1–2, Hell 1–2, Ice Cavern. Big generated maps with
+- Exploration: Grasslands 1–3, Darklands 1–2, Hell 1–2, Ice Cavern, Modina Ruins, Nightmare
+  Valley, Forbidden City and Snow Valley. Big generated maps with
   caves, pits and ledges. Monsters and resources are placed in advance. Deeper levels are
   reached through a purple portal hidden underground. Some levels have a daily Reward Chest.
-- Arenas: Grasslands, Darklands, Hell, Dream and Ghost Arena. Monsters keep coming and the
-  bosses arrive after 3 minutes.
+- Arenas: Grasslands, Darklands, Hell, Dream and Ghost Arena, Mushroom Valley, Fruit Loop and
+  Eggcellence. Monsters keep coming and the bosses arrive after 3 minutes.
+- The later worlds have the original's monsters and bosses: Golden Slugs, Phantom
+  Butterflies and Modina in Modina Ruins; Demon Eyes, Demon Angels, Demon Bats and Doom in
+  Nightmare Valley; An An, Ji Ji, He He, Ravens and the Fortune Boss in the Forbidden City;
+  Grinches, Snow Turtles, Liches, Fairies, Modina 2 and Evil Santa in Snow Valley; the fruits and
+  the Pineapple Killer in Fruit Loop; the cracked eggs, chicks and Harakattu in Eggcellence.
+  Their exclusive drops are in too: Blue Blades, Nightmare Ore and Ingots, Dark Hearts,
+  Forbidden Stones, Honey and Eggency, plus Modina swords and dresses, Long Lances, Hell
+  Spikes (which also mine), Nightmare Blades, Hazard Wipe and the Santa Blade. Volcanic rock
+  shows up in the late worlds. In Snow Valley monsters hit 40 harder below 160 defense, and
+  in Eggcellence they always do.
 - Survival Grasslands: a long corridor where monsters attack from both sides at night.
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
@@ -199,7 +214,10 @@ rates, smelting recipes and times, tool hits, quest steps, day length and surviv
 follow the community fan wikis for Pixel Survival Game 2
 (pixelsurvivalgame.fandom.com and pixelsurvivalgame2o.fandom.com). Where the wikis don't
 list something (most drop chances, potion strength, the solo boss fights), the values are
-estimates. All of it lives in `scripts/data.gd`, so it's easy to adjust.
+estimates. For the later worlds, monster damage, boss health and the Modina, Long Lance,
+Nightmare Blade, Hell Spike, Hazard Wipe and Santa Blade attack and speed are the wiki's;
+health the wiki leaves as "?", drop chances, Doom's health and most upgrade recipes are
+guesses. All of it lives in `scripts/data.gd`, so it's easy to adjust.
 
 Item, character, villager and monster names match the original. Characters based on
 other companies' properties (Backstreet Boy, Sailor Moon) and the items that need them
@@ -247,7 +265,7 @@ and `godot --path . -- --nettest client`.
 ## Not built yet
 
 - Public rooms for strangers (rooms are friends-only)
-- Worlds after Ice Cavern and Ghost Arena (Modina Ruins, Nightmare Valley and later)
+- Tomb of Makara (the wiki has nothing on it yet)
 - Event and gem-shop items, and characters from later updates (the buns)
 - Phone app export (set it up from **Project → Export** in Godot)
 

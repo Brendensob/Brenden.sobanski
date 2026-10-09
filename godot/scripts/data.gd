@@ -69,6 +69,15 @@ func _items_materials() -> void:
 		["hell_bar", "Hell Bar", 900, "Earth crystals and erbium, smelted."], ["evil_bar", "Evil Bar", 2000, "The strongest common metal."],
 		["em_stone", "Em Stone", 500, "A green gem stone."], ["ruby_stone", "Ruby Stone", 500, "A red gem stone."],
 		["sapphire_stone", "Sapphire Stone", 500, "A blue gem stone."],
+		# from the later worlds
+		["blue_blade", "Blue Blade", 800, "A blue blade from Modina Ruins. Used for Modina gear."],
+		["nightmare_ore", "Nightmare Ore", 600, "Only found in Nightmare Valley. Smelt into Nightmare Ingots."],
+		["nightmare_ingot", "Nightmare Ingot", 3000, "Smelted nightmare ore, for nightmare gear."],
+		["dark_heart", "Dark Heart", 5000, "Extremely rare. Nightmare Valley's demons sometimes drop one."],
+		["forbidden_stone", "Forbidden Stone", 8000, "Only found in the Forbidden City."],
+		["fortune_nugget", "Fortune Nugget", 1500, "A lucky golden nugget from the Fortune Boss."],
+		["honey", "Honey", 300, "Only found in Fruit Loop."],
+		["eggency", "Eggency", 500, "Only found in Eggcellence."],
 	]
 	for r in m:
 		_item(r[0], r[1], "material", r[2], r[3])
@@ -136,6 +145,23 @@ func _items_weapons() -> void:
 		["tsurugi_2", "Tsurugi II", 67, 0.55, 22, true, 0, "Sharpened by Nini."],
 		["tsurugi_3", "Tsurugi III", 128, 0.55, 24, true, 0, "Sharpened by Nana."],
 		["tsurugi_4", "Tsurugi IV", 178, 0.55, 24, true, 0, "Sharpened by Nina."],
+		# the later worlds
+		["modina_1", "Modina", 32, 0.6, 24, false, 300, "One of Modina's four swords."],
+		["modina_2", "Modina II", 58, 0.6, 24, false, 600, "One of Modina's four swords."],
+		["modina_3", "Modina III", 85, 0.6, 24, false, 1200, "One of Modina's four swords."],
+		["modina_4", "Modina IV", 124, 0.6, 26, false, 2400, "One of Modina's four swords."],
+		["long_lance", "Long Lance", 52, 0.7, 32, false, 400, "Golden Slugs carry these around."],
+		["long_lance_2", "Long Lance II", 69, 0.6, 32, false, 800, "A longer, sharper lance."],
+		["long_lance_3", "Long Lance III", 110, 0.55, 34, false, 1600, "The best of the lances."],
+		["hell_spike", "Hell Spike", 119, 0.5, 24, false, 2000, "Fast, no knockback, and it mines like a gold pickaxe.", {"pick": 4}],
+		["hell_spike_2", "Hell Spike II", 139, 0.5, 24, false, 4000, "Mines volcanic rock too.", {"pick": 5}],
+		["hell_spike_3", "Hell Spike III", 159, 0.5, 24, false, 8000, "The last Hell Spike.", {"pick": 5}],
+		["hazard_wipe", "Hazard Wipe", 110, 0.65, 26, true, 1500, "Modina sometimes drops it."],
+		["nightmare_long_sword", "Nightmare Long Sword", 128, 0.6, 30, true, 2500, "Long reach, nightmare edge."],
+		["nightmare_blade", "Nightmare Blade", 136, 0.55, 26, true, 3000, "Doom guards it in Nightmare Valley."],
+		["nightmare_blade_2", "Nightmare Blade II", 167, 0.55, 26, true, 6000, "Sharpened with Dark Hearts."],
+		["nightmare_blade_3", "Nightmare Blade III", 196, 0.55, 28, true, 12000, "The darkest blade."],
+		["santa_blade", "Santa Blade", 191, 0.65, 26, true, 5000, "Evil Santa's blade."],
 	]
 	for r in w:
 		var extra := {"dmg": r[2], "spd": r[3], "reach": r[4], "kb": r[5]}
@@ -244,6 +270,16 @@ func _items_gear() -> void:
 	_gear("sage_armor", "Sage Armor", "armor", [0, 0, 0, 14, 14, 0], 900)
 	_gear("lavish_armor", "Lavish Armor", "armor", [0, 3, 0, 25, 0, 0], 900)
 	_gear("hell_armor", "Hell Armor", "armor", [0, 26, 0, 10, 10, 0], 3000)
+	# the later worlds (Modina Dress I-III and the nightmare gear from the wiki; the rest are guesses)
+	_gear("modina_dress", "Modina Dress", "armor", [2, 35, 2, 20, 5, 2], 2000)
+	_gear("modina_dress_2", "Modina Dress II", "armor", [1, 37, 4, 23, 6, 4], 4000)
+	_gear("modina_dress_3", "Modina Dress III", "armor", [5, 42, 8, 27, 8, 6], 8000)
+	_gear("nightmare_dress", "Nightmare Dress", "armor", [2, 45, 2, 15, 7, 2], 6000)
+	_gear("dress_of_lich_king", "Dress of Lich King", "armor", [4, 48, 6, 25, 8, 4], 9000, "Very rare, from Snow Valley.")
+	_gear("nightmare_helmet", "Nightmare Helmet", "helmet", [6, 5, 5, 5, 1, 1], 3000)
+	_gear("modina_face", "Modina Face", "helmet", [3, 6, 3, 6, 2, 1], 3000, "Modina's orange mask.")
+	_gear("fortune_mask", "Fortune Mask", "helmet", [5, 8, 5, 8, 3, 2], 6000, "A childish mask with a lot of luck in it.")
+	_gear("modina_ring", "Modina Ring", "ring", [0, 0, 0, 5, 1, 0], 3000, "Modina's ring.")
 	_gear("rooster_dress", "Rooster Dress", "armor", [0, 7, 0, 6, 5, 5], 300)
 	_gear("dark_armor", "Dark Armor", "armor", [0, 12, 0, 12, 4, 0], 800)
 	# shields
@@ -528,6 +564,18 @@ var SMITH := [
 	{"out": "sage_armor", "cost": {"seer_armor": 1, "erbium_bar": 75, "armor_bug": 75}},
 	{"out": "lavish_armor", "cost": {"scale_armor": 1, "erbium_bar": 75, "armor_bug": 35}},
 	{"out": "hell_armor", "cost": {"living_flame": 99, "legendary_roots": 99, "hero_bug": 50}},
+	{"out": "modina_dress_3", "cost": {"modina_dress_2": 2, "nightmare_ingot": 40, "blue_blade": 1}},
+	{"out": "nightmare_dress", "cost": {"hell_armor": 1, "nightmare_ingot": 50, "dark_heart": 5}},
+	{"out": "nightmare_helmet", "cost": {"hell_bar": 50, "dark_bar": 50, "dark_knight": 1}},
+	{"out": "modina_2", "cost": {"modina_1": 2, "blue_blade": 2, "gold_bar": 20}},
+	{"out": "modina_3", "cost": {"modina_2": 2, "blue_blade": 4, "erbium_bar": 20}},
+	{"out": "modina_4", "cost": {"modina_3": 2, "blue_blade": 8, "nightmare_ingot": 10}},
+	{"out": "long_lance_2", "cost": {"long_lance": 2, "gold_bar": 30}},
+	{"out": "long_lance_3", "cost": {"long_lance_2": 2, "erbium_bar": 30}},
+	{"out": "hell_spike_2", "cost": {"hell_spike": 1, "volcanic_bar": 10, "hell_bar": 20}},
+	{"out": "hell_spike_3", "cost": {"hell_spike_2": 1, "volcanic_bar": 25, "nightmare_ingot": 10}},
+	{"out": "nightmare_blade_2", "cost": {"nightmare_blade": 1, "nightmare_ingot": 20, "dark_heart": 2}},
+	{"out": "nightmare_blade_3", "cost": {"nightmare_blade_2": 1, "nightmare_ingot": 40, "dark_heart": 5}},
 	# shields
 	{"out": "wooden_shield", "cost": {"wood": 40, "branch": 10}},
 	{"out": "leather_shield", "cost": {"monster_leather": 15, "scarab": 10}},
@@ -552,6 +600,7 @@ var SMELT := [
 	{"out": "gold_bar", "main": "gold_ore", "cost": {"gold_ore": 5, "coal": 1}, "time": 120},
 	{"out": "erbium_bar", "main": "erbium", "cost": {"erbium": 5, "coal": 1}, "time": 1200},
 	{"out": "volcanic_bar", "main": "volcanic_ore", "cost": {"volcanic_ore": 5, "coal": 1}, "time": 7200},
+	{"out": "nightmare_ingot", "main": "nightmare_ore", "cost": {"nightmare_ore": 5, "coal": 1}, "time": 7200},
 	{"out": "light_bar", "main": "water_crystal", "cost": {"water_crystal": 5, "silver_bar": 5, "coal": 1}, "time": 2700},
 	{"out": "dark_bar", "main": "dark_crystal", "cost": {"dark_crystal": 5, "gold_bar": 5, "coal": 1}, "time": 2700},
 	{"out": "hell_bar", "main": "earth_crystal", "cost": {"earth_crystal": 5, "erbium_bar": 5, "coal": 1}, "time": 2700},
@@ -576,6 +625,7 @@ var NODES := {
 	"silver": {"tool": "pick", "min": 2, "hits": 7, "drops": [["silver_ore", 1.0, 1, 2], ["coal", 0.35, 1, 1], ["honey_bug", 0.15, 1, 1]], "color": "e3ebf5"},
 	"gold": {"tool": "pick", "min": 3, "hits": 6, "drops": [["gold_ore", 1.0, 1, 2], ["coal", 0.35, 1, 1], ["hero_bug", 0.01, 1, 1]], "color": "f2cf5b"},
 	"erbium_rock": {"tool": "pick", "min": 4, "hits": 10, "step": 2, "drops": [["erbium", 1.0, 1, 1], ["gold_ore", 0.3, 1, 1], ["silver_ore", 0.3, 1, 1], ["coal", 0.3, 1, 1]], "color": "c83a6a"},
+	"volcanic_rock": {"tool": "pick", "min": 5, "hits": 12, "step": 2, "drops": [["volcanic_ore", 0.12, 1, 1], ["erbium", 0.6, 1, 1], ["gold_ore", 0.4, 1, 1], ["coal", 0.3, 1, 1]], "color": "ff5a2a"},
 	"ice_rock": {"tool": "pick", "min": 3, "hits": 6, "drops": [["water_crystal", 0.3, 1, 1], ["silver_ore", 0.6, 1, 1], ["crystal", 0.4, 1, 1]], "color": "a6e6f2"},
 	"rock_wall": {"tool": "pick", "min": 4, "hits": 30, "step": 0, "drops": [], "color": "8a9099", "wall": true},
 	# the wooden wall in front of the Trading Center: hit it with a Torch to burn it down
@@ -644,6 +694,41 @@ func _build_mobs() -> void:
 	_mob("ghost_1", "Ghost", "ghost_1", [2100, 2100], 68, "fly", [], {"through": true, "status": ["slow", 0.2]})
 	_mob("ghost_2", "Ghost", "ghost_2", [4100, 4100], 88, "fly", [], {"through": true, "status": ["slow", 0.2]})
 	_mob("ghost_lord", "Ghost Boss", "ghost_lord", [85000, 85000], 135, "fly", [["spectre_hood", 0.05, 1, 1], ["silver_key", 0.4, 1, 1], ["armor_ring", 0.08, 1, 1], ["armor_ring_2", 0.05, 1, 1], ["armor_ring_3", 0.03, 1, 1], ["armor_ring_4", 0.01, 1, 1], ["ring_of_attack", 0.02, 1, 1], ["devil_spike", 0.04, 1, 1], ["twin_sun", 0.05, 1, 1], ["living_flame", 0.1, 1, 1], ["combo_book_3", 0.06, 1, 1], ["combo_book_4", 0.04, 1, 1], ["combo_book_5", 0.02, 1, 1], ["combination_scroll", 0.2, 1, 1], ["dark_shield", 0.05, 1, 1], ["volcanic_ore", 0.15, 1, 1], ["healing_staff", 0.05, 1, 1], ["queen_egg", 0.03, 1, 1], ["bad_man", 0.04, 1, 1], ["drone", 0.04, 1, 1], ["pirate", 0.04, 1, 1], ["waazookaa_2", 0.02, 1, 1]], {"through": true, "heavy": true, "boss": true, "speed": 40, "coins": [3000, 6000]})
+	# Modina Ruins, Nightmare Valley, Forbidden City, Snow Valley and the new arenas.
+	# Damage is the wiki's; where it lists no health ("?") the health is a guess.
+	var stones := [["em_stone", 0.05, 1, 1], ["ruby_stone", 0.05, 1, 1], ["sapphire_stone", 0.05, 1, 1]]
+	var keys := [["silver_key", 0.3, 1, 1], ["golden_key", 0.15, 1, 1], ["master_key", 0.05, 1, 1]]
+	_mob("slug", "Golden Slug", "slug", [1323, 1500], 65, "accel", [["mana_potion", 0.15, 1, 1], ["antidote_herb", 0.2, 1, 1], ["long_lance", 0.02, 1, 1], ["long_lance_2", 0.008, 1, 1], ["hell_spike", 0.004, 1, 1]], {"jump": true, "big_jump": true, "speed": 42})
+	_mob("phantom_butterfly", "Phantom Butterfly", "phantom_butterfly", [2500, 2500], 77, "fly", [["silver_ore", 0.2, 1, 1], ["gold_ore", 0.15, 1, 1], ["erbium", 0.08, 1, 1], ["blue_blade", 0.02, 1, 1], ["hell_spike", 0.004, 1, 1], ["modina_dress", 0.004, 1, 1]], {"through": true, "speed": 40})
+	_mob("demon_eye", "Demon Eye", "demon_eye", [3950, 3950], 91, "walk", [["green_seeds", 0.05, 1, 1], ["nightmare_ore", 0.03, 1, 1], ["gold_ore", 0.2, 1, 1], ["silver_ore", 0.2, 1, 1], ["dark_heart", 0.002, 1, 1]], {"speed": 12, "crit": 0.1})
+	_mob("imp", "Demon Angel", "imp", [3000, 3200], 81, "accel", [["nightmare_ore", 0.03, 1, 1], ["dark_heart", 0.002, 1, 1], ["iron_ore", 0.3, 1, 1]], {"jump": true, "speed": 62})
+	_mob("demon_bat", "Demon Bat", "demon_bat", [2500, 2500], 84, "fly", [["dark_heart", 0.002, 1, 1], ["silver_ore", 0.2, 1, 1], ["nightmare_ore", 0.03, 1, 1], ["king_egg", 0.005, 1, 1]], {"heavy": true, "speed": 52})
+	_mob("an_an", "An An", "an_an", [4500, 4500], 81, "charge", [["iron_ore", 0.3, 1, 1], ["green_seeds", 0.05, 1, 1], ["fortune_mask", 0.005, 1, 1], ["forbidden_stone", 0.002, 1, 1]], {"jump": true, "speed": 44})
+	_mob("ji_ji", "Ji Ji", "ji_ji", [5500, 5500], 98, "charge", [["iron_ore", 0.3, 1, 1], ["green_seeds", 0.05, 1, 1], ["fortune_nugget", 0.01, 1, 1], ["forbidden_stone", 0.002, 1, 1]], {"jump": true, "speed": 46})
+	_mob("he_he", "He He", "he_he", [6500, 6500], 109, "charge", [["iron_ore", 0.3, 1, 1], ["green_seeds", 0.05, 1, 1], ["volcanic_ore", 0.01, 1, 1], ["forbidden_stone", 0.002, 1, 1]], {"jump": true, "speed": 48})
+	_mob("raven", "Raven", "raven", [4000, 4000], 99, "fly", [["iron_ore", 0.3, 1, 1], ["green_seeds", 0.05, 1, 1], ["volcanic_ore", 0.01, 1, 1]], {"speed": 46})
+	_mob("grinch", "Grinch", "grinch", [6000, 6000], 123, "accel", [["bone", 0.3, 1, 1], ["snowball", 0.3, 1, 1], ["erbium", 0.1, 1, 1]], {"jump": true})
+	_mob("snow_turtle", "Snow Turtle", "snow_turtle", [7000, 7000], 121, "walk", [["bone", 0.3, 1, 1], ["snowball", 0.3, 1, 1], ["herb", 0.2, 1, 1], ["erbium", 0.06, 1, 1]], {"speed": 18, "heavy": true})
+	_mob("lich", "Lich", "lich", [8000, 8000], 153, "wizard", [["bone", 0.3, 1, 1], ["snowball", 0.3, 1, 1], ["herb", 0.2, 1, 1], ["dress_of_lich_king", 0.003, 1, 1]], {"shoots": true, "speed": 22, "status": ["cold", 0.2]})
+	_mob("fairy", "Fairy", "fairy", [6000, 6000], 143, "fly", [["bone", 0.3, 1, 1], ["snowball", 0.3, 1, 1], ["volcanic_ore", 0.01, 1, 1]], {"speed": 44})
+	_mob("mango", "Mango", "mango", [9125, 9125], 57, "accel", [["herb", 0.3, 1, 1], ["honey", 0.05, 1, 1]], {"speed": 40})
+	_mob("cherry", "Cherry", "cherry", [4125, 4125], 81, "walk", [["herb", 0.3, 1, 1], ["honey", 0.05, 1, 1]], {"jump": true, "speed": 34})
+	_mob("pineapple", "Pineapple", "pineapple", [4125, 4125], 81, "charge", [["herb", 0.3, 1, 1], ["honey", 0.05, 1, 1]], {"jump": true, "speed": 44})
+	_mob("strawberry", "Strawberry", "strawberry", [4125, 4125], 81, "accel", [["herb", 0.3, 1, 1], ["honey", 0.05, 1, 1]], {"speed": 60})
+	_mob("egg_orange", "Cracked Egg", "egg_orange", [6000, 6000], 193, "accel", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"jump": true, "speed": 42})
+	_mob("egg_blue", "Cracked Egg", "egg_blue", [5500, 5500], 181, "accel", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"jump": true, "speed": 56})
+	_mob("egg_purple", "Cracked Egg", "egg_purple", [7000, 7000], 221, "accel", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"speed": 38})
+	_mob("egg_clutch", "Flying Egg Clutch", "egg_clutch", [5000, 5000], 201, "fly", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"speed": 46})
+	_mob("chick", "Chick", "chick", [5000, 5000], 201, "accel", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"heavy": true, "speed": 52})
+	_mob("giant_chick", "Giant Chick", "giant_chick", [8000, 8000], 195, "accel", [["monster_shell", 0.3, 1, 1], ["eggency", 0.03, 1, 1]], {"jump": true, "big_jump": true, "speed": 40})
+	# bosses
+	_mob("modina", "Modina", "modina", [72512, 72512], 103, "charge", stones + keys + [["long_lance_3", 0.02, 1, 1], ["hell_spike", 0.03, 1, 1], ["modina_1", 0.06, 1, 1], ["modina_2", 0.03, 1, 1], ["modina_dress", 0.05, 1, 1], ["modina_face", 0.04, 1, 1], ["modina_ring", 0.04, 1, 1], ["blue_blade", 0.15, 1, 2], ["hazard_wipe", 0.02, 1, 1], ["hell_sword", 0.01, 1, 1], ["healing_staff", 0.03, 1, 1], ["moon_blade", 0.04, 1, 1], ["moon_blade_2", 0.02, 1, 1], ["moon_blade_3", 0.01, 1, 1], ["golden_seeds", 0.03, 1, 1], ["herb", 0.5, 1, 3], ["bone", 0.5, 1, 3], ["monster_horn", 0.5, 1, 2], ["water_crystal", 0.3, 1, 1], ["apple", 0.2, 1, 1], ["coal", 0.5, 1, 3], ["old_roots", 0.2, 1, 1], ["legendary_roots", 0.05, 1, 1], ["pirate", 0.02, 1, 1], ["bad_man", 0.02, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 36, "coins": [3000, 6000]})
+	_mob("modina_2", "Modina 2", "modina_2", [42500, 42500], 143, "charge", stones + keys + [["hazard_wipe", 0.04, 1, 1], ["combo_book_5", 0.03, 1, 1], ["long_lance_3", 0.02, 1, 1], ["modina_2", 0.04, 1, 1], ["modina_3", 0.02, 1, 1], ["modina_dress", 0.05, 1, 1], ["modina_dress_2", 0.02, 1, 1], ["blue_blade", 0.2, 1, 2], ["golden_long_sword", 0.04, 1, 1], ["survival_token", 0.3, 1, 2], ["potion", 0.3, 1, 2]], {"jump": true, "heavy": true, "boss": true, "speed": 40, "coins": [4000, 8000]})
+	_mob("doom", "Doom", "doom", [110000, 110000], 136, "accel", keys + [["nightmare_blade", 0.01, 1, 1], ["hell_sword", 0.02, 1, 1], ["volcanic_bar", 0.05, 1, 1], ["volcanic_ore", 0.1, 1, 2], ["hell_spike", 0.03, 1, 1], ["combination_scroll", 0.15, 1, 1], ["combo_book_3", 0.05, 1, 1], ["combo_book_4", 0.03, 1, 1], ["green_egg", 0.05, 1, 1], ["pink_egg", 0.05, 1, 1], ["queen_egg", 0.02, 1, 1], ["ring_of_attack", 0.03, 1, 1], ["nightmare_ore", 0.2, 1, 3], ["dark_heart", 0.02, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 30, "coins": [5000, 10000]})
+	_mob("fortune_boss", "Fortune Boss", "fortune_boss", [118261, 118261], 159, "charge", keys + [["forbidden_stone", 0.05, 1, 1], ["dark_shield", 0.05, 1, 1], ["combination_scroll", 0.15, 1, 1], ["fortune_nugget", 0.15, 1, 2], ["fortune_mask", 0.03, 1, 1], ["ring_of_attack", 0.03, 1, 1], ["king_egg", 0.03, 1, 1], ["bad_man", 0.03, 1, 1], ["drone", 0.03, 1, 1], ["pirate", 0.03, 1, 1], ["survival_token", 0.3, 1, 2], ["golden_long_sword", 0.04, 1, 1], ["devil_spike", 0.04, 1, 1], ["armor_ring", 0.05, 1, 1], ["jade_ring", 0.05, 1, 1]], {"jump": true, "heavy": true, "boss": true, "speed": 38, "coins": [6000, 12000]})
+	_mob("evil_santa", "Evil Santa", "evil_santa", [125000, 125000], 164, "charge", stones + keys + [["santa_blade", 0.03, 1, 1], ["dress_of_lich_king", 0.02, 1, 1], ["nightmare_ore", 0.1, 1, 2], ["volcanic_ore", 0.1, 1, 2], ["erbium", 0.4, 1, 3], ["legendary_roots", 0.05, 1, 1], ["combo_book_5", 0.03, 1, 1], ["healing_staff", 0.03, 1, 1], ["moon_blade_3", 0.02, 1, 1], ["herb", 0.5, 1, 3]], {"jump": true, "heavy": true, "boss": true, "speed": 38, "coins": [6000, 12000]})
+	_mob("pineapple_killer", "Pineapple Killer", "pineapple_killer", [72512, 72512], 113, "charge", stones + keys + [["honey", 0.4, 1, 3], ["potion", 0.3, 1, 2], ["herb", 0.5, 1, 3], ["golden_seeds", 0.03, 1, 1], ["hell_sword", 0.01, 1, 1], ["devil_spike", 0.03, 1, 1], ["long_sword", 0.05, 1, 1], ["golden_long_sword", 0.03, 1, 1], ["moon_blade", 0.04, 1, 1], ["hazard_wipe", 0.02, 1, 1], ["erbium", 0.2, 1, 3], ["volcanic_ore", 0.08, 1, 1], ["survival_token", 0.3, 1, 2]], {"jump": true, "heavy": true, "boss": true, "speed": 40, "coins": [3000, 6000]})
+	_mob("harakattu", "Harakattu", "harakattu", [172512, 172512], 201, "accel", stones + [["ring_of_magic", 0.04, 1, 1], ["sandy_armor", 0.04, 1, 1], ["eggency", 0.4, 1, 3], ["bone", 0.5, 1, 3], ["power_bug", 0.1, 1, 1], ["armor_bug", 0.1, 1, 1], ["hero_bug", 0.03, 1, 1], ["dark_armor", 0.03, 1, 1], ["potion", 0.3, 1, 2], ["mana_potion", 0.3, 1, 2], ["erbium", 0.2, 1, 3], ["dark_knight", 0.02, 1, 1], ["soldier", 0.03, 1, 1], ["pirate", 0.03, 1, 1], ["silver_key", 0.3, 1, 1]], {"jump": true, "big_jump": true, "heavy": true, "boss": true, "speed": 46, "coins": [8000, 16000]})
 	# Survival Grasslands only
 	_mob("bat", "Giant Bat", "bat", [1300, 1300], 17, "fly", [["monster_hide", 0.2, 1, 1]], {"speed": 50})
 	_mob("small_stone", "Small Stone", "small_stone", [1200, 1200], 14, "walk", [["rock", 0.5, 1, 3]], {"jump": true})
@@ -700,11 +785,37 @@ var WORLDS := {
 		"mobs": [["ghost_1", 3], ["ghost_2", 2]],
 		"bosses": [["ghost_lord", 1.0, 1.0]],
 		"boss_drops": [["dark_knight", 0.03, 1, 1], ["waazookaa_3", 0.01, 1, 1], ["crazy_cannon_3", 0.01, 1, 1]]},
+	# the later worlds. mobs: [mob, weight, health multiplier, damage multiplier], so the
+	# Shadow, Ghast, Queen and the rest hit as hard here as the wiki says
+	"modina_ruins": {"name": "Modina Ruins", "kind": "explore", "theme": "modina", "count": 46, "chest": true,
+		"mobs": [["shadow", 3, 1.0, 1.7], ["phantom", 3, 1.17, 1.0], ["eyeball", 2, 1.05, 0.93], ["wizard", 2], ["slug", 3], ["phantom_butterfly", 2], ["dark_trex", 0.3, 36.0, 6.3], ["queen", 0.3, 1.5, 1.55], ["modina", 0.15]],
+		"nodes": [["vase", 3], ["iron", 2], ["silver", 3], ["gold", 3], ["erbium_rock", 3]]},
+	"nightmare_valley": {"name": "Nightmare Valley", "kind": "explore", "theme": "nightmare", "count": 48, "chest": true,
+		"mobs": [["wizard", 2], ["slug", 2], ["phantom_butterfly", 2], ["demon_eye", 3], ["imp", 3], ["demon_bat", 3], ["queen", 0.25, 1.5, 1.55], ["modina", 0.1], ["empress", 0.1], ["doom", 0.1]],
+		"nodes": [["vase", 3], ["silver", 2], ["gold", 2], ["erbium_rock", 3], ["volcanic_rock", 2]]},
+	"forbidden_city": {"name": "Forbidden City", "kind": "explore", "theme": "forbidden", "count": 48, "chest": true,
+		"mobs": [["wizard", 2], ["an_an", 3], ["ji_ji", 3], ["he_he", 2], ["raven", 3], ["demon_bat", 2], ["queen", 0.2, 1.5, 1.55], ["modina", 0.1], ["empress", 0.1], ["fortune_boss", 0.1]],
+		"nodes": [["vase", 3], ["silver", 2], ["gold", 2], ["erbium_rock", 3], ["volcanic_rock", 2]]},
+	"snow_valley": {"name": "Snow Valley", "kind": "explore", "theme": "snow", "count": 48, "chest": true, "def_penalty": [160, 40],
+		"mobs": [["wizard", 2, 2.6, 4.9], ["grinch", 3], ["snow_turtle", 3], ["lich", 2], ["fairy", 3], ["queen", 0.2, 1.75, 1.55], ["modina_2", 0.1], ["fortune_boss", 0.08], ["evil_santa", 0.08]],
+		"nodes": [["ice_rock", 3], ["silver", 2], ["gold", 2], ["erbium_rock", 3], ["volcanic_rock", 1]]},
+	"mushroom_valley": {"name": "Mushroom Valley", "kind": "arena", "theme": "mushroom", "cap": 9,
+		"mobs": [["slug", 4, 1.0, 1.2], ["phantom_butterfly", 3]],
+		"bosses": [["modina", 1.0, 1.0]],
+		"boss_drops": [["hazard_wipe", 0.03, 1, 1], ["modina_dress", 0.05, 1, 1], ["blue_blade", 0.2, 1, 2]]},
+	"fruit_loop": {"name": "Fruit Loop", "kind": "arena", "theme": "fruit", "cap": 9,
+		"mobs": [["mango", 2], ["cherry", 3], ["pineapple", 3], ["strawberry", 3]],
+		"bosses": [["pineapple_killer", 1.0, 1.0]],
+		"boss_drops": [["honey", 0.5, 1, 3]]},
+	"eggcellence": {"name": "Eggcellence", "kind": "arena", "theme": "egg", "cap": 10, "def_penalty": [99999, 40],
+		"mobs": [["egg_orange", 3], ["egg_blue", 2], ["egg_purple", 2], ["egg_clutch", 2], ["chick", 2], ["giant_chick", 1]],
+		"bosses": [["harakattu", 1.0, 1.0]],
+		"boss_drops": [["eggency", 0.5, 1, 3]]},
 	"survival": {"name": "Survival Grasslands", "kind": "survival", "theme": "grass", "needs": "survival_access"},
 }
 # The Gatekeeper offers these. Deeper levels are reached through portals inside each world.
-const WORLD_MENU := [["Exploration", ["grass_1", "dark_1", "hell_1", "ice_cavern"]],
-	["Arena", ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena"]],
+const WORLD_MENU := [["Exploration", ["grass_1", "dark_1", "hell_1", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley"]],
+	["Arena", ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]],
 	["Survival", ["survival"]]]
 
 # Survival Grasslands: which monsters can show up from which day.

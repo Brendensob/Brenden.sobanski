@@ -95,6 +95,61 @@ func check_data() -> void:
 	for id in Data.ITEMS:
 		Art.icon(id)
 
+func until_floor(p: CharacterBody2D) -> void:
+	for f in 240:
+		if p.is_on_floor():
+			return
+		await get_tree().physics_frame
+
+## Clicks at a point on the game screen (480 x 270), like a mouse would.
+func click(at: Vector2) -> void:
+	at *= Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+	for down in [true, false]:
+		var ev := InputEventMouseButton.new()
+		ev.button_index = MOUSE_BUTTON_LEFT
+		ev.pressed = down
+		ev.position = at
+		ev.global_position = at
+		Input.parse_input_event(ev)
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+
+## Lines up every monster from the later worlds for a picture.
+func new_monsters() -> void:
+	await goto("eggcellence")
+	var lvl: Node = main.level
+	for e in lvl.entities.get_children():
+		if e.has_method("die") and not e == lvl.player:
+			e.queue_free()
+	var ids := ["slug", "phantom_butterfly", "demon_eye", "imp", "demon_bat", "an_an", "ji_ji", "he_he", "raven", "grinch", "snow_turtle", "lich",
+		"fairy", "mango", "cherry", "pineapple", "strawberry", "egg_orange", "egg_blue", "egg_purple", "egg_clutch", "chick", "giant_chick"]
+	var p: Node2D = lvl.player
+	var base := p.position + Vector2(-200, -40)
+	for i in ids.size():
+		var m: Node = lvl.spawn_mob_at(ids[i], base + Vector2((i % 12) * 34, (i / 12) * 44))
+		m.set_physics_process(false)
+	await wait(0.3)
+	await shot("31_new_monsters")
+	for e in lvl.entities.get_children():
+		if e.has_method("die") and not e == lvl.player:
+			e.queue_free()
+	var bosses := ["modina", "modina_2", "doom", "fortune_boss", "evil_santa", "pineapple_killer", "harakattu"]
+	for i in bosses.size():
+		var m: Node = lvl.spawn_mob_at(bosses[i], p.position + Vector2(-210 + i * 70, -10))
+		m.set_physics_process(false)
+	await wait(0.3)
+	await shot("32_new_bosses")
+	# Snow Valley's monsters hit 40 harder below 160 defense
+	await goto("snow_valley")
+	main.level.player.invuln = 0.0
+	var hp0: float = GS.max_hp()
+	GS.hp = 9999
+	main.level.player.hurt(1, 0.0, main.level.player.position.x - 5)
+	var took := int(9999 - GS.hp)
+	check(took >= 41 - GS.stat("def") and took <= 41, "Snow Valley adds 40 damage under 160 defense (a 1-attack hit took %d)" % took)
+	GS.hp = hp0
+	main.level.player.invuln = 9999.0
+
 ## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
 func climb(dir: String, done: Callable, timeout: float) -> bool:
 	var lvl: Node = main.level
@@ -148,6 +203,49 @@ func jump_and_underground() -> void:
 	await wait(0.1)
 	await shot("03b_jump_flip")
 	await wait(1.0)
+	# jumping again in the air uses the green bar: one point a jump
+	GS.st = 4.0
+	var ground := p.position.y
+	var high := ground
+	await tap("jump")
+	for k in 4:
+		for f in 8:
+			await get_tree().physics_frame
+			high = minf(high, p.position.y)
+		await tap("jump")
+	for f in 10:
+		await get_tree().physics_frame
+		high = minf(high, p.position.y)
+	check(GS.st < 1.0 and ground - high > 120, "4 air jumps on a full green bar go %.0f px high and use it up (%.1f left)" % [ground - high, GS.st])
+	await shot("03b2_multi_jump")
+	await until_floor(p)
+	GS.st = 0.0
+	GS.add_status("fatigue") # no stamina coming back during the check
+	ground = p.position.y
+	await tap("jump")
+	for f in 8:
+		await get_tree().physics_frame
+	var y1 := p.position.y
+	await tap("jump")
+	for f in 12:
+		await get_tree().physics_frame
+	check(p.position.y > y1, "with an empty green bar there's no jump in the air")
+	GS.status.erase("fatigue")
+	await until_floor(p)
+	GS.st = GS.max_st()
+	# clicking: the world hits, the on-screen buttons press
+	var sw0: int = p.swings
+	await click(Vector2(240, 60))
+	check(p.swings == sw0 + 1, "clicking in the world hits")
+	var a_btn: TouchScreenButton = main.hud.touch_nodes[2]
+	p.cooldown = 0
+	await click(a_btn.global_position + Vector2(10, 10))
+	check(p.swings == sw0 + 2, "clicking the red A button hits")
+	var b_btn: TouchScreenButton = main.hud.touch_nodes[3]
+	await click(b_btn.global_position + Vector2(10, 10))
+	await get_tree().physics_frame
+	check(not p.is_on_floor(), "clicking the green B button jumps")
+	await until_floor(p)
 	# the Trading Center ledge is still in reach with the new jump
 	p.position = lvl.cell_pos(Vector2i(44, 16))
 	await wait(0.4)
@@ -435,16 +533,17 @@ func run() -> void:
 	var loot := GS.open_chest("silver")
 	check(loot.size() == 2, "a silver chest gives two items")
 	# worlds
-	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern"]:
+	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley"]:
 		await goto(w)
 		check(main.level.count_mobs() > 10, "%s has monsters (%d)" % [w, main.level.count_mobs()])
 		await shot("20_" + w)
-	for w in ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena"]:
+	for w in ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]:
 		await goto(w)
 		main.level.arena_time = 179.0
 		await wait(1.6)
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
+	await new_monsters()
 	# survival at night
 	await goto("survival")
 	GS.clock = 0.85

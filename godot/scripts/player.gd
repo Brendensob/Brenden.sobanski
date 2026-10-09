@@ -14,6 +14,7 @@ const RISE_GRAVITY := 6600.0
 const FALL_GRAVITY := 1500.0
 const MAX_FALL := 58.0
 const FLIP_TIME := 0.33
+const AIR_JUMP_COST := 1.0
 const STAMINA_COST := 0.5
 ## The PSG2 swing, timed from the trailer: the blade snaps up, slams down
 ## past level, holds low for a moment and comes back up. Same for every
@@ -100,11 +101,16 @@ func _physics_process(delta: float) -> void:
 	var dir := 0.0
 	if not level.main.input_blocked():
 		dir = Input.get_axis("move_left", "move_right")
-		if Input.is_action_just_pressed("jump") and is_on_floor():
-			velocity.y = JUMP
-			flip_t = 0.0
-			Sfx.play("jump")
-			jumps += 1
+		if Input.is_action_just_pressed("jump"):
+			if is_on_floor():
+				_jump()
+			elif GS.st >= AIR_JUMP_COST:
+				# double, triple, quadruple...: every jump in the air uses one
+				# point of the green bar, so the bar counts the jumps you have left
+				GS.st -= AIR_JUMP_COST
+				GS.stats_changed.emit()
+				_jump()
+				level.burst(position, Color("8fe05a"), 4)
 		if Input.is_action_just_pressed("attack"):
 			auto_attack = false
 			use_held(true)
@@ -195,6 +201,12 @@ func _tick(delta: float, dir: float) -> void:
 	var glow := 1.0 if GS.held() == "torch_weapon" else 0.35
 	var gloom := 1.0 if level.modulate_node.color.r < 0.9 else 0.0
 	light.energy = maxf(GS.darkness(), gloom) * glow
+
+func _jump() -> void:
+	velocity.y = JUMP
+	flip_t = 0.0
+	jumps += 1
+	Sfx.play("jump", 0.0 if is_on_floor() else 0.1)
 
 func flip_rotation() -> float:
 	if flip_t >= FLIP_TIME:
@@ -414,6 +426,8 @@ func _do_hit() -> void:
 		tier = int(it.tier)
 	elif need == "axe" and it.has("axe"):
 		tier = int(it.axe)
+	elif need == "pick" and it.has("pick"):
+		tier = int(it.pick) # the Hell Spikes mine too
 	if tier <= 0:
 		_say("You need %s for that." % ("an axe" if need == "axe" else "a pickaxe"))
 		n.shake()
@@ -433,6 +447,10 @@ static func bump(n: Node2D) -> void:
 func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if dead or invuln > 0:
 		return
+	# Snow Valley and Eggcellence: monsters hit 40 harder unless your defense is high enough
+	var pen: Array = level.def.get("def_penalty", [])
+	if pen.size() == 2 and GS.stat("def") < int(pen[0]):
+		dmg += int(pen[1])
 	var r := GS.roll_monster_hit(dmg, crit_chance)
 	GS.hp -= r.dmg
 	GS.stats_changed.emit()
