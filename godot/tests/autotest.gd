@@ -509,7 +509,7 @@ func climb(dir: String, done: Callable, timeout: float) -> bool:
 func jump_and_underground() -> void:
 	var lvl: Node = main.level
 	var p: CharacterBody2D = lvl.player
-	p.position = lvl.cell_pos(Vector2i(43, lvl.TOWN_MID - 1)) # under the opening
+	p.position = lvl.cell_pos(Vector2i(lvl.TOWN_OPENING[0] + 2, lvl.TOWN_MID - 1)) # under the opening
 	p.velocity = Vector2.ZERO
 	await wait(0.6)
 	var y0 := p.position.y
@@ -582,7 +582,7 @@ func jump_and_underground() -> void:
 	check(not p.is_on_floor(), "clicking the green B button jumps")
 	await until_floor(p)
 	# three floors, like the original: jump up through the opening in the upper floor
-	p.position = lvl.cell_pos(Vector2i(43, lvl.TOWN_MID - 1))
+	p.position = lvl.cell_pos(Vector2i(lvl.TOWN_OPENING[0] + 1, lvl.TOWN_MID - 1))
 	GS.st = GS.max_st()
 	await wait(0.4)
 	await tap("jump")

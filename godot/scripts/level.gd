@@ -346,8 +346,8 @@ const TOWN_CEIL := 7
 const TOWN_TOP := 18
 const TOWN_MID := 24
 const TOWN_BASE := 34
-const TOWN_PORTAL := Vector2i(48, 23)
-const TOWN_OPENING := [41, 46] # the gap in the upper floor, from x to x (exclusive)
+const TOWN_PORTAL := Vector2i(49, 23)
+const TOWN_OPENING := [47, 53] # the gap in the upper floor, from x to x (exclusive), in the middle
 
 func _gen_town() -> void:
 	_init_grid(100, 42)
@@ -361,10 +361,11 @@ func _gen_town() -> void:
 	# the upper floor, with one opening in the middle to jump up through
 	fill(1, TOWN_TOP, W - 2, 1)
 	carve(TOWN_OPENING[0], TOWN_TOP, TOWN_OPENING[1] - TOWN_OPENING[0], 1)
-	# the Trading Center's wall goes up to the roof; the wooden wall closes the bottom
+	# the two sides mirror each other: the Trading Center on the left and the
+	# furnace room on the right, each walled up to the roof, with a door at the
+	# bottom (the wooden wall you burn, and the GateKeeper's gate)
 	fill(17, TOWN_CEIL, 1, TOWN_TOP - TOWN_CEIL - 3)
-	# a short wall hanging from the roof between the chests and the furnaces
-	fill(69, TOWN_CEIL, 1, 3)
+	fill(W - 18, TOWN_CEIL, 1, TOWN_TOP - TOWN_CEIL - 3)
 	# the furnace hill at the east end, with a low tunnel under it to the hole
 	fill(86, TOWN_TOP, W - 87, 3)
 	# the magic soils in a cave behind the rock wall
@@ -653,13 +654,13 @@ func _populate_town() -> void:
 	add_station("chest_master", 0, Vector2i(36, top))
 	# the Gatekeeper stands on the street, right next to where her portals open
 	add_npc("keeper", TOWN_PORTAL + Vector2i(3, 0))
-	# the green GateKeeper guards the furnaces, each with a signboard
-	add_npc("warden", Vector2i(64, top))
+	# the green GateKeeper guards the furnace room's gate; each furnace has a signboard
+	add_npc("warden", Vector2i(W - 21, top))
 	if not GS.flags.get("furnaces", false):
-		add_station("gate", 0, Vector2i(67, top))
+		add_station("gate", 0, Vector2i(W - 18, top))
 	for i in Data.FURNACES:
-		add_station("furnace", i, Vector2i(70 + i * 4, top))
-		add_station("furnace_board", i, Vector2i(72 + i * 4, top))
+		add_station("furnace", i, Vector2i(W - 16 + i * 3, top))
+		add_station("furnace_board", i, Vector2i(W - 15 + i * 3, top))
 	# east end of the street: the massive stone wall only the Wall Hammer breaks,
 	# closing the tunnel to the hole down to the basement
 	if not GS.flags.get("hammer_wall", false):
