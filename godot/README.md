@@ -174,7 +174,9 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 - **Up top**, west to east:
   - the Trading Center, a closed room behind a wooden wall you burn with a Torch;
   - the Incubator and the Silver, Golden and Master keg chests, each with a signboard;
-  - the green GateKeeper guarding the five furnaces on the hill (Pretzel quest).
+  - the furnace room on the right, mirroring the Trading Center: walled up to the roof, with the
+    green GateKeeper's gate as its door (Pretzel quest). The opening up from the street is in the
+    exact middle.
 - **The street in the middle:**
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
