@@ -45,7 +45,9 @@ func setup(mob_id: String, lvl: Node, hp_mul: float = 1.0, dmg_mul: float = 1.0)
 	id = mob_id
 	def = Data.MOBS[id]
 	level = lvl
-	max_hp = round(randf_range(def.hp[0], def.hp[1]) * hp_mul)
+	# a world can give a monster the health the wiki lists for it there
+	var hp_range: Array = lvl.def.get("hp", {}).get(id, def.hp)
+	max_hp = round(randf_range(hp_range[0], hp_range[1]) * hp_mul)
 	hp = max_hp
 	dmg = maxi(1, int(round(def.dmg * dmg_mul)))
 	flying = def.ai == "fly"
@@ -73,6 +75,14 @@ func _ready() -> void:
 	dir = 1 if randf() < 0.5 else -1
 	hop = randf_range(0.2, 1.2)
 	state_t = randf_range(0.5, 2.0)
+
+## What touching this monster can give you. In Hell every monster except
+## wizards and bosses can poison you, on top of their own effects.
+func status_effect() -> Array:
+	var own: Array = def.get("status", [])
+	if own.is_empty() and level.def.has("status") and not is_boss() and def.ai != "wizard":
+		return level.def.status
+	return own
 
 func is_boss() -> bool:
 	return def.get("boss", false) or arena_boss
@@ -136,7 +146,7 @@ func _physics_process(delta: float) -> void:
 	# touching the player hurts
 	if player_ok and contact_cd <= 0 and hit_rect().intersects(p.hit_rect()):
 		contact_cd = 0.5 if def.get("fast_hits", false) else 0.9
-		p.hurt(dmg, def.get("crit", 0.05), position.x, def.get("status", []))
+		p.hurt(dmg, def.get("crit", 0.05), position.x, status_effect())
 	# looks
 	var alt := int(anim * (8 if flying else 5)) % 2 == 1 and (absf(velocity.x) > 1 or flying)
 	if def.get("hop", false):
@@ -299,7 +309,11 @@ func die() -> void:
 		Net.mob_died.rpc(level.id, nid)
 		level.net_objs.erase(nid)
 	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
-	for d in def.drops:
+	# arena monsters drop the arena's own small loot, like the original
+	var drops: Array = def.drops
+	if level.kind == "arena" and not is_boss() and level.def.has("mob_drops"):
+		drops = level.def.mob_drops
+	for d in drops:
 		if randf() < d[1]:
 			level.drop(d[0], randi_range(d[2], d[3]), position)
 	if def.has("coins"):

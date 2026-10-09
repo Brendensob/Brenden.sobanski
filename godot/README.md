@@ -219,6 +219,16 @@ Nightmare Blade, Hell Spike, Hazard Wipe and Santa Blade attack and speed are th
 health the wiki leaves as "?", drop chances, Doom's health and most upgrade recipes are
 guesses. All of it lives in `scripts/data.gd`, so it's easy to adjust.
 
+A search for better numbers (fan wikis, forums, GitHub, posted datamines) found that nobody
+has published the original's real drop rates; the wikis only list drops as "Rare" or
+"Uncommon", apart from the Slime's (about 20% each). So drop chances are still estimates.
+Health and damage now follow the wikis' measured values where they exist: Darklands Slimes
+125–130, Worms 358–362 and Rexy 462; Hell 1 Mantis 250–300 and Hands 900–1,100; Hell 2
+Shadows 1,400, Hands 2,000, Dark Rexy 50,000 and Queens from level 1 to 3. In Hell every
+monster except Wizards and bosses can poison you, and arena monsters drop the arena's own
+small loot. There is no Hell 3 or Darklands 3 in Pixel Survival Game 2; those are from the
+separate Pixel Survival Game 2.o.
+
 Item, character, villager and monster names match the original. Characters based on
 other companies' properties (Backstreet Boy, Sailor Moon) and the items that need them
 were left out, Iron Man is the Iron Bot here, and the Green Face uses School Girls in place
