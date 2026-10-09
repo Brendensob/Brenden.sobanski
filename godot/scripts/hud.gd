@@ -961,6 +961,8 @@ func _crafter_tab(id: String) -> String:
 	var t: String = Data.ITEMS[id].type
 	if t in ["weapon", "staff", "bow", "axe", "pick"]:
 		return "weapon"
+	if t == "material":
+		return "ring" # the Dark Stone sits with the rings and their gem stones
 	return t
 
 func _page_craft() -> void:
@@ -1662,12 +1664,21 @@ func _refresh_map() -> void:
 		for wid in section[1]:
 			var w: Dictionary = Data.WORLDS[wid]
 			var target: String = wid
-			var b := _button(w.name, func(): close_panels(); main.change_level(target), false)
+			var b := _button(w.name, func(): _enter_world(target), false)
 			if w.has("needs") and not GS.flags.get(w.needs, false):
 				b.disabled = true
 				b.tooltip_text = "Finish Brutus' quest first."
 			v.add_child(b)
 		cols.add_child(v)
+
+func _enter_world(wid: String) -> void:
+	var w: Dictionary = Data.WORLDS[wid]
+	# the Tomb of Makara needs at least 8 stamina
+	if GS.max_st() < float(w.get("min_st", 0)):
+		toast("You need at least %d stamina to enter the %s." % [w.min_st, w.name], "warn")
+		return
+	close_panels()
+	main.change_level(wid)
 
 # stations
 func open_station(s: Node) -> void:

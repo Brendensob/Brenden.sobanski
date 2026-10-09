@@ -160,6 +160,11 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   Spikes (which also mine), Nightmare Blades, Hazard Wipe and the Santa Blade. Volcanic rock
   shows up in the late worlds. In Snow Valley monsters hit 40 harder below 160 defense, and
   in Eggcellence they always do.
+- Tomb of Makara (Exploration, needs 8 stamina): a sealed maze of 11×11 rooms. Some of its
+  walls are deadly and make you faint on touch. Tomb Worms, Tomb UFOs, Sand Mantises,
+  Tombstones, Vampires and Makara himself live there, with Sandnite Rock to mine and Makara's
+  Bone, Skin and Treasure to collect. Monsters hit 40 harder below 160 defense, and a portal
+  next to the start takes you home.
 - Survival Grasslands: a long corridor where monsters attack from both sides at night.
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
@@ -186,7 +191,8 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 
 **Characters**
 - A new game starts as the Man in Suit or the Nurse.
-- Cavemun, Pirate, The Spi, Bad Man, School Girl, Soldier, ChuChu, Drone and Dark Knight
+- Cavemun, Pirate, The Spi, Bad Man, School Girl, Soldier, ChuChu, Drone, Dark Knight,
+  Backstreet Boy and Sailor Moons
   drop from monsters, bosses and chests. Use one to look like that character. Cavemun,
   Pirate and The Spi also give their weapon (Wood King, Golden Night, Blue Night).
 - The Crafter turns characters into hats: Bear Head, Dark Night, Green Face, Soldier Helmet,
@@ -202,10 +208,23 @@ Blue Fluorescent, Golden Faceguard and the Gold, Silver, Orb, Ruby, Armor, Attac
 rings. Dark Stones come from the Eggcellence boss, Sky Stones, Dragon Spines and Skull Dresses
 from the Master Chest, and the Dragon Dress from the Dream Arena bosses (those chances are
 placeholders). Two wiki rows read like typos and were read the sensible way: Hell Armor IV takes
-Hell Armor III, and the Iron Bar, Sticky Bones and Crystal cost on the Long Sword Shield row is
-the Long Sword's. Gear that needs Sailor Moons or Backstreet Boys (Crown, Royal Mask, Thors,
-W Cap, Rooster Hat), event items (Snowman Hat II), and the Combo Book Z chains (Robo Masks,
-Ghost Dress, Ice Devil Swords) aren't in yet.
+Hell Armor III, and the Iron Bar, Sticky Bones and Crystal cost on the Long Sword Shield row
+belongs to the Long Sword Shield. The Crown, Royal Mask, Thors, W Cap, Rooster Hat, Snowman Hat
+II, Robo Masks, Ghost Dress and Dark Stone are in the Crafter too.
+
+**Combination books** I to V, Survival, Z, ZX and U, with every recipe the wiki lists (Z has
+28, ZX 22 and U 14): Heartstone, Manastone, Muscle Fire and Shattered Souls rings, Moon
+Blades IV and V, Moonclipse I to V and its shields, Twin Sun, Devil Spike, Rainbow Sword,
+Dragon Blades, the U swords and more. Missing Pages (and the U page) drop from late bosses.
+
+**Weapons and gear** from the wiki's tables: about 80 more swords and axes (including the
+Christmas, Halloween and Easter event weapons), Blue, Golden, Candy, Holy, Ruby and Sapphire
+staffs, all six Healing Staffs, the Pistol and Laser guns, Fira, Icy, Magmum, Jade and Snow
+Maker bows, Devil Cannons, Robo Masks, Moon Hats, X Wings, Ghost Dresses and about 25 more
+pets from the Blue, Lunar, Easter, Christmas and Halloween eggs. Event and gem-shop items come
+out of the Golden, Silver and Master Chests. Rings work like the original: silver rings slowly
+restore health and gold rings mana, the Jade Ring stops poison, and the stone rings restore
+health or mana every few seconds.
 
 **Systems**
 - Health, mana and stamina (red, blue, green). Attacks use stamina, staffs use mana.
@@ -220,6 +239,9 @@ Ghost Dress, Ice Devil Swords) aren't in yet.
   Failed or unknown combinations give Dust. Read a book to see its recipes.
 - Tools: better axes and pickaxes take fewer hits, and some ores need a minimum tier.
 - Status effects from monsters: poison, fatigue, slow and cold, each for 10 seconds.
+- Sandnite Bars (5 Sandnite Ore and Coal) and Forbidden Bars smelt in the furnaces.
+- Once all of Miffie's quests are done she gives a daily bounty: bring her a piece of
+  equipment for Silver Keys or a Master Key.
 - Pets regenerate health, mana or stamina, or attack nearby monsters.
 - The game saves on every map change and every 30 seconds, into the character's slot.
 
@@ -245,10 +267,10 @@ monster except Wizards and bosses can poison you, and arena monsters drop the ar
 small loot. There is no Hell 3 or Darklands 3 in Pixel Survival Game 2; those are from the
 separate Pixel Survival Game 2.o.
 
-Item, character, villager and monster names match the original. Characters based on
-other companies' properties (Backstreet Boy, Sailor Moon) and the items that need them
-were left out, Iron Man is the Iron Bot here, and the Green Face uses School Girls in place
-of Backstreet Boys. The Ninja and Iron Bot were gem-shop characters in the original; here
+Item, character, villager and monster names match the original. Iron Man is the Iron Bot
+here. Tomb of Makara monster health, the shields and upgrades the wiki lists without
+numbers, the Missing Page recipe, which egg each new pet hatches from, and the tier V
+Tsurugi and Iron Fist are estimates. The Ninja and Iron Bot were gem-shop characters in the original; here
 they come out of Master Chests. The wiki doesn't say which night gives the Wall Hammer, so
 night 10 is a guess.
 No sprites were copied: every sprite is drawn in code to look like the original's style.
@@ -291,8 +313,8 @@ and `godot --path . -- --nettest client`.
 ## Not built yet
 
 - Public rooms for strangers (rooms are friends-only)
-- Tomb of Makara (the wiki has nothing on it yet)
-- Event and gem-shop items, and characters from later updates (the buns)
+- Characters from later updates (the buns)
+- The "Halloween?" Combo Book Z recipe (the wiki doesn't say what it makes)
 - Phone app export (set it up from **Project → Export** in Godot)
 
 Fonts: Pixelify Sans and Silkscreen, under the SIL Open Font License (see `fonts/`).

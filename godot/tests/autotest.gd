@@ -91,9 +91,51 @@ func check_data() -> void:
 	for c in Data.CHARACTERS:
 		if not Art.LOOKS.has(c):
 			missing.append("look " + c)
+	for egg in Data.EGG_PETS:
+		if not Data.ITEMS.has(egg):
+			missing.append(egg)
+		for pet in Data.EGG_PETS[egg]:
+			if not Data.PETS.has(pet):
+				missing.append(pet)
+	for r in Data.RECIPES:
+		if not Data.BOOK_ITEM.has(r.book):
+			missing.append("book " + r.book)
+	for sec in Data.WORLD_MENU:
+		for w in sec[1]:
+			if not Data.WORLDS.has(w):
+				missing.append("world " + w)
 	check(missing.is_empty(), "every item and look the data uses exists %s" % [missing])
 	for id in Data.ITEMS:
 		Art.icon(id)
+	# no monster or pet falls back to the magenta placeholder blob
+	var blobs := []
+	var looks := []
+	for m in Data.MOBS.values():
+		looks.append(m.look)
+	for pt in Data.PETS.values():
+		looks.append(pt.look)
+	for look in looks:
+		var img: Image = Art.mob_tex(look, false).get_image()
+		for y in img.get_height():
+			for x in img.get_width():
+				if img.get_pixel(x, y).is_equal_approx(Color("ff00ff")) and not look in blobs:
+					blobs.append(look)
+	check(blobs.is_empty(), "every monster and pet has its own picture %s" % [blobs])
+	# no two combinations take the same items
+	var seen := {}
+	var dupes := []
+	for r in Data.RECIPES:
+		var k: Array = r.in.duplicate()
+		k.sort()
+		if seen.has(str(k)):
+			dupes.append(r.out)
+		seen[str(k)] = true
+	check(dupes.is_empty(), "every combination has its own ingredients %s" % [dupes])
+	var books := {}
+	for r in Data.RECIPES:
+		books[r.book] = books.get(r.book, 0) + 1
+	check(books.get("z", 0) == 28 and books.get("zx", 0) == 22 and books.get("u", 0) == 14,
+		"Combo Books Z, ZX and U have the wiki's recipes (+ the Missing Page's) %s" % [books])
 
 func until_floor(p: CharacterBody2D) -> void:
 	for f in 240:
@@ -155,6 +197,176 @@ func new_monsters() -> void:
 	var wz: Node = main.level.spawn_mob_at("wizard", main.level.player.position + Vector2(90, 0))
 	check(mt.max_hp >= 250 and mt.max_hp <= 300 and mt.status_effect() == ["poison", 0.12] and wz.status_effect().is_empty(),
 		"Hell 1 Mantis has %d health (wiki: 250-300) and can poison; Wizards can't" % mt.max_hp)
+
+## The rest of Pixel Survival Game 2: the Tomb of Makara, Combo Books Z, ZX and U,
+## the rings that restore health or mana, the Jade Ring, and Miffie's Daily Bounty.
+func psg2_complete() -> void:
+	# the Tomb of Makara needs 8 stamina
+	GS.equip.ring_l = ""
+	GS.equip.ring_r = ""
+	GS.equip.armor = ""
+	main.hud.close_panels()
+	var st0: float = GS.max_st()
+	main.hud._enter_world("tomb_of_makara")
+	await wait(0.3)
+	check(st0 >= 8 or main.level.id != "tomb_of_makara", "the Tomb of Makara turns you away under 8 stamina (%d)" % st0)
+	GS.equip.armor = "emperor_dress_4" # +9 stamina
+	main.hud._enter_world("tomb_of_makara")
+	await wait(0.6)
+	var lvl: Node = main.level
+	check(lvl.id == "tomb_of_makara", "with 8 stamina the Gatekeeper opens the Tomb of Makara")
+	lvl.player.invuln = 9999.0
+	var deadly := 0
+	var sky := 0
+	for y in lvl.H:
+		for x in lvl.W:
+			if lvl.grid[lvl.idx(x, y)] == 3:
+				deadly += 1
+	for x in lvl.W:
+		if not lvl.solid(x, 0):
+			sky += 1
+	check(deadly > 0 and sky == 0, "the tomb is an enclosed maze with deadly walls (%d deadly tiles)" % deadly)
+	var home: Node = null
+	for n in lvl.props.get_children() + lvl.entities.get_children():
+		if n.get("target") == "town":
+			home = n
+	check(home != null and absf(home.position.y - lvl.player.position.y) < 20, "the portal home is next to where you start in the tomb")
+	# every room can be reached: flood fill the open cells from the start
+	var todo := [lvl.spawn_cell]
+	var reach := {lvl.spawn_cell: true}
+	while not todo.is_empty():
+		var c: Vector2i = todo.pop_back()
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d
+			if n.x >= 0 and n.y >= 0 and n.x < lvl.W and n.y < lvl.H and not reach.has(n) and (not lvl.solid(n.x, n.y) or lvl.is_ledge(n.x, n.y)):
+				reach[n] = true
+				todo.append(n)
+	var rooms_ok := true
+	for r in 4:
+		for c in (lvl.W - 4) / 11:
+			if not reach.has(Vector2i(2 + c * 11 + 1, 2 + r * 11 + 9)):
+				rooms_ok = false
+	check(rooms_ok, "every room of the tomb's maze is connected")
+	await shot("21_tomb_of_makara")
+	# touching a deadly wall makes you faint
+	var wall_cell := Vector2i(-1, -1)
+	for y in lvl.H:
+		for x in lvl.W:
+			# the bottom of a deadly wall, with floor to stand on just left of it
+			if lvl.grid[lvl.idx(x, y)] == 3 and not lvl.solid(x - 1, y) and not lvl.solid(x - 1, y - 1) and lvl.solid(x - 1, y + 1) and not lvl.is_ledge(x - 1, y + 1) and wall_cell.x < 0:
+				wall_cell = Vector2i(x, y)
+	check(wall_cell.x > 0, "the tomb has a deadly wall to walk into")
+	lvl.player.position = Vector2(wall_cell.x * 16 - 12, wall_cell.y * 16 + 15)
+	lvl.player.velocity = Vector2.ZERO
+	Input.action_press("move_right")
+	for i in 240:
+		await get_tree().physics_frame
+		if lvl.player.dead:
+			break
+	Input.action_release("move_right")
+	check(lvl.player.dead, "a deadly wall in the tomb makes you faint")
+	main.respawn()
+	await wait(0.3)
+	# the tomb's monsters and Makara
+	await goto("tomb_of_makara")
+	lvl = main.level
+	for e in lvl.entities.get_children():
+		if e.has_method("die") and not e == lvl.player:
+			e.queue_free()
+	var p: Node2D = lvl.player
+	var ids := ["tomb_worm", "tomb_ufo", "sand_mantis", "tombstone", "vampire", "makara"]
+	for i in ids.size():
+		var m: Node = lvl.spawn_mob_at(ids[i], p.position + Vector2(30 + i * 40, -10))
+		m.set_physics_process(false)
+	await wait(0.3)
+	await shot("22_tomb_monsters")
+	# hits 40 harder below 160 defense, like Snow Valley
+	p.invuln = 0.0
+	GS.hp = 9999
+	p.hurt(1, 0.0, p.position.x - 5)
+	check(9999 - GS.hp >= 41 - GS.stat("def"), "the tomb's monsters hit 40 harder below 160 defense")
+	GS.hp = GS.max_hp()
+	p.invuln = 9999.0
+	GS.equip.armor = ""
+	# the Jade Ring stops poison
+	GS.equip.ring_l = "jade_ring"
+	GS.status.erase("poison")
+	GS.add_status("poison")
+	check(not GS.has_status("poison"), "the Jade Ring stops poison")
+	GS.equip.ring_l = ""
+	GS.add_status("poison")
+	check(GS.has_status("poison"), "without it you can be poisoned")
+	GS.status.erase("poison")
+	# a Heartstone Ring restores 1 health every 10 seconds
+	GS.equip.ring_l = "heartstone_ring"
+	GS.hp = 1
+	p.ring_t.ring_l = 9.9
+	for i in 30:
+		await get_tree().physics_frame
+	check(GS.hp >= 2, "the Heartstone Ring restores health (%.0f)" % GS.hp)
+	GS.equip.ring_l = ""
+	GS.hp = GS.max_hp()
+	# Combo Book Z: a Skull Dress from Bone + Fira + Linen with the book and a scroll
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.add_item("combo_book_z", 1)
+	var slot_of := func(id: String) -> int:
+		for i in GS.BAG:
+			if GS.inv[i] and GS.inv[i].id == id:
+				return i
+		return -1
+	var made := 0
+	var pv := {}
+	for t in 100:
+		GS.add_item("bone", 1)
+		GS.add_item("living_flame", 1)
+		GS.add_item("linen", 1)
+		GS.add_item("combination_scroll", 1)
+		var sl := [slot_of.call("bone"), slot_of.call("living_flame"), slot_of.call("linen")]
+		if t == 0:
+			pv = GS.preview_combo(sl, true)
+		GS.combine(sl, true)
+		GS.remove_item("dust", 99)
+		if GS.count("skull_dress") > 0:
+			made = t + 1
+			break
+	check(pv.get("chance", 0) == 10 and pv.get("book", false), "Skull Dress is -75%%, +50%% with Combo Book Z and +35%% with a scroll (%s%%)" % pv.get("chance", "?"))
+	check(made > 0, "Combo Book Z makes a Skull Dress (took %d tries)" % made)
+	main.hud.open_book("z")
+	await shot("23_combo_book_z")
+	main.hud.close_panels()
+	main.hud.open_book("u")
+	await shot("23b_combo_book_u")
+	main.hud.close_panels()
+	# the wiki's stack sizes
+	check(GS.stack_size("dark_heart") == 1 and GS.stack_size("living_flame") == 25 and GS.stack_size("legendary_roots") == 50 and GS.stack_size("nightmare_ore") == 10,
+		"Dark Hearts don't stack, Fira stacks to 25, Legendary Roots to 50, Nightmare Ore to 10")
+	# the Forbidden Bar is smelted while holding Blue Wood
+	var fb := {}
+	for r in Data.SMELT:
+		if r.out == "forbidden_bar":
+			fb = r
+	check(fb.get("main", "") == "blue_wood" and fb.time == 7200, "the Forbidden Bar smelts from Blue Wood, Evil, Volcanic and Nightmare metal in 2 hours")
+	# Miffie's Daily Bounty Quest after her 27 quests
+	for q in Data.QUESTS:
+		if q.npc == "mira" and not q.id in GS.quests_done:
+			GS.quests_done.append(q.id)
+	var bq := GS.next_quest("mira")
+	check(bq.get("id", "").begins_with("bounty_") and bq.need.size() == 1, "Miffie gives a Daily Bounty Quest once her questline is done (%s)" % bq.get("text", ""))
+	for id in bq.need:
+		GS.add_item(id, 1)
+	var keys0 := GS.count("master_key") + GS.count("silver_key")
+	GS.complete_quest(bq)
+	check(GS.count("master_key") + GS.count("silver_key") > keys0 and GS.next_quest("mira").is_empty(), "the bounty pays keys, once a day")
+	# the Topaz steps in Nina's and 2219 OOP's quests
+	var topaz := 0
+	for q in Data.QUESTS:
+		if q.need.has("topaz_stone"):
+			topaz += 1
+	check(topaz == 2, "Nina and 2219 OOP ask for 9 Topaz Stones")
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.add_item("iron_sword_cast", 1)
 
 ## Holds a direction and jumps whenever on the ground, until `done` or time runs out.
 func climb(dir: String, done: Callable, timeout: float) -> bool:
@@ -570,7 +782,7 @@ func run() -> void:
 	var loot := GS.open_chest("silver")
 	check(loot.size() == 2, "a silver chest gives two items")
 	# worlds
-	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley"]:
+	for w in ["grass_2", "grass_3", "dark_1", "dark_2", "hell_1", "hell_2", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley", "tomb_of_makara"]:
 		await goto(w)
 		check(main.level.count_mobs() > 10, "%s has monsters (%d)" % [w, main.level.count_mobs()])
 		await shot("20_" + w)
@@ -581,6 +793,7 @@ func run() -> void:
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
 	await new_monsters()
+	await psg2_complete()
 	# survival at night
 	await goto("survival")
 	GS.clock = 0.85
