@@ -6,6 +6,13 @@ extends CharacterBody2D
 
 const ProjectileScript := preload("res://scripts/projectile.gd")
 const GRAVITY := 720.0
+## Knockback, measured from the trailer: a hit with a knockback weapon pushes a
+## monster back only a few pixels and it comes right back. Heavy monsters and
+## bosses don't move at all.
+const KNOCK_SPEED := 90.0
+const KNOCK_TIME := 0.12
+## The main colour of each monster's sprite, for the burst when it dies.
+static var _death_colors := {}
 
 var id := ""
 var def: Dictionary
@@ -30,6 +37,7 @@ var flash := 0.0
 var anim := 0.0
 var show_bar := 0.0
 var spike_cd := 0.0
+var knock_t := 0.0
 var home := Vector2.ZERO
 var frames: Array
 var sprite: Sprite2D
@@ -84,6 +92,25 @@ func status_effect() -> Array:
 		return level.def.status
 	return own
 
+## Monsters burst into squares of their own colour, like the original.
+func death_color() -> Color:
+	var look: String = def.look
+	if not _death_colors.has(look):
+		var img: Image = frames[0].get_image()
+		var counts := {}
+		for y in img.get_height():
+			for x in img.get_width():
+				var c := img.get_pixel(x, y)
+				if c.a > 0.5 and c.get_luminance() > 0.12:
+					var key := c.to_html(false)
+					counts[key] = counts.get(key, 0) + 1
+		var best := "f2efe6"
+		for k in counts:
+			if counts[k] > counts.get(best, 0):
+				best = k
+		_death_colors[look] = Color(best)
+	return _death_colors[look]
+
 func is_boss() -> bool:
 	return def.get("boss", false) or arena_boss
 
@@ -110,13 +137,20 @@ func _physics_process(delta: float) -> void:
 		if regen_t >= 1.0:
 			regen_t = 0
 			hp = minf(max_hp, hp + max_hp * 0.0008 * (1.0 if aggro else 10.0))
-	match def.ai:
-		"walk": _walk(delta, to, dist)
-		"accel": _accel(delta, to, dist)
-		"charge": _charge(delta, to, dist)
-		"fly": _fly(delta, to, dist)
-		"wizard": _wizard(delta, to, dist)
-		"stone": _stone(delta)
+	if knock_t > 0:
+		# pushed back: the monster slides a little before it moves on its own again
+		knock_t -= delta
+		velocity.x = move_toward(velocity.x, 0, 500 * delta)
+		if flying:
+			velocity.y = move_toward(velocity.y, 0, 500 * delta)
+	else:
+		match def.ai:
+			"walk": _walk(delta, to, dist)
+			"accel": _accel(delta, to, dist)
+			"charge": _charge(delta, to, dist)
+			"fly": _fly(delta, to, dist)
+			"wizard": _wizard(delta, to, dist)
+			"stone": _stone(delta)
 	if not flying and def.ai != "stone":
 		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
 	move_and_slide()
@@ -297,8 +331,14 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 	show_bar = 4.0
 	aggro_forced = true
 	level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
-	if knock and not def.get("heavy", false):
-		velocity = Vector2(signf(position.x - from_x) * 120, -100)
+	if knock and not def.get("heavy", false) and not is_boss():
+		velocity.x = signf(position.x - from_x) * KNOCK_SPEED
+		if flying:
+			velocity.y = -KNOCK_SPEED * 0.3
+		elif is_on_floor():
+			velocity.y = -60.0
+		knock_t = KNOCK_TIME
+		accel = 0.0 # a monster that was speeding up has to start over
 	if hp <= 0:
 		die()
 
@@ -308,7 +348,7 @@ func die() -> void:
 	if level.netted and Net.is_host():
 		Net.mob_died.rpc(level.id, nid)
 		level.net_objs.erase(nid)
-	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
+	level.burst(position + Vector2(0, -size.y / 2), death_color(), 24 if is_boss() else 10)
 	# arena monsters drop the arena's own small loot, like the original
 	var drops: Array = def.drops
 	if level.kind == "arena" and not is_boss() and level.def.has("mob_drops"):
@@ -327,7 +367,7 @@ func die() -> void:
 func die_visual() -> void:
 	dead = true
 	Sfx.play("mob_die")
-	level.burst(position + Vector2(0, -size.y / 2), Color("f2efe6"), 12 if is_boss() else 6)
+	level.burst(position + Vector2(0, -size.y / 2), death_color(), 24 if is_boss() else 10)
 	if is_boss():
 		level.main.shake(6)
 	queue_free()

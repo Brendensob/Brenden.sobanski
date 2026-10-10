@@ -134,15 +134,15 @@ func roll_attack(weapon_id: String) -> int:
 
 ## Damage a monster deals to you, the same way the wiki's defense calculator does it:
 ## the monster's attack (doubled on a critical hit) minus a random number between
-## 0 and your defense, never less than 1. So defense equal to a monster's attack
-## halves its hits on average, and twice its attack makes most hits deal 1.
+## 0 and your defense. Like in the trailer, a hit your defense soaks up completely
+## does 0. Defense equal to a monster's attack halves its hits on average.
 func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
 	var hit := dmg
 	var crit := randf() < crit_chance
 	if crit:
 		hit *= 2
 	var blocked := randi_range(0, maxi(0, stat("def")))
-	return {"dmg": maxi(1, hit - blocked), "crit": crit}
+	return {"dmg": maxi(0, hit - blocked), "crit": crit}
 
 func add_status(effect: String) -> void:
 	if immune_to(effect):

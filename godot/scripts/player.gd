@@ -15,6 +15,7 @@ const FALL_GRAVITY := 1500.0
 const MAX_FALL := 120.0 # the trailer floats at about 58; faster feels better
 const FLIP_TIME := 0.33
 const AIR_JUMP_COST := 1.0
+const KNOCKBACK := 60.0
 const STAMINA_COST := 0.5
 ## The PSG2 swing, timed from the trailer: the blade snaps up, slams down
 ## past level, holds low for a moment and comes back up. Same for every
@@ -483,21 +484,28 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if pen.size() == 2 and GS.stat("def") < int(pen[0]):
 		dmg += int(pen[1])
 	var r := GS.roll_monster_hit(dmg, crit_chance)
+	invuln = 0.6
+	# the number floats over your head in white, like the original (a critical hit in yellow)
+	level.number(position + Vector2(0, -24), str(r.dmg), Color("f2cf5b") if r.crit else Color.WHITE)
+	if r.dmg <= 0:
+		# your defense took the whole hit
+		Sfx.play("thud")
+		return
 	GS.hp -= r.dmg
 	GS.stats_changed.emit()
-	invuln = 0.6
 	flash = 0.12
 	since_hurt = 0
 	Sfx.play("crit" if r.crit else "hurt")
-	velocity = Vector2(signf(position.x - from_x) * 140, -360)
-	level.number(position + Vector2(0, -24), ("CRIT -%d" if r.crit else "-%d") % r.dmg, Color("f06a5a"))
-	level.main.shake(4 if r.crit else 2)
+	# barely a nudge: in the trailer the player hardly moves when hit
+	velocity.x = signf(position.x - from_x) * KNOCKBACK
+	level.main.shake(3 if r.crit else 1)
 	if status.size() == 2 and randf() < status[1]:
 		GS.add_status(status[0])
 	if GS.hp <= 0:
 		_die()
 
 func _die() -> void:
+	level.burst(position + Vector2(0, -8), Color("d8433a"), 16)
 	auto_attack = false
 	GS.hp = 0
 	dead = true

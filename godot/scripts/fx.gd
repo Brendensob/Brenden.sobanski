@@ -27,15 +27,16 @@ func setup_burst(c: Color, n: int) -> void:
 func _process(delta: float) -> void:
 	t += delta
 	if label:
-		label.position.y = -6 - t * 22
-		label.modulate.a = clampf(1.4 - t * 1.6, 0, 1)
+		# pops up quickly, hangs for a moment, then fades (as in the trailer)
+		label.position.y = -6 - 16.0 * (1.0 - exp(-t * 7.0))
+		label.modulate.a = clampf((1.0 - t) / 0.35, 0, 1)
 	for p in parts:
 		p.v.y += 400 * delta
 		p.p += p.v * delta
 	queue_redraw()
-	if t > 0.9:
+	if t > 1.0:
 		queue_free()
 
 func _draw() -> void:
 	for p in parts:
-		draw_rect(Rect2(p.p.x - 1, p.p.y - 1, 2, 2), color)
+		draw_rect(Rect2(p.p.x - 1.5, p.p.y - 1.5, 3, 3), color)
