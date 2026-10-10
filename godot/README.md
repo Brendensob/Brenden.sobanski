@@ -51,6 +51,13 @@ The red A, green B and grey arrow buttons show on every screen, like the origina
 computer you can click them, and clicking anywhere in the world hits. A swing snaps the blade up, slams it down past level, holds it low for a moment and
 brings it back; the body stays still.
 
+**Combat, matched to the trailer.** A hit does a random amount from 1 up to your weapon's
+attack (plus your Attack stat), shown as a white number that pops up and fades. Weapons with
+knockback push a monster back only a few pixels; heavy monsters and bosses don't move.
+Monsters barely move you at all. Their hits lose a random part of your defense, and when
+your defense soaks up the whole hit you take 0, as in the trailer. Monsters burst into
+squares of their own colour when they die.
+
 **Sound.** 8-bit sound effects for swings, hits, chopping, mining, jumping, pickups, coins,
 hurting, fainting, crafting, quests, portals and menus. They're made in code in the same
 chiptune style; the original's sound files are Cobalt's and aren't copied. Turn sound off

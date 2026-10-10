@@ -730,7 +730,7 @@ func run() -> void:
 	var low := 99
 	for i in 200:
 		low = mini(low, GS.roll_monster_hit(7, 0.0).dmg)
-	check(low == 1, "with defense 15 a 7-attack monster can drop to 1 damage")
+	check(low == 0, "with defense 15 a 7-attack monster's hit can be blocked completely (0 damage)")
 	GS.equip.armor = ""
 	# characters: becoming the Pirate gives a Golden Night, and character hats are crafted
 	GS.add_item("pirate", 11)
@@ -772,6 +772,38 @@ func run() -> void:
 		GS.st = GS.max_st()
 		GS.hp = GS.max_hp()
 	check(not is_instance_valid(slime) or slime.dead, "a slime dies to the starter sword")
+	# knockback like the original: a few pixels for monsters, none for bosses, a nudge for you
+	var mum: Node = lvl.spawn_mob_at("mummy", p.position + Vector2(40, -2))
+	mum.max_hp = 9999
+	mum.hp = 9999
+	await wait(0.6)
+	mum.set_physics_process(false)
+	await get_tree().physics_frame
+	mum.set_physics_process(true)
+	var x0: float = mum.position.x
+	mum.take_damage(1, mum.position.x - 10, true)
+	var far := 0.0
+	while mum.knock_t > 0:
+		await get_tree().physics_frame
+	far = mum.position.x - x0 # how far the push itself moved it
+	check(far > 3 and far < 14, "a knockback hit pushes a monster back a few pixels (%.1f)" % far)
+	var boss: Node = lvl.spawn_mob_at("king", p.position + Vector2(-60, -2))
+	await wait(0.4)
+	boss.take_damage(1, boss.position.x - 10, true)
+	check(boss.knock_t <= 0.0 and mum.knock_t <= 0.0, "bosses don't get knocked back")
+	mum.queue_free()
+	boss.queue_free()
+	p.invuln = 0.0
+	var px0: float = p.position.x
+	GS.hp = 9999
+	p.hurt(40, 0.0, p.position.x - 10)
+	var pfar := 0.0
+	for f in 20:
+		await get_tree().physics_frame
+		pfar = maxf(pfar, absf(p.position.x - px0))
+	check(pfar < 4, "getting hit barely moves you (%.1f px)" % pfar)
+	p.invuln = 9999.0
+	GS.hp = GS.max_hp()
 	await shot("06_fight")
 	p.cooldown = 0
 	GS.st = GS.max_st()
@@ -786,7 +818,10 @@ func run() -> void:
 		await stand_by(tree)
 		GS.sel = 1
 		GS.inventory_changed.emit()
-		for i in 9:
+		for i in 14:
+			if not tree.alive:
+				break
+			p.cooldown = 0
 			await tap("attack")
 			await wait(0.55)
 			GS.st = GS.max_st()
