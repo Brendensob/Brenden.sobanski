@@ -601,6 +601,38 @@ func jump_and_underground() -> void:
 	var portal := find_prop(func(n): return n.get_meta("gate", false))
 	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
 	main.hud.close_panels()
+	# the Storage girl: six backpacks of 30 slots next to your bag
+	var sgirl := find_prop(func(n): return n.get("npc_id") == "storage")
+	check(sgirl != null, "the Storage girl is on the street")
+	check(GS.storage.size() == 6 and GS.storage[0].size() == 30, "the storage has 6 backpacks of 30 slots")
+	GS.add_item("rock", 7)
+	var rock_i := -1
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "rock":
+			rock_i = i
+	var rocks0 := GS.count("rock")
+	main.hud.open_storage()
+	main.hud.storage_page = 2
+	main.hud._bag_click(rock_i)
+	var in_pack := 0
+	for s0 in GS.storage[2]:
+		if s0 and s0.id == "rock":
+			in_pack += int(s0.n)
+	check(in_pack == rocks0 and GS.count("rock") == 0, "tapping a stack puts it in the open backpack (%d rocks in backpack 3)" % in_pack)
+	await shot("03f_storage")
+	for k in GS.BACKPACK_SLOTS:
+		if GS.storage[2][k] and GS.storage[2][k].id == "rock":
+			GS.retrieve(2, k)
+	check(GS.count("rock") == rocks0, "and tapping it there brings it back")
+	main.hud.close_panels()
+	# the Gatekeeper's cards, in the original's order, each with a map picture
+	main.hud.open_panel("map")
+	var cards: Node = main.hud.panels.map.find_child("Cards", true, false)
+	check(cards.get_child_count() == Data.WORLD_CARDS.size() and cards.get_child(0).find_child("Activate", true, false) != null,
+		"the Gatekeeper shows %d world cards with Activate buttons" % cards.get_child_count())
+	await shot("04b_world_cards")
+	main.hud.close_panels()
+	check(not main.hud.day_label.visible, "no day counter in town (only in Survival)")
 	# the stone wall needs the Wall Hammer
 	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
 	check(wall != null, "a massive stone wall stands east of the furnaces")
@@ -684,8 +716,6 @@ func run() -> void:
 	GS.clock = 0.7
 	check(GS.is_night(), "night starts after 15 of 24 hours")
 	GS.clock = 0.0
-	var g1 := GS.open_gift()
-	check(not g1.is_empty() and GS.open_gift().is_empty(), "the Daily Free Gift opens once a day")
 	await wait(0.8)
 	await shot("02_village")
 	# talk to the Gatekeeper
@@ -987,6 +1017,8 @@ func run() -> void:
 	await gems_and_characters()
 	# survival at night
 	await goto("survival")
+	await wait(0.2)
+	check(main.hud.day_label.visible, "Survival Grasslands shows the day")
 	GS.clock = 0.85
 	main.level.s_day = 7
 	await wait(3.0)

@@ -1305,6 +1305,27 @@ var WORLDS := {
 	"survival": {"name": "Survival Grasslands", "kind": "survival", "theme": "grass", "needs": "survival_access"},
 }
 # The Gatekeeper offers these. Deeper levels are reached through portals inside each world.
+# The Gatekeeper's cards, in the original's order, with its titles and lines.
+const WORLD_CARDS := [
+	["grass_1", "Grasslands", "The land of the slimes."],
+	["grass_arena", "Grassland Arena", "Boss spawns in 3 minutes."],
+	["survival", "Survival Grasslands", "Win treasure from surviving!"],
+	["dark_1", "Darklands", "Danger.."],
+	["dark_arena", "Darklands Arena", "Boss spawns in 3 minutes."],
+	["hell_1", "Hell", "Hell welcomes you"],
+	["hell_arena", "Hell Arena", "EPIC DANGER!"],
+	["dream_arena", "Dream Arena", ""],
+	["ice_cavern", "Ice Cavern", ""],
+	["ghost_arena", "Ghost Arena", ""],
+	["modina_ruins", "Modina Ruins", "Poisonous ancient ruins"],
+	["nightmare_valley", "Nightmare Valley", "Nightmare starts here.."],
+	["mushroom_valley", "Mushroom Valley", "Prepare for some challenge!"],
+	["forbidden_city", "Forbidden City", "The lost ruins of Forbidden City"],
+	["fruit_loop", "Fruit Loop", "Fruit ninja needed!"],
+	["snow_valley", "Snow Valley", "Weaklings, stay away!"],
+	["tomb_of_makara", "Tomb of Makara", "Ancient evil.. filled with treasures?"],
+	["eggcellence", "Eggcellence", "To feast, or be feasted on."],
+]
 const WORLD_MENU := [["Exploration", ["grass_1", "dark_1", "hell_1", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley", "tomb_of_makara"]],
 	["Arena", ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]],
 	["Survival", ["survival"]]]
@@ -1350,6 +1371,7 @@ var NPCS := {
 	"fc_9912": {"name": "FC 9912", "look": "robot_npc", "talk": "BEEP. IRON FIST UPGRADE PROTOCOL READY."},
 	"tt_1001": {"name": "TT 1001", "look": "robot_npc2", "talk": "BOOP. MORE MATERIALS REQUIRED."},
 	"oop_2219": {"name": "2219 OOP", "look": "robot_npc3", "talk": "ERROR 2219. JUST KIDDING. UPGRADES AVAILABLE."},
+	"storage": {"name": "Storage", "look": "storage", "talk": "I keep your things safe. Six backpacks, all yours."},
 	"trader": {"name": "Trader", "look": "trader", "talk": "Welcome to the Trading Center! Stand at a trading table to swap items with a friend in your room. Both of you put up your items, both press Ready, and the trade happens."},
 }
 
@@ -1563,10 +1585,6 @@ var SEED_LOOT := {
 	"golden_seeds": [["golden_seeds", 1, 1, 0.3], ["red_seeds", 1, 2], ["master_key", 1, 1], ["golden_key", 1, 2], ["erbium", 3, 6], ["volcanic_ore", 1, 1, 0.3], ["gem", 1, 3]],
 }
 
-# The Daily Free Gift in Pixel Town (one roll a day): seeds, keys, potions and characters.
-var DAILY_GIFT := [["green_seeds", 1, 1, 2], ["red_seeds", 1, 1, 0.5], ["silver_key", 1, 1, 1.5], ["golden_key", 1, 1, 0.4],
-	["small_potion", 3, 5, 2], ["potion", 2, 3, 1], ["combination_scroll", 1, 1, 0.5], ["coin", 100, 500, 2], ["gem", 1, 2, 0.5],
-	["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["pirate", 1, 1, 0.2], ["soldier", 1, 1, 0.2]]
 
 func pick_loot(table: Array) -> Array:
 	# entries: [item, min, max, weight=1]

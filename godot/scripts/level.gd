@@ -383,6 +383,35 @@ func _gen_town() -> void:
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(20, TOWN_MID - 1)
 
+## A little picture of a world's layout for the Gatekeeper's cards: builds the
+## map with a fixed seed (no monsters or props) and paints one pixel per tile.
+func preview_image(world_id: String) -> Image:
+	id = world_id
+	def = Data.WORLDS[id]
+	kind = def.kind
+	th = Art.theme(def.theme)
+	rng.seed = 7
+	match kind:
+		"town": _gen_town()
+		"explore": _gen_maze() if def.get("maze", false) else _gen_explore()
+		"arena": _gen_arena()
+		"survival": _gen_survival()
+	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
+	for y in H:
+		for x in W:
+			var v: int = grid[idx(x, y)]
+			var c: Color
+			if v == 0:
+				c = th.cave if y > surface[x] and kind == "explore" else th.sky[0].lerp(th.sky[1], float(y) / H)
+			elif v == 3:
+				c = Color("d8433a")
+			elif y > 0 and not solid(x, y - 1) or v == 2:
+				c = th.top
+			else:
+				c = th.dirt2 if (x + y) % 3 == 0 else th.dirt
+			img.set_pixel(x, y, c)
+	return img
+
 # ---------------------------------------------------------------- collision and drawing
 func _build_collision() -> void:
 	var body := StaticBody2D.new()
@@ -626,7 +655,7 @@ func _populate_town() -> void:
 		props.add_child(s)
 	# the street, west to east: the magic soils in the cave behind the rock wall
 	# (break it with a gold pickaxe), the Miner and Brutus, Miffie, the Merchant,
-	# the Gatekeeper by her portal, the Plumber and the Crafter
+	# the Gatekeeper by her portal, the Storage girl, the Plumber and the Crafter
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
 	if not GS.flags.get("rock_wall", false):
@@ -638,6 +667,7 @@ func _populate_town() -> void:
 	add_station("sign", 0, Vector2i(27, y))
 	add_npc("merchant", Vector2i(23, y))
 	add_npc("keeper", TOWN_PORTAL + Vector2i(3, 0))
+	add_npc("storage", Vector2i(37, y))
 	add_npc("tools", Vector2i(40, y))
 	add_npc("smith", Vector2i(47, y))
 	# upstairs, west: the Trading Center behind its wooden wall (burn it with a Torch)

@@ -114,7 +114,9 @@ const LOOKS := {
 		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
 	"gruff": {"h": "8a3a12", "H": "5a2208", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "s": "f2c07a", "j": "3a2a22", "long": true,
 		"over": [[0, 0, ["..hhhhhhhh..", ".hhhhhhhhhh.", "hhhhhhhhhhhh", "hhhhhhhhhhhh"]], [0, 8, ["hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [10, 7, ["hh"]]]},
-	"mira": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "f06aa0", "C": "c84a80", "t": "f2efe6", "j": "e06a9a", "q": "f2c07a", "f": "3a2a22"},
+	"mira": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "e8c040", "C": "c8a020", "t": "e8c040", "v": "e8c040", "j": "c8a020", "q": "f2c07a", "f": "3a2a22"},
+	"storage": {"h": "f2d84a", "H": "d0a830", "s": "f2c07a", "long": true, "c": "d06ad0", "C": "a84aa8", "t": "d06ad0", "v": "d06ad0", "j": "a84aa8", "q": "f2c07a", "f": "3a2a22",
+		"over": [[0, 4, ["h", "h", "h", "h"]], [11, 4, ["h", "h", "h", "h"]]]},
 	"warden": {"h": "1b1a24", "H": "1b1a24", "s": "2e9a52", "S": "1e7a3e", "b": "1b1a24", "c": "3a4a3a", "C": "2a3a2a", "q": "3a3a48", "f": "1b1a24", "hair": "bald",
 		"over": [[1, 2, ["..kkkkkkkk.", ".kkkkkkkkkk", "kkkkkkkkkkk"]], [4, 8, ["kkkkkkk"]]]},
 	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "s": "c88a5a", "v": "a07a55", "t": "a07a55"},
@@ -1084,7 +1086,7 @@ func icon_spec(id: String) -> Array:
 		"torch": return ["torch_i", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
 		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
-		"gem": return ["gem", {"X": "f0507a", "x": "a8284a"}]
+		"gem": return ["gem", {"X": "dcecf8", "x": "7a9ab8"}] # the original's white-blue diamond
 		"combination_scroll": return ["scroll", {"X": "a77ee0"}]
 		"missing_page": return ["scroll", {"X": "1b1a24"}]
 		"missing_page_u": return ["scroll", {"X": "d8433a"}]

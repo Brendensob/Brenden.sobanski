@@ -76,14 +76,21 @@ or on from the Menu (compass button).
   Nurse and type a name (it starts as Player_ and nine numbers). Then Single Player or
   Multiplayer.
 - **Screen:** five peach hotbar slots top left (green border on the one you hold), the red,
-  blue and green bars under them, the turning sky clock top centre with the day and your
-  coins, the backpack, compass and bomb down the right side, grey ◀ ▶ bottom left and the
+  blue and green bars under them, the turning sky clock top centre with your gems
+  next to it, the backpack, compass and bomb down the right side, grey ◀ ▶ bottom left and the
   red A above the green B bottom right. Your name shows in red above your head. Pickups
-  show as "Wood obtained" under the clock. In town there's a Daily Free Gift button.
+  show as "Wood obtained" under the clock. The day only shows in Survival Grasslands, and your
+  coins are on the bag's character page.
 - **Bag:** the equipment column on the left with the trash and close buttons under it,
   the 5 x 5 bag (top row is the hotbar), the item box under it, and three tabs on the
   right: your character and stats, combining (big result slot, scroll slot, slots I, II,
   III and Combine), and the menu. Tapping items fills the green combination slot.
+- **Storage:** hit the blonde girl in pigtails on the street and the bag opens with six
+  backpack tabs on the right, each a 5 x 6 grid. Tap an item in your bag to put it in the open
+  backpack, tap it in the backpack to take it back.
+- **World cards:** the Gatekeeper shows one card per world, side by side (‹ › to scroll): its
+  name in green, a one-line description, a small picture of the map and Activate. Worlds you
+  haven't opened yet say Locked.
 - **Crafter:** the bag on the left and five tabs on the right (weapons and tools, helmets,
   armor, shields, rings). Each tab shows everything he makes; pick one to see it big with its
   stats, the three things it takes (have / need, green when you have enough) and Craft.
@@ -193,7 +200,7 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 - **The street in the middle:**
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
-  - Miffie (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools) and the Crafter.
+  - Miffie in her yellow dress (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools), the storage girl and the Crafter. Shopkeepers call out "New stocked items!" now and then.
   - The Gatekeeper stands right next to where her portals open. Pick a world and its portal opens there; hit it to go through.
   - The way up is an opening in the middle of the upper floor: jump up through it (a jump and two jumps in the air).
 - **The basement**, under the whole town:
@@ -218,7 +225,7 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 for the Gem Shop, which sells 3 Silver, Golden or Master Keys for 5, 15 or 40 gems, every
 character (100, 300, 800 or 2,000 gems, the original's tiers), Combination Scrolls and Magic
 Seeds. Gems come from bosses (1 or 2, rarely), Golden and Master Chests, Red and Golden Magic
-Seeds, the Daily Free Gift, Miffie's quests and her daily bounty, and the GateKeeper's mask
+Seeds, Miffie's quests and her daily bounty, and the GateKeeper's mask
 quest. In place of the original's real-money gem packs, the Gem Shop sells gems for 2,500
 Pixel Coins each.
 - The Crafter turns characters into hats: Bear Head, Dark Night, Green Face, Soldier Helmet,
