@@ -122,6 +122,7 @@ const LOOKS := {
 	"tools": {"h": "4a2a1a", "H": "3a2010", "cap": "d8433a", "capH": "a82a22", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
 		"over": [[7, 11, ["kkkk"]]]},
 	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230"},
+	"banka": {"h": "2a2230", "H": "1b1a24", "cap": "3a8a5a", "capH": "1e5a3a", "c": "2e3242", "C": "1e2030", "v": "f2efe6", "t": "3a8a5a", "q": "2e3242", "f": "1b1a24"},
 	"trader": {"h": "6a4220", "H": "4a2e14", "cap": "4f9a44", "capH": "2e7a2a", "c": "f2cf5b", "C": "c99a2e", "t": "4f9a44", "q": "4a3a2a", "f": "2a2230"},
 	"jumpie": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "5cbf3f", "C": "3e8a2e", "t": "f2efe6", "j": "4f9a44", "q": "f2c07a", "f": "3a2a22",
 		"over": [[8, 3, ["rr", "r."]]]},
@@ -301,7 +302,7 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 		"miner":
 			rect(img, 2, 3, 9, 3, Color("f2cf5b"))
 			rect(img, 8, 4, 2, 2, Color("f2efe6"))
-		"merchant", "tools", "trader":
+		"merchant", "tools", "trader", "banka":
 			rect(img, 1, 3, 10, 3, col(map.get("cap", map.h)))
 			rect(img, 7, 5, 5, 1, col(map.get("capH", map.H)))
 		"warden":

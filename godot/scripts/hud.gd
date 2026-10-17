@@ -52,6 +52,8 @@ var chat_log := [] # recent room chat, newest last
 var room_label: Label
 var room_box: VBoxContainer
 var trade_bag: Array = []
+var storage_bag: Array = []
+var storage_slots: Array = []
 var busy := false # waiting on the online server
 const MobScript := preload("res://scripts/mob.gd")
 
@@ -1240,6 +1242,36 @@ func _build_panels() -> void:
 	fr.add_child(add_row)
 	_scroll(fr, Vector2(10, 56), Vector2(420, 182)).name = "FriendList"
 
+	# Banka's storage: your bag on the left, the storage on the right; tap to move a stack
+	var sp := _panel("storage", Vector2(440, 236), "Storage")
+	var bag_grid := GridContainer.new()
+	bag_grid.columns = 5
+	bag_grid.position = Vector2(10, 40)
+	bag_grid.add_theme_constant_override("h_separation", 1)
+	bag_grid.add_theme_constant_override("v_separation", 1)
+	sp.add_child(bag_grid)
+	sp.add_child(_at(_heading("Bag", 9), Vector2(10, 26)))
+	for i in GS.BAG:
+		var b := _slot(28)
+		var idx := i
+		b.pressed.connect(func(): _store_move(true, idx))
+		bag_grid.add_child(b)
+		storage_bag.append(b)
+	var st_grid := GridContainer.new()
+	st_grid.columns = 8
+	st_grid.position = Vector2(170, 40)
+	st_grid.add_theme_constant_override("h_separation", 1)
+	st_grid.add_theme_constant_override("v_separation", 1)
+	sp.add_child(st_grid)
+	sp.add_child(_at(_heading("Storage", 9), Vector2(170, 26)))
+	for i in GS.STORAGE:
+		var b := _slot(28)
+		var idx := i
+		b.pressed.connect(func(): _store_move(false, idx))
+		st_grid.add_child(b)
+		storage_slots.append(b)
+	sp.add_child(_at(_wrap("Tap a stack to move it between your bag and the storage.", 150, C_MUTED, 8), Vector2(10, 192)))
+
 	var tp := _panel("trade_pick", Vector2(260, 160), "Trading Table")
 	_scroll(tp, Vector2(10, 28), Vector2(240, 124)).name = "PickList"
 
@@ -1575,6 +1607,18 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 		row.add_child(_button("Craft", func(): open_smith(), true))
 	if npc_id == "keeper":
 		row.add_child(_button("Open a portal", func(): open_panel("map"), true))
+	if npc_id == "banka":
+		if GS.storage_member():
+			row.add_child(_button("Storage", func(): open_storage(), true))
+		else:
+			text = "Welcome to the warehouse! The membership is %d coins, once. Then you can keep your things here." % GS.STORAGE_FEE
+			var join := _button("Join (%d coins)" % GS.STORAGE_FEE, func():
+				if GS.join_storage():
+					Sfx.play("coin", 0.0)
+					_refresh_npc(npc_id, "Thank you! Eventually you will get more...  Your storage is ready.")
+				else:
+					_refresh_npc(npc_id, "You need %d coins for the membership." % GS.STORAGE_FEE), true)
+			row.add_child(join)
 	row.add_child(_button("Bye", func(): close_panels()))
 	p.get_node("Text").text = text
 
@@ -2055,6 +2099,23 @@ func _refresh_room_box() -> void:
 		room_box.add_child(row)
 
 # ---------------------------------------------------------------- trading
+func open_storage() -> void:
+	open_panel("storage")
+	_refresh_storage()
+
+func _refresh_storage() -> void:
+	for i in GS.BAG:
+		_fill_slot(storage_bag[i], GS.inv[i])
+	for i in GS.STORAGE:
+		_fill_slot(storage_slots[i], GS.storage[i])
+
+func _store_move(to_storage: bool, i: int) -> void:
+	var left := GS.store(i) if to_storage else GS.retrieve(i)
+	if left > 0:
+		toast("The storage is full." if to_storage else "Your bag is full.", "warn")
+	Sfx.play("pickup", 0.0)
+	_refresh_storage()
+
 func open_trade_pick() -> void:
 	if not Net.active:
 		toast("Trading needs friends in your room. Claim your name in Friends so they can join.", "warn")

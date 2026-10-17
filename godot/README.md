@@ -47,12 +47,11 @@ you talk to villagers and use portals, chests, furnaces, the incubator and the r
 **hitting them**: face them and press A, and they open when your swing lands. Hold A to keep
 attacking. Holding A while you open the bag turns on auto-attack until you press A again.
 
-**Jumping and swinging, timed from the official trailer frame by frame.** B shoots you up
-about two blocks in a tenth of a second while your character does one full flip, then you
-come back down (about half a second in the air; the trailer's fall is slower, about 0.8 s,
-but a faster fall plays better). Press B again in the air to jump again:
-each jump in the air uses one point of the green bar, so a full bar is that many extra jumps
-(double, triple and up). Thin ledges can be jumped up through from below.
+**Jumping and swinging.** B takes you up almost three blocks in about 0.2 seconds while your
+character does one full flip; gravity eases off near the top so the peak is smooth, then you
+come back down (about 0.65 seconds in the air). Press B again in the air to jump again:
+each jump in the air uses one point of the green bar, so a full bar is that many extra jumps.
+Thin ledges can be jumped up through from below.
 
 The red A, green B and grey arrow buttons show on every screen, like the original. On a
 computer you can click them, and clicking anywhere in the world hits. A swing snaps the blade up, slams it down past level, holds it low for a moment and
@@ -184,7 +183,7 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   Survive nights for Survival Tokens. Bosses every 6 days. Dying after day 7, 19 or 45
   gives a Silver, Golden or Master Key.
 
-**Pixel Town** is closed in on all sides, with three floors:
+**Pixel Town** is small and closed in on all sides, with three floors:
 - **Up top**, west to east:
   - the Trading Center, a closed room behind a wooden wall you burn with a Torch;
   - the Incubator and the Silver, Golden and Master keg chests, each with a signboard;
@@ -195,6 +194,8 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
   - Miffie (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools) and the Crafter.
+  - Banka keeps a 40-slot storage for you, after a one-time 1,000 coin membership (as the
+    2.o wiki describes him; the original PSG2's storage keeper isn't documented).
   - The Gatekeeper stands right next to where her portals open. Pick a world and its portal opens there; hit it to go through.
   - The way up is an opening in the middle of the upper floor: jump up through it (a jump and two jumps in the air).
 - **The basement**, under the whole town:

@@ -1350,6 +1350,7 @@ var NPCS := {
 	"fc_9912": {"name": "FC 9912", "look": "robot_npc", "talk": "BEEP. IRON FIST UPGRADE PROTOCOL READY."},
 	"tt_1001": {"name": "TT 1001", "look": "robot_npc2", "talk": "BOOP. MORE MATERIALS REQUIRED."},
 	"oop_2219": {"name": "2219 OOP", "look": "robot_npc3", "talk": "ERROR 2219. JUST KIDDING. UPGRADES AVAILABLE."},
+	"banka": {"name": "Banka", "look": "banka", "talk": "Welcome to the warehouse! Members can store their things here, safe and sound."},
 	"trader": {"name": "Trader", "look": "trader", "talk": "Welcome to the Trading Center! Stand at a trading table to swap items with a friend in your room. Both of you put up your items, both press Ready, and the trade happens."},
 }
 
