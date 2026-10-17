@@ -530,9 +530,9 @@ func jump_and_underground() -> void:
 		if t > 0.1 and p.is_on_floor():
 			break
 	var apex := y0 - top
-	check(apex > 34 and apex < 44, "a jump goes up about 2 blocks (%.1f px)" % apex)
-	check(t_top <= 0.13, "the jump reaches the top in about a tenth of a second (%.2f s)" % t_top)
-	check(t > 0.35 and t < 0.6, "a jump is about half a second in the air (%.2f s)" % t)
+	check(apex > 42 and apex < 52, "a jump goes up almost 3 blocks (%.1f px)" % apex)
+	check(t_top > 0.15 and t_top <= 0.25, "the jump rises smoothly for about 0.2 s (%.2f s)" % t_top)
+	check(t > 0.5 and t < 0.8, "a jump is about 0.65 s in the air (%.2f s)" % t)
 	check(spun > PI and p.body_sprite.rotation == 0.0, "the player does a full flip and lands upright")
 	await tap("jump")
 	await wait(0.1)
@@ -601,6 +601,32 @@ func jump_and_underground() -> void:
 	var portal := find_prop(func(n): return n.get_meta("gate", false))
 	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
 	main.hud.close_panels()
+	# Banka keeps your things, after a 1,000 coin membership
+	var banka := find_prop(func(n): return n.get("npc_id") == "banka")
+	check(banka != null, "Banka the storage keeper is in Pixel Town")
+	GS.coins = 500
+	check(not GS.join_storage(), "Banka's storage needs 1,000 coins")
+	GS.coins = 1500
+	check(GS.join_storage() and GS.coins == 500, "joining costs 1,000 coins once")
+	GS.add_item("rock", 7)
+	var rock_i := -1
+	for i in GS.BAG:
+		if GS.inv[i] and GS.inv[i].id == "rock":
+			rock_i = i
+	var rocks0 := GS.count("rock")
+	GS.store(rock_i)
+	var stored := 0
+	for s0 in GS.storage:
+		if s0 and s0.id == "rock":
+			stored += int(s0.n)
+	check(stored == rocks0 and GS.count("rock") == 0, "a stack goes into storage (%d rocks)" % stored)
+	main.hud.open_storage()
+	await shot("03f_storage")
+	for i in GS.STORAGE:
+		if GS.storage[i] and GS.storage[i].id == "rock":
+			GS.retrieve(i)
+	check(GS.count("rock") == rocks0, "and comes back out")
+	main.hud.close_panels()
 	# the stone wall needs the Wall Hammer
 	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
 	check(wall != null, "a massive stone wall stands east of the furnaces")
@@ -636,7 +662,7 @@ func jump_and_underground() -> void:
 	await shot("03e_nini")
 	main.hud.close_panels()
 	# and back up the ledges under the hole
-	p.position = lvl.cell_pos(Vector2i(93, lvl.TOWN_BASE - 1))
+	p.position = lvl.cell_pos(Vector2i(lvl.TOWN_HOLE + 1, lvl.TOWN_BASE - 1))
 	await wait(0.3)
 	await climb_up(func(): return p.position.y <= (lvl.TOWN_MID + 2) * 16 + 1 and p.is_on_floor(), 8.0)
 	var out: bool = await climb("move_right", func(): return p.position.y <= lvl.TOWN_MID * 16 + 1 and p.is_on_floor(), 4.0)

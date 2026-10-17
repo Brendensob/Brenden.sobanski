@@ -6,13 +6,14 @@ extends CharacterBody2D
 const ProjectileScript := preload("res://scripts/projectile.gd")
 
 const SPEED := 82.0
-## The PSG2 jump, timed from the trailer frame by frame: you shoot up about
-## 2 blocks in a tenth of a second while doing one full flip, then float down
-## slowly. About 0.8 seconds in the air in all.
-const JUMP := -660.0
-const RISE_GRAVITY := 6600.0
-const FALL_GRAVITY := 1500.0
-const MAX_FALL := 120.0 # the trailer floats at about 58; faster feels better
+## The jump: a quick rise to almost 3 blocks with one full flip, a soft top
+## (gravity eases off near the peak so it doesn't snap), then a steady fall.
+## About 0.2 s up and 0.65 s in the air in all.
+const JUMP := -490.0
+const RISE_GRAVITY := 2900.0
+const APEX_SPEED := 80.0 # below this speed going up, gravity is halved
+const FALL_GRAVITY := 1100.0
+const MAX_FALL := 120.0
 const FLIP_TIME := 0.33
 const AIR_JUMP_COST := 1.0
 const KNOCKBACK := 60.0
@@ -120,7 +121,12 @@ func _physics_process(delta: float) -> void:
 		elif (Input.is_action_pressed("attack") or auto_attack) and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
 			use_held(false)
 	if not is_on_floor():
-		velocity.y = minf(velocity.y + (RISE_GRAVITY if velocity.y < 0 else FALL_GRAVITY) * delta, MAX_FALL)
+		var g := FALL_GRAVITY
+		if velocity.y < -APEX_SPEED:
+			g = RISE_GRAVITY
+		elif velocity.y < 0:
+			g = RISE_GRAVITY * 0.5
+		velocity.y = minf(velocity.y + g * delta, MAX_FALL)
 	var speed := SPEED
 	if GS.has_status("slow"):
 		speed *= 0.55
