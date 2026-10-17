@@ -13,8 +13,8 @@ There are two versions in this repo:
 Open `index.html` in any modern browser. No install or build step is needed.
 Your island saves automatically in the browser.
 
-To play on your phone, turn on GitHub Pages for this repo
-(Settings → Pages → Deploy from branch → pick the branch and `/ (root)`), then open the link it gives you.
+This version is also online at https://brendensob.github.io/Brenden.sobanski/classic/
+(the Godot version is at https://brendensob.github.io/Brenden.sobanski/).
 
 ## What's in it
 

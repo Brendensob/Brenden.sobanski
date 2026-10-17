@@ -6,6 +6,13 @@ with all art redrawn in code, and nothing for sale.
 
 ## How to open it
 
+**On a phone (or any browser):** open https://brendensob.github.io/Brenden.sobanski/ and turn
+the phone sideways. Every change merged to `main` is rebuilt and put there by the
+"Web build" GitHub Action. To play full screen, use the browser's "Add to Home Screen" and
+open it from the icon. Saves stay in that browser. Playing with friends online doesn't work
+in the browser version yet, because browsers can't open the plain network connection the
+relay uses; single player works fully.
+
 **On a Windows PC, the easy way:** open PowerShell (Start menu, type "PowerShell") and paste
 
 ```
@@ -335,6 +342,6 @@ and `godot --path . -- --nettest client`.
 
 - Public rooms for strangers (rooms are friends-only)
 - The "Halloween?" Combo Book Z recipe (the wiki doesn't say what it makes)
-- Phone app export (set it up from **Project → Export** in Godot)
+- Phone app export (set it up from **Project → Export** in Godot; the web version above already plays on phones)
 
 Fonts: Pixelify Sans and Silkscreen, under the SIL Open Font License (see `fonts/`).
