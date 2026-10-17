@@ -67,7 +67,7 @@ func _setup_input() -> void:
 func now() -> float:
 	return Time.get_unix_time_from_system()
 
-## The storage the Storage girl in Pixel Town keeps for you: six backpacks of
+## The storage Banka in Pixel Town keeps for you: six backpacks of
 ## 5 x 6 slots, like the original's bag screen.
 const BACKPACKS := 6
 const BACKPACK_SLOTS := 30
