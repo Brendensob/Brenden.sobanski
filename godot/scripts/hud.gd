@@ -790,7 +790,7 @@ func _bag_click(i: int) -> void:
 		bag_sel = i if GS.inv[i] else -1
 		_refresh_bag()
 		return
-	# at the Storage girl, tapping an item puts it in the open backpack
+	# at Banka, tapping an item puts it in the open backpack
 	if bag_mode == "storage":
 		if GS.inv[i] != null and GS.store(i, storage_page) > 0:
 			toast("This backpack is full.", "warn")
@@ -882,7 +882,7 @@ func _page_storage() -> void:
 			_refresh_bag())
 		grid.add_child(b)
 
-## The Storage girl opens your bag with the six backpacks next to it.
+## Banka opens your bag with the six backpacks next to it.
 func open_storage() -> void:
 	bag_mode = "storage"
 	bag_sel = -1
@@ -1624,7 +1624,7 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 		row.add_child(_button("Craft", func(): open_smith(), true))
 	if npc_id == "keeper":
 		row.add_child(_button("Open a portal", func(): open_panel("map"), true))
-	if npc_id == "storage":
+	if npc_id == "banka":
 		row.add_child(_button("Storage", func(): open_storage(), true))
 	row.add_child(_button("Bye", func(): close_panels()))
 	p.get_node("Text").text = text

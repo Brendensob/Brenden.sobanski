@@ -654,8 +654,8 @@ func _populate_town() -> void:
 		s.position = Vector2(h[0] * T - h[3] / 2, (y + 1) * T - 47)
 		props.add_child(s)
 	# the street, west to east: the magic soils in the cave behind the rock wall
-	# (break it with a gold pickaxe), the Miner and Brutus, Miffie, the Merchant,
-	# the Gatekeeper by her portal, the Storage girl, the Plumber and the Crafter
+	# (break it with a gold pickaxe), the Miner and Brutus, Miffie, the sign,
+	# the Gatekeeper by her portal, the Plumber, Banka (storage), the Merchant and the Crafter
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
 	if not GS.flags.get("rock_wall", false):
@@ -665,10 +665,10 @@ func _populate_town() -> void:
 	add_npc("gruff", Vector2i(15, y))
 	add_npc("mira", Vector2i(19, y))
 	add_station("sign", 0, Vector2i(27, y))
-	add_npc("merchant", Vector2i(23, y))
 	add_npc("keeper", TOWN_PORTAL + Vector2i(3, 0))
-	add_npc("storage", Vector2i(37, y))
-	add_npc("tools", Vector2i(40, y))
+	add_npc("tools", Vector2i(37, y))
+	add_npc("banka", Vector2i(40, y))
+	add_npc("merchant", Vector2i(43, y))
 	add_npc("smith", Vector2i(47, y))
 	# upstairs, west: the Trading Center behind its wooden wall (burn it with a Torch)
 	add_npc("trader", Vector2i(3, top))

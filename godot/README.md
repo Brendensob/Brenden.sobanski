@@ -85,7 +85,7 @@ or on from the Menu (compass button).
   the 5 x 5 bag (top row is the hotbar), the item box under it, and three tabs on the
   right: your character and stats, combining (big result slot, scroll slot, slots I, II,
   III and Combine), and the menu. Tapping items fills the green combination slot.
-- **Storage:** hit the blonde girl in pigtails on the street and the bag opens with six
+- **Storage:** hit Banka, the blonde girl in pigtails on the street, and the bag opens with six
   backpack tabs on the right, each a 5 x 6 grid. Tap an item in your bag to put it in the open
   backpack, tap it in the backpack to take it back.
 - **World cards:** the Gatekeeper shows one card per world, side by side (‹ › to scroll): its
@@ -200,7 +200,8 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
 - **The street in the middle:**
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
-  - Miffie in her yellow dress (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools), the storage girl and the Crafter. Shopkeepers call out "New stocked items!" now and then.
+  - Miffie in her yellow dress (her 27 quests in the original's order);
+  - Right of the portal: the Plumber (tools), Banka (storage), the spiky-haired Merchant (Combo Book II for 1,500 and supplies) and the Crafter. Shopkeepers call out "New stocked items!" now and then.
   - The Gatekeeper stands right next to where her portals open. Pick a world and its portal opens there; hit it to go through.
   - The way up is an opening in the middle of the upper floor: jump up through it (a jump and two jumps in the air).
 - **The basement**, under the whole town:

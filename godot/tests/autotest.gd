@@ -601,9 +601,9 @@ func jump_and_underground() -> void:
 	var portal := find_prop(func(n): return n.get_meta("gate", false))
 	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
 	main.hud.close_panels()
-	# the Storage girl: six backpacks of 30 slots next to your bag
-	var sgirl := find_prop(func(n): return n.get("npc_id") == "storage")
-	check(sgirl != null, "the Storage girl is on the street")
+	# Banka: six backpacks of 30 slots next to your bag
+	var sgirl := find_prop(func(n): return n.get("npc_id") == "banka")
+	check(sgirl != null, "Banka (storage) is on the street")
 	check(GS.storage.size() == 6 and GS.storage[0].size() == 30, "the storage has 6 backpacks of 30 slots")
 	GS.add_item("rock", 7)
 	var rock_i := -1
