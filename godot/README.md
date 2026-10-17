@@ -194,8 +194,6 @@ Steam build can swap in Steam's relay (GodotSteam) the same way.
   - the magic soils in a cave behind the rock wall (break it with a gold pickaxe);
   - the Miner (seeds and keys for Survival Tokens) and Brutus (Wood Wall quest: Survival Book and Survival Grasslands);
   - Miffie (her 27 quests in the original's order), the Merchant (Combo Book II for 1,500), the Plumber (tools) and the Crafter.
-  - Banka keeps a 40-slot storage for you, after a one-time 1,000 coin membership (as the
-    2.o wiki describes him; the original PSG2's storage keeper isn't documented).
   - The Gatekeeper stands right next to where her portals open. Pick a world and its portal opens there; hit it to go through.
   - The way up is an opening in the middle of the upper floor: jump up through it (a jump and two jumps in the air).
 - **The basement**, under the whole town:

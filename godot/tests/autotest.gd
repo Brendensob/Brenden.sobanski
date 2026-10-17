@@ -601,32 +601,6 @@ func jump_and_underground() -> void:
 	var portal := find_prop(func(n): return n.get_meta("gate", false))
 	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
 	main.hud.close_panels()
-	# Banka keeps your things, after a 1,000 coin membership
-	var banka := find_prop(func(n): return n.get("npc_id") == "banka")
-	check(banka != null, "Banka the storage keeper is in Pixel Town")
-	GS.coins = 500
-	check(not GS.join_storage(), "Banka's storage needs 1,000 coins")
-	GS.coins = 1500
-	check(GS.join_storage() and GS.coins == 500, "joining costs 1,000 coins once")
-	GS.add_item("rock", 7)
-	var rock_i := -1
-	for i in GS.BAG:
-		if GS.inv[i] and GS.inv[i].id == "rock":
-			rock_i = i
-	var rocks0 := GS.count("rock")
-	GS.store(rock_i)
-	var stored := 0
-	for s0 in GS.storage:
-		if s0 and s0.id == "rock":
-			stored += int(s0.n)
-	check(stored == rocks0 and GS.count("rock") == 0, "a stack goes into storage (%d rocks)" % stored)
-	main.hud.open_storage()
-	await shot("03f_storage")
-	for i in GS.STORAGE:
-		if GS.storage[i] and GS.storage[i].id == "rock":
-			GS.retrieve(i)
-	check(GS.count("rock") == rocks0, "and comes back out")
-	main.hud.close_panels()
 	# the stone wall needs the Wall Hammer
 	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
 	check(wall != null, "a massive stone wall stands east of the furnaces")
