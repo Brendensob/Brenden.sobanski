@@ -1,0 +1,78 @@
+# Builds the Godot game for the web and puts it on GitHub Pages, so it can be
+# played on a phone from https://brendensob.github.io/Brenden.sobanski/
+# The older top-down browser version goes to /classic/.
+name: Web build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.3
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/godot
+            ~/.local/share/godot/export_templates
+          key: godot-${{ env.GODOT_VERSION }}-web
+
+      - name: Download Godot and the web export templates
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          base=https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable
+          mkdir -p ~/godot ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          curl -sSL -o godot.zip $base/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q godot.zip -d ~/godot
+          curl -sSL -o templates.tpz $base/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip -q -j templates.tpz 'templates/web*' 'templates/version.txt' \
+            -d ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          rm godot.zip templates.tpz
+
+      - name: Export for the web
+        run: |
+          godot=~/godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64
+          mkdir -p site
+          cd godot
+          $godot --headless --import . || true
+          $godot --headless --export-release "Web" ../site/index.html
+          test -f ../site/index.wasm
+
+      - name: Add the classic browser version
+        run: |
+          mkdir -p site/classic
+          cp -r index.html css js site/classic/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
