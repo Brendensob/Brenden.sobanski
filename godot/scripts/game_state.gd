@@ -67,12 +67,6 @@ func _setup_input() -> void:
 func now() -> float:
 	return Time.get_unix_time_from_system()
 
-## Banka's storage in Pixel Town: room for more things than the bag, after a
-## one-time 1,000 coin membership.
-const STORAGE := 40
-const STORAGE_FEE := 1000
-var storage: Array = []
-
 func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	look = character
 	player_name = pname if pname != "" else default_name()
@@ -80,8 +74,6 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	pending_token = ""
 	inv.clear()
 	inv.resize(BAG)
-	storage.clear()
-	storage.resize(STORAGE)
 	equip = {}
 	for s in EQUIP_SLOTS:
 		equip[s] = ""
@@ -525,7 +517,7 @@ func is_night() -> bool:
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
-		"v": VERSION, "inv": inv, "storage": storage, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
+		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
@@ -586,11 +578,6 @@ func load_game() -> bool:
 		var s = saved[i]
 		if s and Data.ITEMS.has(s.id):
 			inv[i] = {"id": s.id, "n": int(s.n)}
-	var stored: Array = d.get("storage", [])
-	for i in mini(stored.size(), STORAGE):
-		var s = stored[i]
-		if s and Data.ITEMS.has(s.id):
-			storage[i] = {"id": s.id, "n": int(s.n)}
 	for slot in EQUIP_SLOTS:
 		var id: String = d.get("equip", {}).get(slot, "")
 		equip[slot] = id if Data.ITEMS.has(id) else ""
@@ -642,51 +629,6 @@ func use_character(i: int) -> String:
 	return msg
 
 ## The Daily Free Gift button in Pixel Town: one free roll per real day.
-# ---------------------------------------------------------------- Banka's storage
-func storage_member() -> bool:
-	return flags.get("storage", false)
-
-## Pays Banka's membership. Returns false without enough coins.
-func join_storage() -> bool:
-	if storage_member():
-		return true
-	if coins < STORAGE_FEE:
-		return false
-	coins -= STORAGE_FEE
-	flags["storage"] = true
-	stats_changed.emit()
-	return true
-
-## Moves a whole stack between two lists of slots, stacking onto what's there first.
-## Returns how many didn't fit.
-func _move_stack(from: Array, i: int, to: Array) -> int:
-	var s = from[i]
-	if s == null:
-		return 0
-	var left: int = s.n
-	var cap := stack_size(s.id)
-	for k in to.size():
-		if left > 0 and to[k] and to[k].id == s.id and to[k].n < cap:
-			var put := mini(left, cap - int(to[k].n))
-			to[k].n += put
-			left -= put
-	for k in to.size():
-		if left > 0 and to[k] == null:
-			var put := mini(left, cap)
-			to[k] = {"id": s.id, "n": put}
-			left -= put
-	from[i] = null if left <= 0 else {"id": s.id, "n": left}
-	inventory_changed.emit()
-	return left
-
-## Bag slot i into storage.
-func store(i: int) -> int:
-	return _move_stack(inv, i, storage)
-
-## Storage slot i back into the bag.
-func retrieve(i: int) -> int:
-	return _move_stack(storage, i, inv)
-
 func gift_ready() -> bool:
 	return int(flags.get("gift_day", -1)) != today()
 
