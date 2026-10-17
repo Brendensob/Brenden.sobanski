@@ -179,6 +179,7 @@ func grid_image(rows: Array, map: Dictionary = {}, scale: int = 1) -> Image:
 	return img
 
 func outline(src: Image, color: Color = OUTLINE) -> Image:
+	src = cartoon(src)
 	var w := src.get_width() + 2
 	var h := src.get_height() + 2
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
@@ -195,6 +196,35 @@ func outline(src: Image, color: Color = OUTLINE) -> Image:
 					out.set_pixel(x, y, color)
 					break
 	return out
+
+## The cartoon finish every outlined sprite gets: colours a bit brighter and
+## punchier, a light rim along the top and left edges and a shadow along the
+## bottom and right, so flat shapes look rounded.
+func cartoon(src: Image) -> Image:
+	var w := src.get_width()
+	var h := src.get_height()
+	var img := src.duplicate()
+	for y in h:
+		for x in w:
+			var c := src.get_pixel(x, y)
+			if c.a < 0.5:
+				continue
+			if c.v < 0.2:
+				continue # leave eyes and dark details crisp
+			c = Color.from_hsv(c.h, minf(c.s * 1.15, 1.0), minf(c.v * 1.05, 1.0), c.a)
+			if _clear(src, x, y - 1):
+				c = c.lightened(0.22)
+			elif _clear(src, x, y + 1):
+				c = c.darkened(0.22)
+			elif _clear(src, x - 1, y):
+				c = c.lightened(0.1)
+			elif _clear(src, x + 1, y):
+				c = c.darkened(0.12)
+			img.set_pixel(x, y, c)
+	return img
+
+func _clear(img: Image, x: int, y: int) -> bool:
+	return x < 0 or y < 0 or x >= img.get_width() or y >= img.get_height() or img.get_pixel(x, y).a < 0.5
 
 func flash_image(src: Image) -> Image:
 	var img := src.duplicate()
@@ -1172,6 +1202,198 @@ func icon_big(id: String) -> Texture2D:
 		img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
 		return to_tex(img))
 
+# ---------------------------------------------------------------- emotes
+## An emote for the emote panel and over people's heads.
+func emote(id: String) -> Texture2D:
+	return cached("emote_" + id, func(): return to_tex(outline(emote_img(id))))
+
+func _face(img: Image, c: Color) -> void:
+	ellipse(img, 8, 8, 7, 7, c)
+
+func emote_img(id: String) -> Image:
+	var img := blank(16, 16)
+	var k := OUTLINE
+	var y := Color("f2cf5b")
+	var w := Color("f2efe6")
+	var r := Color("d8433a")
+	var m := Color("8a1e1a")
+	var s := Color("f2c29a")
+	var b := Color("6bb8f0")
+	match id:
+		"angry":
+			_face(img, Color("f0903a"))
+			for d in 3:
+				px(img, 4 + d, 5 + d / 2, k)
+				px(img, 11 - d, 5 + d / 2, k)
+			rect(img, 5, 7, 1, 2, k)
+			rect(img, 10, 7, 1, 2, k)
+			px(img, 5, 12, k)
+			rect(img, 6, 11, 4, 1, k)
+			px(img, 10, 12, k)
+		"grin":
+			_face(img, y)
+			for e in [4, 9]:
+				px(img, e, 7, k)
+				px(img, e + 1, 6, k)
+				px(img, e + 2, 7, k)
+			rect(img, 4, 9, 8, 3, k)
+			rect(img, 5, 9, 6, 2, w)
+		"bomb":
+			ellipse(img, 8, 9.5, 6, 6, Color("2a2a30"))
+			rect(img, 6, 7, 4, 3, w)
+			px(img, 7, 8, k)
+			px(img, 8, 8, w)
+			px(img, 9, 8, k)
+			rect(img, 7, 10, 2, 1, w)
+			px(img, 11, 3, Color("8a5a32"))
+			px(img, 12, 2, Color("8a5a32"))
+			px(img, 13, 1, y)
+			px(img, 14, 0, Color("ea8a33"))
+			px(img, 14, 2, Color("ea8a33"))
+		"sleepy":
+			_face(img, y)
+			rect(img, 4, 8, 3, 1, k)
+			rect(img, 9, 8, 3, 1, k)
+			rect(img, 7, 11, 2, 2, m)
+			rect(img, 11, 0, 4, 1, b)
+			px(img, 13, 1, b)
+			px(img, 12, 2, b)
+			rect(img, 11, 3, 4, 1, b)
+		"poop":
+			var brown := Color("8a5a32")
+			ellipse(img, 8, 13, 7, 2.5, brown)
+			ellipse(img, 8, 9.5, 5, 2.2, brown)
+			ellipse(img, 8, 6.5, 3, 1.8, brown)
+			px(img, 9, 4, brown)
+			px(img, 10, 3, brown)
+			rect(img, 5, 9, 2, 2, w)
+			rect(img, 9, 9, 2, 2, w)
+			px(img, 6, 10, k)
+			px(img, 10, 10, k)
+			rect(img, 6, 13, 4, 1, k)
+		"laugh":
+			_face(img, y)
+			px(img, 4, 6, k)
+			px(img, 5, 7, k)
+			px(img, 4, 8, k)
+			px(img, 11, 6, k)
+			px(img, 10, 7, k)
+			px(img, 11, 8, k)
+			rect(img, 4, 10, 8, 3, m)
+			rect(img, 5, 10, 6, 1, w)
+			rect(img, 6, 12, 4, 1, Color("f06a8a"))
+			px(img, 1, 8, b)
+			px(img, 14, 8, b)
+		"shock":
+			_face(img, y)
+			rect(img, 4, 5, 3, 3, w)
+			rect(img, 9, 5, 3, 3, w)
+			px(img, 5, 6, k)
+			px(img, 10, 6, k)
+			rect(img, 7, 10, 2, 3, m)
+			px(img, 6, 11, m)
+			px(img, 9, 11, m)
+		"thumbs":
+			_face(img, y)
+			rect(img, 5, 6, 1, 2, k)
+			rect(img, 10, 6, 1, 2, k)
+			px(img, 5, 10, k)
+			rect(img, 6, 11, 4, 1, k)
+			px(img, 10, 10, k)
+			rect(img, 0, 11, 5, 5, s)
+			rect(img, 1, 7, 2, 4, s)
+			rect(img, 1, 12, 4, 1, s.darkened(0.25))
+			rect(img, 1, 14, 4, 1, s.darkened(0.25))
+		"cry":
+			_face(img, y)
+			for e in [4, 9]:
+				px(img, e, 6, k)
+				px(img, e + 1, 7, k)
+				px(img, e + 2, 6, k)
+			rect(img, 4, 8, 1, 7, b)
+			rect(img, 11, 8, 1, 7, b)
+			rect(img, 6, 11, 4, 2, m)
+			px(img, 6, 11, y)
+			px(img, 9, 11, y)
+		"salute":
+			_face(img, y)
+			rect(img, 5, 7, 1, 2, k)
+			rect(img, 10, 7, 1, 2, k)
+			px(img, 5, 11, k)
+			rect(img, 6, 12, 4, 1, k)
+			px(img, 10, 11, k)
+			rect(img, 8, 2, 7, 3, s)
+			rect(img, 13, 0, 3, 3, s)
+			rect(img, 9, 3, 5, 1, s.darkened(0.25))
+		"devil":
+			ellipse(img, 8, 9, 6.5, 6.5, r)
+			px(img, 2, 0, r)
+			rect(img, 2, 1, 2, 2, r)
+			rect(img, 3, 3, 2, 1, r)
+			px(img, 13, 0, r)
+			rect(img, 12, 1, 2, 2, r)
+			rect(img, 11, 3, 2, 1, r)
+			rect(img, 5, 8, 2, 1, y)
+			rect(img, 9, 8, 2, 1, y)
+			px(img, 4, 7, k)
+			px(img, 11, 7, k)
+			px(img, 4, 11, k)
+			rect(img, 5, 12, 6, 1, k)
+			px(img, 11, 11, k)
+		"rose":
+			var g := Color("4f9a44")
+			rect(img, 7, 8, 1, 8, g)
+			rect(img, 8, 11, 3, 1, g)
+			px(img, 10, 10, g)
+			rect(img, 4, 13, 3, 1, g)
+			ellipse(img, 7.5, 5, 4.5, 4, r)
+			px(img, 7, 3, m)
+			px(img, 8, 4, m)
+			px(img, 6, 5, m)
+			px(img, 9, 6, m)
+		"ghost":
+			var gh := ghost_img(14, 15, Color("a6e6f2"), k, false)
+			img.blit_rect(gh, Rect2i(Vector2i.ZERO, gh.get_size()), Vector2i(1, 1))
+		"gift":
+			rect(img, 2, 8, 12, 8, r)
+			rect(img, 1, 5, 14, 3, r.lightened(0.15))
+			rect(img, 7, 5, 2, 11, w)
+			rect(img, 1, 10, 14, 1, w)
+			ellipse(img, 5.5, 3, 2.5, 2, w)
+			ellipse(img, 10.5, 3, 2.5, 2, w)
+		"lips":
+			ellipse(img, 8, 6.5, 7, 2.5, r)
+			ellipse(img, 8, 9.5, 6, 2.5, r)
+			rect(img, 2, 8, 12, 1, m)
+			px(img, 8, 4, Color(0, 0, 0, 0))
+			px(img, 5, 10, r.lightened(0.35))
+		"heart":
+			ellipse(img, 5, 5.5, 3.5, 3.5, r)
+			ellipse(img, 11, 5.5, 3.5, 3.5, r)
+			for i in 8:
+				rect(img, 1 + i, 6 + i, 14 - 2 * i, 1, r)
+			px(img, 4, 4, w)
+		"wave":
+			_face(img, y)
+			rect(img, 5, 6, 1, 2, k)
+			rect(img, 10, 6, 1, 2, k)
+			px(img, 5, 10, k)
+			rect(img, 6, 11, 4, 1, k)
+			px(img, 10, 10, k)
+			rect(img, 0, 9, 4, 6, s)
+			for f in 3:
+				rect(img, f + f / 2, 6, 1, 3, s)
+		"left", "up", "right", "down":
+			ellipse(img, 8, 8, 7, 7, Color("3b7be0"))
+			for i in 5:
+				rect(img, 7 - i, 3 + i, 2 + 2 * i, 1, w)
+			rect(img, 6, 8, 4, 5, w)
+			match id:
+				"right": img.rotate_90(CLOCKWISE)
+				"left": img.rotate_90(COUNTERCLOCKWISE)
+				"down": img.rotate_180()
+	return img
+
 # ---------------------------------------------------------------- world themes
 const THEMES := {
 	"grass": {"sky": ["6fb6dc", "bfe3ee"], "mount": "5a8c8a", "snow": "e8f2f2", "hills": "3f8a52", "top": "5cbf3f", "top2": "3e9a2e", "dirt": "8a5a32", "dirt2": "6e4426", "cave": "4a3020"},
@@ -1211,12 +1433,17 @@ func ground_tiles(th: Dictionary) -> Array:
 	top.fill(th.dirt)
 	for i in 10:
 		px(top, rng.randi_range(0, 15), rng.randi_range(6, 15), th.dirt2)
+	# cartoon grass: a dark line on top, a bright rim under it and round
+	# scallops hanging into the dirt with a dark edge
 	for x in 16:
-		var d := rng.randi_range(4, 7)
+		var d := 5 + int(round(1.6 * sin(x * TAU / 8.0)))
 		rect(top, x, 0, 1, d, th.top)
 		px(top, x, d, th.top2)
-	for i in 4:
-		px(top, rng.randi_range(0, 15), rng.randi_range(0, 2), th.top.lightened(0.25))
+		px(top, x, d + 1, th.dirt2.darkened(0.35))
+		px(top, x, 1, th.top.lightened(0.3))
+		px(top, x, 0, th.top2.darkened(0.45))
+	for i in 3:
+		px(top, rng.randi_range(0, 15), rng.randi_range(2, 3), th.top.lightened(0.3))
 	var fill := blank(16, 16)
 	fill.fill(th.dirt)
 	for i in 14:
@@ -1232,6 +1459,7 @@ func ground_tiles(th: Dictionary) -> Array:
 			px(fill, x, 12 + absi((x % 8) - 4) - 4, th.dirt.lightened(0.15))
 	var ledge := fill.duplicate()
 	rect(ledge, 0, 0, 16, 3, th.dirt.lightened(0.18))
+	rect(ledge, 0, 0, 16, 1, th.dirt2.darkened(0.45))
 	for x in 16:
 		px(ledge, x, 3 + (x * 7) % 2, th.dirt2)
 	var tex := [to_tex(top), to_tex(fill), to_tex(back), to_tex(ledge)]
@@ -1536,6 +1764,9 @@ const UI_GRIDS := {
 	"trash": ["...kk...", "kkkkkkkk", ".kkkkkk.", ".kOkOkk.", ".kOkOkk.", ".kOkOkk.", ".kkkkkk."],
 	"close": ["kk....kk", ".kk..kk.", "..kkkk..", "...kk...", "..kkkk..", ".kk..kk.", "kk....kk"],
 	"plus": ["..g..", "..g..", "ggggg", "..g..", "..g.."],
+	"friend": ["..kk....", ".kkkk...", ".kkkk.k.", "..kk.kkk", ".kkkk.k.", "kkkkkk..", "kkkkkk.."],
+	"chat": [".kkkkkk.", "kkkkkkkk", "kkkkkkkk", "kkkkkkkk", ".kkkkkk.", "..kk....", ".k......"],
+	"smile": ["..kkkk..", ".k....k.", "k.k..k.k", "k......k", "k.k..k.k", "k..kk..k", ".k....k.", "..kkkk.."],
 }
 
 ## Small interface icons (backpack, compass, bomb, hammer, trash, close).
@@ -1543,7 +1774,7 @@ func ui_icon(name: String, scale: int = 1) -> Texture2D:
 	return cached("ui_%s_%d" % [name, scale], func():
 		var map := {"N": "6a3a4a", "n": "9a5a6a", "Y": "c99a2e", "O": "e8862a", "k": "5a2a10", "g": "f2cf5b"}
 		var img := grid_image(UI_GRIDS[name], map, scale)
-		if name in ["trash", "close", "plus"]:
+		if name in ["trash", "close", "plus", "friend", "chat", "smile"]:
 			return to_tex(img)
 		return to_tex(outline(img)))
 

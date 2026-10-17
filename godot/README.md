@@ -4,6 +4,11 @@ A side-scrolling pixel survival crafting game built to play like Pixel Survival 
 the same items, recipes, characters, defense and drop tables (as the fan wikis list them),
 with all art redrawn in code, and nothing for sale.
 
+**Art style:** pixel art with a cartoon twist. Every sprite gets a dark outline, a light rim
+on top, a shadow underneath and slightly punchier colours, so shapes look round. Grass hangs
+over the dirt in round scallops with a dark edge, damage numbers pop in big and squash back
+to size, and monsters burst into round puffs.
+
 ## How to open it
 
 **On a phone (or any browser):** open https://brendensob.github.io/Brenden.sobanski/ and turn
@@ -76,11 +81,15 @@ or on from the Menu (compass button).
   Nurse and type a name (it starts as Player_ and nine numbers). Then Single Player or
   Multiplayer.
 - **Screen:** five peach hotbar slots top left (green border on the one you hold), the red,
-  blue and green bars under them, the turning sky clock top centre with your gems
+  blue and green bars under them with three orange buttons beside them (friends, chat and
+  emotes), the turning sky clock top centre with your gems
   next to it, the backpack, compass and bomb down the right side, grey ◀ ▶ bottom left and the
   red A above the green B bottom right. Your name shows in red above your head. Pickups
   show as "Wood obtained" under the clock. The day only shows in Survival Grasslands, and your
   coins are on the bag's character page.
+- **Emotes:** the smiley button opens a panel of 21 emotes (faces, a bomb, a rose, a ghost, a
+  gift, a heart, the four arrows and more). Tap one and it pops up over your head for three
+  seconds; everyone in your room sees it too.
 - **Bag:** the equipment column on the left with the trash and close buttons under it,
   the 5 x 5 bag (top row is the hotbar), the item box under it, and three tabs on the
   right: your character and stats, combining (big result slot, scroll slot, slots I, II,

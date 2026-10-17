@@ -25,6 +25,9 @@ func _ready() -> void:
 	add_child(camera)
 	Net.main = self
 	Net.chat_received.connect(func(from: String, text: String): hud.add_chat(from, text))
+	Net.emote_received.connect(func(peer: int, e: String):
+		if level and level.puppets.has(peer) and is_instance_valid(level.puppets[peer]):
+			level.show_emote(level.puppets[peer], e))
 	_load_level("grass_1", true)
 	hud.open_panel("title")
 	if "--nettest" in OS.get_cmdline_user_args():

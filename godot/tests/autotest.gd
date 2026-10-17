@@ -633,6 +633,26 @@ func jump_and_underground() -> void:
 	await shot("04b_world_cards")
 	main.hud.close_panels()
 	check(not main.hud.day_label.visible, "no day counter in town (only in Survival)")
+	# the friend, chat and emote buttons by the bars, and the emote panel
+	for bn in ["FriendButton", "ChatButton", "EmoteButton"]:
+		check(main.hud.hud_root.get_node_or_null(bn) != null, "the %s sits right of the bars" % bn)
+	(main.hud.hud_root.get_node("EmoteButton") as Button).pressed.emit()
+	var egrid: Node = main.hud.emote_panel.get_child(0)
+	check(main.hud.emote_panel.visible and egrid.get_child_count() == 21, "the emote button opens the panel with 21 emotes")
+	var drawn := 0
+	for e in Data.EMOTES:
+		if Art.emote(e).get_width() == 18:
+			drawn += 1
+	check(drawn == Data.EMOTES.size(), "all %d emotes are drawn" % drawn)
+	(egrid.get_node("laugh") as TextureButton).pressed.emit()
+	var bubble: Node = lvl.player.get_node_or_null("Emote")
+	check(bubble != null and bubble.texture == Art.emote("laugh"), "tapping an emote shows it over your head")
+	await get_tree().create_timer(0.3).timeout
+	await shot("03g_emotes")
+	await get_tree().create_timer(3.2).timeout
+	check(not is_instance_valid(bubble) or bubble.is_queued_for_deletion(), "the emote fades after a few seconds")
+	main.hud.toggle_emotes()
+	check(not main.hud.emote_panel.visible, "and the emote button closes the panel again")
 	# the stone wall needs the Wall Hammer
 	var wall := find_prop(func(n): return n.get("kind") == "hammer_wall")
 	check(wall != null, "a massive stone wall stands east of the furnaces")
