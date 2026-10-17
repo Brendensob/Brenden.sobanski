@@ -67,6 +67,12 @@ func _setup_input() -> void:
 func now() -> float:
 	return Time.get_unix_time_from_system()
 
+## The storage the Storage girl in Pixel Town keeps for you: six backpacks of
+## 5 x 6 slots, like the original's bag screen.
+const BACKPACKS := 6
+const BACKPACK_SLOTS := 30
+var storage: Array = [] # one Array of slots per backpack
+
 func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	look = character
 	player_name = pname if pname != "" else default_name()
@@ -74,6 +80,11 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	pending_token = ""
 	inv.clear()
 	inv.resize(BAG)
+	storage = []
+	for b in BACKPACKS:
+		var page := []
+		page.resize(BACKPACK_SLOTS)
+		storage.append(page)
 	equip = {}
 	for s in EQUIP_SLOTS:
 		equip[s] = ""
@@ -517,7 +528,7 @@ func is_night() -> bool:
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
-		"v": VERSION, "inv": inv, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
+		"v": VERSION, "inv": inv, "storage": storage, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
@@ -578,6 +589,13 @@ func load_game() -> bool:
 		var s = saved[i]
 		if s and Data.ITEMS.has(s.id):
 			inv[i] = {"id": s.id, "n": int(s.n)}
+	var saved_storage: Array = d.get("storage", [])
+	for b in mini(saved_storage.size(), BACKPACKS):
+		var page: Array = saved_storage[b] if saved_storage[b] is Array else []
+		for k in mini(page.size(), BACKPACK_SLOTS):
+			var s = page[k]
+			if s and Data.ITEMS.has(s.id):
+				storage[b][k] = {"id": s.id, "n": int(s.n)}
 	for slot in EQUIP_SLOTS:
 		var id: String = d.get("equip", {}).get(slot, "")
 		equip[slot] = id if Data.ITEMS.has(id) else ""
@@ -628,17 +646,34 @@ func use_character(i: int) -> String:
 	inventory_changed.emit()
 	return msg
 
-## The Daily Free Gift button in Pixel Town: one free roll per real day.
-func gift_ready() -> bool:
-	return int(flags.get("gift_day", -1)) != today()
-
-func open_gift() -> Array:
-	if not gift_ready():
-		return []
-	flags["gift_day"] = today()
-	var got: Array = Data.pick_loot(Data.DAILY_GIFT)
-	Sfx.play("quest", 0.0)
-	if add_item(got[0], got[1], true) > 0:
-		message.emit("Your bag is full.", "warn")
+# ---------------------------------------------------------------- storage
+## Moves a whole stack from one list of slots to another, stacking onto what's
+## already there first. Returns how many didn't fit.
+func _move_stack(from: Array, i: int, to: Array) -> int:
+	var s = from[i]
+	if s == null:
+		return 0
+	var left: int = s.n
+	var cap := stack_size(s.id)
+	for k in to.size():
+		if left > 0 and to[k] and to[k].id == s.id and to[k].n < cap:
+			var put := mini(left, cap - int(to[k].n))
+			to[k].n += put
+			left -= put
+	for k in to.size():
+		if left > 0 and to[k] == null:
+			var put := mini(left, cap)
+			to[k] = {"id": s.id, "n": put}
+			left -= put
+	from[i] = null if left <= 0 else {"id": s.id, "n": left}
 	inventory_changed.emit()
-	return got
+	return left
+
+## Bag slot i into backpack b.
+func store(i: int, b: int) -> int:
+	return _move_stack(inv, i, storage[b])
+
+## Backpack b's slot k back into the bag.
+func retrieve(b: int, k: int) -> int:
+	return _move_stack(storage[b], k, inv)
+

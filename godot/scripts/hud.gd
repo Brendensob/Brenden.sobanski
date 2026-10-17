@@ -12,7 +12,6 @@ var ui_theme: Theme
 var hotbar_slots: Array = []
 var bars: Control
 var clock: Control
-var coin_label: Label
 var gem_label: Label
 var day_label: Label
 var info_label: Label
@@ -22,7 +21,6 @@ var boss_box: Control
 var boss: Node = null
 var hint_label: Label
 var bomb_btn: TextureButton
-var gift_btn: Button
 var touch_nodes: Array = []
 var force_touch := false
 
@@ -34,7 +32,8 @@ var move_from := -1
 var combo := [-1, -1, -1]
 var combo_target := 0
 var use_scroll := false
-var bag_mode := "bag" # "bag" when opened from the backpack, "craft" at the Crafter
+var bag_mode := "bag" # "bag" when opened from the backpack, "craft" at the Crafter, "storage" at the Storage girl
+var storage_page := 0 # which of the six backpacks is open
 var bag_tab := "combine" # bag: character, combine, menu. craft: weapon, helmet, armor, shield, ring
 var craft_sel := -1
 var craft_scroll := 0 # where the Crafter's list is scrolled to
@@ -314,36 +313,22 @@ func _build_hud() -> void:
 	clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clock.draw.connect(_draw_clock)
 	hud_root.add_child(clock)
+	# the day only counts in Survival Grasslands, like the original
 	day_label = _outlined(_label("Day 1", 9, C_YELLOW, true))
 	day_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	day_label.position = Vector2(37, 3)
 	hud_root.add_child(day_label)
-	var coin_box := HBoxContainer.new()
-	coin_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	coin_box.position = Vector2(30, 17)
-	coin_box.add_theme_constant_override("separation", 2)
-	coin_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var plus := TextureRect.new()
-	plus.texture = Art.ui_icon("plus")
-	plus.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	coin_box.add_child(plus)
-	var ci := TextureRect.new()
-	ci.texture = Art.prop_tex("coin")
-	ci.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	coin_box.add_child(ci)
-	coin_label = _outlined(_label("0", 9, Color("5ce0d0"), true))
-	coin_box.add_child(coin_label)
-	hud_root.add_child(coin_box)
-	# gems under the coins; tap them for the Gem Shop
+	# your gems next to the clock, like the original ("+" and the gem open the Gem Shop)
 	var gem_box := HBoxContainer.new()
 	gem_box.name = "GemBox"
 	gem_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	gem_box.position = Vector2(37, 26)
+	gem_box.position = Vector2(30, 17)
 	gem_box.add_theme_constant_override("separation", 2)
+	gem_box.add_child(_icon_button(Art.ui_icon("plus"), Vector2(7, 9), func(): open_gem_shop()))
 	var gem_btn := _icon_button(Art.icon("gem"), Vector2(9, 9), func(): open_gem_shop())
 	gem_btn.name = "GemButton"
 	gem_box.add_child(gem_btn)
-	gem_label = _outlined(_label("0", 9, Color("f08aa0"), true))
+	gem_label = _outlined(_label("0", 9, Color("5ce0d0"), true))
 	gem_label.mouse_filter = Control.MOUSE_FILTER_STOP
 	gem_label.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -372,17 +357,6 @@ func _build_hud() -> void:
 	bomb_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	bomb_btn.position = Vector2(-29, 96)
 	hud_root.add_child(bomb_btn)
-	gift_btn = _button("DAILY FREE GIFT", func(): _open_gift())
-	gift_btn.add_theme_font_override("font", Art.font_title)
-	gift_btn.add_theme_font_size_override("font_size", 7)
-	gift_btn.add_theme_color_override("font_color", C_YELLOW)
-	gift_btn.add_theme_color_override("font_hover_color", C_YELLOW)
-	gift_btn.add_theme_color_override("font_outline_color", Color("4a1e08"))
-	gift_btn.add_theme_constant_override("outline_size", 3)
-	gift_btn.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	gift_btn.position = Vector2(76, 4)
-	gift_btn.custom_minimum_size = Vector2(92, 16)
-	hud_root.add_child(gift_btn)
 	boss_box = Control.new()
 	boss_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	boss_box.position = Vector2(-90, 46)
@@ -498,9 +472,9 @@ func _process(_d: float) -> void:
 	chat_btn.visible = Net.active
 	if room_label and panels.pause.visible:
 		room_label.text = _room_text()
-	day_label.text = "Day %d" % (lvl.s_day if lvl.kind == "survival" else GS.day)
+	day_label.visible = lvl.kind == "survival"
+	day_label.text = "Day %d" % lvl.s_day
 	bomb_btn.visible = not town
-	gift_btn.visible = town and GS.gift_ready()
 	var info := ""
 	if lvl.kind == "arena" and not lvl.bosses_spawned:
 		var s := int(lvl.arena_time_left())
@@ -527,7 +501,6 @@ func _process(_d: float) -> void:
 
 func _refresh_stats() -> void:
 	bars.queue_redraw()
-	coin_label.text = str(GS.coins)
 	gem_label.text = str(GS.gems)
 
 func _refresh() -> void:
@@ -557,12 +530,6 @@ func toast(text: String, kind: String = "") -> void:
 	tw.tween_interval(2.4)
 	tw.tween_property(l, "modulate:a", 0.0, 0.4)
 	tw.tween_callback(l.queue_free)
-
-func _open_gift() -> void:
-	var got := GS.open_gift()
-	if got.is_empty():
-		return
-	toast("Daily Free Gift: %s x%d" % [Data.ITEMS[got[0]].name, got[1]], "big")
 
 # ---------------------------------------------------------------- touch controls
 func _build_touch() -> void:
@@ -806,6 +773,11 @@ func _build_bag() -> void:
 	p.add_child(page)
 
 func _tabs() -> Array:
+	if bag_mode == "storage":
+		var t := []
+		for b in GS.BACKPACKS:
+			t.append(["pack%d" % b, ""])
+		return t
 	if bag_mode == "craft":
 		return [["weapon", "sword_cast"], ["helmet", "copper_helmet"], ["armor", "iron_armor"], ["shield", "wooden_shield"], ["ring", "gold_ring"]]
 	return [["character", ""], ["combine", ""], ["menu", ""]]
@@ -816,6 +788,13 @@ func _bag_click(i: int) -> void:
 			GS.swap(move_from, i)
 		move_from = -1
 		bag_sel = i if GS.inv[i] else -1
+		_refresh_bag()
+		return
+	# at the Storage girl, tapping an item puts it in the open backpack
+	if bag_mode == "storage":
+		if GS.inv[i] != null and GS.store(i, storage_page) > 0:
+			toast("This backpack is full.", "warn")
+		bag_sel = -1
 		_refresh_bag()
 		return
 	# on the combine page, tapping an item puts it in the green slot
@@ -851,20 +830,31 @@ func _refresh_bag() -> void:
 		var key: String = t[0]
 		var b := Button.new()
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(42 if bag_mode == "craft" else 72, 30)
+		b.custom_minimum_size = Vector2(42 if bag_mode == "craft" else (35 if bag_mode == "storage" else 72), 30)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		if bag_mode == "craft":
+		if bag_mode == "storage":
+			b.icon = Art.ui_icon("backpack", 2)
+		elif bag_mode == "craft":
 			b.icon = Art.icon_big(t[1])
 		else:
 			b.icon = Art.ui_icon({"character": "backpack", "combine": "hammer", "menu": "compass"}[key], 2)
 		b.tooltip_text = key.capitalize()
-		b.pressed.connect(func(): bag_tab = key; craft_sel = -1; craft_scroll = 0; _refresh_bag())
-		if key == bag_tab:
+		b.pressed.connect(func():
+			if bag_mode == "storage":
+				storage_page = int(key.substr(4))
+			else:
+				bag_tab = key
+			craft_sel = -1
+			craft_scroll = 0
+			_refresh_bag())
+		if key == bag_tab or (bag_mode == "storage" and key == "pack%d" % storage_page):
 			b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 3))
 			b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 3))
 		tab_row.add_child(b)
 	_clear(page)
-	if bag_mode == "craft":
+	if bag_mode == "storage":
+		_page_storage()
+	elif bag_mode == "craft":
 		_page_craft()
 	else:
 		match bag_tab:
@@ -872,6 +862,31 @@ func _refresh_bag() -> void:
 			"combine": _page_combine()
 			"menu": _page_menu()
 	_refresh_info()
+
+## One backpack of the storage: 5 x 6 slots. Tap a stack to take it back.
+func _page_storage() -> void:
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.position = Vector2(26, 8)
+	grid.add_theme_constant_override("h_separation", 1)
+	grid.add_theme_constant_override("v_separation", 1)
+	page.add_child(grid)
+	var pack: Array = GS.storage[storage_page]
+	for k in GS.BACKPACK_SLOTS:
+		var b := _slot(31)
+		var idx := k
+		_fill_slot(b, pack[k])
+		b.pressed.connect(func():
+			if GS.retrieve(storage_page, idx) > 0:
+				toast("Your bag is full.", "warn")
+			_refresh_bag())
+		grid.add_child(b)
+
+## The Storage girl opens your bag with the six backpacks next to it.
+func open_storage() -> void:
+	bag_mode = "storage"
+	bag_sel = -1
+	open_panel("bag")
 
 func _page_character() -> void:
 	var pic := TextureRect.new()
@@ -882,7 +897,7 @@ func _page_character() -> void:
 	page.add_child(_at(_label(Data.CHARACTERS.get(GS.look, {"name": ""}).name, 9, C_MUTED), Vector2(64, 22)))
 	var ar := GS.attack_range(GS.held())
 	var lines := [["Attack", "%d-%d" % [ar.x, ar.y]], ["Defense", str(GS.stat("def"))], ["Magic", str(GS.stat("mag"))],
-		["Health", str(int(GS.max_hp()))], ["Mana", str(int(GS.max_mp()))], ["Stamina", str(int(GS.max_st()))]]
+		["Health", str(int(GS.max_hp()))], ["Mana", str(int(GS.max_mp()))], ["Stamina", str(int(GS.max_st()))], ["Coins", str(GS.coins)]]
 	for i in lines.size():
 		page.add_child(_at(_label(lines[i][0], 9), Vector2(64, 40 + i * 13)))
 		page.add_child(_at(_label(lines[i][1], 9, C_EMBER, true), Vector2(130, 40 + i * 13)))
@@ -1107,7 +1122,12 @@ func _refresh_info() -> void:
 		info_box.add_child(_wrap("Tap a slot to move the item there.", 156, C_MUTED))
 		return
 	if bag_sel < 0 or GS.inv[bag_sel] == null:
-		info_box.add_child(_wrap("Tap an item to see what it does." if bag_mode == "bag" else "Pick something to craft. The Crafter never fails.", 156, C_MUTED))
+		var hint := "Tap an item to see what it does."
+		if bag_mode == "craft":
+			hint = "Pick something to craft. The Crafter never fails."
+		elif bag_mode == "storage":
+			hint = "Tap a stack to move it between your bag and the open backpack."
+		info_box.add_child(_wrap(hint, 156, C_MUTED))
 		return
 	var s = GS.inv[bag_sel]
 	var it: Dictionary = Data.ITEMS[s.id]
@@ -1199,14 +1219,43 @@ func _build_panels() -> void:
 	st.add_child(stext)
 	_scroll(st, Vector2(10, 56), Vector2(400, 156))
 
-	var m := _panel("map", Vector2(440, 214), "Gatekeeper")
-	var cols := HBoxContainer.new()
-	cols.name = "Cols"
-	cols.position = Vector2(10, 28)
-	cols.add_theme_constant_override("separation", 8)
-	m.add_child(cols)
-	# the note sits in the Survival column, under its one button
-	m.add_child(_at(_wrap("Deeper levels are through the purple portal hidden underground. In arenas the boss comes after 3 minutes. In Survival, live through the nights for Survival Tokens.", 134, C_MUTED, 8), Vector2(294, 96)))
+	# the Gatekeeper's worlds, like the original: two cards at a time on a dark red
+	# board, each with its name, a line, a picture of the map and Activate. Swipe
+	# (or use the arrows) for more; the X sits outside, bottom right.
+	var m := Panel.new()
+	m.size = Vector2(344, 206)
+	m.visible = false
+	m.add_theme_stylebox_override("panel", _tex_box(Art.ui_frame("frame"), 4, 4))
+	root.add_child(m)
+	panels["map"] = m
+	var board := ColorRect.new()
+	board.color = Color("4a1418")
+	board.position = Vector2(7, 7)
+	board.size = m.size - Vector2(14, 14)
+	board.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m.add_child(board)
+	var sc := ScrollContainer.new()
+	sc.name = "Scroll"
+	sc.position = Vector2(16, 14)
+	sc.size = Vector2(312, 178)
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	m.add_child(sc)
+	var cards := HBoxContainer.new()
+	cards.name = "Cards"
+	cards.add_theme_constant_override("separation", 12)
+	sc.add_child(cards)
+	for side in [-1, 1]:
+		var dir: int = side
+		var arrow := _small_button("<" if side < 0 else ">", func(): sc.scroll_horizontal += dir * 312)
+		arrow.custom_minimum_size = Vector2(12, 26)
+		arrow.position = Vector2(2 if side < 0 else m.size.x - 14, m.size.y / 2 - 13)
+		m.add_child(arrow)
+	var mx := _close_button(func(): close_panels())
+	mx.icon = Art.ui_icon("close", 2)
+	mx.custom_minimum_size = Vector2(30, 28)
+	mx.position = Vector2(m.size.x + 6, m.size.y - 40)
+	m.add_child(mx)
 
 	var ch := _panel("chat", Vector2(320, 150), "Chat")
 	var lines := _wrap("", 300, C_INK, 8)
@@ -1575,6 +1624,8 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 		row.add_child(_button("Craft", func(): open_smith(), true))
 	if npc_id == "keeper":
 		row.add_child(_button("Open a portal", func(): open_panel("map"), true))
+	if npc_id == "storage":
+		row.add_child(_button("Storage", func(): open_storage(), true))
 	row.add_child(_button("Bye", func(): close_panels()))
 	p.get_node("Text").text = text
 
@@ -1702,22 +1753,75 @@ func open_book(book: String) -> void:
 
 # world list
 func _refresh_map() -> void:
-	var cols: HBoxContainer = panels.map.get_node("Cols")
-	_clear(cols)
-	for section in Data.WORLD_MENU:
-		var v := VBoxContainer.new()
-		v.custom_minimum_size = Vector2(134, 0)
-		v.add_theme_constant_override("separation", 3)
-		v.add_child(_heading(section[0], 10))
-		for wid in section[1]:
-			var w: Dictionary = Data.WORLDS[wid]
-			var target: String = wid
-			var b := _button(w.name, func(): _enter_world(target), false)
-			if w.has("needs") and not GS.flags.get(w.needs, false):
-				b.disabled = true
-				b.tooltip_text = "Finish Brutus' quest first."
-			v.add_child(b)
-		cols.add_child(v)
+	var cards: HBoxContainer = panels.map.find_child("Cards", true, false)
+	_clear(cards)
+	for c in Data.WORLD_CARDS:
+		cards.add_child(_world_card(c[0], c[1], c[2]))
+	(panels.map.get_node("Scroll") as ScrollContainer).scroll_horizontal = 0
+
+var _previews := {}
+
+## The map picture on a card, made once per world.
+func _world_preview(wid: String) -> Texture2D:
+	if not _previews.has(wid):
+		var lv: Node = load("res://scripts/level.gd").new()
+		_previews[wid] = ImageTexture.create_from_image(lv.preview_image(wid))
+		lv.free()
+	return _previews[wid]
+
+func _world_card(wid: String, title: String, line: String) -> Control:
+	var card := Panel.new()
+	card.custom_minimum_size = Vector2(150, 178)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color("fdd08c")
+	bg.border_color = Color("e8862a")
+	bg.border_width_top = 4
+	card.add_theme_stylebox_override("panel", bg)
+	var t := _outlined(_label(title, 11, Color("3fd06a"), true))
+	t.add_theme_color_override("font_outline_color", Color("1e5a1e"))
+	t.position = Vector2(0, 8)
+	t.size = Vector2(150, 14)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card.add_child(t)
+	var sub := _outlined(_label(line, 7, C_WHITE))
+	sub.add_theme_color_override("font_outline_color", Color("6a3a10"))
+	sub.position = Vector2(0, 28)
+	sub.size = Vector2(150, 12)
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.clip_text = true
+	card.add_child(sub)
+	var dark := ColorRect.new()
+	dark.color = Color("0a0a0c")
+	dark.position = Vector2(0, 46)
+	dark.size = Vector2(150, 84)
+	card.add_child(dark)
+	var pic := TextureRect.new()
+	pic.texture = _world_preview(wid)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	pic.position = Vector2(0, 46)
+	pic.size = Vector2(150, 84)
+	card.add_child(pic)
+	var w: Dictionary = Data.WORLDS[wid]
+	var target: String = wid
+	var act := _button("Activate", func(): _enter_world(target), false)
+	act.name = "Activate"
+	act.add_theme_font_override("font", Art.font_title)
+	act.add_theme_font_size_override("font_size", 11)
+	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		act.add_theme_color_override(k, C_WHITE)
+	act.add_theme_color_override("font_outline_color", Color("6a3a10"))
+	act.add_theme_constant_override("outline_size", 3)
+	act.position = Vector2(0, 140)
+	act.custom_minimum_size = Vector2(150, 34)
+	act.size = Vector2(150, 34)
+	if w.has("needs") and not GS.flags.get(w.needs, false):
+		act.disabled = true
+		act.text = "Locked"
+		act.tooltip_text = "Finish Brutus' quest first."
+	card.add_child(act)
+	return card
 
 func _enter_world(wid: String) -> void:
 	var w: Dictionary = Data.WORLDS[wid]
