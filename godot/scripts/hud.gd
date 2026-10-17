@@ -46,6 +46,7 @@ var menu_step := "title"
 var new_char := "man_in_suit"
 var name_edit: LineEdit
 var chat_btn: Button
+var emote_panel: Panel
 var chat_edit: LineEdit
 var chat_log := [] # recent room chat, newest last
 var room_label: Label
@@ -305,6 +306,61 @@ func _build_hud() -> void:
 	chat_btn.visible = false
 	hud_root.add_child(chat_btn)
 	chat_btn.size = Vector2(92, 13) # after the small font is in place, or it keeps the default height
+	# the three orange buttons right of the bars: friends, chat and emotes
+	var side := [["FriendButton", "friend", func(): open_friends()],
+		["ChatButton", "chat", func():
+			if Net.active:
+				open_chat()
+			else:
+				toast("Chat works when you play online with friends.")],
+		["EmoteButton", "smile", func(): toggle_emotes()]]
+	for i in side.size():
+		var sb := Button.new()
+		sb.name = side[i][0]
+		sb.focus_mode = Control.FOCUS_NONE
+		sb.position = Vector2(101, 37 + i * 18)
+		sb.custom_minimum_size = Vector2(15, 15)
+		sb.size = Vector2(15, 15)
+		sb.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("button"), 3, 0))
+		sb.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("button"), 3, 0))
+		sb.add_theme_stylebox_override("pressed", _tex_box(Art.ui_frame("button_down"), 3, 0))
+		var ic := TextureRect.new()
+		ic.texture = Art.ui_icon(side[i][1])
+		ic.set_anchors_preset(Control.PRESET_FULL_RECT)
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sb.add_child(ic)
+		sb.pressed.connect(side[i][2])
+		hud_root.add_child(sb)
+	# the emote panel under the chat box: tap one to show it over your head
+	emote_panel = Panel.new()
+	emote_panel.name = "EmotePanel"
+	emote_panel.position = Vector2(5, 93)
+	emote_panel.size = Vector2(155, 71)
+	var eb := StyleBoxFlat.new()
+	eb.bg_color = Color("f9c98a")
+	eb.set_border_width_all(3)
+	eb.border_color = Color("e8862a")
+	eb.expand_margin_left = 1
+	eb.expand_margin_right = 1
+	eb.expand_margin_top = 1
+	eb.expand_margin_bottom = 1
+	eb.shadow_color = Color("4a1e08")
+	eb.shadow_size = 1
+	emote_panel.add_theme_stylebox_override("panel", eb)
+	emote_panel.visible = false
+	var grid := GridContainer.new()
+	grid.columns = 7
+	grid.position = Vector2(4, 4)
+	grid.add_theme_constant_override("h_separation", 0)
+	grid.add_theme_constant_override("v_separation", 0)
+	emote_panel.add_child(grid)
+	for e in Data.EMOTES:
+		var em := _icon_button(Art.emote(e), Vector2(21, 21), func(): use_emote(e))
+		em.name = e
+		em.tooltip_text = e.capitalize()
+		grid.add_child(em)
+	hud_root.add_child(emote_panel)
 	# the sky clock, with the day and your coins next to it
 	clock = Control.new()
 	clock.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -470,6 +526,7 @@ func _process(_d: float) -> void:
 		return
 	var town: bool = lvl.kind == "town"
 	chat_btn.visible = Net.active
+	status_label.position.y = 168 if emote_panel.visible else 92
 	if room_label and panels.pause.visible:
 		room_label.text = _room_text()
 	day_label.visible = lvl.kind == "survival"
@@ -1463,6 +1520,17 @@ func _room_text() -> String:
 	if Net.is_host():
 		t += "\nFriends join you from their friends list. Nobody sees your IP address."
 	return t
+
+func toggle_emotes() -> void:
+	emote_panel.visible = not emote_panel.visible
+	Sfx.play("open" if emote_panel.visible else "close", 0.0)
+
+## Shows an emote over your head, and over it on everyone else's screen.
+func use_emote(e: String) -> void:
+	if main.level == null or main.level.player == null:
+		return
+	main.level.show_emote(main.level.player, e)
+	Net.send_emote(e)
 
 func chat_focused() -> bool:
 	return chat_edit != null and chat_edit.has_focus()

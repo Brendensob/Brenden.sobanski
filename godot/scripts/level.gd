@@ -13,6 +13,7 @@ const PortalScript := preload("res://scripts/portal.gd")
 const PlacedScript := preload("res://scripts/placed.gd")
 const StationScript := preload("res://scripts/station.gd")
 const FxScript := preload("res://scripts/fx.gd")
+const EmoteScript := preload("res://scripts/emote.gd")
 const PetScript := preload("res://scripts/pet.gd")
 const PuppetScript := preload("res://scripts/remote_player.gd")
 const ProjectileScript := preload("res://scripts/projectile.gd")
@@ -919,6 +920,16 @@ func number(pos: Vector2, text: String, color: Color) -> void:
 	f.setup_text(text, color)
 	f.position = pos
 	add_child(f)
+
+## An emote over someone's head (you or another player); replaces the last one.
+func show_emote(who: Node2D, e: String) -> void:
+	var old: Node = who.get_node_or_null("Emote")
+	if old:
+		old.name = "OldEmote"
+		old.queue_free()
+	var em := EmoteScript.new()
+	em.setup(e)
+	who.add_child(em)
 
 func burst(pos: Vector2, color: Color, n: int = 6) -> void:
 	var f := FxScript.new()

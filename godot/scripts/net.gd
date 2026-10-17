@@ -11,6 +11,7 @@ extends Node
 
 signal players_changed
 signal chat_received(from: String, text: String)
+signal emote_received(peer: int, id: String)
 signal trade_invited(peer: int, from: String)
 signal trade_started
 signal trade_changed
@@ -385,6 +386,16 @@ func say(text: String) -> void:
 @rpc("any_peer", "reliable")
 func chat(from: String, text: String) -> void:
 	chat_received.emit(from, text.left(80))
+
+## Shows an emote over your head on everyone else's screen.
+func send_emote(id: String) -> void:
+	if active:
+		emote.rpc(id)
+
+@rpc("any_peer", "reliable")
+func emote(id: String) -> void:
+	if id in Data.EMOTES:
+		emote_received.emit(multiplayer.get_remote_sender_id(), id)
 
 # ---------------------------------------------------------------- trading
 ## Players in your room who are in Pixel Town right now (you trade at the Trading Center).

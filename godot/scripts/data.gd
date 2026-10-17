@@ -1306,6 +1306,11 @@ var WORLDS := {
 }
 # The Gatekeeper offers these. Deeper levels are reached through portals inside each world.
 # The Gatekeeper's cards, in the original's order, with its titles and lines.
+## The emotes in the chat bar's emote panel, in the panel's order (7 x 3).
+const EMOTES := ["angry", "grin", "bomb", "sleepy", "poop", "laugh", "shock",
+	"thumbs", "cry", "salute", "devil", "rose", "ghost", "gift",
+	"lips", "heart", "wave", "left", "up", "right", "down"]
+
 const WORLD_CARDS := [
 	["grass_1", "Grasslands", "The land of the slimes."],
 	["grass_arena", "Grassland Arena", "Boss spawns in 3 minutes."],

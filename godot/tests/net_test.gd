@@ -90,6 +90,8 @@ func run_host() -> void:
 	var slime: Node = lvl.spawn_mob_at("slime", pp.position + Vector2(14, 0))
 	slime.aggro_forced = true
 	check(await until(func(): return chat_log.has("hello from friend"), 90.0), "the friend's chat message arrived")
+	var em: Node = pp.get_node_or_null("Emote") if is_instance_valid(pp) else null
+	check(em != null and em.texture == Art.emote("heart"), "the friend's heart emote shows over their head")
 	var placed := 0
 	for n in lvl.props.get_children():
 		if n is PlacedScript:
@@ -197,6 +199,7 @@ func run_client() -> void:
 		if n is PlacedScript:
 			placed += 1
 	check(placed == 1, "the wall shows up for the friend too")
+	main.hud.use_emote("heart")
 	main.hud.open_chat()
 	main.hud.chat_edit.text = "hello from friend"
 	await shot("net_client_chat")
