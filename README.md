@@ -8,6 +8,16 @@ There are two versions in this repo:
 - **Browser version** (this folder): a top-down game you can play by opening `index.html`.
 - **Godot version** (`godot/`): a side-scroller that plays like Pixel Survival Game 2. See [`godot/README.md`](godot/README.md).
 
+## Project notes (Obsidian)
+
+`Pixel Wilds Vault/` is an Obsidian vault with the project's memory:
+- the rules and decisions;
+- every change;
+- how each part of the game works;
+- research notes and the roadmap.
+
+Open the folder in Obsidian with **Open folder as vault**. Put your own notes in `My Notes`. `CLAUDE.md` tells Claude to read the vault at the start of each session and keep it updated.
+
 ## Play the browser version
 
 Open `index.html` in any modern browser. No install or build step is needed.

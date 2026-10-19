@@ -272,7 +272,8 @@ health or mana every few seconds.
 **Systems**
 - Health, mana and stamina (red, blue, green). Attacks use stamina, staffs use mana.
 - Defense works like the wiki's defense calculator: a monster hits for its attack
-  (doubled on a critical) minus a random number from 0 to your defense, never below 1.
+  (doubled on a critical) minus a random number from 0 to your defense, never below 0
+  (a hit your defense fully soaks does 0, as in the trailer).
 - Bows, Crazy Cannons and WaazooKaas each use their own ammo, made with Combo Book I.
   Snow Balls are thrown by hand.
 - Gear: helmet, armor, shield, two rings and a pet, each with attack, defense, magic,

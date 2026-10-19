@@ -1,0 +1,37 @@
+---
+tags: [game, hud]
+---
+# HUD and Controls
+
+Laid out like Brenden's PSG2 screenshots.
+
+![[hud_emotes.png]]
+
+## Screen
+- **Top left:** 5 peach hotbar slots (green border on the one you're holding).
+- **Under them:** the red, blue and green bars (health, mana, stamina).
+- **Right of the bars:** three orange buttons, top to bottom:
+  - **friends**;
+  - **chat** (offline it says chat needs online play);
+  - **emotes** (see [[Emotes]]).
+- **Under the bars:** the **Chat..** box (only in online rooms).
+- **Top centre:** the turning sky clock, with **gems** next to it (`+` 💎 count). Tap them for the Gem Shop.
+- **Day counter:** only in Survival Grasslands.
+- **Right side:** backpack (bag), compass (menu), bomb (back to town).
+- **Bottom:** grey ◀ ▶ bottom left; red **A** above green **B** bottom right.
+- Your name shows in red over your head. Pickups read "Wood obtained" under the clock.
+- Coins are on the bag's character page, not on the HUD.
+
+## Controls
+| | Keyboard | Phone or mouse |
+|---|---|---|
+| Move | A / D or arrows | ◀ ▶ |
+| Jump (B) | Space, W, K or Up | B |
+| Hit / use (A) | J, X, Enter, or click anywhere | A |
+| Bag | E | Backpack |
+| Hotbar slot | 1–5 | Tap the slot |
+| Menu | Esc | Compass |
+| Chat | T | Chat.. box |
+| Back to town | | Bomb |
+
+Holding A while you open the bag turns on auto-attack.
