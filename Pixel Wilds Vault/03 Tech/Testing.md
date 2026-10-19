@@ -24,5 +24,13 @@ It checks joining, following through portals, drops, chat, **emotes**, walls, tr
 ## Server checks
 `python3 server/test_server.py`
 
+## Vault data export
+After any change to `scripts/data.gd`, run:
+```
+cd godot
+<godot> --headless --path . -s tools/vault_export.gd
+```
+It rewrites the notes in `Pixel Wilds Vault/06 Data`.
+
 ## Getting Godot in a fresh cloud container
 Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releases (4.3-stable) and unzip it, for example to `/tmp/godot/`.

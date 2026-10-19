@@ -6,6 +6,7 @@ tags: [project, decisions]
 Newest first. Each entry gives the decision, why, and where it came from.
 
 ## 2026-10-19
+- **The vault holds all the game's data, plus rules with examples.** Every table in `data.gd` (567 items, 70 monsters, recipes, drops, shops, chests, 75 quests) is exported to `06 Data` by `godot/tools/vault_export.gd`. [[Rules and Preferences]] got worked examples. *Brenden: "store all data in it rules and examples then send it".*
 - **Update the vault with every change.** Brenden keeps Obsidian open. Every PR must update the vault, and the Obsidian Git plugin pulls it about every 2 minutes. *Brenden: "obsidan is open rn connec to it and update it everytime a change is made".* A cloud session can't reach his PC directly, so GitHub is the bridge.
 - **Set up this Obsidian vault as the project memory**, plus a `CLAUDE.md` file that tells every Claude session to read the vault and keep it updated. *Brenden: "connect to obsidian and make an entire thing for this topic and use it to help memory".*
 - **Brenden's own notes go in `My Notes`.** The desktop shortcut pushes that folder to GitHub so Claude can read it.

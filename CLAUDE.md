@@ -18,6 +18,7 @@ The project memory is the Obsidian vault in `Pixel Wilds Vault/`. Brenden reads 
 - The game or tech notes the change affects, so they keep describing the game as it is.
 - A new session note in `05 Sessions/` (copy `Templates/Session Log.md`).
 - `Open Questions.md`, `Known Issues.md` and `Roadmap.md` when they change.
+- If `godot/scripts/data.gd` changed: run `<godot> --headless --path . -s tools/vault_export.gd` from `godot/`. It rewrites `06 Data`.
 
 Vault style: plain Markdown with `[[wikilinks]]` between notes, short sections, tables for lists. Our own screenshots go in `attachments/`. Never add the original game's images.
 
