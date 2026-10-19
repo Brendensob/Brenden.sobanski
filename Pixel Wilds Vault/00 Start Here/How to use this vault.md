@@ -10,6 +10,18 @@ tags: [start]
    `C:\Users\<you>\PixelWilds\Brenden.sobanski\Pixel Wilds Vault`
 4. Open [[Home]].
 
+## Live updates while Obsidian is open (Obsidian Git)
+Claude changes these notes with every change to the game. To see them show up on their own, without reopening the game:
+1. In Obsidian: **Settings → Community plugins → Turn on community plugins**.
+2. **Browse**, search for **Git** (by Vinzent), then **Install** and **Enable**.
+3. Open the plugin's settings:
+   - **Auto pull interval (minutes):** `2`
+   - **Pull on startup:** on
+   - **Auto commit-and-sync interval:** leave it at `0` (off), so the plugin never sends your game files anywhere. The desktop shortcut sends `My Notes`.
+4. Done. Every 2 minutes Obsidian pulls the newest notes (and game files) from GitHub.
+
+To pull right away: press **Ctrl+P** and run **Git: Pull**.
+
 ## Keeping it up to date
 - Claude writes and updates every note except the ones in `My Notes`.
 - The desktop shortcut pulls the newest notes each time you open the game.
