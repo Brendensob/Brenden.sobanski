@@ -32,6 +32,9 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 - [[Git Workflow]]: branch, PR, merge
 - [[Online Server]]
 
+## Game data (every number, exported from the game)
+- [[Game Data]]: [[Items]] · [[Monsters]] · [[World Data]] · [[Combinations]] · [[Crafter Recipes]] · [[Smelting]] · [[Resources]] · [[Shops]] · [[Chests and Seeds]] · [[Quests]] · [[Character Data]] · [[Pets]]
+
 ## Research
 - [[PSG2 Sources]]: what counts as a source and what doesn't
 - [[PSG2 Screenshot Notes]]: what Brenden's screenshots and video showed
@@ -40,6 +43,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 ## Sessions
 - [[2026-10-09 to 10-17 History]]
 - [[2026-10-19 Vault created]]
+- [[2026-10-19 Game data and examples]]
 
 ## Yours
 - [[My Notes/Welcome|My Notes]]: Brenden's own notes, synced up so Claude can read them
