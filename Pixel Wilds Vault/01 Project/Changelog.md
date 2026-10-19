@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #19 | 2026-10-19 | Vault: live updates through the Obsidian Git plugin; rule to update the vault with every change |
 | #18 | 2026-10-19 | This Obsidian vault, `CLAUDE.md`, and My Notes sync in the desktop shortcut |
 | #17 | 2026-10-17 | Cartoon art twist (shading, wavy grass, big damage numbers, puff bursts), friend/chat/emote buttons, 21 emotes synced online |
 | #16 | 2026-10-17 | Storage girl named Banka; the Merchant gets spiky blond hair; street order Plumber → Banka → Merchant → Crafter |

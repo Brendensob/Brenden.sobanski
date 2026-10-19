@@ -23,7 +23,7 @@ Claude follows these every session. They come from Brenden's own instructions; t
   4. **merge it**. Brenden asked for this ("do it for me").
 - Brenden plays through the desktop shortcut (it pulls `main`) or the web build. A change isn't "done" for him until it's merged.
 - Show screenshots of what changed.
-- Update this vault ([[Decision Log]], [[Changelog]], the affected game notes, and a note in `05 Sessions`) in the same PR as the change.
+- **Update this vault with every change** ([[Decision Log]], [[Changelog]], the affected game notes, and a note in `05 Sessions`), in the same PR, and merge it. Brenden watches the vault live in Obsidian; the Obsidian Git plugin pulls `main` every ~2 minutes.
 
 ## Talking with Brenden
 - Brenden writes short, quick messages with typos. Read for intent.

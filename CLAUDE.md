@@ -12,7 +12,7 @@ The project memory is the Obsidian vault in `Pixel Wilds Vault/`. Brenden reads 
 4. Everything in `Pixel Wilds Vault/My Notes/`: Brenden's own notes, ideas and requests. **Never edit this folder.** Fold what it says into the other notes.
 5. The game notes in `02 Game/` that touch the task.
 
-**With every change, in the same PR, update:**
+**With every change, in the same PR, update** (Brenden keeps Obsidian open, and the Obsidian Git plugin pulls `main` every ~2 minutes, so merge promptly):
 - `01 Project/Decision Log.md`: what was decided, why, and Brenden's words.
 - `01 Project/Changelog.md`: one row per merged PR.
 - The game or tech notes the change affects, so they keep describing the game as it is.
