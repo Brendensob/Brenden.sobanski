@@ -1,1 +1,5 @@
 build/
+
+# Obsidian keeps its own per-PC settings here
+Pixel Wilds Vault/.obsidian/
+Pixel Wilds Vault/.trash/

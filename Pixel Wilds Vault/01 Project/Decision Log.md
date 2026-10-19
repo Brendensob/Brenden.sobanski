@@ -1,0 +1,58 @@
+---
+tags: [project, decisions]
+---
+# Decision Log
+
+Newest first. Each entry gives the decision, why, and where it came from.
+
+## 2026-10-19
+- **Set up this Obsidian vault as the project memory**, plus a `CLAUDE.md` file that tells every Claude session to read the vault and keep it updated. *Brenden: "connect to obsidian and make an entire thing for this topic and use it to help memory".*
+- **Brenden's own notes go in `My Notes`.** The desktop shortcut pushes that folder to GitHub so Claude can read it.
+
+## 2026-10-17
+- **Cartoon twist on the art**, plus the HUD from his screenshot and recording:
+  - friend, chat and emote buttons;
+  - the emote panel;
+  - big damage numbers.
+  
+  *Brenden: "Redo the art style with a twist of cartoon ish and what's on the screen right now".* → PR #17
+- **The storage girl is named Banka**, and **the spiky-haired blond NPC is the Merchant** (he sells stuff). *Brenden's answers.* → PR #16
+- **Keep the Gem Shop**: "I wanna make money from this too". See [[Monetization]].
+- **The day counter shows only in Survival Grasslands**, and the Daily Free Gift was removed. *"The day counter and rewards for days is only in survival grasslands but no one really cares for it".* → PR #15
+- **The HUD follows his screenshots:**
+  - gems sit next to the clock;
+  - storage is 6 backpacks of 30 slots in the bag screen;
+  - the Gatekeeper shows world cards.
+  
+  → PR #15
+- **Only the PSG2 wiki and the trailer count as sources**: "Don't use the App Store wiki and 2.o wiki is the wrong one". The first Banka (from the 2.o wiki) was removed. → PR #14
+- **A smaller town and smoother, slightly higher jumps.** *"make the map layout way closer to the actual one it's too big".* → PR #13
+- **Web build on GitHub Pages**, so the game plays on phones. → PR #12
+
+## 2026-10-10
+- **Combat closer to the original:**
+  - damage is random from 1 up to the hit;
+  - defense can soak a hit to 0;
+  - knockback is small;
+  - damage numbers are white.
+  
+  → PR #11
+
+## 2026-10-09
+- **Pixel Town follows Brenden's sketch:**
+  - three floors, closed in;
+  - an opening in the middle to jump up through;
+  - the Gatekeeper right of the portal;
+  - symmetrical sides;
+  - faster falling.
+  
+  → PRs #8–#10
+- **The research on drop rates and HP came up mostly empty.** Nobody has published PSG2's real drop rates, so they stay estimates. **There is no Hell 3 in PSG2** (it's from 2.o). → PR #4
+- **More worlds, mouse clicks to hit, and multi-jumps paid with the green (stamina) bar.** → PR #3
+- **Brenden edits and plays in Godot on his PC** with a one-line PowerShell setup and a desktop shortcut that pulls `main`. → PR #2
+- **The game starts as a Godot clone of PSG2**:
+  - hit NPCs and objects to interact;
+  - a swing animation and synthesized sounds.
+  
+  → PR #1
+- **Another Claude session added gems, the Gem Shop and character stats.** Brenden didn't object. → PRs #5–#7
