@@ -43,6 +43,7 @@ var page: Control
 var station: Node = null
 var station_t := 0.0
 var menu_step := "title"
+var del_slot := 0 # the slot "Select a character" asks to delete
 var new_char := "man_in_suit"
 var name_edit: LineEdit
 var chat_btn: Button
@@ -54,6 +55,7 @@ var room_box: VBoxContainer
 var trade_bag: Array = []
 var busy := false # waiting on the online server
 const MobScript := preload("res://scripts/mob.gd")
+const INVITE_URL := "https://brendensob.github.io/Brenden.sobanski/"
 
 const C_INK := Color("4a2410") # dark brown text on the peach panels
 const C_MUTED := Color("8a5a32")
@@ -1044,7 +1046,7 @@ func _page_menu() -> void:
 	page.add_child(v)
 	v.add_child(_heading(Data.WORLDS[main.level.id].name if main.level else "", 10))
 	v.add_child(_button("Resume", func(): close_panels()))
-	v.add_child(_button("Save and leave game", func(): main.quit_to_title()))
+	v.add_child(_button("Save and leave game", func(): open_panel("leave")))
 	v.add_child(_wrap("Tip: hold A and open the bag to keep attacking on your own. Press A to stop.", 150, C_MUTED, 8))
 
 func _crafter_tab(id: String) -> String:
@@ -1376,7 +1378,7 @@ func _build_panels() -> void:
 	pv.add_theme_constant_override("separation", 6)
 	pz.add_child(pv)
 	pv.add_child(_button("Resume", func(): close_panels()))
-	pv.add_child(_button("Save and leave game", func(): main.quit_to_title()))
+	pv.add_child(_button("Save and leave game", func(): open_panel("leave")))
 	pv.add_child(_button("Friends", func(): open_friends()))
 	var snd := _button("Sound: On" if Sfx.on else "Sound: Off", func(): pass)
 	snd.pressed.connect(func():
@@ -1388,6 +1390,20 @@ func _build_panels() -> void:
 	room_box = VBoxContainer.new()
 	room_box.add_theme_constant_override("separation", 2)
 	pv.add_child(room_box)
+
+	# the original asks first: "Save and Leave Game?" Yes / No
+	var lv := _panel("leave", Vector2(220, 96), "", false)
+	var lq := _label("Save and Leave Game?", 11, C_INK, true)
+	lq.size = Vector2(220, 16)
+	lq.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lv.add_child(_at(lq, Vector2(0, 22)))
+	var yes := _menu_button("Yes", func(): main.quit_to_title())
+	yes.name = "Yes"
+	yes.custom_minimum_size = Vector2(80, 26)
+	lv.add_child(_at(yes, Vector2(22, 56)))
+	var no := _menu_button("No", func(): close_panels())
+	no.custom_minimum_size = Vector2(80, 26)
+	lv.add_child(_at(no, Vector2(118, 56)))
 
 	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
 	var dtext := _wrap("", 240)
@@ -1431,24 +1447,68 @@ func _refresh_title(_choosing := false) -> void:
 	_clear(screen)
 	match menu_step:
 		"title":
+			# like the original: Play and Options at the bottom left,
+			# a green "Invite a friend!" at the bottom right
 			_logo(screen, 34)
-			var tap := _button("PLAY", func(): menu_step = "slots"; _refresh_title())
-			tap.custom_minimum_size = Vector2(120, 28)
-			tap.add_theme_font_override("font", Art.font_title)
-			tap.add_theme_font_size_override("font_size", 12)
-			screen.add_child(_at(tap, Vector2(180, 150)))
-			var sub := _outlined(_label("Explore, combine, smelt and survive. Nothing to buy, ever.", 9, C_WHITE))
-			sub.size = Vector2(480, 12)
-			sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			screen.add_child(_at(sub, Vector2(0, 190)))
+			var tap := _menu_button("Play", func(): menu_step = "slots"; _refresh_title())
+			tap.name = "Play"
+			screen.add_child(_at(tap, Vector2(10, 196)))
+			screen.add_child(_at(_menu_button("Options", func(): menu_step = "options"; _refresh_title()), Vector2(10, 232)))
+			var inv := _button("Invite a friend!", func(): menu_step = "invite"; _refresh_title(), true)
+			inv.icon = Art.ui_icon("friend", 2)
+			inv.custom_minimum_size = Vector2(124, 30)
+			screen.add_child(_at(inv, Vector2(346, 206)))
+		"options":
+			var op := _frame(Vector2(140, 50), Vector2(200, 150))
+			screen.add_child(op)
+			var oh := _heading("Options", 11)
+			oh.size = Vector2(200, 14)
+			oh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			op.add_child(_at(oh, Vector2(0, 8)))
+			var snd := _menu_button("Sound: On" if Sfx.on else "Sound: Off", func(): pass)
+			snd.name = "Sound"
+			snd.pressed.connect(func():
+				Sfx.set_on(not Sfx.on)
+				snd.text = "Sound: On" if Sfx.on else "Sound: Off")
+			op.add_child(_at(snd, Vector2(60, 36)))
+			var ver := _label("Pixel Wilds: made by Brenden", 8, C_MUTED)
+			ver.size = Vector2(200, 12)
+			ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			op.add_child(_at(ver, Vector2(0, 76)))
+			op.add_child(_at(_menu_button("Back", func(): menu_step = "title"; _refresh_title(), true), Vector2(60, 110)))
+		"invite":
+			var ip := _frame(Vector2(110, 60), Vector2(260, 130))
+			screen.add_child(ip)
+			var ih := _heading("Invite a friend!", 11)
+			ih.size = Vector2(260, 14)
+			ih.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			ip.add_child(_at(ih, Vector2(0, 8)))
+			var it := _wrap("Send your friend this link. Then add each other in Friends (Multiplayer) to play together.\n" + INVITE_URL, 240, C_INK, 8)
+			ip.add_child(_at(it, Vector2(10, 28)))
+			ip.add_child(_at(_button("Copy link", func():
+				DisplayServer.clipboard_set(INVITE_URL)
+				toast("Link copied!", "good"), true), Vector2(50, 98)))
+			ip.add_child(_at(_button("Back", func(): menu_step = "title"; _refresh_title()), Vector2(160, 98)))
 		"slots":
-			var head := _heading("Choose a character slot", 12)
-			head.size = Vector2(480, 16)
+			var head := _outlined(_label("Select a character", 14, C_WHITE, true))
+			head.size = Vector2(480, 18)
 			head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			screen.add_child(_at(head, Vector2(0, 12)))
+			screen.add_child(_at(head, Vector2(0, 20)))
 			for i in GS.SLOTS:
-				screen.add_child(_slot_card(i, Vector2(24 + i * 148, 36)))
-			screen.add_child(_at(_button("Back", func(): menu_step = "title"; _refresh_title()), Vector2(208, 236)))
+				_slot_row(screen, i, Vector2(146, 46 + i * 40))
+			screen.add_child(_at(_menu_button("Menu", func(): menu_step = "title"; _refresh_title()), Vector2(10, 232)))
+		"delete":
+			var dp := _frame(Vector2(120, 80), Vector2(240, 104))
+			screen.add_child(dp)
+			var dt := _wrap("Delete %s?\nThis can't be undone." % GS.slot_info(del_slot).get("name", ""), 220, C_INK, 10)
+			dt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			dp.add_child(_at(dt, Vector2(10, 16)))
+			dp.add_child(_at(_menu_button("Yes", func():
+				GS.delete_slot(del_slot)
+				toast("Slot %d deleted." % (del_slot + 1), "warn")
+				menu_step = "slots"
+				_refresh_title()), Vector2(18, 64)))
+			dp.add_child(_at(_menu_button("No", func(): menu_step = "slots"; _refresh_title()), Vector2(130, 64)))
 		"create":
 			var head2 := _heading("Create a character", 12)
 			head2.size = Vector2(480, 16)
@@ -1488,27 +1548,17 @@ func _refresh_title(_choosing := false) -> void:
 				menu_step = "mode"
 				_refresh_title()), Vector2(208, 140)))
 		"mode":
-			_logo(screen, 20)
-			var v := VBoxContainer.new()
-			v.position = Vector2(160, 118)
-			v.custom_minimum_size = Vector2(160, 0)
-			v.add_theme_constant_override("separation", 8)
-			screen.add_child(v)
+			# the original's three buttons, stacked at the bottom left
 			var info := GS.slot_info(GS.slot)
-			var who := _heading(info.get("name", name_edit.text if name_edit and is_instance_valid(name_edit) else ""), 10)
+			var who := _outlined(_label(info.get("name", name_edit.text if name_edit and is_instance_valid(name_edit) else ""), 10, C_WHITE, true))
+			who.size = Vector2(110, 14)
 			who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			v.add_child(who)
-			var sp := _button("Play", func(): _start_from_menu(), true)
-			sp.custom_minimum_size = Vector2(160, 26)
-			v.add_child(sp)
-			var mp := _button("Join a Friend", func(): open_friends())
-			mp.custom_minimum_size = Vector2(160, 26)
-			v.add_child(mp)
-			v.add_child(_button("Back", func(): menu_step = "slots"; _refresh_title()))
-			var note := _outlined(_label("Your world is your room: friends can join you from their friends list.", 8, C_WHITE))
-			note.size = Vector2(480, 12)
-			note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			screen.add_child(_at(note, Vector2(0, 252)))
+			screen.add_child(_at(who, Vector2(10, 140)))
+			var sp := _menu_button("Single Player", func(): _start_from_menu())
+			sp.name = "SinglePlayer"
+			screen.add_child(_at(sp, Vector2(10, 160)))
+			screen.add_child(_at(_menu_button("Multiplayer", func(): open_friends()), Vector2(10, 196)))
+			screen.add_child(_at(_menu_button("Back", func(): menu_step = "slots"; _refresh_title()), Vector2(10, 232)))
 
 func _room_text() -> String:
 	if not Net.active:
@@ -1586,54 +1636,66 @@ func _create_ok() -> void:
 	menu_step = "mode"
 	_refresh_title()
 
-func _slot_card(i: int, pos: Vector2) -> Control:
-	var card := _frame(pos, Vector2(136, 192))
-	card.mouse_filter = Control.MOUSE_FILTER_PASS
+## The original's menu buttons: wide orange bars with white outlined text.
+func _menu_button(text: String, cb: Callable, accent := false) -> Button:
+	var b := _button(text, cb, accent)
+	b.custom_minimum_size = Vector2(92 if text in ["Yes", "No"] else 110, 28)
+	b.add_theme_font_size_override("font_size", 10)
+	if not accent:
+		b.add_theme_color_override("font_color", C_WHITE)
+		b.add_theme_color_override("font_hover_color", C_WHITE)
+		b.add_theme_color_override("font_pressed_color", C_WHITE)
+		b.add_theme_color_override("font_outline_color", Color("5a2408"))
+		b.add_theme_constant_override("outline_size", 3)
+	return b
+
+## One row of "Select a character": a red X to delete it on the left, then a
+## wide bar with the character's face, name and kind. Tap the bar to play.
+func _slot_row(parent: Control, i: int, pos: Vector2) -> void:
 	var info := GS.slot_info(i)
-	var title := _heading("Slot %d" % (i + 1), 9)
-	title.position = Vector2(10, 7)
-	card.add_child(title)
-	if info.is_empty():
-		var empty := _label("Empty", 10, C_MUTED, true)
-		empty.size = Vector2(136, 14)
-		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		card.add_child(_at(empty, Vector2(0, 80)))
-		var cb := _button("Create", func():
-			GS.slot = i
+	var row := _button("", func():
+		GS.slot = i
+		if GS.slot_info(i).is_empty():
 			new_char = "man_in_suit"
 			name_edit = null
 			menu_step = "create"
-			_refresh_title(), true)
-		cb.custom_minimum_size = Vector2(100, 22)
-		card.add_child(_at(cb, Vector2(18, 158)))
-		return card
-	var pic := TextureRect.new()
-	pic.texture = Art.character(info.look, "stand", 4)
-	pic.position = Vector2(40, 22)
-	card.add_child(pic)
-	var nm := _label(info.name, 9, C_INK)
-	nm.size = Vector2(136, 12)
-	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nm.clip_text = true
-	card.add_child(_at(nm, Vector2(0, 116)))
-	var dl := _label("Day %d" % info.day, 8, C_MUTED, true)
-	dl.size = Vector2(136, 12)
-	dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	card.add_child(_at(dl, Vector2(0, 130)))
-	var play := _button("Play", func():
-		GS.slot = i
-		menu_step = "mode"
-		_refresh_title(), true)
-	play.custom_minimum_size = Vector2(70, 22)
-	card.add_child(_at(play, Vector2(12, 158)))
-	var del := _button("", func():
-		GS.delete_slot(i)
-		toast("Slot %d deleted." % (i + 1), "warn")
+		else:
+			menu_step = "mode"
 		_refresh_title())
-	del.icon = Art.ui_icon("trash", 2)
-	del.custom_minimum_size = Vector2(32, 22)
-	card.add_child(_at(del, Vector2(90, 158)))
-	return card
+	row.name = "Slot%d" % i
+	row.custom_minimum_size = Vector2(190, 34)
+	row.size = row.custom_minimum_size
+	parent.add_child(_at(row, pos + Vector2(38, 0)))
+	var face := TextureRect.new()
+	face.texture = Art.character(info.get("look", "man_in_suit"), "stand", 1)
+	face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	face.position = Vector2(5, 4)
+	face.size = Vector2(26, 26)
+	face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if info.is_empty():
+		face.modulate = Color(0, 0, 0, 0.25)
+	row.add_child(face)
+	var nm := _label("New character" if info.is_empty() else info.name, 9, C_INK, true)
+	nm.clip_text = true
+	nm.size = Vector2(150, 12)
+	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(_at(nm, Vector2(36, 5)))
+	var kind := "Empty" if info.is_empty() else "%s · Day %d" % [Data.CHARACTERS.get(info.look, {}).get("name", ""), info.day]
+	var kl := _label(kind, 8, C_MUTED)
+	kl.size = Vector2(150, 12)
+	kl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(_at(kl, Vector2(36, 18)))
+	if not info.is_empty():
+		var del := _button("", func():
+			del_slot = i
+			menu_step = "delete"
+			_refresh_title())
+		del.name = "Delete%d" % i
+		del.icon = Art.ui_icon("close", 2)
+		del.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		del.custom_minimum_size = Vector2(34, 34)
+		parent.add_child(_at(del, pos))
 
 func _start_from_menu() -> void:
 	if GS.slot_info(GS.slot).is_empty():

@@ -9,6 +9,7 @@ var badge: Label
 var t := 0.0
 var say: Label
 var say_t := 0.0
+var name_label: Label
 
 func setup(id: String, lvl: Node) -> void:
 	npc_id = id
@@ -20,7 +21,8 @@ func _ready() -> void:
 	sprite.texture = Art.character(data.look)
 	sprite.position = Vector2(0, -sprite.texture.get_height() / 2.0)
 	add_child(sprite)
-	add_child(_label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_body))
+	name_label = _label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_body)
+	add_child(name_label)
 	badge = _label("", Vector2(-10, -46), Color("f2cf5b"), Art.font_title)
 	add_child(badge)
 	# shopkeepers call out now and then, like the original
@@ -53,6 +55,12 @@ func _process(delta: float) -> void:
 	else:
 		badge.text = ""
 	sprite.flip_h = level.player.position.x < position.x
+	# walk up to a villager and they call out to you, like the original
+	if data.has("greet"):
+		var near: bool = absf(level.player.position.x - position.x) < 64 and absf(level.player.position.y - position.y) < 32
+		name_label.text = data.greet if near else data.name
+		name_label.position.x = -60 if near else -30
+		name_label.size.x = 120 if near else 60
 	if Data.SHOPS.has(npc_id):
 		say_t -= delta
 		if say_t <= 0:

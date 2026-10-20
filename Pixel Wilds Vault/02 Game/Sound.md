@@ -12,4 +12,4 @@ Sounds:
 - **getting things:** pickup, coin, eat, craft, quest, fail;
 - **menus:** click, tap, open, close, night.
 
-Sound on/off is in the compass menu and saved in `user://settings.cfg`.
+Sound on/off is in the compass menu and in **Options** on the title (see [[Main Menu]]), and saved in `user://settings.cfg`.

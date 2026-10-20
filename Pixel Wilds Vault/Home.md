@@ -21,7 +21,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 ## The game
 - [[Pixel Town]] · [[NPCs]] · [[Worlds]]
 - [[Combat]] · [[Movement and Jumping]] · [[Day and Night]]
-- [[HUD and Controls]] · [[Emotes]] · [[Bag and Storage]]
+- [[Main Menu]] · [[HUD and Controls]] · [[Emotes]] · [[Bag and Storage]]
 - [[Crafting and Combining]] · [[Characters]] · [[Currencies and Gem Shop]]
 - [[Multiplayer]] · [[Art Style]] · [[Sound]]
 
@@ -44,6 +44,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 - [[2026-10-09 to 10-17 History]]
 - [[2026-10-19 Vault created]]
 - [[2026-10-19 Game data and examples]]
+- [[2026-10-20 Menus from the recording]]
 
 ## Yours
 - [[My Notes/Welcome|My Notes]]: Brenden's own notes, synced up so Claude can read them
