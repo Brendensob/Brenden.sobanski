@@ -10,7 +10,7 @@ Run both before every merge.
 cd godot
 xvfb-run -a <godot> --path . --resolution 960x540 -- --autotest --touch
 ```
-- It ends with `AUTOTEST DONE, 0 failures` and runs **137 checks** (2026-10-17).
+- It ends with `AUTOTEST DONE, 0 failures` and runs **137 checks** (2026-10-17), plus 6 menu and greeting checks (2026-10-20).
 - `AT_QUICK=1` stops early, after the town, jump and underground checks.
 - Screenshots go to `~/.local/share/godot/app_userdata/Pixel Wilds/shots/`.
 

@@ -727,6 +727,15 @@ func run() -> void:
 	main.hud.menu_step = "mode"
 	main.hud._refresh_title()
 	await shot("01c_mode")
+	main.hud.menu_step = "title"
+	main.hud._refresh_title()
+	check(main.hud.panels.title.get_node("Screen/Play") != null, "the title has Play and Options at the bottom left")
+	main.hud.menu_step = "options"
+	main.hud._refresh_title()
+	await shot("01d_options")
+	main.hud.menu_step = "invite"
+	main.hud._refresh_title()
+	await shot("01e_invite")
 	main.start_game(false, "nurse", "Tester")
 	check(GS.look == "nurse" and GS.player_name == "Tester", "a new game starts as the Nurse named Tester")
 	check(GS.slot_info(0).get("name", "") == "Tester", "the character is saved in slot 1")
@@ -1052,5 +1061,28 @@ func run() -> void:
 	await wait(0.3)
 	GS.save_game()
 	check(GS.load_game(), "save and load")
+	# villagers call out when you walk up to them
+	var brutus: Node = find_prop(func(n): return n.get("npc_id") == "gruff")
+	main.level.player.position = brutus.position + Vector2(20, 0)
+	await wait(0.3)
+	check(brutus.name_label.text == "Looking for the Book of Survival?", "Brutus asks about the Book of Survival when you're near")
+	await shot("42_greeting")
+	# leaving asks first, then goes to "Select a character"
+	main.hud.open_panel("leave")
+	await wait(0.2)
+	check(main.hud.panels.leave.visible, "leaving asks: Save and Leave Game?")
+	await shot("43_save_and_leave")
+	main.hud.panels.leave.get_node("Yes").pressed.emit()
+	await wait(1.0)
+	check(main.on_title() and main.hud.menu_step == "slots", "Yes saves and goes to Select a character")
+	var scr: Node = main.hud.panels.title.get_node("Screen")
+	check(scr.get_node_or_null("Slot0") != null and scr.get_node_or_null("Delete0") != null and scr.get_node_or_null("Delete1") == null, "slot 1 shows the character with a red X; empty slots have no X")
+	await shot("44_select_character")
+	scr.get_node("Delete0").pressed.emit()
+	await wait(0.2)
+	check(main.hud.menu_step == "delete" and GS.slot_info(0).size() > 0, "the red X asks before deleting")
+	await shot("45_delete_ask")
+	main.hud.menu_step = "slots"
+	main.hud._refresh_title()
 	print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 	get_tree().quit()

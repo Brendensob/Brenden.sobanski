@@ -5,6 +5,16 @@ tags: [research, screenshots]
 
 What Brenden's screenshots and recordings of the real game showed. The images themselves aren't stored here, because they're the original game's art.
 
+## 2026-10-20: 52-second recording (menus, town, bag)
+- **Title:** logo in the middle; **Play** and **Options** at the bottom left; green **Invite a friend!** at the bottom right; an ad tile top left and a trophy-like button top right (not copied).
+- **Options:** Support, language (English), Find SupportID, sound and music toggles, Rate, Back, Terms and Conditions.
+- **Select a character:** 3 rows with the face, name and kind ("Ninja"), a red X on the left of each, and **Menu** at the bottom left.
+- Then **Single Player / Multiplayer / Back** stacked at the bottom left.
+- **Town:** no names over villagers. They call out when you're near: "Do you need a hammer?" (a red-haired girl), "Where do you wish to go?" (Gatekeeper), "Looking for the Book of Survival?" (Brutus), "aghh.." (the miner with the yellow hard hat).
+- **HUD:** health, mana and stamina bars with numbers (55/55, 37/37, 18/18), the same as ours.
+- **Bag:** 5 equipment tabs on the left; the right side has a collection book (weapons, helmets, armor, shields, rings and gems), a character page with the UID and share buttons, a combine page (I, II, III), and crafting pages with silhouettes. The item box under the bag shows stats as icons.
+- **Leaving:** "Save and Leave Game?" Yes / No.
+
 ## 2026-10-17: 12 screenshots
 - **HUD:**
   - gems sit right of the clock (`+` 💎 count in green-cyan);

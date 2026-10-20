@@ -5,6 +5,11 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-20
+- **The menus follow Brenden's recording of the real game.** He sent a 52-second recording with no text. It showed the title (Play and Options at the bottom left, green Invite a friend!), Options, "Select a character" rows with red X buttons, Single Player / Multiplayer / Back, and "Save and Leave Game?" Yes / No. All of these were copied in layout (not art). See [[Main Menu]].
+- **Villagers call out when you walk up to them**, like in the recording: the Gatekeeper "Where do you wish to go?", Brutus "Looking for the Book of Survival?", the Miner "aghh..". Their name shows the rest of the time, so quests still say who to find.
+- **The title no longer says "Nothing to buy, ever."** That stopped being true when the [[Currencies and Gem Shop|Gem Shop]] came in.
+
 ## 2026-10-19
 - **The vault holds all the game's data, plus rules with examples.** Every table in `data.gd` (567 items, 70 monsters, recipes, drops, shops, chests, 75 quests) is exported to `06 Data` by `godot/tools/vault_export.gd`. [[Rules and Preferences]] got worked examples. *Brenden: "store all data in it rules and examples then send it".*
 - **Update the vault with every change.** Brenden keeps Obsidian open. Every PR must update the vault, and the Obsidian Git plugin pulls it about every 2 minutes. *Brenden: "obsidan is open rn connec to it and update it everytime a change is made".* A cloud session can't reach his PC directly, so GitHub is the bridge.

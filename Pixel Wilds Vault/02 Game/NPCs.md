@@ -24,4 +24,14 @@ You talk to an NPC by **hitting** them (face them and press A), like the origina
 
 Every shopkeeper now and then shows **"New stocked items!"** over their head.
 
+Walk up to some villagers and their name turns into a greeting, as in Brenden's 2026-10-20 recording:
+
+| NPC | Says |
+|---|---|
+| Gatekeeper | "Where do you wish to go?" |
+| Brutus | "Looking for the Book of Survival?" |
+| Miner | "aghh.." |
+
+The greetings are the `greet` field in `Data.NPCS`.
+
 In code, NPCs are defined in `Data.NPCS` (data.gd), their looks in `Art.LOOKS` (art.gd) and their shops in `Data.SHOPS`.

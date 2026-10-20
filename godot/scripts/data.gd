@@ -1359,14 +1359,14 @@ func survival_tokens(day: int) -> int:
 
 # ---------------------------------------------------------------- village
 var NPCS := {
-	"keeper": {"name": "Gatekeeper", "look": "keeper", "talk": "Which world do you want to explore? I'll open a portal for you."},
-	"gruff": {"name": "Brutus", "look": "gruff", "talk": "Bring me a Wood Wall and I'll show you how to survive out there."},
+	"keeper": {"name": "Gatekeeper", "look": "keeper", "greet": "Where do you wish to go?", "talk": "Which world do you want to explore? I'll open a portal for you."},
+	"gruff": {"name": "Brutus", "look": "gruff", "greet": "Looking for the Book of Survival?", "talk": "Bring me a Wood Wall and I'll show you how to survive out there."},
 	"mira": {"name": "Miffie", "look": "mira", "talk": "I always need things collected. Help me and I'll make it worth your while!"},
 	"warden": {"name": "GateKeeper", "look": "warden", "talk": "Nobody gets to the furnaces without bringing me a Pretzel."},
 	"smith": {"name": "Crafter", "look": "smith", "talk": "Bring me materials and I'll make anything on my list. No luck needed."},
 	"merchant": {"name": "Merchant", "look": "merchant", "talk": "Buying and selling, best prices in town!"},
 	"tools": {"name": "Plumber", "look": "tools", "talk": "Lost your tools? I've got spares."},
-	"miner": {"name": "Miner", "look": "miner", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
+	"miner": {"name": "Miner", "look": "miner", "greet": "aghh..", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
 	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
 	"warden_hell": {"name": "GateKeeper", "look": "warden", "talk": "Em Stones, for those who helped me."},
 	# under Pixel Town, behind the east stone wall

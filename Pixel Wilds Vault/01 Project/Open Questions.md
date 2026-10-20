@@ -9,6 +9,7 @@ Things only Brenden can answer. Claude asks these when they matter and moves the
 - [ ] Are the **friend, chat and emote buttons** visible in single player in the real game, or only online? (Ours always show.)
 - [ ] Which NPC sells what in the real Pixel Town? Is the spiky-haired Merchant's stock right?
 - [ ] Should the **cartoon look** go further (thicker outlines, rounder shapes) or stay as it is?
+- [ ] In the recording, a **red-haired girl** says "Do you need a hammer?". Which of our villagers is she, or is she one we don't have yet?
 - [ ] Which other worlds or events does he play most, so they get polished first?
 
 ## Answered

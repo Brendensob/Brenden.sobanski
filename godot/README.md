@@ -109,7 +109,7 @@ or on from the Menu (compass button).
 ## Playing with friends
 
 Every player who starts the game is the host of their own room: your world is your
-room, and up to 3 friends can join it. To join a friend, pick **Join a Friend** on the
+room, and up to 3 friends can join it. To join a friend, pick **Multiplayer** on the
 play menu (or **Friends** in the compass menu) and press **Join** next to their name.
 
 - **Your IP stays private.** Players never connect to each other directly. All room
