@@ -201,8 +201,10 @@ func player_died() -> void:
 		if key != "":
 			if GS.add_item(key, 1, true) == 0:
 				text += " You earned a %s!" % Data.ITEMS[key].name
+			elif GS.stash(key, 1) == 0:
+				text += " You earned a %s! Your bag was full, so Banka is keeping it for you." % Data.ITEMS[key].name
 			else:
-				text += " Your bag was full, so the %s was lost." % Data.ITEMS[key].name
+				text += " Your bag and storage were full, so the %s was lost." % Data.ITEMS[key].name
 	await get_tree().create_timer(1.0).timeout
 	# already back up (woken early or moved to another map): no faint screen
 	if level == null or not is_instance_valid(level.player) or not level.player.dead:

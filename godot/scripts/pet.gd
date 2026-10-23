@@ -42,6 +42,6 @@ func _process(delta: float) -> void:
 	GS.stats_changed.emit()
 	if def.get("dmg", 0) > 0:
 		var m: Node = level.nearest_mob(position, 90)
-		if m:
+		if m and not level.wall_between(position, m.hit_rect().get_center()):
 			m.take_damage(int(def.dmg), position.x, false)
 			level.burst(m.position + Vector2(0, -8), Color("f2cf5b"), 5)

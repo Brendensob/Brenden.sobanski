@@ -28,6 +28,7 @@ Godot **4.3**, renderer `gl_compatibility`.
 | `scripts/sfx.gd` | Synthesized sounds |
 | `server/pixel_server.py` | The online server (see [[Online Server]]) |
 | `tests/autotest.gd`, `tests/net_test.gd` | See [[Testing]] |
+| `tools/data_audit.gd` | Checks the data: broken ids, unobtainable items, dead ends, money loops |
 | `tools/vault_export.gd` | Writes every data table to the vault's `06 Data` notes |
 
 ## Level grid values

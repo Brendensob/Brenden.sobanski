@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #22 | 2026-10-22 | Full game audit: data checker, completion checklist, rewards never lost on a full bag, crash-safe saves with backup, no hits through walls, character swap keeps the old one, Snow Valley needs 12 stamina, Nightmare Long Sword in the Master Chest |
 | #21 | 2026-10-20 | Menus like the real game: title, Options, Invite a friend, Select a character, Single/Multiplayer, Save and Leave Game?; villagers call out when you're near |
 | #20 | 2026-10-19 | Vault: `06 Data` with every game table exported from `data.gd`, and rules with examples |
 | #19 | 2026-10-19 | Vault: live updates through the Obsidian Git plugin; rule to update the vault with every change |

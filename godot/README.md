@@ -287,7 +287,9 @@ health or mana every few seconds.
 - Once all of Miffie's quests are done she gives a daily bounty: bring her a piece of
   equipment for Silver Keys or a Master Key.
 - Pets regenerate health, mana or stamina, or attack nearby monsters.
-- The game saves on every map change and every 30 seconds, into the character's slot.
+- The game saves on every map change and every 30 seconds, into the character's slot. Each save goes to a new file first, and the previous save is kept as a backup. A damaged save loads from the backup and is kept aside, never deleted.
+- A full bag never loses anything: rewards that don't fit (chests, the Crafter, quests, combining, harvests) drop at your feet.
+- Swings and pets can't hit monsters through walls. Switching character gives your old character back as an item.
 
 ## Where the numbers come from
 

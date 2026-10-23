@@ -10,6 +10,16 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Villagers call out when you walk up to them**, like in the recording: the Gatekeeper "Where do you wish to go?", Brutus "Looking for the Book of Survival?", the Miner "aghh..". Their name shows the rest of the time, so quests still say who to find.
 - **The title no longer says "Nothing to buy, ever."** That stopped being true when the [[Currencies and Gem Shop|Gem Shop]] came in.
 
+## 2026-10-22
+- **A full audit of the game against its data.** `tools/data_audit.gd` checks every reference and works out which items can actually be obtained. The results are in [[Completion Checklist]]. *Brenden asked for a full game audit and completion.*
+- **Nothing earned is ever lost.** A full bag drops rewards at your feet: chests, the Crafter, quests, combining, harvests, tokens, trades and multiplayer pickups. A survival key goes to Banka if the bag is full.
+- **Saves are crash-safe.** Each save goes to a temp file first, and the previous save is kept as a backup. A damaged save loads from the backup and is kept aside, never deleted.
+- **No world locks were invented.** The PSG2 wiki shows every world open at the Gatekeeper. Added the wiki's **12 stamina** rule for Snow Valley.
+- **The Nightmare Long Sword drops from the Master Chest**, as the wiki's Chests page lists. The Blood Long Sword, Stone Wall and Torch Stand have no source on the wiki, so they stay unobtainable and are logged in [[Known Issues]].
+- **Swinging and pets can't hit through walls.**
+- **Becoming a character gives your old one back.** A character's weapon comes only the first time.
+- **Healing staffs don't spend mana at full health.**
+
 ## 2026-10-19
 - **The vault holds all the game's data, plus rules with examples.** Every table in `data.gd` (567 items, 70 monsters, recipes, drops, shops, chests, 75 quests) is exported to `06 Data` by `godot/tools/vault_export.gd`. [[Rules and Preferences]] got worked examples. *Brenden: "store all data in it rules and examples then send it".*
 - **Update the vault with every change.** Brenden keeps Obsidian open. Every PR must update the vault, and the Obsidian Git plugin pulls it about every 2 minutes. *Brenden: "obsidan is open rn connec to it and update it everytime a change is made".* A cloud session can't reach his PC directly, so GitHub is the bridge.

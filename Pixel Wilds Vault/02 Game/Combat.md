@@ -12,6 +12,8 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Deaths:** monsters burst into round outlined puffs in their own main color.
 - **Swing:** the blade snaps up, slams down past level, holds low for a moment, then comes back. The body stays still. Hold A to keep attacking.
 - **Ranged:** bows, cannons and WaazooKaas each use their own ammo. Staffs use mana.
+- **Walls:** swings and pets can't hit monsters on the other side of a wall (thin ledges don't block).
+- **Healing staffs** don't cast, or spend mana, at full health.
 - **Status effects:** poison, fatigue, slow and cold, each for 10 s. Most Hell monsters can poison you.
 
 Code: `GS.roll_attack` and the damage formula in game_state.gd, `take_damage` in mob.gd, numbers in fx.gd.
