@@ -12,6 +12,7 @@ tags: [game, characters]
   - The Spi → Blue Night;
   - Ninja → Tsurugi;
   - Iron Bot → Iron Fist.
+- **Switching character** gives your old character back as an item, so nothing is lost. A character's bonus weapon comes only the first time you become it.
 - The Crafter turns characters into hats.
 
 > [!warning]

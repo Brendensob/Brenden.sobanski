@@ -16,6 +16,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 - [[Roadmap]]: what's next
 - [[Open Questions]]: things only Brenden can answer
 - [[Known Issues]]: bugs, inaccuracies and loose ends
+- [[Completion Checklist]]: every system and how finished it is
 - [[Monetization]]: the Gem Shop and plans to earn from the game
 
 ## The game
@@ -45,6 +46,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 - [[2026-10-19 Vault created]]
 - [[2026-10-19 Game data and examples]]
 - [[2026-10-20 Menus from the recording]]
+- [[2026-10-22 Full game audit]]
 
 ## Yours
 - [[My Notes/Welcome|My Notes]]: Brenden's own notes, synced up so Claude can read them

@@ -121,6 +121,18 @@ func solid(x: int, y: int) -> bool:
 		return false
 	return grid[idx(x, y)] != 0
 
+## True when a solid or deadly wall stands between two points (thin ledges don't
+## count), so swings can't reach monsters on the other side of a wall.
+func wall_between(a: Vector2, b: Vector2) -> bool:
+	var steps := maxi(1, int(a.distance_to(b) / 4.0))
+	for i in range(1, steps):
+		var p := a.lerp(b, float(i) / steps)
+		var x := int(floor(p.x / T))
+		var y := int(floor(p.y / T))
+		if x >= 0 and y >= 0 and x < W and y < H and grid[idx(x, y)] in [1, 3]:
+			return true
+	return false
+
 ## A thin ledge: you stand on it, but jump up through it from below.
 func is_ledge(x: int, y: int) -> bool:
 	return x >= 0 and y >= 0 and x < W and y < H and grid[idx(x, y)] == 2
@@ -872,7 +884,7 @@ func _survival_tick(delta: float) -> void:
 		s_night = false
 		var tokens := Data.survival_tokens(s_day)
 		if tokens > 0:
-			GS.add_item("survival_token", tokens)
+			GS.give("survival_token", tokens)
 		if netted and Net.is_host():
 			Net.night_survived.rpc(tokens)
 		announce("You survived night %d! +%d Survival Tokens" % [s_day, tokens], "good")
@@ -906,11 +918,14 @@ func _surv_scale() -> float:
 	return 1.0 + (s_day - 1) * 0.08
 
 # ---------------------------------------------------------------- drops, effects, building
-func drop(item: String, n: int, pos: Vector2) -> void:
+## personal: an item only you can pick up (your own overflow), never shared with the room.
+func drop(item: String, n: int, pos: Vector2, personal := false) -> void:
 	var p := PickupScript.new()
 	p.setup(item, n, self)
 	p.position = pos + Vector2(randf_range(-4, 4), -6)
 	entities.add_child(p)
+	if personal:
+		return
 	_register(p)
 	if live and netted and Net.is_host():
 		Net.pickup_spawned.rpc(id, [p.nid, item, n, p.position.x, p.position.y, p.vel.x, p.vel.y])
@@ -1196,9 +1211,7 @@ func net_projectile(pos: Vector2, vel: Vector2, gravity: float, color: Color, ra
 ## Surviving enough nights in Survival Grasslands earns the Wall Hammer, which
 ## breaks the stone wall in the east of Pixel Town.
 func _give_wall_hammer() -> void:
-	if GS.count("wall_hammer") > 0:
+	if GS.count("wall_hammer") > 0 or GS.in_storage("wall_hammer") > 0 or GS.flags.get("hammer_wall", false):
 		return
-	if GS.add_item("wall_hammer", 1, true) == 0:
-		main.hud.toast("You earned the Wall Hammer! Try it on the big stone wall in the east of Pixel Town.", "big")
-	else:
-		main.hud.toast("You earned the Wall Hammer, but your bag was full.", "warn")
+	GS.give("wall_hammer", 1)
+	main.hud.toast("You earned the Wall Hammer! Try it on the big stone wall in the east of Pixel Town.", "big")

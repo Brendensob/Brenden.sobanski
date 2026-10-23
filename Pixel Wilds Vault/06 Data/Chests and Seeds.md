@@ -197,6 +197,7 @@ Opens with: Master Key · picks 1 times from:
 | Gem | 2–5 | 300% |
 | Pole Axe | 1 | 100% |
 | Combo Sword | 1 | 100% |
+| Nightmare Long Sword | 1 | 100% |
 | Moon Blade | 1 | 100% |
 | Moon Blade II | 1 | 100% |
 | Moon Blade III | 1 | 100% |

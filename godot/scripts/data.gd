@@ -1281,7 +1281,7 @@ var WORLDS := {
 	"forbidden_city": {"name": "Forbidden City", "kind": "explore", "theme": "forbidden", "count": 48, "chest": true,
 		"mobs": [["wizard", 2], ["an_an", 3], ["ji_ji", 3], ["he_he", 2], ["raven", 3], ["demon_bat", 2], ["queen", 0.2, 1.5, 1.55], ["modina", 0.1], ["empress", 0.1], ["fortune_boss", 0.1]],
 		"nodes": [["vase", 3], ["silver", 2], ["gold", 2], ["erbium_rock", 3], ["volcanic_rock", 2]]},
-	"snow_valley": {"name": "Snow Valley", "kind": "explore", "theme": "snow", "count": 48, "chest": true, "def_penalty": [160, 40],
+	"snow_valley": {"name": "Snow Valley", "kind": "explore", "theme": "snow", "count": 48, "chest": true, "def_penalty": [160, 40], "min_st": 12,
 		"mobs": [["wizard", 2, 2.6, 4.9], ["grinch", 3], ["snow_turtle", 3], ["lich", 2], ["fairy", 3], ["queen", 0.2, 1.75, 1.55], ["modina_2", 0.1], ["fortune_boss", 0.08], ["evil_santa", 0.08]],
 		"nodes": [["ice_rock", 3], ["silver", 2], ["gold", 2], ["erbium_rock", 3], ["volcanic_rock", 1]]},
 	# An enclosed maze under the sand. Some of its walls kill on touch, you need at least
@@ -1552,7 +1552,7 @@ var CHESTS := {
 		["firecracker_blade", 1, 1, 0.3], ["steel_bow", 1, 1, 0.3], ["backstreet_boy", 1, 1, 0.3]]},
 	"master": {"name": "Master Chest", "key": "master_key", "rolls": 1, "loot": [
 		["gem", 2, 5, 3],
-		["pole_axe", 1, 1], ["combo_sword", 1, 1], ["moon_blade", 1, 1], ["moon_blade_2", 1, 1], ["moon_blade_3", 1, 1], ["twin_sun", 1, 1],
+		["pole_axe", 1, 1], ["combo_sword", 1, 1], ["nightmare_long_sword", 1, 1], ["moon_blade", 1, 1], ["moon_blade_2", 1, 1], ["moon_blade_3", 1, 1], ["twin_sun", 1, 1],
 		["devil_spike", 1, 1], ["golden_long_sword", 1, 1], ["copper_faceguard", 1, 1], ["tank_shield", 1, 1], ["iron_armor", 1, 1], ["golden_armor", 1, 1],
 		["gold_shield", 1, 1], ["blue_shield", 1, 1], ["armor_ring_2", 1, 1], ["armor_ring_3", 1, 1], ["jade_ring", 1, 1], ["blood_diamond_armor", 1, 1],
 		["seer_armor", 1, 1], ["ivory_armor", 1, 1], ["scale_armor", 1, 1], ["copper_helmet", 1, 1], ["brass_helmet", 1, 1], ["fear_helmet", 1, 1],

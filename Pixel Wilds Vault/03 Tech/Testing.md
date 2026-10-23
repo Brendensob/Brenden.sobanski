@@ -24,6 +24,13 @@ It checks joining, following through portals, drops, chat, **emotes**, walls, tr
 ## Server checks
 `python3 server/test_server.py`
 
+## Data audit
+```
+cd godot
+<godot> --headless --path . -s tools/data_audit.gd
+```
+It checks every id in every table, works out which items can be obtained by playing, and lists items with no use, rare spawns and money loops. It exits with an error if any reference is broken. Run it after changing `data.gd`.
+
 ## Vault data export
 After any change to `scripts/data.gd`, run:
 ```
@@ -34,3 +41,6 @@ It rewrites the notes in `Pixel Wilds Vault/06 Data`.
 
 ## Getting Godot in a fresh cloud container
 Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releases (4.3-stable) and unzip it, for example to `/tmp/godot/`.
+
+## Only the systems checks
+`AT_SYSTEMS=1` runs only `systems_check()`, about a minute instead of 12. It covers rewards on a full bag, shops, gear, ammo, mana, keys, furnaces, quests, walls, tool tiers, the token shop, cures, characters and saving.

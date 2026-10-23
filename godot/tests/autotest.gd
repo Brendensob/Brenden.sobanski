@@ -712,6 +712,215 @@ func jump_and_underground() -> void:
 	main.set_process(true)
 	main.hud.visible = true
 
+# ---------------------------------------------------------------- systems
+const PickupScript := preload("res://scripts/pickup.gd")
+
+## How many of an item lie on the ground as pickups.
+func on_ground(id: String) -> int:
+	var t := 0
+	for e in main.level.entities.get_children():
+		if e is PickupScript and e.item == id and not e.is_queued_for_deletion():
+			t += e.n
+	return t
+
+func clear_ground() -> void:
+	for e in main.level.entities.get_children():
+		if e is PickupScript:
+			e.queue_free()
+
+func shop_button(container: String, label_start: String) -> Button:
+	var box: Node = main.hud.panels.shop.find_child(container, true, false)
+	for row in box.get_children():
+		if row is HBoxContainer and (row.get_child(1) as Label).text.begins_with(label_start):
+			return row.get_child(2)
+	return null
+
+## The systems behind the items: nothing earned is lost, shops, gear, ammo,
+## mana, keys, furnaces, walls and saving.
+func systems_check() -> void:
+	await goto("town")
+	await wait(0.3)
+	var p: Node = main.level.player
+	p.invuln = 9999.0
+	var keep_inv: Array = GS.inv.duplicate(true)
+	clear_ground()
+	# a full bag never eats a reward: the rest drops at your feet
+	for i in GS.BAG:
+		GS.inv[i] = {"id": "rock", "n": 99}
+	GS.give("wood", 40)
+	await wait(0.1)
+	check(on_ground("wood") == 40, "with a full bag, 40 Wood from a reward drops at your feet (%d)" % on_ground("wood"))
+	GS.inv[GS.BAG - 1] = {"id": "silver_key", "n": 1}
+	var before := {}
+	var loot := GS.open_chest("silver")
+	await wait(0.1)
+	var ok: bool = loot.size() == Data.CHESTS.silver.rolls
+	var got := {}
+	for l in loot:
+		got[l[0]] = got.get(l[0], 0) + int(l[1])
+	for id in got:
+		var have: int = (GS.count(id) if id != "rock" else GS.count(id) - 24 * 99) + on_ground(id)
+		if id == "coin" or id == "gem":
+			continue
+		ok = ok and have >= got[id]
+	check(ok, "a chest opened with a full bag keeps all its loot %s" % str(loot))
+	GS.inv[0] = {"id": "wood_board", "n": 25}
+	var helm_before := on_ground("wooden_helmet") + GS.count("wooden_helmet")
+	GS.smith({"out": "wooden_helmet", "cost": {"wood_board": 25}})
+	await wait(0.1)
+	check(on_ground("wooden_helmet") + GS.count("wooden_helmet") == helm_before + 1, "the Crafter's item isn't lost when the bag is full")
+	clear_ground()
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.inventory_changed.emit()
+	# shops: buying takes the price, can't buy without the money, selling pays the item's price
+	GS.coins = 100
+	main.hud.open_shop("merchant")
+	await wait(0.1)
+	var buy := shop_button("Buy", "Small Potion")
+	check(buy != null and not buy.disabled, "the Merchant sells Small Potions")
+	buy.pressed.emit()
+	await wait(0.1)
+	check(GS.coins == 85 and GS.count("small_potion") == 1, "buying a Small Potion costs 15 coins (%d left)" % GS.coins)
+	GS.coins = 10
+	main.hud._refresh_shop("merchant")
+	await wait(0.1)
+	check(shop_button("Buy", "Small Potion").disabled, "with 10 coins you can't buy a 15-coin potion")
+	GS.add_item("iron_ore", 3)
+	main.hud._refresh_shop("merchant")
+	await wait(0.1)
+	var sell := shop_button("Sell", "Iron Ore")
+	var coins0 := GS.coins
+	sell.pressed.emit()
+	await wait(0.1)
+	check(GS.coins == coins0 + int(Data.ITEMS.iron_ore.sell) and GS.count("iron_ore") == 2, "selling one Iron Ore pays its price (%d)" % Data.ITEMS.iron_ore.sell)
+	main.hud.close_panels()
+	# gear: equipping adds the item's stats, taking it off removes them
+	for slot in GS.EQUIP_SLOTS:
+		GS.equip[slot] = ""
+	GS.clamp_stats()
+	var def0 := GS.stat("def")
+	GS.inv[3] = {"id": "copper_helmet", "n": 1}
+	GS.equip_from(3)
+	var plus: int = Data.ITEMS.copper_helmet.stats.def if Data.ITEMS.copper_helmet.has("stats") else int(Data.ITEMS.copper_helmet.get("def", 0))
+	check(GS.equip.helmet == "copper_helmet" and GS.stat("def") == def0 + plus, "a Copper Helmet adds %d defense when worn" % plus)
+	GS.unequip("helmet")
+	check(GS.stat("def") == def0 and GS.count("copper_helmet") == 1, "and taking it off puts it back in the bag")
+	# bows use arrows, staffs use mana
+	GS.inv[0] = {"id": "bow", "n": 1}
+	GS.inv[1] = {"id": "arrow", "n": 2}
+	GS.sel = 0
+	p.cooldown = 0.0
+	p._shoot("bow", Data.ITEMS.bow)
+	p._shoot("bow", Data.ITEMS.bow)
+	p._shoot("bow", Data.ITEMS.bow)
+	check(GS.count("arrow") == 0, "each bow shot uses one arrow, and an empty quiver stops it")
+	GS.mp = 3.0
+	p._cast("blue_staff", Data.ITEMS.blue_staff)
+	var mp_after := GS.mp
+	p._cast("blue_staff", Data.ITEMS.blue_staff)
+	check(is_equal_approx(mp_after, 1.0) and is_equal_approx(GS.mp, 1.0), "a Blue Staff spell costs 2 mana and won't cast with 1 left")
+	# keys: no key, no chest
+	GS.remove_item("silver_key", GS.count("silver_key"))
+	check(GS.open_chest("silver").is_empty(), "a chest won't open without its key")
+	# furnaces: not before it's done, and only once
+	GS.flags["furnaces"] = true
+	GS.furnaces[0] = null
+	GS.add_item("copper_ore", 5)
+	GS.add_item("coal", 1)
+	var recipe: Dictionary = Data.SMELT[0]
+	check(GS.start_smelt(0, recipe) == "" and GS.count("copper_ore") == 0, "smelting takes 5 Copper Ore and Coal")
+	check(not GS.collect_smelt(0), "a bar can't be collected before it's done")
+	GS.furnaces[0].done = GS.now() - 1.0
+	var bars := GS.count("copper_bar")
+	check(GS.collect_smelt(0) and not GS.collect_smelt(0) and GS.count("copper_bar") == bars + 1, "a finished bar is collected once")
+	# quests pay once
+	if not "gruff_1" in GS.quests_done:
+		GS.add_item("wood_wall", 1)
+		GS.complete_quest(Data.QUESTS[0])
+	check(GS.next_quest("gruff").get("id", "") != "gruff_1" and GS.quests_done.count("gruff_1") == 1, "Brutus' quest can't be done twice")
+	# swings don't go through walls
+	GS.inv[0] = {"id": "sword_cast", "n": 1}
+	GS.sel = 0
+	var lvl: Node = main.level
+	var c: Vector2i = Vector2i(int(p.position.x / lvl.T), int((p.position.y - 10) / lvl.T))
+	var slime: Node = lvl.spawn_mob_at("slime", p.position + Vector2(p.facing * 20, 0))
+	slime.hp = 999.0
+	var wall := c + Vector2i(p.facing, 0)
+	var old: int = lvl.grid[lvl.idx(wall.x, wall.y)]
+	lvl.set_cell(wall.x, wall.y, 1)
+	p.interact_target = null
+	p._do_hit()
+	var through: bool = slime.hp < 999.0
+	lvl.set_cell(wall.x, wall.y, old)
+	p._do_hit()
+	check(not through and slime.hp < 999.0, "a swing can't hit a monster through a wall, but hits it in the open")
+	slime.queue_free()
+	await wait(0.05)
+	# tools: gold needs an Iron Pickaxe or better; better tools take fewer hits
+	var gold: Node = lvl.add_node("gold", Vector2i(2, 2))
+	gold.position = p.position + Vector2(p.facing * 10, 0)
+	GS.inv[0] = {"id": "wooden_pick", "n": 1}
+	p.interact_target = null
+	p._do_hit()
+	var wood_hits: int = gold.hits
+	GS.inv[0] = {"id": "iron_pick", "n": 1}
+	p._do_hit()
+	check(wood_hits == 0 and gold.hits == 1 and Data.hits_needed("gold", 4) < Data.hits_needed("gold", 3),
+		"a Wooden Pick can't mine gold, an Iron Pickaxe can, and a Gold Pickaxe needs fewer hits (%d, %d)" % [wood_hits, gold.hits])
+	gold.queue_free()
+	# the Miner trades Survival Tokens, and won't without enough
+	GS.remove_item("survival_token", GS.count("survival_token"))
+	GS.add_item("survival_token", 20)
+	main.hud.open_shop("miner")
+	await wait(0.1)
+	var seeds := GS.count("green_seeds")
+	shop_button("Buy", "Magic Seeds (Green)").pressed.emit()
+	await wait(0.1)
+	check(GS.count("survival_token") == 5 and GS.count("green_seeds") == seeds + 1, "the Miner sells Green Seeds for 15 Survival Tokens")
+	check(shop_button("Buy", "Magic Seeds (Green)").disabled, "and won't with only 5 tokens left")
+	main.hud.close_panels()
+	# potions cure what they're for
+	GS.add_status("poison")
+	GS.inv[0] = {"id": "antidote", "n": 1}
+	check(GS.consume(0) and not GS.has_status("poison"), "an Antidote cures poison")
+	# switching character hands the old one back; a character's weapon comes once
+	var was: String = GS.look
+	GS.inv[2] = {"id": "soldier", "n": 1}
+	GS.use_character(2)
+	check(GS.look == "soldier" and GS.count(was) >= 1, "becoming the Soldier gives your old character (%s) back as an item" % was)
+	var pirate_blades := GS.count("gilded_blade")
+	GS.flags["gave_pirate"] = true
+	GS.inv[2] = {"id": "pirate", "n": 1}
+	GS.use_character(2)
+	check(GS.count("gilded_blade") == pirate_blades, "becoming the Pirate again doesn't hand out a second Golden Night")
+	# saving keeps everything, and a damaged save falls back to the backup
+	GS.storage[1][0] = {"id": "gold_bar", "n": 3}
+	GS.flags["test_flag"] = true
+	GS.coins = 1234
+	GS.gems = 56
+	GS.inv[4] = {"id": "copper_helmet", "n": 1}
+	GS.equip_from(4)
+	GS.save_game()
+	GS.save_game()
+	GS.storage[1][0] = null
+	GS.coins = 0
+	GS.flags.erase("test_flag")
+	check(GS.load_game(), "the game loads")
+	check(GS.storage[1][0] != null and GS.storage[1][0].id == "gold_bar" and GS.coins == 1234 and GS.gems == 56 and GS.flags.get("test_flag", false) and GS.equip.helmet == "copper_helmet" and GS.furnaces[0] == null and "gruff_1" in GS.quests_done,
+		"saving keeps storage, coins, gems, unlocks, gear, furnaces and quests")
+	var f := FileAccess.open(GS.slot_path(GS.slot), FileAccess.WRITE)
+	f.store_string("{ this is not a save")
+	f.close()
+	GS.coins = 0
+	check(GS.load_game() and GS.coins == 1234, "a damaged save loads from its backup instead of losing the character")
+	check(FileAccess.file_exists("user://slot%d.damaged.json" % GS.slot), "and the damaged file is kept aside, not deleted")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://slot%d.damaged.json" % GS.slot))
+	GS.save_game()
+	GS.inv = keep_inv
+	GS.inventory_changed.emit()
+	p.invuln = 0.0
+
 func run() -> void:
 	await wait(1.0)
 	await shot("01_title")
@@ -766,6 +975,11 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	if OS.has_environment("AT_SYSTEMS"): # set AT_SYSTEMS=1 to run only the systems checks
+		await systems_check()
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
 	await jump_and_underground()
 	if OS.has_environment("AT_QUICK"): # set AT_QUICK=1 to stop here
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
@@ -1044,6 +1258,7 @@ func run() -> void:
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()
+	await systems_check()
 	# survival at night
 	await goto("survival")
 	await wait(0.2)

@@ -308,7 +308,7 @@ func announce(text: String, kind: String) -> void:
 @rpc("authority", "reliable")
 func night_survived(tokens: int) -> void:
 	if tokens > 0:
-		GS.add_item("survival_token", tokens)
+		GS.give("survival_token", tokens)
 
 @rpc("authority", "reliable")
 func wall_hammer() -> void:
@@ -326,6 +326,8 @@ func hurt_me(dmg: int, crit: float, from_x: float, status: Array) -> void:
 func grant(nid: int, item: String, n: int) -> void:
 	_pending_take.erase(nid)
 	var left := GS.add_item(item, n, true)
+	if left > 0 and item != "coin":
+		GS.overflow.emit(item, left)
 	if item == "coin":
 		main.level.number(main.level.player.position + Vector2(0, -24), "+%d coins" % n, Color("f2cf5b"))
 	elif left < n:
@@ -570,7 +572,7 @@ func _apply_trade() -> void:
 		GS.inv[i] = null
 	GS.coins -= coins_out
 	for e in got:
-		GS.add_item(str(e[0]), int(e[1]), true)
+		GS.give(str(e[0]), int(e[1]))
 	GS.coins += coins_in
 	GS.inventory_changed.emit()
 	GS.stats_changed.emit()

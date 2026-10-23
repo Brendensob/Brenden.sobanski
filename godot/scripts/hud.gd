@@ -82,6 +82,7 @@ func _ready() -> void:
 	GS.inventory_changed.connect(_refresh)
 	GS.stats_changed.connect(_refresh_stats)
 	GS.message.connect(toast)
+	GS.overflow.connect(_drop_extra)
 	get_viewport().size_changed.connect(_layout_touch)
 	_layout_touch()
 	_refresh()
@@ -1768,7 +1769,8 @@ func open_gem_shop() -> void:
 ## Things bought in a stack that didn't all fit land at your feet.
 func _drop_extra(id: String, n: int) -> void:
 	if main.level and main.level.player:
-		main.level.drop(id, n, main.level.player.position)
+		main.level.drop(id, n, main.level.player.position, true)
+		toast("Your bag is full: %s dropped at your feet." % Data.ITEMS[id].name, "warn")
 
 func open_shop(npc_id: String) -> void:
 	open_panel("shop")
@@ -2038,7 +2040,7 @@ func _station_body(k: String, i: int, title: Label, text: Label, list: VBoxConta
 					var loot := []
 					for n in 3:
 						var l := Data.pick_loot(Data.CHESTS.silver.loot)
-						GS.add_item(l[0], l[1], true)
+						GS.give(l[0], l[1])
 						loot.append(l)
 					_refresh_station()
 					_show_loot(loot), true))

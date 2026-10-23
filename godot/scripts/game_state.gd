@@ -4,6 +4,8 @@ extends Node
 signal inventory_changed
 signal stats_changed
 signal message(text: String, kind: String)
+## Items that didn't fit in the bag; the HUD drops them at the player's feet.
+signal overflow(id: String, n: int)
 
 const VERSION := 3
 const SLOTS := 3 # character slots on the main menu, like the original
@@ -214,6 +216,13 @@ func has_room(id: String) -> bool:
 			return true
 	return false
 
+## Gives items as a reward or a purchase. Whatever doesn't fit in the bag is
+## dropped at the player's feet, so nothing earned or paid for is ever lost.
+func give(id: String, n: int = 1) -> void:
+	var left := add_item(id, n, true)
+	if left > 0:
+		overflow.emit(id, left)
+
 ## Adds items; returns how many did not fit.
 func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 	if id == "coin":
@@ -389,10 +398,10 @@ func combine(slots: Array, use_scroll: bool) -> Dictionary:
 		remove_item("combination_scroll", 1)
 	if p.known and randi_range(1, 100) <= p.chance:
 		var n: int = p.recipe.get("n", 1)
-		add_item(p.recipe.out, n)
+		give(p.recipe.out, n)
 		Sfx.play("craft", 0.0)
 		return {"ok": true, "success": true, "out": p.recipe.out, "n": n}
-	add_item("dust", 1)
+	give("dust", 1)
 	Sfx.play("fail", 0.0)
 	return {"ok": true, "success": false, "known": p.known}
 
@@ -401,7 +410,7 @@ func smith(recipe: Dictionary) -> bool:
 	if not has_all(recipe.cost):
 		return false
 	take_all(recipe.cost)
-	add_item(recipe.out, 1)
+	give(recipe.out, 1)
 	Sfx.play("craft", 0.0)
 	return true
 
@@ -464,7 +473,7 @@ func harvest(soil: int) -> Array:
 	for i in 3:
 		loot.append(Data.pick_loot(Data.SEED_LOOT[s.seed]))
 	for l in loot:
-		add_item(l[0], l[1], true)
+		give(l[0], l[1])
 	soils[soil] = null
 	return loot
 
@@ -478,7 +487,7 @@ func open_chest(kind: String) -> Array:
 	for i in c.rolls:
 		var l := Data.pick_loot(c.loot)
 		loot.append(l)
-		add_item(l[0], l[1], true)
+		give(l[0], l[1])
 	return loot
 
 func today() -> int:
@@ -501,7 +510,7 @@ func quest_ready(q: Dictionary) -> bool:
 func complete_quest(q: Dictionary) -> void:
 	take_all(q.get("take", q.need)) # a couple of Miffie's quests check for 10 but take 5
 	for id in q.reward:
-		add_item(id, q.reward[id])
+		give(id, q.reward[id])
 	if q.has("coins"):
 		coins += int(q.coins)
 	if q.has("unlock"):
@@ -532,24 +541,52 @@ func save_game() -> void:
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
-	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
-	if f:
-		f.store_string(JSON.stringify(data))
+	# write a new file first, keep the last good save as a backup, then swap the
+	# new one in, so a crash or power cut mid-save can never wipe a character
+	var path := slot_path(slot)
+	var f := FileAccess.open(path + ".tmp", FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify(data))
+	f.close()
+	if FileAccess.file_exists(path):
+		DirAccess.copy_absolute(_abs(path), _abs(backup_path(slot)))
+		DirAccess.remove_absolute(_abs(path))
+	DirAccess.rename_absolute(_abs(path + ".tmp"), _abs(path))
 
 func slot_path(i: int) -> String:
 	return "user://slot%d.json" % i
 
+## The save before the last one, used if the newest file is ever damaged.
+func backup_path(i: int) -> String:
+	return "user://slot%d.bak.json" % i
+
+func _abs(p: String) -> String:
+	return ProjectSettings.globalize_path(p)
+
 func has_save() -> bool:
 	return FileAccess.file_exists(slot_path(slot))
 
+## A slot's save: the newest file, or the backup if the newest is damaged or
+## half-written. A damaged file is kept as slotN.damaged.json, never just dropped.
 func _read_slot(i: int):
-	if not FileAccess.file_exists(slot_path(i)):
+	for p in [slot_path(i), backup_path(i), slot_path(i) + ".tmp"]:
+		var d = _parse_save(p)
+		if d != null:
+			return d
+		if p == slot_path(i) and FileAccess.file_exists(p) and not FileAccess.file_exists("user://slot%d.damaged.json" % i):
+			DirAccess.copy_absolute(_abs(p), _abs("user://slot%d.damaged.json" % i))
+	return null
+
+func _parse_save(p: String):
+	if not FileAccess.file_exists(p):
 		return null
-	var f := FileAccess.open(slot_path(i), FileAccess.READ)
+	var f := FileAccess.open(p, FileAccess.READ)
 	if f == null:
 		return null
 	var d = JSON.parse_string(f.get_as_text())
-	if typeof(d) != TYPE_DICTIONARY or int(d.get("v", 0)) != VERSION:
+	# older saves load too: every field has a default
+	if typeof(d) != TYPE_DICTIONARY or not d.has("inv"):
 		return null
 	return d
 
@@ -571,8 +608,9 @@ func delete_slot(i: int) -> void:
 	var token: String = slot_info(i).get("token", "")
 	if token != "":
 		Online.release(token) # free the name for someone else
-	if FileAccess.file_exists(slot_path(i)):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(slot_path(i)))
+	for p in [slot_path(i), backup_path(i), slot_path(i) + ".tmp"]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(_abs(p))
 
 func default_name() -> String:
 	return "Player_%d" % randi_range(100000000, 999999999)
@@ -584,34 +622,33 @@ func load_game() -> bool:
 	new_game()
 	inv.clear()
 	inv.resize(BAG)
-	var saved: Array = d.get("inv", [])
+	var saved: Array = _arr(d, "inv")
 	for i in mini(saved.size(), BAG):
-		var s = saved[i]
-		if s and Data.ITEMS.has(s.id):
-			inv[i] = {"id": s.id, "n": int(s.n)}
-	var saved_storage: Array = d.get("storage", [])
+		inv[i] = _stack(saved[i])
+	var saved_storage: Array = _arr(d, "storage")
 	for b in mini(saved_storage.size(), BACKPACKS):
 		var page: Array = saved_storage[b] if saved_storage[b] is Array else []
 		for k in mini(page.size(), BACKPACK_SLOTS):
-			var s = page[k]
-			if s and Data.ITEMS.has(s.id):
-				storage[b][k] = {"id": s.id, "n": int(s.n)}
+			storage[b][k] = _stack(page[k])
+	var eq: Dictionary = _dict(d, "equip")
 	for slot in EQUIP_SLOTS:
-		var id: String = d.get("equip", {}).get(slot, "")
+		var id := str(eq.get(slot, ""))
 		equip[slot] = id if Data.ITEMS.has(id) else ""
-	sel = int(d.get("sel", 0))
-	coins = int(d.get("coins", 0))
-	gems = int(d.get("gems", 0))
-	flags = d.get("flags", {})
-	quests_done = d.get("quests", [])
-	var fs: Array = d.get("furnaces", [])
+	sel = clampi(int(d.get("sel", 0)), 0, HOTBAR - 1)
+	coins = maxi(0, int(d.get("coins", 0)))
+	gems = maxi(0, int(d.get("gems", 0)))
+	flags = _dict(d, "flags")
+	quests_done = _arr(d, "quests")
+	var fs: Array = _arr(d, "furnaces")
 	for i in mini(fs.size(), Data.FURNACES):
-		furnaces[i] = fs[i]
-	incubator = d.get("incubator", {})
-	var ss: Array = d.get("soils", [])
+		furnaces[i] = fs[i] if fs[i] is Dictionary and Data.ITEMS.has(str(fs[i].get("out", ""))) else null
+	incubator = _dict(d, "incubator")
+	if not incubator.is_empty() and not Data.EGG_PETS.has(str(incubator.get("egg", ""))):
+		incubator = {}
+	var ss: Array = _arr(d, "soils")
 	for i in mini(ss.size(), 5):
-		soils[i] = ss[i]
-	reward_chests = d.get("reward_chests", {})
+		soils[i] = ss[i] if ss[i] is Dictionary and Data.SEED_LOOT.has(str(ss[i].get("seed", ""))) else null
+	reward_chests = _dict(d, "reward_chests")
 	clock = 0.0 # entering Pixel Town from the menu always starts at morning
 	day = int(d.get("day", 1))
 	best_survival_day = int(d.get("best_survival_day", 0))
@@ -627,22 +664,39 @@ func load_game() -> bool:
 	inventory_changed.emit()
 	return true
 
+# a damaged save can hold anything; these only let through what makes sense
+func _arr(d: Dictionary, k: String) -> Array:
+	return d[k] if d.get(k) is Array else []
+
+func _dict(d: Dictionary, k: String) -> Dictionary:
+	return d[k] if d.get(k) is Dictionary else {}
+
+func _stack(s):
+	if s is Dictionary and Data.ITEMS.has(str(s.get("id", ""))) and int(s.get("n", 0)) > 0:
+		return {"id": str(s.id), "n": int(s.n)}
+	return null
+
 ## Use a character item: you take on its look, and some characters come with a weapon.
 func use_character(i: int) -> String:
 	var s = inv[i]
 	if s == null or Data.ITEMS[s.id].type != "character":
 		return ""
 	var it: Dictionary = Data.ITEMS[s.id]
+	var new_id: String = s.id
 	remove_at(i, 1)
+	# you don't lose the character you were: it goes back in the bag
+	var old_id := look
+	if old_id != new_id and Data.ITEMS.has(old_id):
+		give(old_id, 1)
 	look = it.look
 	clamp_stats()
 	stats_changed.emit()
 	var msg := "You're now the %s!" % it.name
-	if it.gives != "":
-		if add_item(it.gives, 1, true) == 0:
-			msg += " You got a %s." % Data.ITEMS[it.gives].name
-		else:
-			msg += " Your bag was full, so the %s was lost." % Data.ITEMS[it.gives].name
+	# a character's weapon comes with it once, so swapping back and forth can't farm it
+	if it.gives != "" and not flags.get("gave_" + new_id, false):
+		flags["gave_" + new_id] = true
+		give(it.gives, 1)
+		msg += " You got a %s." % Data.ITEMS[it.gives].name
 	inventory_changed.emit()
 	return msg
 
@@ -668,6 +722,24 @@ func _move_stack(from: Array, i: int, to: Array) -> int:
 	from[i] = null if left <= 0 else {"id": s.id, "n": left}
 	inventory_changed.emit()
 	return left
+
+## Puts items straight into Banka's storage (for rewards earned while you can't
+## pick anything up). Returns how many didn't fit anywhere.
+func stash(id: String, n: int) -> int:
+	for b in storage:
+		if n <= 0:
+			break
+		n = _move_stack([{"id": id, "n": n}], 0, b)
+	return n
+
+## How many of an item sit in Banka's storage.
+func in_storage(id: String) -> int:
+	var t := 0
+	for b in storage:
+		for s in b:
+			if s and s.id == id:
+				t += int(s.n)
+	return t
 
 ## Bag slot i into backpack b.
 func store(i: int, b: int) -> int:

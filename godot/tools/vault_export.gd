@@ -105,16 +105,30 @@ func _monsters() -> void:
 	_write("Monsters", "Monsters", body)
 
 func _worlds() -> void:
-	var body := "| World | id | Kind | Theme | Next | Monsters (count) | Resources (count) |\n|---|---|---|---|---|---|---|\n"
+	var body := "Monsters: each one's share of the spawns (a world places its *count* monsters, or keeps up to *cap* in an arena). A rare one like King at 0.3 weight is a small share, not zero. ×1.5 hp / ×6.3 hit are that world's health and damage multipliers.\n\n| World | id | Kind | Theme | Next | Monsters (share of spawns) | Bosses (arena) | Resources (share) |\n|---|---|---|---|---|---|---|---|\n"
 	for id in D.WORLDS:
 		var w: Dictionary = D.WORLDS[id]
 		var mobs := []
+		var total := 0.0
 		for m in w.get("mobs", []):
-			mobs.append("%s ×%d" % [D.MOBS[m[0]].name if D.MOBS.has(m[0]) else m[0], m[1]])
+			total += float(m[1])
+		for m in w.get("mobs", []):
+			var extra := ""
+			if m.size() > 2 and float(m[2]) != 1.0:
+				extra += " ×%s hp" % m[2]
+			if m.size() > 3 and float(m[3]) != 1.0:
+				extra += " ×%s hit" % m[3]
+			mobs.append("%s %s%s" % [D.MOBS[m[0]].name if D.MOBS.has(m[0]) else m[0], _pct(float(m[1]) / total), extra])
+		var bosses := []
+		for b in w.get("bosses", []):
+			bosses.append(D.MOBS[b[0]].name if D.MOBS.has(b[0]) else b[0])
 		var nodes := []
+		var ntotal := 0.0
 		for n in w.get("nodes", []):
-			nodes.append("%s ×%d" % [n[0], n[1]])
-		body += "| %s | `%s` | %s | %s | %s | %s | %s |\n" % [_cell(w.name), id, w.get("kind", ""), w.get("theme", ""), w.get("next", ""), _cell(", ".join(mobs)), _cell(", ".join(nodes))]
+			ntotal += float(n[1])
+		for n in w.get("nodes", []):
+			nodes.append("%s %s" % [n[0], _pct(float(n[1]) / ntotal)])
+		body += "| %s | `%s` | %s | %s | %s | %s | %s | %s |\n" % [_cell(w.name), id, w.get("kind", ""), w.get("theme", ""), w.get("next", ""), _cell(", ".join(mobs)), _cell(", ".join(bosses)), _cell(", ".join(nodes))]
 	body += "\n## Gatekeeper cards (in order)\n\n| # | World | Text |\n|---|---|---|\n"
 	var i := 1
 	for c in D.WORLD_CARDS:

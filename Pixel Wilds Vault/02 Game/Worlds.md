@@ -39,6 +39,8 @@ The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's scr
   - a maze of 11×11 rooms, and it costs 8 stamina to enter;
   - some walls are deadly;
   - monsters hit 40 harder when your defense is below 160.
+- **Snow Valley** needs at least **12 stamina** to enter (wiki), and its monsters hit 40 harder below 160 defense.
+- **No world locks:** every world is open at the Gatekeeper, as in PSG2. Stronger worlds are gated by how strong you are.
 
 > [!important] There is no Hell 3 or Darklands 3 in PSG2
 > Those are from the separate 2.o game. Don't add them.

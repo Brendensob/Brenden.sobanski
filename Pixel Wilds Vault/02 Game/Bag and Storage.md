@@ -13,6 +13,9 @@ tags: [game, bag, storage]
   - **combining** (result slot, scroll slot, slots I, II and III, Combine);
   - **menu**.
 
+## A full bag never loses anything
+Rewards that don't fit drop at your feet as your own pickup. In multiplayer only you can pick them up. That covers chests, the Crafter, quests, combining, seed harvests, Survival Tokens, trades and room pickups. A survival key earned while fainting goes to Banka's storage if the bag is full.
+
 ## Storage (Banka)
 - Hit **Banka** on the street (see [[NPCs]]) and the bag opens in storage mode.
 - **6 backpack tabs**, each a **5 × 6 grid** (30 slots), like Brenden's screenshot.

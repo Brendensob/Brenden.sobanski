@@ -361,6 +361,10 @@ static func swing_angle(k: float) -> float:
 
 func _cast(id: String, it: Dictionary) -> void:
 	var cost: int = it.mana_cost
+	if it.has("heal") and GS.hp >= GS.max_hp():
+		_say("You're already at full health.")
+		cooldown = 0.3
+		return
 	if GS.mp < cost:
 		_say("Not enough mana.")
 		return
@@ -434,7 +438,8 @@ func _do_hit() -> void:
 	var reach: float = it.get("reach", 14)
 	var x0 := position.x + (2.0 if facing > 0 else -2.0 - reach)
 	var r := Rect2(x0, position.y - 24, reach, 26)
-	var mobs: Array = level.mobs_in_rect(r)
+	var chest := position + Vector2(0, -10)
+	var mobs: Array = level.mobs_in_rect(r).filter(func(m): return not level.wall_between(chest, m.hit_rect().get_center()))
 	if mobs.size() > 0:
 		for m in mobs:
 			m.take_damage(GS.roll_attack(id), position.x, it.get("kb", false))
