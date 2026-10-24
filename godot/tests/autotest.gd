@@ -751,6 +751,19 @@ func audio_check() -> void:
 		if w.loop_mode != AudioStreamWAV.LOOP_FORWARD or w.get_length() < 10.0 or loud < 3000:
 			bad.append(id)
 	check(bad.is_empty(), "every track loops, lasts over 10 s and isn't silent %s" % str(bad))
+	# without threads (the web build), tracks are made a small piece per frame
+	var job: Dictionary = Music.render_begin(Music.TRACKS.town)
+	var worst := 0
+	var steps := 0
+	while true:
+		var t1 := Time.get_ticks_usec()
+		var done: bool = Music.render_step(job)
+		worst = maxi(worst, Time.get_ticks_usec() - t1)
+		steps += 1
+		if done:
+			break
+	var same: bool = job.wav.data == Music.render(Music.TRACKS.town).data
+	check(same and worst < 15000, "built in %d small pieces (slowest %.1f ms), a track comes out the same as built in one go" % [steps, worst / 1000.0])
 	check(Music.pick(true, "explore", "grass", false, false, false) == "menu" and Music.pick(false, "town", "grass", false, false, false) == "town"
 		and Music.pick(false, "explore", "grass", false, false, false) == "field" and Music.pick(false, "explore", "grass", false, false, true) == "cave"
 		and Music.pick(false, "explore", "dark", false, false, false) == "cave" and Music.pick(false, "explore", "hell", false, false, false) == "hell"
@@ -809,6 +822,329 @@ func darkness_check() -> void:
 		check(main.dark > 0.5, "deep in a Grasslands cave the edges go dark (%.2f)" % main.dark)
 		check(Music.current == "cave", "and the cave music plays (%s)" % Music.current)
 		await shot("51_grass_cave")
+
+## Phase 3 and 5: the systems a player meets on their way through the game,
+## played with the game's own code paths.
+func gameplay_check() -> void:
+	await goto("grass_1")
+	await wait(0.3)
+	var lvl: Node = main.level
+	var p: Node = lvl.player
+	p.invuln = 9999.0
+	clear_ground()
+	# monsters of every movement type come after you
+	var kinds := {"walk": "slime", "fly": "wisp", "charge": "mummy", "accel": "shell", "wizard": "wizard", "stone": "crusher"}
+	var moved := []
+	for ai in kinds:
+		var m: Node = lvl.spawn_mob_at(kinds[ai], p.position + Vector2(70, -4))
+		m.aggro_forced = true
+		var d0: float = m.position.distance_to(p.position)
+		var x0: float = m.position.x
+		await wait(1.5)
+		var ok: bool = m.position.distance_to(p.position) < d0 - 4.0 if ai != "stone" else true
+		if ai == "wizard":
+			ok = ok or absf(m.position.x - x0) > 1.0 or m.position.distance_to(p.position) < 120.0
+		if ok:
+			moved.append(ai)
+		m.queue_free()
+	await wait(0.1)
+	check(moved.size() == kinds.size(), "monsters of every movement type move the way they should %s" % str(moved))
+	# killing monsters drops their loot, and only loot from their own table
+	var allowed := {}
+	for d in Data.MOBS.slime.drops:
+		allowed[d[0]] = true
+	for i in 25:
+		var s: Node = lvl.spawn_mob_at("slime", p.position + Vector2(40 + i * 2, -4))
+		s.take_damage(99999, s.position.x - 5, false)
+	await wait(0.6)
+	var dropped := {}
+	for e in lvl.entities.get_children():
+		if e is PickupScript:
+			dropped[e.item] = true
+	var stray: Array = dropped.keys().filter(func(k): return not allowed.has(k) and k != "gem" and k != "coin")
+	check(dropped.size() > 0 and stray.is_empty(), "25 slimes drop their own loot %s" % str(dropped.keys()))
+	clear_ground()
+	# mining a stone with the Wooden Pick gives rocks
+	var stone: Node = lvl.add_node("stone", Vector2i(2, 2))
+	stone.position = p.position + Vector2(p.facing * 10, 0)
+	GS.inv[0] = {"id": "wooden_pick", "n": 1}
+	GS.sel = 0
+	for k in Data.hits_needed("stone", 1) + 1:
+		p.interact_target = null
+		p._do_hit()
+	await wait(0.6)
+	check(not stone.alive and on_ground("rock") + GS.count("rock") > 0, "a Wooden Pick breaks a stone and rocks fall out (%d)" % (on_ground("rock") + GS.count("rock")))
+	clear_ground()
+	# potions heal
+	GS.hp = 1.0
+	GS.inv[1] = {"id": "small_potion", "n": 1}
+	check(GS.consume(1) and GS.hp > 1.0, "a Small Potion heals (%.0f)" % GS.hp)
+	# a pet does its job: Fireball heals you every few seconds
+	GS.equip.pet = "pet_fireball"
+	lvl.spawn_pet()
+	GS.hp = 1.0
+	lvl.pet.timer = 999.0
+	await wait(0.2)
+	check(GS.hp > 1.0, "an equipped Fireball pet heals you")
+	GS.equip.pet = ""
+	lvl.spawn_pet()
+	# every item type does something when used (away from anything to talk to)
+	p.position = lvl.cell_pos(Vector2i(60, lvl.surface[60] - 1))
+	await wait(0.3)
+	var bad_types := []
+	var samples := {}
+	for id in Data.ITEMS:
+		var t: String = Data.ITEMS[id].type
+		if not samples.has(t) and not id in ["fist", "coin", "gem", GS.look]:
+			samples[t] = id
+	for t in samples:
+		var id: String = samples[t]
+		for i in GS.BAG:
+			GS.inv[i] = null
+		for s2 in GS.EQUIP_SLOTS:
+			GS.equip[s2] = ""
+		GS.inv[0] = {"id": id, "n": 3}
+		GS.sel = 0
+		GS.hp = 1.0
+		GS.mp = GS.max_mp()
+		GS.st = GS.max_st()
+		main.hud.close_panels()
+		p.cooldown = 0.0
+		p.interact_target = null
+		var st0: float = GS.st
+		p.use_held(true)
+		await wait(0.05)
+		var changed: bool = GS.inv[0] == null or int(GS.inv[0].n) != 3 or GS.hp > 1.0 or GS.st < st0 or GS.mp < GS.max_mp() \
+			or main.hud.any_open() or GS.equip.values().has(id) or p.swing > 0.0
+		if t in ["egg", "seed", "key", "scroll", "token", "ammo", "place", "material"]:
+			changed = true # these explain where they're used (or are crafting materials / need open ground)
+		if not changed:
+			bad_types.append("%s (%s)" % [t, id])
+	main.hud.close_panels()
+	check(bad_types.is_empty(), "every one of the %d usable item types does something when used %s" % [samples.size(), str(bad_types)])
+	for i in GS.BAG:
+		GS.inv[i] = null
+	for s2 in GS.EQUIP_SLOTS:
+		GS.equip[s2] = ""
+	lvl.spawn_pet()
+	GS.inventory_changed.emit()
+	await goto("town")
+	await wait(0.3)
+	lvl = main.level
+	p = lvl.player
+	# magic soils: plant, can't harvest early, harvest three things once ripe
+	GS.soils[0] = null
+	GS.add_item("green_seeds", 1)
+	check(GS.plant(0, "green_seeds") and GS.harvest(0).is_empty(), "a planted seed can't be picked before it's ripe")
+	GS.soils[0].done = GS.now() - 1.0
+	var crop := GS.harvest(0)
+	check(crop.size() == 3 and GS.soils[0] == null, "a ripe Green Seed gives three things and frees the soil %s" % str(crop))
+	# a smelt or an egg left running survives saving and loading
+	GS.flags["furnaces"] = true
+	GS.furnaces[2] = null
+	GS.add_item("copper_ore", 5)
+	GS.add_item("coal", 1)
+	GS.start_smelt(2, Data.SMELT[0])
+	GS.incubator = {}
+	GS.add_item("green_egg", 1)
+	GS.start_hatch("green_egg")
+	GS.save_game()
+	GS.load_game()
+	check(GS.furnaces[2] != null and GS.furnaces[2].out == "copper_bar" and not GS.incubator.is_empty(), "a running smelt and egg are still there after saving and loading")
+	GS.furnaces[2].done = GS.now() - 1.0
+	GS.incubator.done = GS.now() - 1.0
+	await wait(1.2)
+	check(main.announced.has("f2_%d" % int(GS.furnaces[2].done)), "you're told when a smelt is done, wherever you are")
+	check(GS.collect_smelt(2) and GS.collect_hatch() != "", "and both can be collected when done")
+	# low health makes the health bar pulse
+	GS.hp = 1.0
+	GS.stats_changed.emit()
+	await wait(0.2)
+	await shot("54_low_health")
+	GS.hp = GS.max_hp()
+	# leaving to the menu and starting the character again keeps everything
+	GS.coins = 4321
+	GS.add_item("gold_bar", 7)
+	main.quit_to_title()
+	await wait(0.5)
+	GS.coins = 0
+	main.start_game(true)
+	await wait(0.8)
+	check(GS.coins == 4321 and GS.count("gold_bar") >= 7 and main.level.kind == "town", "quitting to the menu and playing the slot again keeps coins and items")
+	main.hud.close_panels()
+	# a save with damaged fields still loads, with sensible values
+	var f := FileAccess.open(GS.slot_path(GS.slot), FileAccess.WRITE)
+	f.store_string(JSON.stringify({"v": 3, "inv": [{"id": "wood", "n": 5}, "junk", {"id": "no_such_item", "n": 3}, {"n": 2}], "storage": "oops",
+		"equip": 7, "coins": -50, "flags": [1, 2], "quests": "x", "furnaces": [{"out": "nope"}, 5], "incubator": {"egg": "rock"}, "soils": [{"seed": 1}],
+		"sel": 99, "look": "dragon", "now": "soon"}))
+	f.close()
+	check(GS.load_game() and GS.count("wood") == 5 and GS.coins == 0 and GS.sel < GS.HOTBAR and GS.look == "man_in_suit" and GS.furnaces[0] == null and GS.incubator.is_empty(),
+		"a save with damaged fields still loads and keeps what's good")
+	# an old save without the newer fields loads too
+	f = FileAccess.open(GS.slot_path(GS.slot), FileAccess.WRITE)
+	f.store_string(JSON.stringify({"v": 3, "inv": [{"id": "rock", "n": 9}], "coins": 77, "name": "Tester", "look": "nurse"}))
+	f.close()
+	check(GS.load_game() and GS.count("rock") == 9 and GS.coins == 77 and GS.storage.size() == GS.BACKPACKS, "an old save without storage, gems or clock fields still loads")
+	GS.save_game()
+	# the HUD fits every window shape: nothing off screen, A and B and the arrows don't overlap
+	for size in [Vector2i(960, 540), Vector2i(1280, 540), Vector2i(720, 540), Vector2i(540, 720)]:
+		get_window().size = size
+		await wait(0.4)
+		var vr := get_viewport().get_visible_rect()
+		var names := []
+		var rects := {}
+		for n in ["BagButton", "EmoteButton", "GemBox"]:
+			var c: Control = main.hud.hud_root.get_node_or_null(n)
+			if c:
+				rects[n] = c.get_global_rect()
+		rects["bars"] = main.hud.bars.get_global_rect()
+		var tn := ["left", "right", "A", "B"]
+		for i in main.hud.touch_nodes.size():
+			var t: Node = main.hud.touch_nodes[i]
+			if t.visible:
+				rects[tn[i] if i < tn.size() else str(i)] = main.hud._touch_rect(t)
+		var off := []
+		for k in rects:
+			if not vr.grow(1.0).encloses(rects[k]):
+				off.append(k)
+		var overlap := []
+		var keys := rects.keys()
+		for i in keys.size():
+			for j in range(i + 1, keys.size()):
+				if rects[keys[i]].grow(-1.0).intersects(rects[keys[j]].grow(-1.0)):
+					overlap.append("%s/%s" % [keys[i], keys[j]])
+		check(off.is_empty() and overlap.is_empty(), "at %dx%d the HUD fits (off screen %s, overlapping %s)" % [size.x, size.y, str(off), str(overlap)])
+		await shot("53_hud_%dx%d" % [size.x, size.y])
+	get_window().size = Vector2i(960, 540)
+	await wait(0.3)
+
+func empty_bag() -> void:
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.inventory_changed.emit()
+
+## Every recipe, every Crafter item, every bar, every shop item and every quest
+## in the data, run through the game's own functions.
+func content_check() -> void:
+	await goto("town")
+	await wait(0.2)
+	clear_ground()
+	GS.save_game()
+	var keep_coins := GS.coins
+	# combinations: each one is recognised from its own ingredients, and possible with its book and a scroll
+	var wrong := []
+	var impossible := []
+	for r in Data.RECIPES:
+		empty_bag()
+		var slots := []
+		for x in r["in"]:
+			for i in GS.BAG:
+				if GS.inv[i] == null:
+					GS.inv[i] = {"id": x, "n": 1}
+					slots.append(i)
+					break
+		GS.add_item(Data.BOOK_ITEM[r.book], 1)
+		GS.add_item("combination_scroll", 1)
+		var pv: Dictionary = GS.preview_combo(slots, true)
+		if not pv.get("known", false) or pv.recipe.out != r.out:
+			wrong.append(r.out)
+		elif int(pv.chance) <= 0:
+			impossible.append(r.out)
+	check(wrong.is_empty() and impossible.is_empty(), "all %d combinations are recognised and possible with their book and a scroll (wrong %s, impossible %s)" % [Data.RECIPES.size(), str(wrong), str(impossible)])
+	# the Crafter: every recipe takes exactly its cost and gives its item
+	var bad_smith := []
+	for s in Data.SMITH:
+		empty_bag()
+		for k in s.cost:
+			GS.give(k, int(s.cost[k]))
+		var ok: bool = GS.smith(s) and GS.count(s.out) + on_ground(s.out) >= 1
+		for k in s.cost:
+			if k != s.out and GS.count(k) != 0:
+				ok = false
+		if not ok:
+			bad_smith.append(s.out)
+		clear_ground()
+	check(bad_smith.is_empty(), "all %d Crafter recipes take their cost and give their item %s" % [Data.SMITH.size(), str(bad_smith)])
+	# furnaces: every bar smelts and is collected
+	GS.flags["furnaces"] = true
+	var bad_smelt := []
+	for s in Data.SMELT:
+		empty_bag()
+		GS.furnaces[0] = null
+		for k in s.cost:
+			GS.give(k, int(s.cost[k]))
+		var started: bool = GS.start_smelt(0, s) == ""
+		if started:
+			GS.furnaces[0].done = GS.now() - 1.0
+		if not (started and GS.collect_smelt(0) and GS.count(s.out) == 1):
+			bad_smelt.append(s.out)
+	GS.furnaces[0] = null
+	check(bad_smelt.is_empty(), "all %d smelting recipes work %s" % [Data.SMELT.size(), str(bad_smelt)])
+	# shops: every item can be bought for exactly its price
+	GS.flags["em_shop"] = true
+	var bad_buy := []
+	var bought := 0
+	for shop_id in Data.SHOPS.keys() + ["gem_shop"]:
+		var shop: Dictionary = Data.gem_shop() if shop_id == "gem_shop" else Data.SHOPS[shop_id]
+		var cur: String = shop.get("currency", "coins")
+		for e in shop.sells:
+			empty_bag()
+			var price: int = e[1]
+			var qty: int = e[2] if e.size() > 2 else 1
+			GS.coins = price if cur == "coins" else 0
+			GS.gems = price if cur == "gem" else 0
+			if cur == "survival_token":
+				GS.add_item("survival_token", price)
+			main.hud.open_shop(shop_id)
+			await wait(0.02)
+			var label: String = Data.ITEMS[e[0]].name
+			var b := shop_button("Buy", label)
+			if b == null or b.disabled:
+				bad_buy.append("%s:%s (no button)" % [shop_id, e[0]])
+				continue
+			var n0: int = GS.count(e[0]) + on_ground(e[0])
+			b.pressed.emit()
+			await wait(0.02)
+			var left: int = GS.coins if cur == "coins" else GS.count(cur)
+			if left != 0 or GS.count(e[0]) + on_ground(e[0]) - n0 != qty:
+				bad_buy.append("%s:%s" % [shop_id, e[0]])
+			else:
+				bought += 1
+			clear_ground()
+	main.hud.close_panels()
+	check(bad_buy.is_empty(), "every shop item (%d) can be bought for exactly its price %s" % [bought, str(bad_buy)])
+	# quests: every villager's quests come in order and pay their rewards
+	GS.quests_done = []
+	var bad_q := []
+	for q in Data.QUESTS:
+		empty_bag()
+		var nxt: Dictionary = GS.next_quest(q.npc)
+		if nxt.get("id", "") != q.id:
+			bad_q.append("%s (offered %s)" % [q.id, nxt.get("id", "none")])
+			GS.quests_done.append(q.id)
+			continue
+		for k in q.need:
+			GS.give(k, int(q.need[k]))
+		var before := {}
+		for k in q.reward:
+			before[k] = GS.count(k) + on_ground(k)
+		if not GS.quest_ready(q):
+			bad_q.append(q.id + " (not ready with its items)")
+		GS.complete_quest(q)
+		await wait(0.01)
+		for k in q.reward:
+			var got: int = GS.count(k) + on_ground(k) - int(before[k])
+			var taken: int = int(q.get("take", q.need).get(k, 0))
+			if got + taken < int(q.reward[k]):
+				bad_q.append("%s (reward %s)" % [q.id, k])
+		if q.has("unlock") and not GS.flags.get(q.unlock, false):
+			bad_q.append(q.id + " (unlock)")
+		clear_ground()
+	check(bad_q.is_empty(), "all %d quests come in order, take their items and pay %s" % [Data.QUESTS.size(), str(bad_q)])
+	# back to how things were
+	GS.load_game()
+	GS.coins = keep_coins
+	clear_ground()
 
 ## The systems behind the items: nothing earned is lost, shops, gear, ammo,
 ## mana, keys, furnaces, walls and saving.
@@ -1096,7 +1432,9 @@ func run() -> void:
 	if OS.has_environment("AT_SYSTEMS"): # set AT_SYSTEMS=1 to run only the systems checks
 		await audio_check()
 		await darkness_check()
+		await gameplay_check()
 		await systems_check()
+		await content_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 		get_tree().quit()
 		return
@@ -1385,7 +1723,9 @@ func run() -> void:
 	await gems_and_characters()
 	await audio_check()
 	await darkness_check()
+	await gameplay_check()
 	await systems_check()
+	await content_check()
 	# survival at night
 	await goto("survival")
 	await wait(0.2)

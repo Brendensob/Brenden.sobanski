@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #25 | 2026-10-24 | Progression audit (0 softlocks), tests for every recipe, Crafter item, smelt, shop item and quest, monster AI, item types, damaged and old saves, HUD at 4 window shapes; ready notices, low-health pulse, music for the web build |
 | #24 | 2026-10-24 | Music (7 synthesized loops) and volume settings, new sounds, cave darkness, character-switch confirmation, room-wide town walls, a cheat-proof game clock with server time |
 | #23 | 2026-10-24 | Combat: knockback about a tile, hit stun (no touch damage while dazed), monsters bounce off you, hit freeze/spark/squash, tap buffer for phones |
 | #22 | 2026-10-22 | Full game audit: data checker, completion checklist, rewards never lost on a full bag, crash-safe saves with backup, no hits through walls, character swap keeps the old one, Snow Valley needs 12 stamina, Nightmare Long Sword in the Master Chest |

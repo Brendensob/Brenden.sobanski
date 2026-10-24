@@ -281,10 +281,38 @@ func _darkness(delta: float) -> void:
 	mat.set_shader_parameter("aspect", vs.x / vs.y)
 	mat.set_shader_parameter("strength", dark)
 
+var _timer_check := 0.0
+var announced := {} # timers already reported as done
+
+## Tells you when a smelt, an egg or a crop finishes, wherever you are.
+func _timers(delta: float) -> void:
+	_timer_check += delta
+	if _timer_check < 1.0 or title_mode:
+		return
+	_timer_check = 0.0
+	var t := GS.now()
+	var done := []
+	for i in GS.furnaces.size():
+		var j = GS.furnaces[i]
+		if j and t >= float(j.done):
+			done.append(["f%d_%d" % [i, int(j.done)], "Your %s is ready in the furnace." % Data.ITEMS[j.out].name])
+	if not GS.incubator.is_empty() and t >= float(GS.incubator.done):
+		done.append(["egg_%d" % int(GS.incubator.done), "Your %s has hatched in the incubator!" % Data.ITEMS[GS.incubator.egg].name])
+	for i in GS.soils.size():
+		var s = GS.soils[i]
+		if s and t >= float(s.done):
+			done.append(["soil%d_%d" % [i, int(s.done)], "Your %s is ripe in the soil." % Data.ITEMS[s.seed].name])
+	for d in done:
+		if not announced.has(d[0]):
+			announced[d[0]] = true
+			hud.toast(d[1], "good")
+			Sfx.play("coin", 0.0, -6.0)
+
 func _process(delta: float) -> void:
 	if level == null:
 		return
 	_music()
+	_timers(delta)
 	_darkness(delta)
 	if title_mode:
 		title_t += delta

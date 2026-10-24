@@ -47,6 +47,9 @@ var _players: Array[AudioStreamPlayer] = []
 var _active := 0
 var _thread: Thread
 var _mutex := Mutex.new()
+var _jobs := [] # without threads (the web build): tracks still to make, a slice per frame
+var _job: Dictionary = {}
+const SLICE_MS := 3
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -58,8 +61,11 @@ func _ready() -> void:
 		p.volume_db = -80.0
 		add_child(p)
 		_players.append(p)
-	_thread = Thread.new()
-	_thread.start(_build_all)
+	if OS.has_feature("threads"):
+		_thread = Thread.new()
+		_thread.start(_build_all)
+	else:
+		_jobs = TRACKS.keys()
 
 func _exit_tree() -> void:
 	if _thread and _thread.is_started():
@@ -82,7 +88,26 @@ func set_volume(v: float) -> void:
 func want(id: String) -> void:
 	_wanted = id
 
+## Without threads, makes a little of the next track each frame, starting
+## with the one that should be playing, so there's never a long freeze.
+func _work_slice() -> void:
+	if _job.is_empty():
+		if _jobs.is_empty():
+			return
+		var id: String = _wanted if _wanted in _jobs else _jobs[0]
+		_jobs.erase(id)
+		_job = render_begin(TRACKS[id])
+		_job.id = id
+	var t0 := Time.get_ticks_msec()
+	while Time.get_ticks_msec() - t0 < SLICE_MS:
+		if render_step(_job):
+			tracks[_job.id] = _job.wav
+			_job = {}
+			return
+
 func _process(delta: float) -> void:
+	if not _jobs.is_empty() or not _job.is_empty():
+		_work_slice()
 	if _wanted != current:
 		var stream: AudioStreamWAV = null
 		_mutex.lock()
@@ -141,65 +166,56 @@ static func _note(t: Dictionary, chord: int, deg: int) -> float:
 	var octave := floori(d / 7.0)
 	return float(t.key) + scale[posmod(d, 7)] + 12 * octave
 
-## Renders one track: 16 bars, the A melody over the progression, then the B melody.
+## Renders one track in one go: 16 bars, the A melody over the progression,
+## then the B melody.
 static func render(t: Dictionary) -> AudioStreamWAV:
+	var job := render_begin(t)
+	while not render_step(job):
+		pass
+	return job.wav
+
+## A track being made a piece at a time (an eighth note per step, then the encoding).
+static func render_begin(t: Dictionary) -> Dictionary:
 	var step := 60.0 / float(t.bpm) / 2.0 # an eighth note
 	var bars := 16
-	var prog: Array = t.prog
 	var total := int(bars * 8 * step * RATE)
 	var buf := PackedFloat32Array()
 	buf.resize(total)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(str(t))
-	for bar in bars:
-		var chord: int = prog[bar % prog.size()]
-		var mel: Array = t.a if (bar / prog.size()) % 2 == 0 else t.b
-		for s in 8:
-			var start := int((bar * 8 + s) * step * RATE)
-			# lead
-			if mel[s] != R:
-				var len := step
-				if s < 7 and mel[s + 1] == R:
-					len = step * 2.0
-				_tone(buf, start, len * 0.92, _freq(_note(t, chord, mel[s]) + 12), "square", float(t.lead), 0.16)
-			# bass on every beat, an octave and a fifth below on the off-beats
-			if s % 2 == 0:
-				_tone(buf, start, step * 0.9, _freq(_note(t, chord, 0) - 12), "tri", 0.5, 0.30)
-			elif t.drums != "soft":
-				_tone(buf, start, step * 0.5, _freq(_note(t, chord, 4) - 12), "tri", 0.5, 0.16)
-			# a quiet arpeggio of the chord
-			if t.arp:
-				for k in 2:
-					var a := start + int(k * step * 0.5 * RATE)
-					_tone(buf, a, step * 0.45, _freq(_note(t, chord, [0, 2, 4, 2][(s * 2 + k) % 4]) + 24), "square", 0.125, 0.045)
-			# drums
-			match t.drums:
-				"soft":
-					if s == 0:
-						_kick(buf, start, 0.22)
-					if s % 2 == 1:
-						_noise(buf, start, 0.02, 0.025, rng)
-				"full":
-					if s == 0 or s == 4:
-						_kick(buf, start, 0.32)
-					if s == 2 or s == 6:
-						_noise(buf, start, 0.11, 0.13, rng)
-					_noise(buf, start, 0.025, 0.04, rng)
-				"hard":
-					if s % 2 == 0:
-						_kick(buf, start, 0.34)
-					if s == 2 or s == 6:
-						_noise(buf, start, 0.12, 0.16, rng)
-					_noise(buf, start, 0.025, 0.05, rng)
-	# keep it well under full scale
-	var peak := 0.001
-	for v in buf:
-		peak = maxf(peak, absf(v))
-	var gain := 0.7 / peak
-	var data := PackedByteArray()
-	data.resize(total * 2)
-	for i in total:
+	return {"t": t, "step": step, "notes": bars * 8, "total": total, "buf": buf, "rng": rng, "at": 0, "pk": 0, "peak": 0.001, "enc": 0}
+
+## Does one more piece of a track (one eighth note, or a chunk of encoding);
+## true when it's finished (job.wav is set).
+static func render_step(job: Dictionary) -> bool:
+	var t: Dictionary = job.t
+	var buf: PackedFloat32Array = job.buf
+	if job.at < job.notes:
+		_render_eighth(t, buf, job.at / 8, job.at % 8, job.step, job.rng)
+		job.at += 1
+		return false
+	# find the loudest point, a chunk at a time
+	if job.pk < job.total:
+		var peak: float = job.peak
+		var end := mini(job.pk + 6000, job.total)
+		for i in range(job.pk, end):
+			peak = maxf(peak, absf(buf[i]))
+		job.peak = peak
+		job.pk = end
+		return false
+	if job.enc == 0 and not job.has("data"):
+		job.gain = 0.7 / float(job.peak)
+		job.data = PackedByteArray()
+		job.data.resize(job.total * 2)
+	# encode in chunks of a bar's worth of samples
+	var data: PackedByteArray = job.data
+	var gain: float = job.gain
+	var stop := mini(job.enc + 6000, job.total)
+	for i in range(job.enc, stop):
 		data.encode_s16(i * 2, int(clampf(buf[i] * gain, -1.0, 1.0) * 30000.0))
+	job.enc = stop
+	if job.enc < job.total:
+		return false
 	var wav := AudioStreamWAV.new()
 	wav.format = AudioStreamWAV.FORMAT_16_BITS
 	wav.mix_rate = RATE
@@ -207,8 +223,51 @@ static func render(t: Dictionary) -> AudioStreamWAV:
 	wav.data = data
 	wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	wav.loop_begin = 0
-	wav.loop_end = total
-	return wav
+	wav.loop_end = job.total
+	job.wav = wav
+	return true
+
+static func _render_eighth(t: Dictionary, buf: PackedFloat32Array, bar: int, s: int, step: float, rng: RandomNumberGenerator) -> void:
+	var prog: Array = t.prog
+	var chord: int = prog[bar % prog.size()]
+	var mel: Array = t.a if (bar / prog.size()) % 2 == 0 else t.b
+	if true:
+		var start := int((bar * 8 + s) * step * RATE)
+		# lead
+		if mel[s] != R:
+			var len := step
+			if s < 7 and mel[s + 1] == R:
+				len = step * 2.0
+			_tone(buf, start, len * 0.92, _freq(_note(t, chord, mel[s]) + 12), "square", float(t.lead), 0.16)
+		# bass on every beat, an octave and a fifth below on the off-beats
+		if s % 2 == 0:
+			_tone(buf, start, step * 0.9, _freq(_note(t, chord, 0) - 12), "tri", 0.5, 0.30)
+		elif t.drums != "soft":
+			_tone(buf, start, step * 0.5, _freq(_note(t, chord, 4) - 12), "tri", 0.5, 0.16)
+		# a quiet arpeggio of the chord
+		if t.arp:
+			for k in 2:
+				var a := start + int(k * step * 0.5 * RATE)
+				_tone(buf, a, step * 0.45, _freq(_note(t, chord, [0, 2, 4, 2][(s * 2 + k) % 4]) + 24), "square", 0.125, 0.045)
+		# drums
+		match t.drums:
+			"soft":
+				if s == 0:
+					_kick(buf, start, 0.22)
+				if s % 2 == 1:
+					_noise(buf, start, 0.02, 0.025, rng)
+			"full":
+				if s == 0 or s == 4:
+					_kick(buf, start, 0.32)
+				if s == 2 or s == 6:
+					_noise(buf, start, 0.11, 0.13, rng)
+				_noise(buf, start, 0.025, 0.04, rng)
+			"hard":
+				if s % 2 == 0:
+					_kick(buf, start, 0.34)
+				if s == 2 or s == 6:
+					_noise(buf, start, 0.12, 0.16, rng)
+				_noise(buf, start, 0.025, 0.05, rng)
 
 static func _tone(buf: PackedFloat32Array, start: int, dur: float, f: float, wave: String, duty: float, vol: float) -> void:
 	var n := mini(int(dur * RATE), buf.size() - start)
