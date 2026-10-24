@@ -8,6 +8,7 @@ tags: [game, multiplayer]
 - **IPs stay private:** all room traffic goes through the [[Online Server]] relay.
 - **Names:** each name can be taken once. It's tied to a secret key saved with the character.
 - **Shared world:** the host's game runs the map, monsters, drops and time. Everyone keeps their own bag and gear.
+- **Town walls in a room:** each player has their own Pixel Town, built from their own unlocks. In a room, a wall (rock wall, Trading Center wall, stone wall to the basement) is open if **anyone in the room** has opened it, so everyone sees the same town. Breaking a wall opens it on everyone's screen at once. The unlock is saved only for the player who broke it. Others get their own wall back when they leave the room. (A design decision: PSG2's behaviour here isn't documented.)
 - **Chat:** the Chat.. box under the bars, or press T.
 - **Emotes:** shown to everyone in the room (see [[Emotes]]).
 - **Trading:** at the Trading Center tables in [[Pixel Town]]. Each side puts up to 6 stacks plus coins, and both press Ready.

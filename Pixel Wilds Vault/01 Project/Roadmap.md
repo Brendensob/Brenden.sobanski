@@ -4,13 +4,13 @@ tags: [project, roadmap]
 # Roadmap
 
 ## Next up (seen in Brenden's recording, not built yet)
-- [ ] **Dark edges in caves and dark worlds**: the screen fades to black around the player, as in his Darklands video.
+- [x] **Dark edges in caves and dark worlds** (2026-10-24)
 - [ ] **Rainbow cape and wings** cosmetics, like the outfit in his video.
 
 ## Seen in the 2026-10-20 recording, not built yet
 - [ ] The bag's **collection book** (every weapon, helmet, armor, shield and ring, by tab).
 - [ ] The item box showing stats as small icons.
-- [ ] Music, with a music toggle in Options.
+- [x] Music, with Sound and Music volume in Options (2026-10-24)
 
 ## Money and Steam (see [[Monetization]])
 - [ ] Decide: a paid game, real-money gems through Steam in-game purchases, or both.

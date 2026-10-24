@@ -43,6 +43,7 @@ var pending_token := "" # a name just claimed for a character that's about to be
 var slot := 0 # which character slot is being played
 
 func _ready() -> void:
+	anchor_to_device()
 	_setup_input()
 	new_game()
 
@@ -66,8 +67,39 @@ func _setup_input() -> void:
 		jb.button_index = pad[action]
 		InputMap.action_add_event(action, jb)
 
+# ---------------------------------------------------------------- trusted time
+# Furnaces, eggs, seeds and the daily chests and bounty run on now(). It counts
+# from a starting point with the computer's steady tick counter, so changing
+# the device clock while playing does nothing. The starting point is the online
+# server's time when it can be reached; otherwise the device clock when the game
+# starts, but never earlier than the last save (setting the clock back can't
+# rewind anything). Time away from the game still counts, so furnaces finish
+# while you're gone.
+var _anchor_unix := 0.0
+var _anchor_ms := 0
+var trusted_time := false
+var _system_clock: Callable = func() -> float: return Time.get_unix_time_from_system()
+
 func now() -> float:
-	return Time.get_unix_time_from_system()
+	return _anchor_unix + (Time.get_ticks_msec() - _anchor_ms) / 1000.0
+
+## Starts counting from the device clock (until the server's time arrives).
+func anchor_to_device() -> void:
+	if trusted_time:
+		return
+	_anchor_unix = float(_system_clock.call())
+	_anchor_ms = Time.get_ticks_msec()
+
+## The online server told us the real time: count from that from now on.
+func set_trusted_time(unix: float) -> void:
+	_anchor_unix = unix
+	_anchor_ms = Time.get_ticks_msec()
+	trusted_time = true
+
+## A save made at `saved` (its now()): the clock can't run backwards from it.
+func _no_rewind(saved: float) -> void:
+	if not trusted_time and now() < saved:
+		_anchor_unix += saved - now()
 
 ## The storage Banka in Pixel Town keeps for you: six backpacks of
 ## 5 x 6 slots, like the original's bag screen.
@@ -315,6 +347,7 @@ func equip_from(i: int) -> void:
 	inv[i] = {"id": old, "n": 1} if old != "" else null
 	clamp_stats()
 	inventory_changed.emit()
+	Sfx.play("equip", 0.0)
 	message.emit("Equipped %s." % Data.ITEMS[s.id].name, "")
 
 func unequip(slot: String) -> void:
@@ -422,6 +455,7 @@ func start_smelt(f: int, recipe: Dictionary) -> String:
 	if not has_all(recipe.cost):
 		return "You need %s." % cost_text(recipe.cost)
 	take_all(recipe.cost)
+	Sfx.play("smelt", 0.0)
 	furnaces[f] = {"out": recipe.out, "done": now() + recipe.time, "main": recipe.main}
 	return ""
 
@@ -483,6 +517,7 @@ func open_chest(kind: String) -> Array:
 	if count(c.key) <= 0:
 		return []
 	remove_item(c.key, 1)
+	Sfx.play("chest", 0.0)
 	var loot := []
 	for i in c.rolls:
 		var l := Data.pick_loot(c.loot)
@@ -539,7 +574,7 @@ func save_game() -> void:
 	var data := {
 		"v": VERSION, "inv": inv, "storage": storage, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
-		"reward_chests": reward_chests, "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
+		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 	}
 	# write a new file first, keep the last good save as a backup, then swap the
 	# new one in, so a crash or power cut mid-save can never wipe a character
@@ -649,6 +684,9 @@ func load_game() -> bool:
 	for i in mini(ss.size(), 5):
 		soils[i] = ss[i] if ss[i] is Dictionary and Data.SEED_LOOT.has(str(ss[i].get("seed", ""))) else null
 	reward_chests = _dict(d, "reward_chests")
+	# the device clock is only read when the game starts, so quitting to the menu
+	# and loading again can't pick up a changed clock either
+	_no_rewind(float(d.get("now", 0.0)))
 	clock = 0.0 # entering Pixel Town from the menu always starts at morning
 	day = int(d.get("day", 1))
 	best_survival_day = int(d.get("best_survival_day", 0))
@@ -683,6 +721,8 @@ func use_character(i: int) -> String:
 		return ""
 	var it: Dictionary = Data.ITEMS[s.id]
 	var new_id: String = s.id
+	if look == new_id:
+		return "You're already the %s." % it.name
 	remove_at(i, 1)
 	# you don't lose the character you were: it goes back in the bag
 	var old_id := look

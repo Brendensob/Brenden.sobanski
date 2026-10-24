@@ -31,6 +31,12 @@ class ServerTest(unittest.TestCase):
         self.call("/release", {"token": a["token"]})
         self.assertTrue(self.call("/register", {"name": "Brenden"})["ok"])
 
+    def test_time(self):
+        import time
+        r = self.call("/time", {})
+        self.assertTrue(r["ok"])
+        self.assertAlmostEqual(r["time"], time.time(), delta=2)
+
     def test_friends(self):
         a = self.call("/register", {"name": "Alice"})["token"]
         b = self.call("/register", {"name": "Bob"})["token"]

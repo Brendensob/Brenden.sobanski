@@ -10,6 +10,10 @@ Things only Brenden can answer. Claude asks these when they matter and moves the
 - [ ] Which NPC sells what in the real Pixel Town? Is the spiky-haired Merchant's stock right?
 - [ ] Should the **cartoon look** go further (thicker outlines, rounder shapes) or stay as it is?
 - [ ] In the recording, a **red-haired girl** says "Do you need a hammer?". Which of our villagers is she, or is she one we don't have yet?
+- [ ] **The 3 items with no source.** These are best-fit proposals, *not* verified PSG2 behaviour. Pick yes or no for each:
+  1. **Blood Long Sword:** add it to the Master Chest, as one of the wiki's "Long Swords" there.
+  2. **Stone Wall:** a Survival Book combination, **Rock + Rock + Wood Wall**, at the Wood Wall's 90%.
+  3. **Torch Stand:** remove it, since PSG2 doesn't seem to have it. Or keep it and craft it from **Torch + Wood**.
 - [ ] Which other worlds or events does he play most, so they get polished first?
 
 ## Answered

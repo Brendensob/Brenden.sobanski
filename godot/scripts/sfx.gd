@@ -2,7 +2,9 @@ extends Node
 ## Sound effects. Every sound is made in code when the game starts: short
 ## 8-bit square, triangle and noise blips in the style of the original, so
 ## there are no sound files to ship. Sfx.play("coin") plays one.
-## Sound on/off is kept in user://settings.cfg.
+## The sound volume (0 = off) is kept in user://settings.cfg. The same sound
+## can't start again within a few hundredths of a second, so a burst of hits
+## never stacks into one loud blast.
 
 const RATE := 22050
 const VOICES := 12
@@ -12,12 +14,17 @@ var sounds := {}
 var players: Array[AudioStreamPlayer] = []
 var _next := 0
 var on := true
+var volume := 1.0
+var _last := {} # id -> when it last started (ms)
+const MIN_GAP_MS := 45
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	var cfg := ConfigFile.new()
 	if cfg.load(SETTINGS) == OK:
 		on = bool(cfg.get_value("audio", "sound", true))
+		volume = clampf(float(cfg.get_value("audio", "sound_volume", 1.0 if on else 0.0)), 0.0, 1.0)
+		on = volume > 0.0
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
@@ -29,20 +36,29 @@ func _ready() -> void:
 			n.pressed.connect(func(): play("click", 0.0)))
 
 func set_on(v: bool) -> void:
-	on = v
+	set_volume(1.0 if v else 0.0)
+
+func set_volume(v: float) -> void:
+	volume = clampf(v, 0.0, 1.0)
+	on = volume > 0.0
 	var cfg := ConfigFile.new()
 	cfg.load(SETTINGS)
-	cfg.set_value("audio", "sound", v)
+	cfg.set_value("audio", "sound", on)
+	cfg.set_value("audio", "sound_volume", volume)
 	cfg.save(SETTINGS)
 
 func play(id: String, jitter: float = 0.05, db: float = 0.0) -> void:
 	if not on or not sounds.has(id):
 		return
+	var t := Time.get_ticks_msec()
+	if t - int(_last.get(id, -1000)) < MIN_GAP_MS:
+		return
+	_last[id] = t
 	var p := players[_next]
 	_next = (_next + 1) % players.size()
 	p.stream = sounds[id]
 	p.pitch_scale = 1.0 + randf_range(-jitter, jitter)
-	p.volume_db = db
+	p.volume_db = db + linear_to_db(volume)
 	p.play()
 
 # ---------------------------------------------------------------- the synth
@@ -139,6 +155,12 @@ func _build() -> void:
 			{"w": "square", "f": 784, "d": 0.06, "v": 0.3, "v1": 0.3, "duty": 0.25}, {"w": "square", "f": 1047, "d": 0.16, "v": 0.3, "duty": 0.25}],
 		"quest": [{"w": "square", "f": 784, "d": 0.08, "v": 0.3, "v1": 0.3, "duty": 0.5}, {"w": "square", "f": 1047, "d": 0.08, "v": 0.3, "v1": 0.3, "duty": 0.5},
 			{"w": "square", "f": 1319, "d": 0.08, "v": 0.3, "v1": 0.3, "duty": 0.5}, {"w": "square", "f": 1568, "d": 0.25, "v": 0.3, "duty": 0.5}],
+		"heal": [{"w": "tri", "f": 523, "d": 0.07, "v": 0.4, "v1": 0.4}, {"w": "tri", "f": 784, "d": 0.07, "v": 0.4, "v1": 0.4},
+			{"w": "square", "f": 1047, "f1": 1175, "d": 0.18, "v": 0.22, "duty": 0.25, "vib": 0.03}],
+		"equip": [{"w": "noise", "f": 3000, "d": 0.03, "v": 0.25, "lp": 0.5}, {"w": "square", "f": 392, "f1": 523, "d": 0.08, "v": 0.3, "duty": 0.25}],
+		"chest": [{"w": "noise", "f": 1200, "f1": 600, "d": 0.08, "v": 0.3, "lp": 0.4}, {"w": "square", "f": 659, "d": 0.07, "v": 0.3, "v1": 0.3, "duty": 0.5},
+			{"w": "square", "f": 784, "d": 0.07, "v": 0.3, "v1": 0.3, "duty": 0.5}, {"w": "square", "f": 1319, "d": 0.25, "v": 0.3, "duty": 0.5, "vib": 0.02}],
+		"smelt": [{"w": "noise", "f": 4000, "f1": 1500, "d": 0.25, "v": 0.22, "v1": 0.05, "lp": 0.3}, {"w": "tri", "f": 200, "f1": 260, "d": 0.12, "v": 0.3}],
 		"fail": [{"w": "square", "f": 220, "d": 0.08, "v": 0.3, "v1": 0.3, "duty": 0.5, "gap": 0.02}, {"w": "square", "f": 165, "d": 0.14, "v": 0.3, "duty": 0.5}],
 		# menus and people
 		"click": [{"w": "square", "f": 1100, "d": 0.025, "v": 0.18, "duty": 0.25}],

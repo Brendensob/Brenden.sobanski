@@ -12,6 +12,9 @@ var shake_amt := 0.0
 var autosave := 0.0
 var title_mode := true
 var title_t := 0.0
+var dark_layer: CanvasLayer
+var dark_rect: ColorRect
+var dark := 0.0 # how dark the screen edges are right now (eases toward the target)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -23,6 +26,17 @@ func _ready() -> void:
 	camera.position_smoothing_speed = 8.0
 	camera.zoom = Vector2(2, 2)
 	add_child(camera)
+	# cave darkness sits over the world but under the HUD
+	dark_layer = CanvasLayer.new()
+	dark_layer.layer = 5
+	add_child(dark_layer)
+	dark_rect = ColorRect.new()
+	dark_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dark_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/cave_dark.gdshader")
+	dark_rect.material = mat
+	dark_layer.add_child(dark_rect)
 	Net.main = self
 	Net.chat_received.connect(func(from: String, text: String): hud.add_chat(from, text))
 	Net.emote_received.connect(func(peer: int, e: String):
@@ -225,9 +239,53 @@ func respawn() -> void:
 func shake(amount: float) -> void:
 	shake_amt = maxf(shake_amt, amount)
 
+var deep := false # underground in an explore world (the cave music plays)
+
+func _music() -> void:
+	var kind: String = level.kind
+	if kind == "explore" and is_instance_valid(level.player):
+		var c := int(level.player.position.x / 16.0)
+		var down: int = int(level.player.position.y / 16.0) - level.surface[clampi(c, 0, level.surface.size() - 1)]
+		deep = down > 6 if deep else down > 10 # a little slack so it doesn't flip at the edge
+	else:
+		deep = false
+	Music.want(Music.pick(title_mode, kind, String(level.def.get("theme", "")), hud.boss != null and is_instance_valid(hud.boss),
+		kind == "survival" and GS.is_night(), deep))
+
+## How dark the edges should be: the dark worlds always, any explore world
+## once you're well underground, and never in town, menus or the open fields.
+func dark_target() -> float:
+	if title_mode or level == null or not is_instance_valid(level.player):
+		return 0.0
+	var theme := String(level.def.get("theme", ""))
+	var base := 0.0
+	if theme in ["dark", "ghost", "tomb", "nightmare", "modina"]:
+		base = 0.78
+	elif theme == "hell":
+		base = 0.6
+	if level.kind == "explore":
+		var c := clampi(int(level.player.position.x / 16.0), 0, level.surface.size() - 1)
+		var down: float = level.player.position.y / 16.0 - level.surface[c]
+		base = maxf(base, clampf((down - 3.0) / 10.0, 0.0, 0.9))
+	return base
+
+func _darkness(delta: float) -> void:
+	dark = move_toward(dark, dark_target(), delta * 0.8)
+	dark_rect.visible = dark > 0.01
+	if not dark_rect.visible:
+		return
+	var vs := get_viewport().get_visible_rect().size
+	var mat: ShaderMaterial = dark_rect.material
+	var at: Vector2 = level.player.get_global_transform_with_canvas().origin + Vector2(0, -12)
+	mat.set_shader_parameter("center", at / vs)
+	mat.set_shader_parameter("aspect", vs.x / vs.y)
+	mat.set_shader_parameter("strength", dark)
+
 func _process(delta: float) -> void:
 	if level == null:
 		return
+	_music()
+	_darkness(delta)
 	if title_mode:
 		title_t += delta
 		var w: float = level.world_size().x

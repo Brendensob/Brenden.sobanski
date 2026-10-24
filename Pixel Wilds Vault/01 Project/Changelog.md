@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #24 | 2026-10-24 | Music (7 synthesized loops) and volume settings, new sounds, cave darkness, character-switch confirmation, room-wide town walls, a cheat-proof game clock with server time |
 | #23 | 2026-10-24 | Combat: knockback about a tile, hit stun (no touch damage while dazed), monsters bounce off you, hit freeze/spark/squash, tap buffer for phones |
 | #22 | 2026-10-22 | Full game audit: data checker, completion checklist, rewards never lost on a full bag, crash-safe saves with backup, no hits through walls, character swap keeps the old one, Snow Valley needs 12 stamina, Nightmare Long Sword in the Master Chest |
 | #21 | 2026-10-20 | Menus like the real game: title, Options, Invite a friend, Select a character, Single/Multiplayer, Save and Leave Game?; villagers call out when you're near |

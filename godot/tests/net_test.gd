@@ -53,6 +53,13 @@ func finish() -> void:
 	print("NETTEST %s DONE, %d failures: %s" % [role, fails.size(), fails])
 	get_tree().quit()
 
+## The rock wall node in this game's Pixel Town, if it's still standing.
+func rock_wall() -> Node:
+	for n in main.level.props.get_children():
+		if n is NodeScript and n.kind == "rock_wall" and n.alive and not n.is_queued_for_deletion():
+			return n
+	return null
+
 func run_host() -> void:
 	await wait(1.0)
 	GS.slot = 2
@@ -64,6 +71,8 @@ func run_host() -> void:
 	GS.save_game()
 	main.start_game(true)
 	check(Net.is_host(), "starting the game opens the host's own room")
+	check(await until(func(): return GS.trusted_time, 10.0), "the game takes its time from the online server")
+	check(absf(GS.now() - Time.get_unix_time_from_system()) < 3.0, "and that time is right (%.1f s off)" % absf(GS.now() - Time.get_unix_time_from_system()))
 	check(await until(func(): return Net.relay != null and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED, 15.0), "the room is open on the relay")
 	# the friend asks to be friends; accept it (only friends can join)
 	var got_req := false
@@ -77,6 +86,11 @@ func run_host() -> void:
 	await Online.answer("Friend1", true)
 	check(await until(func(): return Net.players.size() == 1, 60.0), "a friend joined the room")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the host sees the friend in Pixel Town")
+	# the friend breaks their rock wall: it opens in the host's town too,
+	# but the unlock stays the friend's
+	check(rock_wall() != null, "the host's own rock wall stands at first")
+	check(await until(func(): return rock_wall() == null, 30.0), "when the friend breaks the rock wall, it opens in the host's town too")
+	check(not GS.flags.get("rock_wall", false), "but it's the friend's unlock: the host's own save doesn't get it")
 	await wait(0.5)
 	await shot("net_host_town")
 	main.change_level("grass_1")
@@ -102,10 +116,16 @@ func run_host() -> void:
 	await shot("net_host_grass2")
 	# trading at the Trading Center
 	check(await until(func(): return main.level.id == "town", 30.0), "the room went back to Pixel Town")
-	GS.flags["trade_wall"] = true
+	await wait(0.5)
+	check(rock_wall() == null, "back in town, the rebuilt town keeps the wall the friend opened")
 	GS.add_item("wood", 5)
 	var coins0 := GS.coins
 	check(await until(func(): return chat_log.has("ready to trade"), 90.0), "the friend burned the wall and is at the Trading Center")
+	var host_wall: Node = null
+	for n in main.level.props.get_children():
+		if n is NodeScript and n.kind == "trade_wall" and n.alive and not n.is_queued_for_deletion():
+			host_wall = n
+	check(host_wall == null and not GS.flags.get("trade_wall", false), "the wall the friend burned is gone from the host's town too, and stays the friend's unlock")
 	var friend_peer: int = Net.players.keys()[0]
 	Net.ask_trade(friend_peer)
 	check(await until(func(): return Net.trading(), 15.0), "the friend accepted the trade")
@@ -120,6 +140,11 @@ func run_host() -> void:
 	check(await until(func(): return not Net.trading(), 20.0), "the trade finished")
 	check(GS.count("rock") == 3 and GS.coins == coins0 + 50 and GS.count("wood") == 0, "the host got 3 Rocks and 50 coins for 5 Wood")
 	check(await until(func(): return Net.players.is_empty(), 30.0), "the friend left the room")
+	main.change_level("grass_1")
+	await wait(1.0)
+	main.change_level("town")
+	await wait(1.0)
+	check(rock_wall() != null, "after the friend leaves, the host's town has its own rock wall again")
 	finish()
 
 func run_client() -> void:
@@ -159,6 +184,13 @@ func run_client() -> void:
 	main.hud._join_friend("HostA")
 	check(await until(func(): return not main.on_title() and main.level.id == "town", 60.0), "joined the room in Pixel Town")
 	check(await until(func(): return main.level.puppets.size() == 1, 10.0), "the friend sees the host")
+	var rw: Node = rock_wall()
+	for k in 40:
+		if rw == null or not is_instance_valid(rw) or not rw.alive:
+			break
+		rw.hit(5)
+		await wait(0.1)
+	check(GS.flags.get("rock_wall", false) and rock_wall() == null, "the friend broke their rock wall")
 	check(await until(func(): return main.level.id == "grass_1", 30.0), "followed the host to Grasslands 1")
 	var lvl: Node = main.level
 	await wait(1.0)

@@ -95,10 +95,22 @@ func hit(tier: int, _from_net: bool = false) -> void:
 			Net.node_changed.rpc(level.id, nid, hits, alive)
 		if def.get("wall", false):
 			GS.flags[def.get("flag", "rock_wall")] = true
-			if def.tool == "torch":
-				for k in 4:
-					level.burst(position + Vector2(randf_range(-6, 6), -8 - k * 10), Color("f2a33a"), 8)
 			level.main.hud.toast(def.get("opened", "The rock wall crumbles! The soils behind it are yours."), "good")
-			if body:
-				body.queue_free()
-			queue_free()
+			open_wall(true)
+
+## Takes a town wall away: broken by you, or already opened by someone in your room.
+func open_wall(mine: bool) -> void:
+	alive = false
+	if sprite:
+		sprite.visible = false
+	if def.tool == "torch":
+		for k in 4:
+			level.burst(position + Vector2(randf_range(-6, 6), -8 - k * 10), Color("f2a33a"), 8)
+	else:
+		level.burst(position + Vector2(0, -8), Color(def.color), 10)
+	if not mine:
+		Sfx.play("break")
+		level.main.hud.toast("A friend in your room opened this wall.", "")
+	if body:
+		body.queue_free()
+	queue_free()
