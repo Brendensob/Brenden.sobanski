@@ -5,6 +5,10 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-24
+- **Stronger knockback and a hit stun, so the Grasslands are fair for a new character.** The starter Sword Cast does 2–4 a hit, so a Mummy (45 HP) or Shelly (50 HP) takes about 15 hits, while they hit back for 3 and 2 on 5 HP. With the old 7 px push they came right back and traded hits. Now a knockback hit throws a monster about a tile, every hit dazes it so it can't hurt you by touch for a moment, and monsters bounce off you. Health and damage numbers from the wiki were not changed. *Brenden: "its really hard to kill things in grasslands at a starter make the kockback better and the whole cobat better".* This replaces the 2026-10-10 "small knockback from the trailer" rule.
+- **Hits feel heavier:** a tiny freeze, a spark, a squash and a small screen shake. A tap of A during a swing is remembered, for phone play.
+
 ## 2026-10-20
 - **The menus follow Brenden's recording of the real game.** He sent a 52-second recording with no text. It showed the title (Play and Options at the bottom left, green Invite a friend!), Options, "Select a character" rows with red X buttons, Single Player / Multiplayer / Back, and "Save and Leave Game?" Yes / No. All of these were copied in layout (not art). See [[Main Menu]].
 - **Villagers call out when you walk up to them**, like in the recording: the Gatekeeper "Where do you wish to go?", Brutus "Looking for the Book of Survival?", the Miner "aghh..". Their name shows the rest of the time, so quests still say who to find.

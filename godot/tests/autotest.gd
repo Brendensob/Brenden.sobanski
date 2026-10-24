@@ -1045,7 +1045,7 @@ func run() -> void:
 		GS.st = GS.max_st()
 		GS.hp = GS.max_hp()
 	check(not is_instance_valid(slime) or slime.dead, "a slime dies to the starter sword")
-	# knockback like the original: a few pixels for monsters, none for bosses, a nudge for you
+	# knockback: about a tile for monsters (out of touching range), none for bosses, a nudge for you
 	var mum: Node = lvl.spawn_mob_at("mummy", p.position + Vector2(40, -2))
 	mum.max_hp = 9999
 	mum.hp = 9999
@@ -1059,7 +1059,12 @@ func run() -> void:
 	while mum.knock_t > 0:
 		await get_tree().physics_frame
 	far = mum.position.x - x0 # how far the push itself moved it
-	check(far > 3 and far < 14, "a knockback hit pushes a monster back a few pixels (%.1f)" % far)
+	check(far > 10 and far < 26, "a knockback hit pushes a monster back about a tile (%.1f)" % far)
+	# any hit, even a fist with no knockback, dazes a monster so it can't touch you right away
+	mum.take_damage(1, mum.position.x - 10, false)
+	check(mum.knock_t >= mum.STUN_TIME - 0.01 and mum.contact_cd > 0.3, "a hit dazes a monster and stops its touch for a moment")
+	while mum.knock_t > 0:
+		await get_tree().physics_frame
 	var boss: Node = lvl.spawn_mob_at("king", p.position + Vector2(-60, -2))
 	await wait(0.4)
 	boss.take_damage(1, boss.position.x - 10, true)

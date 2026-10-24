@@ -36,7 +36,7 @@ Claude follows these every session. They come from Brenden's own instructions; t
 - He likes things "exactly like the game" but welcomes a **cartoon twist** in the art.
 - He wants to make money from the game: keep the [[Currencies and Gem Shop|Gem Shop]].
 - Pixel Town should be **small and closed in**, like his sketch (see [[Pixel Town]]).
-- Combat should feel like the trailer: small knockback, numbers popping up (see [[Combat]]).
+- Combat should feel like the trailer, with numbers popping up, but **easy enough for a starter in the Grasslands**: clear knockback and a short daze (see [[Combat]]).
 
 ## Examples
 

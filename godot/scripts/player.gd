@@ -29,6 +29,10 @@ var level: Node
 var facing := 1
 var anim := 0.0
 var cooldown := 0.0
+## A tap of A during a swing is remembered this long and fires the moment the
+## swing ends, so quick taps on a phone aren't lost.
+const ATTACK_BUFFER := 0.2
+var attack_buffer := 0.0
 var swing := 0.0
 var swing_len := 0.3
 var swing_hit := true
@@ -117,6 +121,12 @@ func _physics_process(delta: float) -> void:
 				level.burst(position, Color("8fe05a"), 4)
 		if Input.is_action_just_pressed("attack"):
 			auto_attack = false
+			if cooldown > 0:
+				attack_buffer = ATTACK_BUFFER
+			else:
+				use_held(true)
+		elif attack_buffer > 0 and cooldown <= 0:
+			attack_buffer = 0
 			use_held(true)
 		elif (Input.is_action_pressed("attack") or auto_attack) and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
 			use_held(false)
@@ -148,6 +158,7 @@ func _tick(delta: float, dir: float) -> void:
 	since_hurt += delta
 	msg_cd -= delta
 	cooldown -= delta
+	attack_buffer -= delta
 	# statuses wear off
 	for k in GS.status.keys():
 		GS.status[k] -= delta
@@ -436,13 +447,15 @@ func _do_hit() -> void:
 	var id := GS.held()
 	var it: Dictionary = Data.ITEMS[id] if id != "" else {}
 	var reach: float = it.get("reach", 14)
-	var x0 := position.x + (2.0 if facing > 0 else -2.0 - reach)
-	var r := Rect2(x0, position.y - 24, reach, 26)
+	# the blow starts a little behind your middle, so a monster standing on you is hit too
+	var x0 := position.x + (-4.0 if facing > 0 else 4.0 - reach - 8.0)
+	var r := Rect2(x0, position.y - 24, reach + 8.0, 26)
 	var chest := position + Vector2(0, -10)
 	var mobs: Array = level.mobs_in_rect(r).filter(func(m): return not level.wall_between(chest, m.hit_rect().get_center()))
 	if mobs.size() > 0:
 		for m in mobs:
 			m.take_damage(GS.roll_attack(id), position.x, it.get("kb", false))
+		level.main.shake(1.5)
 		return
 	var n: Node = level.node_in_rect(r)
 	if n == null:
