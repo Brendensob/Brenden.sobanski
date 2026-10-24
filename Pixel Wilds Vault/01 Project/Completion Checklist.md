@@ -19,7 +19,7 @@ The living list of every system and how finished it is. It's updated after each 
 | System | Status | Notes |
 |---|---|---|
 | Every id in every table points to something real | ✅ | `data_audit.gd`: 0 broken references |
-| Every item can be obtained by playing | 🟠 | 564 of 567. **Blood Long Sword, Stone Wall, Torch Stand** have no source on the PSG2 wiki 🔒 |
+| Every item can be obtained by playing | 🔒 | 564 of 567. **Blood Long Sword, Stone Wall, Torch Stand**: researched in the wiki's own page source on 2026-10-24, still no source. Proposals are waiting for Brenden's OK (see [[Open Questions]]) |
 | Every material has a use | ✅ | 3 are only for selling (Snowball, Fortune Nugget, Eggency) |
 | Every monster spawns somewhere | ✅ | 70 of 70 |
 | No shop money loops | ✅ | Every shop price is above the sell price |
@@ -69,7 +69,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Selling at the item's price | ✅ | |
 | Gem Shop and gems for coins | ✅ | |
 | Miner's Survival Token shop | ✅ | |
-| Device-clock cheating (furnaces, daily chests) | 🟠 | Uses the real clock, like most offline games. Steam could check server time |
+| Device-clock cheating (furnaces, daily chests) | ✅ | Steady in-game clock, server time when online, no rewinding a save. Offline, a clock moved forward *while the game is closed* still counts once (see [[Known Issues]]) |
 
 ## Quests and progression
 | System | Status | Notes |
@@ -93,13 +93,15 @@ The living list of every system and how finished it is. It's updated after each 
 | System | Status | Notes |
 |---|---|---|
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test |
-| Wall flags when a guest breaks the host's wall | 🟠 | The flag is set on the host only |
+| Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
 ## UI and feel
 | System | Status | Notes |
 |---|---|---|
 | HUD, menus and panels like PSG2 | ✅ | |
 | Damage numbers and death puffs | ✅ | |
-| Sounds | ✅ | 29 effects |
-| Music | ⛔ | None yet |
-| Dark screen edges in caves | ⛔ | See [[Roadmap]] |
+| Sounds | ✅ | 33 effects, with a repeat limit |
+| Music | ✅ | 7 original synthesized loops; switches by place, boss and night |
+| Sound and Music volume | ✅ | Off to 100% in 25% steps, saved |
+| Dark screen edges in caves | ✅ | Dark worlds and deep caves; under the HUD; tested at 3 window shapes |
+| Character switch confirmation | ✅ | Cancel and Become tested |

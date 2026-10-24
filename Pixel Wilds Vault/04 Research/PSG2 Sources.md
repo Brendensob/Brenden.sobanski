@@ -12,6 +12,10 @@ tags: [research, sources]
 | App Store listing and screenshots | ❌ No | Brenden said not to use it |
 | The game's APK or files | ❌ Never | Copyrighted; don't decompile or copy |
 
+**Reading the wiki from a Claude session:** the fandom site doesn't load directly, but its MediaWiki API does:
+- `curl "https://pixelsurvivalgame.fandom.com/api.php?action=parse&page=<Page>&prop=wikitext&format=json"` gives a page's source;
+- `&list=search&srsearch=<words>` searches the wiki.
+
 **Developer:** Cowbeans (PSG2). Pixel Survival Game 2.o is a separate game.
 
 **Drop rates:** nobody has published them. The wiki only says "Rare" or "Uncommon", apart from the Slime's (about 20% each). See [[Numbers and Estimates]].

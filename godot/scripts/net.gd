@@ -105,6 +105,19 @@ func leave() -> void:
 	_pending_take.clear()
 	players_changed.emit()
 
+## True when anyone in your room (you included) has opened this town wall.
+## Pixel Town isn't shared in a room, so each game shows a wall open if anyone
+## present has opened it: everyone in town sees the same walls.
+func room_opened(flag: String) -> bool:
+	if GS.flags.get(flag, false):
+		return true
+	if not active:
+		return false
+	for pid in players:
+		if flag in players[pid].get("state", {}).get("walls", []):
+			return true
+	return false
+
 func player_count() -> int:
 	return players.size() + (1 if active else 0)
 

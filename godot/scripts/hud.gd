@@ -1213,9 +1213,8 @@ func _refresh_info() -> void:
 		row.add_child(_small_button("Read", func(): open_book(it.book)))
 	if it.type == "character":
 		row.add_child(_small_button("Become", func():
-			toast(GS.use_character(bag_sel), "big")
-			bag_sel = -1
-			_refresh_bag()))
+			ask_become(bag_sel)
+			bag_sel = -1))
 	if bag_sel >= GS.HOTBAR:
 		row.add_child(_small_button("Hold", func():
 			GS.swap(bag_sel, GS.sel)
@@ -1381,11 +1380,11 @@ func _build_panels() -> void:
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): open_panel("leave")))
 	pv.add_child(_button("Friends", func(): open_friends()))
-	var snd := _button("Sound: On" if Sfx.on else "Sound: Off", func(): pass)
-	snd.pressed.connect(func():
-		Sfx.set_on(not Sfx.on)
-		snd.text = "Sound: On" if Sfx.on else "Sound: Off")
-	pv.add_child(snd)
+	for kind in ["Sound", "Music"]:
+		var vb := _button(volume_text(kind), func(): pass)
+		vb.name = kind
+		vb.pressed.connect(func(): step_volume(kind); vb.text = volume_text(kind))
+		pv.add_child(vb)
 	room_label = _wrap("", 220, C_INK, 8)
 	pv.add_child(room_label)
 	room_box = VBoxContainer.new()
@@ -1405,6 +1404,25 @@ func _build_panels() -> void:
 	var no := _menu_button("No", func(): close_panels())
 	no.custom_minimum_size = Vector2(80, 26)
 	lv.add_child(_at(no, Vector2(118, 56)))
+
+	# asks before you become another character
+	var bc := _panel("become", Vector2(280, 132), "", false)
+	var bq := _label("", 11, C_INK, true)
+	bq.name = "Question"
+	bq.size = Vector2(280, 16)
+	bq.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bc.add_child(_at(bq, Vector2(0, 10)))
+	var bt := _wrap("", 256, C_INK, 8)
+	bt.name = "Text"
+	bc.add_child(_at(bt, Vector2(12, 32)))
+	var byes := _menu_button("Become", func(): _confirm_become())
+	byes.name = "Yes"
+	byes.custom_minimum_size = Vector2(100, 26)
+	bc.add_child(_at(byes, Vector2(30, 96)))
+	var bno := _menu_button("Cancel", func(): close_panels())
+	bno.name = "No"
+	bno.custom_minimum_size = Vector2(100, 26)
+	bc.add_child(_at(bno, Vector2(150, 96)))
 
 	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
 	var dtext := _wrap("", 240)
@@ -1466,16 +1484,17 @@ func _refresh_title(_choosing := false) -> void:
 			oh.size = Vector2(200, 14)
 			oh.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			op.add_child(_at(oh, Vector2(0, 8)))
-			var snd := _menu_button("Sound: On" if Sfx.on else "Sound: Off", func(): pass)
-			snd.name = "Sound"
-			snd.pressed.connect(func():
-				Sfx.set_on(not Sfx.on)
-				snd.text = "Sound: On" if Sfx.on else "Sound: Off")
-			op.add_child(_at(snd, Vector2(60, 36)))
+			var row := 28
+			for kind in ["Sound", "Music"]:
+				var vb := _menu_button(volume_text(kind), func(): pass)
+				vb.name = kind
+				vb.pressed.connect(func(): step_volume(kind); vb.text = volume_text(kind))
+				op.add_child(_at(vb, Vector2(60, row)))
+				row += 26
 			var ver := _label("Pixel Wilds: made by Brenden", 8, C_MUTED)
 			ver.size = Vector2(200, 12)
 			ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			op.add_child(_at(ver, Vector2(0, 76)))
+			op.add_child(_at(ver, Vector2(0, 84)))
 			op.add_child(_at(_menu_button("Back", func(): menu_step = "title"; _refresh_title(), true), Vector2(60, 110)))
 		"invite":
 			var ip := _frame(Vector2(110, 60), Vector2(260, 130))
@@ -1837,6 +1856,55 @@ func _refresh_shop(npc_id: String) -> void:
 			GS.coins += price2
 			GS.stats_changed.emit()
 			_refresh_shop(npc_id)))
+
+# ---------------------------------------------------------------- becoming a character
+var become_slot := -1
+var become_id := ""
+
+## Asks before using the character item in bag slot i, and says what happens.
+func ask_become(i: int) -> void:
+	var s = GS.inv[i]
+	if s == null or Data.ITEMS[s.id].type != "character":
+		return
+	var it: Dictionary = Data.ITEMS[s.id]
+	if GS.look == s.id:
+		toast("You're already the %s." % it.name, "warn")
+		return
+	become_slot = i
+	become_id = s.id
+	var now_name: String = Data.ITEMS[GS.look].name if Data.ITEMS.has(GS.look) else "your character"
+	var p: Panel = panels.become
+	(p.get_node("Question") as Label).text = "Become the %s?" % it.name
+	var text := "The %s goes back in your bag as an item, so you can switch back any time. Your bag, gear and coins stay as they are." % now_name
+	if it.gives != "" and not GS.flags.get("gave_" + s.id, false):
+		text += " You also get a %s." % Data.ITEMS[it.gives].name
+	(p.get_node("Text") as Label).text = text
+	open_panel("become")
+
+func _confirm_become() -> void:
+	var s = GS.inv[become_slot] if become_slot >= 0 else null
+	close_panels()
+	if s == null or s.id != become_id:
+		toast("That character isn't in your bag any more.", "warn")
+		return
+	toast(GS.use_character(become_slot), "big")
+	if main.level and main.level.player:
+		main.level.burst(main.level.player.position + Vector2(0, -8), Color("ffe08a"), 14)
+	become_slot = -1
+
+## The Sound and Music buttons: each tap steps Off, 25%, 50%, 75%, 100%.
+func volume_text(kind: String) -> String:
+	var v: float = Sfx.volume if kind == "Sound" else Music.volume
+	return "%s: Off" % kind if v <= 0.0 else "%s: %d%%" % [kind, roundi(v * 100)]
+
+func step_volume(kind: String) -> void:
+	var v: float = Sfx.volume if kind == "Sound" else Music.volume
+	var nxt := 0.0 if v >= 0.99 else snappedf(v + 0.25, 0.25)
+	if kind == "Sound":
+		Sfx.set_volume(nxt)
+		Sfx.play("click", 0.0)
+	else:
+		Music.set_volume(nxt)
 
 func _row(id: String, text: String, verb: String, enabled: bool, cb: Callable) -> Control:
 	var row := HBoxContainer.new()

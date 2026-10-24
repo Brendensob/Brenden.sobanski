@@ -14,6 +14,19 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Villagers call out when you walk up to them**, like in the recording: the Gatekeeper "Where do you wish to go?", Brutus "Looking for the Book of Survival?", the Miner "aghh..". Their name shows the rest of the time, so quests still say who to find.
 - **The title no longer says "Nothing to buy, ever."** That stopped being true when the [[Currencies and Gem Shop|Gem Shop]] came in.
 
+## 2026-10-24 (Phase 1 of the polish pass)
+- **Music is original and synthesized in code.** There are seven loops: menu, town, field, cave, Hell, boss and Survival night. No audio files are used, so nothing needs a licence and nothing copies PSG2. **Sound and Music volume** are in Options and the compass menu.
+- **Cave darkness** matches Brenden's Darklands video: dark worlds and deep caves fade the screen edges, drawn under the HUD.
+- **Switching character asks first** and says what happens to the current character and gear.
+- **The 3 items with no source stay unobtainable** until Brenden picks from the proposals in [[Open Questions]]. The wiki's own page source was searched; the findings are in [[Known Issues]].
+- **Town walls in a room:** a wall anyone in the room opened is open for everyone; the unlock is saved for the breaker. *Brenden: "If one player breaks or changes a wall, every player in that town must see the same result."* Pixel Town stays personal (each player's own unlocks), because PSG2's behaviour isn't documented.
+- **The game has its own clock:**
+  - a steady timer while playing;
+  - the online server's time when it can be reached (a new `/time` on the server);
+  - never earlier than the last save.
+  
+  Time away still counts, so honest players lose nothing.
+
 ## 2026-10-22
 - **A full audit of the game against its data.** `tools/data_audit.gd` checks every reference and works out which items can actually be obtained. The results are in [[Completion Checklist]]. *Brenden asked for a full game audit and completion.*
 - **Nothing earned is ever lost.** A full bag drops rewards at your feet: chests, the Crafter, quests, combining, harvests, tokens, trades and multiplayer pickups. A survival key goes to Banka if the bag is full.

@@ -42,5 +42,20 @@ It rewrites the notes in `Pixel Wilds Vault/06 Data`.
 ## Getting Godot in a fresh cloud container
 Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releases (4.3-stable) and unzip it, for example to `/tmp/godot/`.
 
+## What the suites cover now
+- **Autotest:**
+  - music (7 tracks loop and aren't silent; the right one per place);
+  - volume settings and the sound repeat limit;
+  - cave darkness (dark worlds, deep caves, under the HUD, 3 window shapes);
+  - the switch dialog (Cancel, Become, already that character);
+  - the game clock (device clock ahead, set back, server time).
+- **Two-player test:**
+  - server time;
+  - a friend's broken rock wall opens in the host's town;
+  - the rebuilt town keeps it;
+  - the Torch wall syncs;
+  - the host's own wall comes back after the friend leaves.
+- **Server tests:** `/time`.
+
 ## Only the systems checks
 `AT_SYSTEMS=1` runs only `systems_check()`, about a minute instead of 12. It covers rewards on a full bag, shops, gear, ammo, mana, keys, furnaces, quests, walls, tool tiers, the token shop, cures, characters and saving.

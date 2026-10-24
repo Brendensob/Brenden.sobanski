@@ -671,7 +671,7 @@ func _populate_town() -> void:
 	# the Gatekeeper by her portal, the Plumber, Banka (storage), the Merchant and the Crafter
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
-	if not GS.flags.get("rock_wall", false):
+	if not Net.room_opened("rock_wall"):
 		var rw: Node = add_node("rock_wall", Vector2i(11, y))
 		rw.make_solid()
 	add_npc("miner", Vector2i(13, y))
@@ -688,7 +688,7 @@ func _populate_town() -> void:
 	add_board("coin", Vector2i(5, top))
 	add_station("trade_table", 0, Vector2i(8, top))
 	add_station("trade_table", 1, Vector2i(12, top))
-	if not GS.flags.get("trade_wall", false):
+	if not Net.room_opened("trade_wall"):
 		var tw: Node = add_node("trade_wall", Vector2i(TOWN_ROOM, top))
 		tw.make_solid()
 	# the incubator and the three keg chests, each with a signboard showing its egg or key
@@ -709,7 +709,7 @@ func _populate_town() -> void:
 		add_station("furnace_board", i, Vector2i(W - TOWN_ROOM + 1 + i * 3, top))
 	# east end of the street: the massive stone wall only the Wall Hammer breaks,
 	# closing the tunnel to the hole down to the basement
-	if not GS.flags.get("hammer_wall", false):
+	if not Net.room_opened("hammer_wall"):
 		var hw: Node = add_node("hammer_wall", Vector2i(W - 12, y))
 		hw.make_solid()
 	var under := ["nini", "nana", "nina", "fc_9912", "tt_1001", "oop_2219"]
@@ -873,6 +873,7 @@ func _survival_tick(delta: float) -> void:
 	var night := GS.is_night()
 	if night and not s_night:
 		s_night = true
+		Sfx.play("night", 0.0)
 		announce("Night %d. Here they come!" % s_day, "danger")
 		if s_day % 6 == 0 and s_boss_day != s_day:
 			s_boss_day = s_day
@@ -1163,6 +1164,14 @@ func apply_tick_state(ts: Dictionary) -> void:
 	s_night = ts.get("s_night", s_night)
 
 ## Other players: shown only while they're on the same map as you.
+## In Pixel Town, a wall someone else in the room has opened opens here too.
+func sync_room_walls() -> void:
+	if kind != "town":
+		return
+	for n in props.get_children():
+		if n is NodeScript and n.alive and n.def.get("wall", false) and Net.room_opened(n.def.get("flag", "rock_wall")):
+			n.open_wall(false)
+
 func update_puppet(peer: int, pname: String, st: Dictionary) -> void:
 	if st.get("world", "") != id:
 		remove_puppet(peer)
@@ -1174,6 +1183,8 @@ func update_puppet(peer: int, pname: String, st: Dictionary) -> void:
 		entities.add_child(pp)
 		puppets[peer] = pp
 	pp.apply(st)
+	if kind == "town" and not st.get("walls", []).is_empty():
+		sync_room_walls()
 
 func remove_puppet(peer: int) -> void:
 	var pp: Node = puppets.get(peer)

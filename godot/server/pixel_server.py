@@ -84,6 +84,9 @@ def handle(path, body, ip):
         players[key] = {"name": name, "token": token, "friends": [], "requests": [], "seen": time.time()}
         save()
         return {"ok": True, "token": token, "name": name}
+    if path == "/time":
+        # the game's furnaces, eggs and daily chests count from this, not the device clock
+        return {"ok": True, "time": time.time()}
     if path == "/check":
         name = str(body.get("name", "")).strip()
         return {"ok": True, "free": bool(NAME_RE.match(name)) and name.lower() not in players}

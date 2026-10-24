@@ -735,6 +735,81 @@ func shop_button(container: String, label_start: String) -> Button:
 			return row.get_child(2)
 	return null
 
+## Music: every track is made, loops and isn't silent; the right one plays
+## where you are; and the volume settings stick.
+func audio_check() -> void:
+	var t0 := Time.get_ticks_msec()
+	while Music.ready_count() < Music.TRACKS.size() and Time.get_ticks_msec() - t0 < 30000:
+		await wait(0.2)
+	check(Music.ready_count() == Music.TRACKS.size(), "all %d music tracks are made (in %.1f s)" % [Music.TRACKS.size(), (Time.get_ticks_msec() - t0) / 1000.0])
+	var bad := []
+	for id in Music.tracks:
+		var w: AudioStreamWAV = Music.tracks[id]
+		var loud := 0
+		for i in range(0, w.data.size() - 1, 4000):
+			loud = maxi(loud, absi(w.data.decode_s16(i)))
+		if w.loop_mode != AudioStreamWAV.LOOP_FORWARD or w.get_length() < 10.0 or loud < 3000:
+			bad.append(id)
+	check(bad.is_empty(), "every track loops, lasts over 10 s and isn't silent %s" % str(bad))
+	check(Music.pick(true, "explore", "grass", false, false, false) == "menu" and Music.pick(false, "town", "grass", false, false, false) == "town"
+		and Music.pick(false, "explore", "grass", false, false, false) == "field" and Music.pick(false, "explore", "grass", false, false, true) == "cave"
+		and Music.pick(false, "explore", "dark", false, false, false) == "cave" and Music.pick(false, "explore", "hell", false, false, false) == "hell"
+		and Music.pick(false, "arena", "grass", true, false, false) == "boss" and Music.pick(false, "survival", "grass", false, true, false) == "danger",
+		"the menu, town, fields, caves, Hell, bosses and Survival nights each get their own music")
+	await wait(0.3)
+	check(Music.current == ("town" if main.level.kind == "town" else Music.current), "Pixel Town plays the town music (%s)" % Music.current)
+	var s0: float = Sfx.volume
+	var m0: float = Music.volume
+	main.hud.step_volume("Music")
+	var cfg := ConfigFile.new()
+	cfg.load("user://settings.cfg")
+	check(is_equal_approx(float(cfg.get_value("audio", "music", -1)), Music.volume) and main.hud.volume_text("Music").begins_with("Music: "), "the Music button steps the volume and saves it (%s)" % main.hud.volume_text("Music"))
+	Sfx.set_volume(0.0)
+	check(not Sfx.on and main.hud.volume_text("Sound") == "Sound: Off", "Sound can be turned off")
+	Sfx.set_volume(s0)
+	Music.set_volume(m0)
+	# the same sound can't stack: a second start within a few ms is skipped
+	Sfx._last.erase("hit")
+	var n0: int = Sfx._next
+	Sfx.play("hit")
+	Sfx.play("hit")
+	check(Sfx._next == (n0 + 1) % Sfx.players.size(), "a sound played twice at once only starts once")
+
+## Cave darkness: dark worlds and deep caves fade the screen edges, the open
+## fields don't, the HUD stays on top, and it fits any window shape.
+func darkness_check() -> void:
+	await goto("dark_1")
+	await wait(1.6)
+	var mat: ShaderMaterial = main.dark_rect.material
+	check(main.dark > 0.7 and main.dark_rect.visible, "Darklands fade the screen edges to dark (%.2f)" % main.dark)
+	check(main.dark_layer.layer < main.hud.layer, "the darkness is under the HUD")
+	var c: Vector2 = mat.get_shader_parameter("center")
+	check(c.x > 0.3 and c.x < 0.7 and c.y > 0.3 and c.y < 0.8, "the clear circle follows the player %s" % str(c))
+	await shot("50_cave_dark")
+	for size in [Vector2i(1280, 540), Vector2i(720, 540)]:
+		get_window().size = size
+		await wait(0.4)
+		var vs := get_viewport().get_visible_rect().size
+		check(absf(float(mat.get_shader_parameter("aspect")) - vs.x / vs.y) < 0.01, "the darkness stays round at %dx%d (aspect %.2f)" % [size.x, size.y, vs.x / vs.y])
+		await shot("50_cave_dark_%dx%d" % [size.x, size.y])
+	get_window().size = Vector2i(960, 540)
+	await goto("grass_1")
+	await wait(1.6)
+	check(main.dark < 0.05 and not main.dark_rect.visible, "the open Grasslands aren't darkened (%.2f)" % main.dark)
+	var lvl: Node = main.level
+	var deep_cell := -1
+	for y in range(lvl.surface[40] + 12, lvl.H - 2):
+		if not lvl.solid(40, y) and lvl.solid(40, y + 1):
+			deep_cell = y
+			break
+	if deep_cell > 0:
+		lvl.player.position = lvl.cell_pos(Vector2i(40, deep_cell))
+		lvl.player.velocity = Vector2.ZERO
+		await wait(1.6)
+		check(main.dark > 0.5, "deep in a Grasslands cave the edges go dark (%.2f)" % main.dark)
+		check(Music.current == "cave", "and the cave music plays (%s)" % Music.current)
+		await shot("51_grass_cave")
+
 ## The systems behind the items: nothing earned is lost, shops, gear, ammo,
 ## mana, keys, furnaces, walls and saving.
 func systems_check() -> void:
@@ -884,6 +959,23 @@ func systems_check() -> void:
 	GS.add_status("poison")
 	GS.inv[0] = {"id": "antidote", "n": 1}
 	check(GS.consume(0) and not GS.has_status("poison"), "an Antidote cures poison")
+	# switching asks first: Cancel changes nothing, Become switches
+	var look0: String = GS.look
+	GS.inv[2] = {"id": "school_girl", "n": 1}
+	GS.sel = 2
+	p.cooldown = 0.0
+	p.use_held(true)
+	check(main.hud.panels.become.visible and GS.look == look0 and GS.count("school_girl") == 1, "holding a character and pressing A asks first, without switching")
+	await shot("52_become_ask")
+	main.hud.panels.become.get_node("No").pressed.emit()
+	check(not main.hud.panels.become.visible and GS.look == look0 and GS.count("school_girl") == 1, "Cancel keeps your character and the item")
+	main.hud.ask_become(2)
+	main.hud.panels.become.get_node("Yes").pressed.emit()
+	check(GS.look == "school_girl" and GS.count("school_girl") == 0 and GS.count(look0) >= 1, "Become switches, and the old character comes back as an item")
+	GS.inv[2] = {"id": "school_girl", "n": 1}
+	GS.use_character(2)
+	check(GS.count("school_girl") == 1, "using the character you already are doesn't waste the item")
+	GS.sel = 0
 	# switching character hands the old one back; a character's weapon comes once
 	var was: String = GS.look
 	GS.inv[2] = {"id": "soldier", "n": 1}
@@ -894,6 +986,32 @@ func systems_check() -> void:
 	GS.inv[2] = {"id": "pirate", "n": 1}
 	GS.use_character(2)
 	check(GS.count("gilded_blade") == pirate_blades, "becoming the Pirate again doesn't hand out a second Golden Night")
+	# the game's clock: changing the device clock does nothing while playing,
+	# setting it back can't rewind a save, and the server's time is trusted
+	var real_clock: Callable = GS._system_clock
+	var t0: float = GS.now()
+	GS._system_clock = func() -> float: return Time.get_unix_time_from_system() + 86400.0 * 3
+	await wait(0.5)
+	var moved: float = GS.now() - t0
+	check(moved > 0.3 and moved < 2.0, "moving the device clock 3 days ahead doesn't move the game's clock (+%.1f s)" % moved)
+	GS.furnaces[1] = {"out": "copper_bar", "done": GS.now() + 20.0, "main": "copper_ore"}
+	check(not GS.collect_smelt(1), "so a 20-second smelt still isn't done")
+	GS.furnaces[1] = null
+	GS.save_game()
+	var saved_at: float = GS.now()
+	var was_trusted: bool = GS.trusted_time
+	GS.trusted_time = false
+	GS._system_clock = func() -> float: return Time.get_unix_time_from_system() - 86400.0 * 2
+	GS.anchor_to_device()
+	check(GS.now() < saved_at - 86000.0, "(the device clock is now set 2 days back)")
+	GS.load_game()
+	check(GS.now() >= saved_at - 1.0, "setting the clock back can't rewind a saved game's time")
+	GS.reward_chests["grass_1"] = GS.today()
+	GS.set_trusted_time(Time.get_unix_time_from_system())
+	check(GS.trusted_time and absf(GS.now() - Time.get_unix_time_from_system()) < 2.0, "the online server's time is used when it can be reached")
+	GS._system_clock = real_clock
+	GS.trusted_time = was_trusted
+	GS.reward_chests.erase("grass_1")
 	# saving keeps everything, and a damaged save falls back to the backup
 	GS.storage[1][0] = {"id": "gold_bar", "n": 3}
 	GS.flags["test_flag"] = true
@@ -976,6 +1094,8 @@ func run() -> void:
 	await shot("04_world_list")
 	main.hud.close_panels()
 	if OS.has_environment("AT_SYSTEMS"): # set AT_SYSTEMS=1 to run only the systems checks
+		await audio_check()
+		await darkness_check()
 		await systems_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 		get_tree().quit()
@@ -1263,6 +1383,8 @@ func run() -> void:
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()
+	await audio_check()
+	await darkness_check()
 	await systems_check()
 	# survival at night
 	await goto("survival")

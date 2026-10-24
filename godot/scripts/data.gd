@@ -1348,6 +1348,8 @@ const SURVIVAL_BOSSES := ["dark_trex", "hand", "king", "queen"]
 # Surviving this many nights in Survival Grasslands earns the Wall Hammer (the wiki
 # says it's a Survival reward but not which day, so the day is an estimate).
 const WALL_HAMMER_DAY := 10
+## Pixel Town's breakable walls, by the flag that opening each one sets.
+const TOWN_WALLS := ["rock_wall", "trade_wall", "hammer_wall"]
 
 func survival_tokens(day: int) -> int:
 	if day <= 1: return 0

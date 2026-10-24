@@ -18,6 +18,7 @@ GS="*res://scripts/game_state.gd"
 Net="*res://scripts/net.gd"
 Online="*res://scripts/online.gd"
 Sfx="*res://scripts/sfx.gd"
+Music="*res://scripts/music.gd"
 
 [display]
 

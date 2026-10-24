@@ -25,6 +25,18 @@ func _ready() -> void:
 	var i := args.find("--server")
 	if i >= 0 and i + 1 < args.size():
 		server = args[i + 1]
+	fetch_time()
+
+## Asks the server for the real time, so changing the device clock can't
+## speed up furnaces or reset daily chests. Offline, the game keeps its own count.
+func fetch_time() -> bool:
+	var t0 := Time.get_ticks_msec()
+	var r := await call_api("/time", {})
+	if not r.get("ok", false) or not r.has("time"):
+		return false
+	# half the round trip went by since the server read its clock
+	GS.set_trusted_time(float(r.time) + (Time.get_ticks_msec() - t0) / 2000.0)
+	return true
 
 func valid_name(n: String) -> bool:
 	var re := RegEx.new()

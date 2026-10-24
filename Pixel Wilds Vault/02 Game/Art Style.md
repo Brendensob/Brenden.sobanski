@@ -25,7 +25,14 @@ tags: [game, art]
 ## Palette
 The theme colors for each world are in `Art.THEMES` (grass, dark, hell, ice, dream, modina, nightmare, forbidden, snow, mushroom, fruit, egg, tomb, ghost).
 
+## Cave darkness
+
+![[cave_dark.png]]
+
+In the dark worlds, the screen fades to black away from the player, as in Brenden's Darklands video. This covers Darklands, Ghost Arena, Tomb, Modina Ruins and Nightmare Valley at 78%, and Hell at 60%. Deep underground in any explore world it builds up to 90%.
+
+It's one full-screen shader (`shaders/cave_dark.gdshader`), drawn under the HUD so buttons and bars are never darkened. It measures in screen heights, so the clear circle stays round at any window shape (tested at 16:9, 21:9 and 4:3), and it eases in and out over about a second.
+
 ## Ideas not done yet
-- Dark screen edges in caves and dark worlds
 - Rainbow cape and wings
 - See [[Roadmap]]

@@ -295,7 +295,7 @@ func use_held(pressed: bool) -> void:
 	match type:
 		"food":
 			if pressed and GS.consume(GS.sel):
-				Sfx.play("eat")
+				Sfx.play("heal" if "potion" in id else "eat")
 				level.number(position + Vector2(0, -22), "Yum", Color("f2cf5b"))
 				cooldown = 0.3
 			return
@@ -323,8 +323,7 @@ func use_held(pressed: bool) -> void:
 			return
 		"character":
 			if pressed:
-				level.main.hud.toast(GS.use_character(GS.sel), "big")
-				level.burst(position + Vector2(0, -8), Color("ffe08a"), 14)
+				level.main.hud.ask_become(GS.sel)
 				cooldown = 0.4
 			return
 		"throw":
@@ -386,7 +385,7 @@ func _cast(id: String, it: Dictionary) -> void:
 	swing = swing_len
 	swing_hit = true
 	swings += 1
-	Sfx.play("cast")
+	Sfx.play("heal" if it.has("heal") else "cast")
 	if it.has("heal"):
 		GS.hp = minf(GS.max_hp(), GS.hp + it.heal)
 		GS.stats_changed.emit()
@@ -551,7 +550,8 @@ func self_destruct() -> void:
 ## What the rest of the room needs to draw you.
 func net_state() -> Dictionary:
 	return {"world": level.id, "x": position.x, "y": position.y, "f": facing, "frame": cur_frame, "look": GS.look,
-		"helmet": GS.equip.get("helmet", ""), "armor": GS.equip.get("armor", ""), "held": GS.held(), "dead": dead, "swings": swings, "jumps": jumps}
+		"helmet": GS.equip.get("helmet", ""), "armor": GS.equip.get("armor", ""), "held": GS.held(), "dead": dead, "swings": swings, "jumps": jumps,
+		"walls": Data.TOWN_WALLS.filter(func(f): return GS.flags.get(f, false))}
 
 ## In a room you get back up where the map starts instead of going home.
 func revive() -> void:

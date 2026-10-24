@@ -12,6 +12,9 @@ tags: [game, characters]
   - The Spi → Blue Night;
   - Ninja → Tsurugi;
   - Iron Bot → Iron Fist.
+![[become_ask.png]]
+
+- **Switching asks first:** "Become the Pirate?" explains that your current character goes back in your bag and your bag, gear and coins stay. **Cancel** changes nothing. Using the character you already are does nothing (the item isn't wasted).
 - **Switching character** gives your old character back as an item, so nothing is lost. A character's bonus weapon comes only the first time you become it.
 - The Crafter turns characters into hats.
 
