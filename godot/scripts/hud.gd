@@ -439,6 +439,8 @@ func _build_hud() -> void:
 	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hud_root.add_child(hint_label)
 
+const LOW_HP := 0.25
+
 func _draw_bars() -> void:
 	var rows := [[GS.hp, GS.max_hp(), Color("e8402e")], [GS.mp, GS.max_mp(), Color("2b74d8")], [GS.st, GS.max_st(), Color("5ab52a")]]
 	var f: Font = Art.font_title
@@ -453,6 +455,10 @@ func _draw_bars() -> void:
 		bars.draw_rect(Rect2(1, y + 1, w * k, 9), c)
 		bars.draw_rect(Rect2(1, y + 1, w * k, 2), c.lightened(0.25))
 		bars.draw_rect(Rect2(1, y + 8, w * k, 2), c.darkened(0.3))
+		if i == 0 and k <= LOW_HP and r[0] > 0:
+			# low health: the bar's border pulses red
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 110.0)
+			bars.draw_rect(Rect2(-1, y - 1, w + 4, 13), Color(1.0, 0.25, 0.15, 0.35 + 0.6 * pulse), false, 1.0)
 		var text := "%d/%d" % [int(ceil(maxf(r[0], 0))), int(r[1])]
 		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 		bars.draw_string_outline(f, Vector2(1 + (w - tw) / 2, y + 9), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, C_DARK)
@@ -524,6 +530,8 @@ func set_boss(b: Node) -> void:
 
 func _process(_d: float) -> void:
 	clock.queue_redraw()
+	if GS.hp <= GS.max_hp() * LOW_HP:
+		bars.queue_redraw()
 	var lvl: Node = main.level if main else null
 	if lvl == null:
 		return

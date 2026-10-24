@@ -31,6 +31,13 @@ cd godot
 ```
 It checks every id in every table, works out which items can be obtained by playing, and lists items with no use, rare spawns and money loops. It exits with an error if any reference is broken. Run it after changing `data.gd`.
 
+## Progression audit
+```
+cd godot
+<godot> --headless --path . -s tools/progression_audit.gd
+```
+It plays the progression on paper with the real gates: tool tiers, the furnace gate, Survival access, the rock, Torch and hammer walls, books and scrolls, and the stamina for the Tomb and Snow Valley. It prints when each milestone opens and every softlocked item, and exits with an error if anything is softlocked.
+
 ## Vault data export
 After any change to `scripts/data.gd`, run:
 ```
@@ -56,6 +63,17 @@ Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releas
   - the Torch wall syncs;
   - the host's own wall comes back after the friend leaves.
 - **Server tests:** `/time`.
+
+## Phases 2 to 5 checks (in `gameplay_check` and `content_check`)
+- **Monsters:** all 6 movement types; drops come only from the monster's own table.
+- **Items:** mining, potions, a pet's effect, all 22 item types, soils.
+- **Saving:**
+  - a smelt and an egg across save and load;
+  - quit to the menu and play again;
+  - damaged and old saves.
+- **The "ready" notice.**
+- **The HUD at 4 window shapes.**
+- **All the content:** every combination, Crafter recipe, smelt, shop item and quest.
 
 ## Only the systems checks
 `AT_SYSTEMS=1` runs only `systems_check()`, about a minute instead of 12. It covers rewards on a full bag, shops, gear, ammo, mana, keys, furnaces, quests, walls, tool tiers, the token shop, cures, characters and saving.

@@ -19,6 +19,8 @@ Laid out like Brenden's PSG2 screenshots.
 - **Day counter:** only in Survival Grasslands.
 - **Right side:** backpack (bag), compass (menu), bomb (back to town).
 - **Bottom:** grey ◀ ▶ bottom left; red **A** above green **B** bottom right.
+- **Low health:** under 25%, the health bar's border pulses red.
+- **Ready notices:** "Your Copper Bar is ready in the furnace", "…has hatched", "…is ripe", shown wherever you are.
 - Your name shows in red over your head. Pickups read "Wood obtained" under the clock.
 - Coins are on the bag's character page, not on the HUD.
 

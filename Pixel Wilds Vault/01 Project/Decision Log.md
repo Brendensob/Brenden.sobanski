@@ -14,6 +14,17 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Villagers call out when you walk up to them**, like in the recording: the Gatekeeper "Where do you wish to go?", Brutus "Looking for the Book of Survival?", the Miner "aghh..". Their name shows the rest of the time, so quests still say who to find.
 - **The title no longer says "Nothing to buy, ever."** That stopped being true when the [[Currencies and Gem Shop|Gem Shop]] came in.
 
+## 2026-10-24 (phases 2 to 5 of the polish pass)
+- **The progression is checked with the real gates:** `tools/progression_audit.gd` finds 0 softlocks.
+- **Every recipe, Crafter item, smelt, shop item and quest in the data is now played by the autotest.**
+- **You're told when a smelt, egg or crop is done**, wherever you are.
+- **Low health makes the health bar's border pulse red.**
+- **Music without threads:** on the web build (threads off), tracks are made a small piece per frame, the needed one first, so the browser never freezes and the music still plays.
+- **Not done, on purpose:**
+  - item rarity colours (PSG2 has none we know of);
+  - drag-and-drop (PSG2 is tap-based);
+  - boss attack patterns (not documented).
+
 ## 2026-10-24 (Phase 1 of the polish pass)
 - **Music is original and synthesized in code.** There are seven loops: menu, town, field, cave, Hell, boss and Survival night. No audio files are used, so nothing needs a licence and nothing copies PSG2. **Sound and Music volume** are in Options and the compass menu.
 - **Cave darkness** matches Brenden's Darklands video: dark worlds and deep caves fade the screen edges, drawn under the HUD.
