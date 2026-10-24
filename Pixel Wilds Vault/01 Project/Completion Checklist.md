@@ -47,7 +47,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Staffs and mana | ✅ | Healing staffs don't waste mana at full health |
 | Defense and 0-damage blocks | ✅ | |
 | Status effects (poison, fatigue, slow, cold) and cures | ✅ | The Antidote cure and Jade Ring immunity are tested |
-| Knockback | ✅ | |
+| Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, hop, accel) | 🟡 | |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
 | Fainting and respawn | ✅ | Nothing is lost when you faint |

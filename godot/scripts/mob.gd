@@ -6,11 +6,18 @@ extends CharacterBody2D
 
 const ProjectileScript := preload("res://scripts/projectile.gd")
 const GRAVITY := 720.0
-## Knockback, measured from the trailer: a hit with a knockback weapon pushes a
-## monster back only a few pixels and it comes right back. Heavy monsters and
-## bosses don't move at all.
-const KNOCK_SPEED := 90.0
-const KNOCK_TIME := 0.12
+## Knockback: a hit with a knockback weapon throws a monster back about a
+## tile, out of reach of its touch, and it stands dazed for a moment before it
+## comes back. Brenden found the old nudge (7 px) made the Grasslands too hard
+## for a new character (2026-10-24). Heavy monsters and bosses don't move.
+const KNOCK_SPEED := 160.0
+const KNOCK_DRAG := 800.0
+const KNOCK_TIME := 0.4
+## Every hit, with or without knockback, stuns a monster this long: it stops,
+## and it can't hurt you by touch until it recovers.
+const STUN_TIME := 0.3
+## The tiny freeze when a hit lands, so you feel it connect.
+const HITSTOP := 0.06
 ## The main colour of each monster's sprite, for the burst when it dies.
 static var _death_colors := {}
 
@@ -38,6 +45,7 @@ var anim := 0.0
 var show_bar := 0.0
 var spike_cd := 0.0
 var knock_t := 0.0
+var freeze_t := 0.0
 var home := Vector2.ZERO
 var frames: Array
 var sprite: Sprite2D
@@ -125,6 +133,12 @@ func _physics_process(delta: float) -> void:
 	contact_cd -= delta
 	show_bar -= delta
 	spike_cd -= delta
+	if freeze_t > 0:
+		# hit-stop: hold still for a blink, then fly back
+		freeze_t -= delta
+		sprite.texture = frames[2]
+		queue_redraw()
+		return
 	var p: Node2D = level.target_for(position)
 	var to := p.position - position
 	var dist := to.length()
@@ -138,11 +152,11 @@ func _physics_process(delta: float) -> void:
 			regen_t = 0
 			hp = minf(max_hp, hp + max_hp * 0.0008 * (1.0 if aggro else 10.0))
 	if knock_t > 0:
-		# pushed back: the monster slides a little before it moves on its own again
+		# pushed back or dazed: the monster slides, stops, then moves on its own again
 		knock_t -= delta
-		velocity.x = move_toward(velocity.x, 0, 500 * delta)
+		velocity.x = move_toward(velocity.x, 0, KNOCK_DRAG * delta)
 		if flying:
-			velocity.y = move_toward(velocity.y, 0, 500 * delta)
+			velocity.y = move_toward(velocity.y, 0, KNOCK_DRAG * delta)
 	else:
 		match def.ai:
 			"walk": _walk(delta, to, dist)
@@ -177,10 +191,14 @@ func _physics_process(delta: float) -> void:
 				take_damage(n.trap_damage(), n.position.x, false)
 				spike_cd = 0.7
 				break
-	# touching the player hurts
-	if player_ok and contact_cd <= 0 and hit_rect().intersects(p.hit_rect()):
+	# touching the player hurts (not while it's dazed from your hit)
+	if player_ok and contact_cd <= 0 and knock_t <= 0 and hit_rect().intersects(p.hit_rect()):
 		contact_cd = 0.5 if def.get("fast_hits", false) else 0.9
 		p.hurt(dmg, def.get("crit", 0.05), position.x, status_effect())
+		if can_knock():
+			# it bounces off you instead of sitting on top of you
+			velocity.x = signf(position.x - p.position.x) * KNOCK_SPEED * 0.6
+			knock_t = KNOCK_TIME * 0.6
 	# looks
 	var alt := int(anim * (8 if flying else 5)) % 2 == 1 and (absf(velocity.x) > 1 or flying)
 	if def.get("hop", false):
@@ -318,6 +336,7 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 		flash = 0.1
 		show_bar = 4.0
 		Sfx.play("hit")
+		_hit_fx(from_x)
 		level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
 		Net.hit_mob.rpc_id(1, level.id, nid, amount, from_x, knock)
 		return
@@ -331,16 +350,43 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 	show_bar = 4.0
 	aggro_forced = true
 	level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
-	if knock and not def.get("heavy", false) and not is_boss():
-		velocity.x = signf(position.x - from_x) * KNOCK_SPEED
-		if flying:
-			velocity.y = -KNOCK_SPEED * 0.3
-		elif is_on_floor():
-			velocity.y = -60.0
-		knock_t = KNOCK_TIME
+	if not _from_net:
+		_hit_fx(from_x)
+	if can_knock():
+		var away := signf(position.x - from_x)
+		if away == 0:
+			away = -dir
+		if knock:
+			velocity.x = away * KNOCK_SPEED
+			if flying:
+				velocity.y = -KNOCK_SPEED * 0.3
+			elif is_on_floor():
+				velocity.y = -90.0
+			knock_t = KNOCK_TIME
+		else:
+			velocity.x = 0.0
+			knock_t = maxf(knock_t, STUN_TIME)
+		freeze_t = HITSTOP
 		accel = 0.0 # a monster that was speeding up has to start over
+		if def.ai == "charge":
+			state = "rest" # a hit stops a charge
+			state_t = 1.0
+	contact_cd = maxf(contact_cd, 0.35)
 	if hp <= 0:
 		die()
+
+## Only ordinary monsters get pushed and dazed; heavy ones and bosses shrug it off.
+func can_knock() -> bool:
+	return not def.get("heavy", false) and not is_boss() and def.ai != "stone"
+
+## A white spark where the blow lands, and the monster squashes.
+func _hit_fx(from_x: float) -> void:
+	var side := signf(from_x - position.x)
+	level.burst(position + Vector2(side * size.x * 0.4, -size.y / 2), Color("fff6d8"), 4)
+	var base: Vector2 = Vector2.ONE * float(def.get("scale", 1.0))
+	sprite.scale = base * Vector2(1.25, 0.8)
+	var tw := sprite.create_tween()
+	tw.tween_property(sprite, "scale", base, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func die() -> void:
 	dead = true
