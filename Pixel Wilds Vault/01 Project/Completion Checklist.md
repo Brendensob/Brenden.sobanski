@@ -123,7 +123,8 @@ The living list of every system and how finished it is. It's updated after each 
 | Sound and Music volume | ✅ | Off to 100% in 25% steps, saved |
 | Dark screen edges in caves | ✅ | Dark worlds and deep caves; under the HUD; tested at 3 window shapes |
 | Character switch confirmation | ✅ | Cancel and Become tested |
-| Auto-hit button | ✅ | 2026-10-27: round AUTO button left of A (and Q). Tested: lights up, swings with the bag open, the bag doesn't pause, stays on through A and item switches, turns off, pauses again when off, saved |
+| Touch button sizes | ✅ | 2026-10-27: ◀ ▶ 90 × 34, A and B 68 × 34 again, as before the cartoon pass; checked by the autotest |
+| Auto-hit button | ✅ | 2026-10-27: round AUTO button above A (and Q). Tested: lights up, swings with the bag open, the bag doesn't pause, stays on through A and item switches, turns off, pauses again when off, saved |
 
 ## Phase 2 review: every system, A to E
 **A** complete and working · **B** implemented but incomplete · **C** in the data but not connected · **D** missing · **E** blocked on unknown PSG2 facts

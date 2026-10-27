@@ -763,7 +763,8 @@ func _toast_life(box: Control) -> void:
 
 # ---------------------------------------------------------------- touch controls
 func _build_touch() -> void:
-	# grey ◀ ▶ pads on the left, a round red A above a round green B on the right, as in the original
+	# grey ◀ ▶ pads on the left, a red A above a green B on the right, as in the original,
+	# at the sizes they had before the cartoon pass (Art.TOUCH_SIZE)
 	var specs := [["move_left", "left", ""], ["move_right", "right", ""], ["attack", "A", "A"], ["jump", "B", "B"]]
 	var k := float(Art.TOUCH_K)
 	for s in specs:
@@ -780,7 +781,7 @@ func _build_touch() -> void:
 			l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.35))
 			l.add_theme_constant_override("outline_size", 3)
 			l.scale = Vector2(k, k)
-			l.size = Vector2(46, 44)
+			l.size = Vector2(Art.TOUCH_SIZE[s[1]].x + 2, Art.TOUCH_SIZE[s[1]].y - 2)
 			l.position = Vector2(0, -1 * k)
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -789,7 +790,7 @@ func _build_touch() -> void:
 			t.released.connect(func(): l.position.y = -1 * k)
 		add_child(t)
 		touch_nodes.append(t)
-	# the little round auto-hit switch, left of A: gold when on
+	# the little round auto-hit switch, above A: gold when on
 	var ab := TouchScreenButton.new()
 	ab.name = "AutoHit"
 	ab.scale = Vector2.ONE / k
@@ -875,12 +876,12 @@ func _layout_touch() -> void:
 	var vs := get_viewport().get_visible_rect().size
 	if touch_nodes.size() < 4:
 		return
-	touch_nodes[0].position = Vector2(16, vs.y - 52)
-	touch_nodes[1].position = Vector2(100, vs.y - 52)
-	touch_nodes[2].position = Vector2(vs.x - 62, vs.y - 104)
-	touch_nodes[3].position = Vector2(vs.x - 112, vs.y - 58)
+	touch_nodes[0].position = Vector2(20, vs.y - 58)
+	touch_nodes[1].position = Vector2(127, vs.y - 58)
+	touch_nodes[2].position = Vector2(vs.x - 88, vs.y - 96)
+	touch_nodes[3].position = Vector2(vs.x - 127, vs.y - 54)
 	if touch_nodes.size() > 4:
-		touch_nodes[4].position = Vector2(vs.x - 92, vs.y - 132)
+		touch_nodes[4].position = Vector2(vs.x - 68, vs.y - 134)
 
 func set_touch_visible(on: bool) -> void:
 	for t in touch_nodes:
