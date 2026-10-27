@@ -20,6 +20,13 @@ var toasts: VBoxContainer
 var boss_box: Control
 var boss: Node = null
 var hint_label: Label
+var goal_btn: Button
+var goal_title: Label
+var goal_text: Label
+var goal_help := ""
+var goal_shown := "" # the goal on screen, to notice when it changes
+var goal_index := -1
+var goal_t := 0.0
 var bomb_btn: TextureButton
 var touch_nodes: Array = []
 var force_touch := false
@@ -289,6 +296,35 @@ func _build_hud() -> void:
 	status_label = _outlined(_label("", 7, Color("8fd04a"), true))
 	status_label.position = Vector2(5, 92)
 	hud_root.add_child(status_label)
+	# what to do next: a small card under the bars; tap it for how
+	goal_btn = Button.new()
+	goal_btn.name = "GoalCard"
+	goal_btn.focus_mode = Control.FOCUS_NONE
+	goal_btn.position = Vector2(5, 102)
+	goal_btn.custom_minimum_size = Vector2(60, 22)
+	goal_btn.size = Vector2(150, 22)
+	var gs := StyleBoxFlat.new()
+	gs.bg_color = Color(0.1, 0.07, 0.12, 0.8)
+	gs.set_corner_radius_all(4)
+	gs.border_color = Color(C_YELLOW, 0.75)
+	gs.border_width_left = 2
+	var gh := gs.duplicate()
+	gh.bg_color = Color(0.16, 0.11, 0.18, 0.9)
+	goal_btn.add_theme_stylebox_override("normal", gs)
+	goal_btn.add_theme_stylebox_override("hover", gh)
+	goal_btn.add_theme_stylebox_override("pressed", gh)
+	goal_btn.pressed.connect(func(): open_info("Goal: " + goal_shown, goal_help))
+	goal_title = _outlined(_label("GOAL", 6, C_YELLOW, true))
+	goal_title.position = Vector2(5, 1)
+	goal_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	goal_btn.add_child(goal_title)
+	goal_text = _outlined(_label("", 8, C_WHITE))
+	goal_text.position = Vector2(5, 9)
+	goal_text.size = Vector2(140, 20)
+	goal_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	goal_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	goal_btn.add_child(goal_text)
+	hud_root.add_child(goal_btn)
 	# the "Chat.." box under the bars (rooms only); tap it to type
 	chat_btn = Button.new()
 	chat_btn.text = "Chat.."
@@ -540,6 +576,11 @@ func _process(_d: float) -> void:
 	status_label.position.y = 168 if emote_panel.visible else 92
 	if room_label and panels.pause.visible:
 		room_label.text = _room_text()
+	goal_t -= _d
+	if goal_t <= 0:
+		goal_t = 0.25
+		refresh_goal()
+	goal_btn.visible = not emote_panel.visible and not boss_box.visible
 	day_label.visible = lvl.kind == "survival"
 	day_label.text = "Day %d" % lvl.s_day
 	bomb_btn.visible = not town
@@ -566,6 +607,29 @@ func _process(_d: float) -> void:
 		if station_t > 1.0:
 			station_t = 0.0
 			_station_tick()
+
+## The goal card: what to do next and how far along you are.
+func refresh_goal() -> void:
+	if main == null or main.on_title():
+		return
+	var g := GS.current_goal()
+	if g.is_empty():
+		goal_btn.modulate.a = 0.0
+		return
+	goal_btn.modulate.a = 1.0
+	var line: String = g.text + ("  " + g.progress if g.progress != "" else "")
+	goal_text.text = line
+	goal_help = g.help
+	# the card is as wide as its text, up to two lines
+	var w: float = goal_text.get_theme_font("font").get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
+	goal_btn.size.x = clampf(w + 12, 60, 150)
+	goal_btn.custom_minimum_size.x = goal_btn.size.x
+	goal_text.size.x = goal_btn.size.x - 10
+	goal_btn.size.y = 30 if w > 140 else 22
+	if goal_shown != "" and goal_shown != g.text and int(g.index) > goal_index:
+		toast("Goal done! Next: " + g.text, "good")
+	goal_shown = g.text
+	goal_index = int(g.index)
 
 func _refresh_stats() -> void:
 	bars.queue_redraw()
@@ -2011,6 +2075,19 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 	pic.position = Vector2(0, 46)
 	pic.size = Vector2(150, 84)
 	card.add_child(pic)
+	# how hard it is for you right now, from your gear
+	var dg := GS.world_danger(wid)
+	var badge := _outlined(_label(["Easy", "Fair", "Hard", "Deadly"][dg], 7, C_WHITE, true))
+	badge.name = "Danger"
+	var bs := StyleBoxFlat.new()
+	bs.bg_color = [Color("3a9a2a"), Color("c8a020"), Color("d8661a"), Color("b8241a")][dg]
+	bs.set_corner_radius_all(3)
+	bs.content_margin_left = 3
+	bs.content_margin_right = 3
+	badge.add_theme_stylebox_override("normal", bs)
+	badge.position = Vector2(4, 49)
+	badge.tooltip_text = "How hard this world's monsters are with your gear."
+	card.add_child(badge)
 	var w: Dictionary = Data.WORLDS[wid]
 	var target: String = wid
 	var act := _button("Activate", func(): _enter_world(target), false)

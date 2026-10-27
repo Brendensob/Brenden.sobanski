@@ -14,7 +14,7 @@ Laid out like Brenden's PSG2 screenshots.
   - **friends**;
   - **chat** (offline it says chat needs online play);
   - **emotes** (see [[Emotes]]).
-- **Under the bars:** the **Chat..** box (only in online rooms).
+- **Under the bars:** the **Chat..** box (only in online rooms), then the **goal card**: what to do next, with progress. Tap it for how (see [[Goals and Guidance]]).
 - **Top centre:** the turning sky clock, with **gems** next to it (`+` 💎 count). Tap them for the Gem Shop.
 - **Day counter:** only in Survival Grasslands.
 - **Right side:** backpack (bag), compass (menu), bomb (back to town).

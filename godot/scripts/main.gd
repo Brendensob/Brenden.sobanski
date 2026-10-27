@@ -48,6 +48,10 @@ func _ready() -> void:
 		var nt: Node = load("res://tests/net_test.gd").new()
 		nt.main = self
 		add_child(nt)
+	if "--fighttest" in OS.get_cmdline_user_args():
+		var ft: Node = load("res://tests/fight_test.gd").new()
+		ft.main = self
+		add_child(ft)
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t: Node = load("res://tests/autotest.gd").new()
 		t.main = self
@@ -70,6 +74,8 @@ func start_game(from_save: bool, character: String = "man_in_suit", pname: Strin
 	if not (from_save and GS.load_game()):
 		GS.new_game(character, pname)
 	title_mode = false
+	hud.goal_shown = ""
+	hud.goal_index = -1
 	hud.close_panels()
 	change_level("town")
 	hud.menu_step = "title"
@@ -93,6 +99,7 @@ func change_level(id: String) -> void:
 		Net.request_level.rpc_id(1, id)
 		return
 	GS.world = id
+	GS.flags["been_" + id] = true
 	_load_level(id, false)
 	hud.set_boss(null)
 	hud.toast(Data.WORLDS[id].name, "big")
@@ -126,6 +133,7 @@ func net_load_world(world_id: String, seed: int, state: Dictionary) -> void:
 	var was_title := title_mode
 	title_mode = false
 	GS.world = world_id
+	GS.flags["been_" + world_id] = true
 	if was_title:
 		hud.close_panels()
 	_load_level(world_id, false, seed, state)
@@ -219,11 +227,30 @@ func player_died() -> void:
 				text += " You earned a %s! Your bag was full, so Banka is keeping it for you." % Data.ITEMS[key].name
 			else:
 				text += " Your bag and storage were full, so the %s was lost." % Data.ITEMS[key].name
+	var tip := faint_tip()
+	if tip != "":
+		text += "\n\nTip: " + tip
 	await get_tree().create_timer(1.0).timeout
 	# already back up (woken early or moved to another map): no faint screen
 	if level == null or not is_instance_valid(level.player) or not level.player.dead:
 		return
 	hud.show_dead(text)
+
+## One tip for after fainting: the first thing that would help most.
+func faint_tip() -> String:
+	if GS.equip.armor == "":
+		return "Make Wooden Armor at the Crafter (50 Wood) and tap it in your bag to wear it."
+	if GS.equip.helmet == "" or GS.equip.shield == "":
+		return "A helmet and a shield add defense. The Crafter makes wooden ones."
+	var heals := 0
+	for s in GS.inv:
+		if s and Data.ITEMS[s.id].get("heal", 0) > 0:
+			heals += s.n
+	if heals == 0:
+		return "Carry potions. The Merchant sells Small Potions. Pick one on the hotbar and press A to drink it."
+	if level and Data.WORLDS.has(level.id) and GS.world_danger(level.id) >= 2:
+		return "This place is %s for your gear. Upgrade your sword and armor at the Crafter first." % ["Easy", "Fair", "Hard", "Deadly"][GS.world_danger(level.id)]
+	return "Hit monsters as they come: each hit pushes them back and stuns them for a moment."
 
 func respawn() -> void:
 	GS.hp = GS.max_hp()

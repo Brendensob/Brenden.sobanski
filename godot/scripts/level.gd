@@ -860,6 +860,7 @@ func _arena_tick(delta: float) -> void:
 				alive = true
 		if not alive:
 			arena_done = true
+			GS.flags["cleared_" + id] = true
 			for d in def.boss_drops:
 				if rng.randf() < d[1]:
 					drop(d[0], rng.randi_range(d[2], d[3]), player.position + Vector2(0, -20))

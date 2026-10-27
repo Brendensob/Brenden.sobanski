@@ -98,8 +98,10 @@ func _items_materials() -> void:
 
 func _items_consumables() -> void:
 	var f := [
-		["small_potion", "Small Potion", 3, {"heal": 3}], ["potion", "Potion", 6, {"heal": 6}],
-		["medium_potion", "Medium Potion", 12, {"heal": 15}], ["big_potion", "Big Potion", 25, {"heal": 35}],
+		# potion strength is our estimate (the wiki doesn't say); raised 2026-10-27 so a
+		# potion still matters with the bigger starting health
+		["small_potion", "Small Potion", 3, {"heal": 5}], ["potion", "Potion", 6, {"heal": 12}],
+		["medium_potion", "Medium Potion", 12, {"heal": 25}], ["big_potion", "Big Potion", 25, {"heal": 60}],
 		["small_mana_potion", "Small Mana Potion", 3, {"mana": 3}], ["mana_potion", "Mana Potion", 6, {"mana": 6}],
 		["medium_mana_potion", "Medium Mana Potion", 12, {"mana": 15}], ["big_mana_potion", "Big Mana Potion", 25, {"mana": 35}],
 		["rejuvenate_potion", "Rejuvenate Potion", 15, {"heal": 6, "mana": 6, "stamina": 6}],
@@ -1381,6 +1383,48 @@ var NPCS := {
 	"banka": {"name": "Banka", "look": "banka", "talk": "I keep your things safe. Six backpacks, all yours."},
 	"trader": {"name": "Trader", "look": "trader", "talk": "Welcome to the Trading Center! Stand at a trading table to swap items with a friend in your room. Both of you put up your items, both press Ready, and the trade happens."},
 }
+
+# The goal shown on the HUD, so a new player always knows what to do next.
+# The first goal after the last one done is shown. "done" is how it's checked:
+# a quest id, a flag (been_<world> when you've been there, cleared_<arena>),
+# a slot that has gear in it, a tool tier, or a Survival day reached.
+# "count" shows progress, like 3/10 Jelly.
+const GOALS := [
+	{"text": "Visit the Grasslands", "done": {"flag": "been_grass_1"},
+		"help": "Hit the Gatekeeper (purple hat, next to the portal in the middle of town) and pick Grasslands. Hold A to swing at Slimes."},
+	{"text": "Bring Miffie 10 Jellies", "done": {"quest": "mira_1"}, "count": ["jelly", 10],
+		"help": "Slimes in the Grasslands drop Jelly. Miffie, in the yellow dress, is on the town street: hit her to talk. She gives you Combo Book I."},
+	{"text": "Make Wooden Armor", "done": {"slot": "armor"},
+		"help": "Chop trees for 50 Wood, then hit the Crafter (east end of the street) and pick Wooden Armor. Tap it in your bag to wear it. A Wooden Helmet and Shield help too."},
+	{"text": "Give Brutus a Wood Wall", "done": {"quest": "gruff_1"},
+		"help": "Open your bag, put Wood and Rock in the combination slots and press Combine. Brutus (red hair) gives you the Survival Book and opens Survival Grasslands."},
+	{"text": "Bring the furnace GateKeeper a Pretzel", "done": {"quest": "warden_1"},
+		"help": "Combine a Honey Bug and an Herb (Combo Book I in your bag). Honey Bugs come from pots, Herbs from yellow and pink plants. The GateKeeper with the green face guards the furnace room."},
+	{"text": "Bring Miffie 50 Jellies", "done": {"quest": "mira_2"}, "count": ["jelly", 50],
+		"help": "More Slimes! Miffie gives you Combo Book II for these."},
+	{"text": "Bring Miffie 10 Copper Bars", "done": {"quest": "mira_3"}, "count": ["copper_bar", 10],
+		"help": "Mine copper rocks (orange) for Copper Ore, then smelt it in a furnace in the furnace room. Miffie gives you Golden Night, a better sword."},
+	{"text": "Make a Copper Pickaxe", "done": {"tier": ["pick", 2]},
+		"help": "The Crafter makes it from 5 Copper Bars and your Wooden Pick. You need it to mine iron and silver."},
+	{"text": "Find the portal to Grasslands 2", "done": {"flag": "been_grass_2"},
+		"help": "A purple portal is hidden deep underground on the right side of Grasslands 1. Dig down with your pickaxe."},
+	{"text": "Reach Grasslands 3", "done": {"flag": "been_grass_3"},
+		"help": "Grasslands 2 has its own purple portal deep underground on the right. Octopuses hit hard: wear armor and carry potions."},
+	{"text": "Bring Miffie 10 Iron Bars", "done": {"quest": "mira_4"}, "count": ["iron_bar", 10],
+		"help": "Mine iron (light blue rocks) with a Copper Pickaxe and smelt it. Miffie gives you Blue Night."},
+	{"text": "Clear the Grassland Arena", "done": {"flag": "cleared_grass_arena"},
+		"help": "Pick Grassland Arena at the Gatekeeper. Monsters keep coming, and the boss arrives after 3 minutes. Beat it for its loot."},
+	{"text": "Survive 7 days in Survival Grasslands", "done": {"day": 7},
+		"help": "Pick Survival Grasslands at the Gatekeeper. Build walls before night. Fainting after day 7 gives a Silver Key."},
+	{"text": "Explore the Darklands", "done": {"flag": "been_dark_1"},
+		"help": "Pick Darklands at the Gatekeeper. Wear iron gear first: the monsters there hit much harder."},
+	{"text": "Reach Darklands 2", "done": {"flag": "been_dark_2"},
+		"help": "Find the purple portal deep underground on the right side of Darklands 1."},
+	{"text": "Clear the Darklands Arena", "done": {"flag": "cleared_dark_arena"},
+		"help": "Two bosses arrive after 3 minutes. Bring plenty of potions."},
+	{"text": "Enter Hell", "done": {"flag": "been_hell_1"},
+		"help": "Pick Hell at the Gatekeeper. Most monsters there poison you, so bring Antidotes from the Merchant."},
+]
 
 # Quests are done in order per villager.
 var QUESTS := [

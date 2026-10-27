@@ -13,6 +13,7 @@ const GRAVITY := 720.0
 const KNOCK_SPEED := 160.0
 const KNOCK_DRAG := 800.0
 const KNOCK_TIME := 0.4
+const FLY_TUMBLE := 1.75 # flying monsters stay knocked about this much longer
 ## Every hit, with or without knockback, stuns a monster this long: it stops,
 ## and it can't hurt you by touch until it recovers.
 const STUN_TIME := 0.3
@@ -358,11 +359,13 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 			away = -dir
 		if knock:
 			velocity.x = away * KNOCK_SPEED
+			knock_t = KNOCK_TIME
 			if flying:
+				# nothing to stand on: a flying monster tumbles for longer
 				velocity.y = -KNOCK_SPEED * 0.3
+				knock_t = KNOCK_TIME * FLY_TUMBLE
 			elif is_on_floor():
 				velocity.y = -90.0
-			knock_t = KNOCK_TIME
 		else:
 			velocity.x = 0.0
 			knock_t = maxf(knock_t, STUN_TIME)

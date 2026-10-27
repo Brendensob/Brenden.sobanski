@@ -5,7 +5,7 @@ tags: [game, worlds]
 
 ![[world_cards.png]]
 
-The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's screenshots. Each card has a green title, a one-line description, a small map picture and **Activate** (or **Locked**).
+The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's screenshots. Each card has a green title, a one-line description, a small map picture with a **danger badge** (Easy, Fair, Hard or Deadly for your gear, see [[Goals and Guidance]]) and **Activate** (or **Locked**).
 
 | # | World | Card text |
 |---|---|---|

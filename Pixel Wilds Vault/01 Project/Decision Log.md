@@ -5,6 +5,16 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27
+- **Fights are checked by playing them.** A new fight test has a bot fight two monsters at once in every world up to Hell, with the gear you can have by then. Before the changes it lost to Shellys in Grasslands 1 with the starter kit, to Octopuses in Grasslands 2, and to Dark Slimes, Worms and UFOs after that. *Brenden: "make the game progression solid test it and make sure fights arnt impossible and players know what to do".*
+- **Starting health 10 instead of 5, and 1 second of safety after a hit instead of 0.6.** Both were our own numbers, not the wiki's. With 5 health a Mummy's 3 left one hit before fainting, and an Octopus's 5 was an instant faint.
+- **Potions heal more:** Small 5, Potion 12, Medium 25, Big 60 (were 3, 6, 15, 35). Potion strength was always an estimate; with more health the old ones barely helped.
+- **Flying monsters stay knocked back longer** (0.7 s instead of 0.4 s), so you can fight a UFO.
+- **No wiki monster number was changed.** The UFO really hits 15 in the Darklands (wiki), so it stays the toughest common monster there: the bot beats it about half the time with iron gear.
+- **A goal card shows what to do next**, with progress and a tap for how, from "Visit the Grasslands" to "Enter Hell", then Miffie's quests. See [[Goals and Guidance]].
+- **World cards say how dangerous a world is for your gear** (Easy, Fair, Hard, Deadly), and the faint screen gives one tip.
+- Drop rates were not touched (Brenden sets those).
+
 ## 2026-10-24
 - **Stronger knockback and a hit stun, so the Grasslands are fair for a new character.** The starter Sword Cast does 2–4 a hit, so a Mummy (45 HP) or Shelly (50 HP) takes about 15 hits, while they hit back for 3 and 2 on 5 HP. With the old 7 px push they came right back and traded hits. Now a knockback hit throws a monster about a tile, every hit dazes it so it can't hurt you by touch for a moment, and monsters bounce off you. Health and damage numbers from the wiki were not changed. *Brenden: "its really hard to kill things in grasslands at a starter make the kockback better and the whole cobat better".* This replaces the 2026-10-10 "small knockback from the trailer" rule.
 - **Hits feel heavier:** a tiny freeze, a spark, a squash and a small screen shake. A tap of A during a swing is remembered, for phone play.

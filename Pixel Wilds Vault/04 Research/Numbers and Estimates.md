@@ -15,7 +15,8 @@ All game numbers live in `godot/scripts/data.gd`.
 
 ## Estimates (change them freely)
 - Most **drop chances**. Only the Slime's (~20%) is known.
-- Potion strength and the solo boss fights.
+- Potion strength (Small 5, Potion 12, Medium 25, Big 60 since 2026-10-27) and the solo boss fights.
+- **Starting health 10** and **1 s of safety after a hit** (2026-10-27, tuned with the fight test so the Grasslands are winnable from the start).
 - Health the wiki leaves as "?", and Doom's health.
 - Tomb of Makara monster health.
 - Shield and upgrade numbers the wiki lists without values.

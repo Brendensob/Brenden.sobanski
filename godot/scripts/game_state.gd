@@ -12,7 +12,7 @@ const SLOTS := 3 # character slots on the main menu, like the original
 const HOTBAR := 5
 const BAG := 25 # 5 x 5, the top row is the hotbar
 const EQUIP_SLOTS := ["helmet", "armor", "shield", "ring_l", "ring_r", "pet"]
-const BASE := {"atk": 1, "def": 0, "mag": 0, "hp": 5, "mp": 2, "st": 4}
+const BASE := {"atk": 1, "def": 0, "mag": 0, "hp": 10, "mp": 2, "st": 4}
 const STATUS_TIME := 10.0
 
 var inv: Array = []
@@ -529,6 +529,121 @@ func today() -> int:
 	return int(now() / 86400.0)
 
 # ---------------------------------------------------------------- quests
+## Your best melee or ranged weapon in the bag (the fist if none).
+func best_weapon() -> String:
+	var best := ""
+	var best_dps := 0.0
+	for s in inv:
+		if s == null:
+			continue
+		var it: Dictionary = Data.ITEMS[s.id]
+		if it.get("type", "") in ["weapon", "bow"] and it.has("dmg"):
+			var dps := float(it.dmg) / maxf(0.1, float(it.get("spd", 0.5)))
+			if dps > best_dps:
+				best_dps = dps
+				best = s.id
+	return best
+
+## How hard a world's monsters are for you right now, from your attack,
+## defense and health: 0 Easy, 1 Fair, 2 Hard, 3 Deadly. It's the worst
+## fight_score of the world's common monsters, with limits matched to what the
+## fight test (tests/fight_test.gd) sees in real fights.
+func world_danger(wid: String) -> int:
+	var w: Dictionary = Data.WORLDS[wid]
+	var list: Array = w.get("mobs", []).filter(func(e): return float(e[1]) >= 1.5)
+	if wid == "survival":
+		list = Data.SURVIVAL_WAVES[0][1].map(func(m): return [m, 1.0])
+	var worst := 0.0
+	for e in list:
+		worst = maxf(worst, fight_score(wid, e))
+	for i in DANGER_LIMITS.size():
+		if worst < DANGER_LIMITS[i]:
+			return i
+	return 3
+
+const DANGER_LIMITS := [1.5, 5.0, 20.0]
+
+## The hits you need to beat a monster, over the hits it needs to make you
+## faint. Every hit you land dazes a monster, which stops charges cold and
+## keeps slow walkers away, but flying ones come back from any side.
+const MINI_BOSS_HITS := 150.0
+func fight_score(wid: String, e: Array, for_test := false) -> float:
+	var w: Dictionary = Data.WORLDS[wid]
+	var m: Dictionary = Data.MOBS[e[0]]
+	if m.get("invulnerable", false):
+		return 0.0
+	var r := attack_range(best_weapon())
+	var my_def := stat("def")
+	var mult: float = w.get("mult", 1.0) if w.get("kind", "") == "explore" else 1.0
+	var hp_r: Array = w.get("hp", {}).get(e[0], m.hp)
+	var hp := (float(hp_r[0]) + float(hp_r[1])) / 2.0 * (float(e[2]) if e.size() > 2 else 1.0) * mult
+	var hit := maxi(1, int(round(float(m.dmg) * (float(e[3]) if e.size() > 3 else 1.0) * mult)))
+	var pen: Array = w.get("def_penalty", [])
+	if pen.size() == 2 and my_def < int(pen[0]):
+		hit += int(pen[1])
+	var taken := 0.0 # the average hit after your defense
+	for b in my_def + 1:
+		taken += maxf(0, hit - b)
+	taken /= my_def + 1
+	var hits_to_win := hp / ((r.x + r.y) / 2.0)
+	if hits_to_win > MINI_BOSS_HITS and not for_test:
+		return 0.0 # a mini-boss like the Hand: one to walk away from, not what the world is like
+	var hits_to_faint := max_hp() / maxf(0.01, taken)
+	var f := 1.0
+	if m.ai == "fly":
+		f = 2.0
+	elif m.ai == "charge":
+		f = 0.3
+	elif float(m.get("speed", 30)) < 25:
+		f = 0.5
+	return hits_to_win / hits_to_faint * f
+
+## Whether one of Data.GOALS is done.
+func goal_done(g: Dictionary) -> bool:
+	var d: Dictionary = g.done
+	if d.has("quest"):
+		return d.quest in quests_done
+	if d.has("flag"):
+		return flags.get(d.flag, false)
+	if d.has("slot"):
+		return equip.get(d.slot, "") != ""
+	if d.has("day"):
+		return best_survival_day >= int(d.day)
+	if d.has("tier"):
+		return best_tier(d.tier[0]) >= int(d.tier[1])
+	return false
+
+## The best tool of a kind (axe or pick) in your bag.
+func best_tier(kind: String) -> int:
+	var best := 0
+	for s in inv:
+		if s and Data.ITEMS[s.id].get("type", "") == kind:
+			best = maxi(best, int(Data.ITEMS[s.id].get("tier", 0)))
+	return best
+
+## The goal to show on the HUD: the first one after the last one you've done
+## (so older saves skip the early ones), then Miffie's next quest. Returns
+## {"text", "help", "progress", "index"}, or {} when nothing is left.
+func current_goal() -> Dictionary:
+	var last := -1
+	for i in Data.GOALS.size():
+		if goal_done(Data.GOALS[i]):
+			last = i
+	for i in range(last + 1, Data.GOALS.size()):
+		var g: Dictionary = Data.GOALS[i]
+		if goal_done(g):
+			continue
+		var out := {"text": g.text, "help": g.help, "progress": "", "index": i}
+		if g.has("count"):
+			out.progress = "%d/%d" % [mini(count(g.count[0]), int(g.count[1])), int(g.count[1])]
+		return out
+	var q := next_quest("mira")
+	if not q.is_empty():
+		var id: String = q.need.keys()[0]
+		var n := int(q.need[id])
+		return {"text": "Miffie wants %d %s" % [n, Data.ITEMS[id].name], "help": q.text, "progress": "%d/%d" % [mini(count(id), n), n], "index": Data.GOALS.size() + quests_done.size()}
+	return {}
+
 func next_quest(npc: String) -> Dictionary:
 	for q in Data.QUESTS:
 		if q.npc == npc and not q.id in quests_done:
