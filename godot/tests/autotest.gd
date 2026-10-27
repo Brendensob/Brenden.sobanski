@@ -1006,7 +1006,7 @@ func gameplay_check() -> void:
 			if c:
 				rects[n] = c.get_global_rect()
 		rects["bars"] = main.hud.bars.get_global_rect()
-		var tn := ["left", "right", "A", "B"]
+		var tn := ["left", "right", "A", "B", "auto"]
 		for i in main.hud.touch_nodes.size():
 			var t: Node = main.hud.touch_nodes[i]
 			if t.visible:
@@ -1155,6 +1155,60 @@ func content_check() -> void:
 	clear_ground()
 
 ## The faint screen and the multiplayer menus.
+## The auto-hit switch: a little round button left of A. On, the held weapon or
+## tool swings by itself, even with the bag open, and it stays on through
+## pressing A and switching items.
+func auto_hit_check() -> void:
+	var p: Node = main.level.player
+	var ab: TouchScreenButton = main.hud.touch_nodes[4]
+	check(ab.name == "AutoHit" and ab.visible, "there's a round auto-hit button")
+	var off_tex := ab.texture_normal
+	# hold A and open the bag: auto-hit, like the original's trick
+	Input.action_press("attack")
+	main.hud.toggle_bag()
+	Input.action_release("attack")
+	check(GS.auto_hit and ab.texture_normal != off_tex, "holding A while opening the bag turns auto-hit on, and the button lights up")
+	check(main.level.process_mode != Node.PROCESS_MODE_DISABLED, "with auto-hit on the bag doesn't pause the world")
+	GS.sel = 0
+	GS.inventory_changed.emit()
+	GS.st = GS.max_st()
+	var s0: int = p.swings
+	await wait(1.2)
+	check(p.swings >= s0 + 2, "auto-hit keeps swinging with the bag open (%d swings)" % (p.swings - s0))
+	main.hud.close_panels()
+	await tap("attack")
+	main.hud.close_panels() # in case A opened a villager's chat
+	GS.sel = 1
+	GS.inventory_changed.emit()
+	GS.st = GS.max_st()
+	s0 = p.swings
+	await wait(1.2)
+	check(GS.auto_hit and p.swings >= s0 + 2, "auto-hit stays on after pressing A and switching items")
+	await shot("09c_auto_hit_on")
+	# the button turns it off
+	ab.pressed.emit()
+	await wait(0.1)
+	check(not GS.auto_hit and ab.texture_normal == off_tex, "the round button turns auto-hit off")
+	s0 = p.swings
+	await wait(0.8)
+	check(p.swings == s0, "with auto-hit off nothing swings by itself")
+	main.hud.toggle_bag()
+	check(main.level.process_mode == Node.PROCESS_MODE_DISABLED, "with auto-hit off the bag pauses the world again")
+	main.hud.close_panels()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_Q
+	key.pressed = true
+	Input.parse_input_event(key)
+	await wait(0.1)
+	key = key.duplicate()
+	key.pressed = false
+	Input.parse_input_event(key)
+	check(GS.auto_hit, "and Q turns it back on")
+	var cfg := ConfigFile.new()
+	cfg.load(GS.SETTINGS)
+	check(cfg.get_value("controls", "auto_hit", false) == true, "the switch is saved")
+	GS.set_auto_hit(false)
+
 ## The ground's art: every world bakes its ground quickly, the map's edges are
 ## rock and the back walls are drawn; screenshots of the surface and the caves.
 func look_check() -> void:
@@ -1549,6 +1603,7 @@ func check_character_unlocks() -> void:
 	main.hud._refresh_title()
 
 func run() -> void:
+	GS.set_auto_hit(false)
 	await wait(1.0)
 	await shot("01_title")
 	check_data()
@@ -1610,8 +1665,10 @@ func run() -> void:
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 		get_tree().quit()
 		return
-	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen and multiplayer menu checks
+	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen, multiplayer menu and auto-hit checks
 		await menus_check()
+		await goto("grass_1")
+		await auto_hit_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 		get_tree().quit()
 		return
@@ -1794,14 +1851,7 @@ func run() -> void:
 	main.hud._refresh_bag()
 	await shot("09b_bag_character")
 	main.hud.close_panels()
-	# hold A and open the bag: auto-attack, like the original
-	Input.action_press("attack")
-	main.hud.toggle_bag()
-	Input.action_release("attack")
-	check(main.level.player.auto_attack, "holding A while opening the bag turns on auto-attack")
-	main.hud.close_panels()
-	await tap("attack")
-	check(not main.level.player.auto_attack, "pressing A stops auto-attack")
+	await auto_hit_check()
 	# the bomb button sends you home
 	main.level.player.invuln = 0.0
 	main.level.player.self_destruct()

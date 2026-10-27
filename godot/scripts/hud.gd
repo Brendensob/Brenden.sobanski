@@ -789,9 +789,43 @@ func _build_touch() -> void:
 			t.released.connect(func(): l.position.y = -1 * k)
 		add_child(t)
 		touch_nodes.append(t)
+	# the little round auto-hit switch, left of A: gold when on
+	var ab := TouchScreenButton.new()
+	ab.name = "AutoHit"
+	ab.scale = Vector2.ONE / k
+	ab.passby_press = false
+	ab.pressed.connect(toggle_auto_hit)
+	ab.modulate = Color(1, 1, 1, 0.92)
+	var al := _label("AUTO", 7, Color(1, 1, 1, 0.95), true)
+	al.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	al.add_theme_constant_override("outline_size", 3)
+	al.scale = Vector2(k, k)
+	al.size = Vector2(28, 9)
+	al.position = Vector2(0, 26 * k)
+	al.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ab.add_child(al)
+	add_child(ab)
+	touch_nodes.append(ab)
+	_refresh_auto_hit()
+	GS.auto_hit_changed.connect(_refresh_auto_hit)
 	force_touch = "--touch" in OS.get_cmdline_user_args()
 	hint_label.visible = not DisplayServer.is_touchscreen_available() and not force_touch
-	hint_label.text = "Click or J: hit (A)   Space or K: jump (B)   A/D: move   E: bag   1-5: hotbar"
+	hint_label.text = "Click or J: hit (A)   Space or K: jump (B)   A/D: move   E: bag   1-5: hotbar   Q: auto hit"
+
+## The round button, a click on it, or Q.
+func toggle_auto_hit() -> void:
+	if main == null or main.on_title():
+		return
+	GS.set_auto_hit(not GS.auto_hit)
+	if panels.bag.visible:
+		main.set_paused(not GS.auto_hit)
+	Sfx.play("click", 0.0)
+	toast("Auto hit on" if GS.auto_hit else "Auto hit off")
+
+func _refresh_auto_hit() -> void:
+	var ab: TouchScreenButton = touch_nodes[4]
+	ab.texture_normal = Art.auto_tex(GS.auto_hit, false)
+	ab.texture_pressed = Art.auto_tex(GS.auto_hit, true)
 
 ## The A, B and arrow buttons show on every screen, like the original.
 func _touch() -> bool:
@@ -809,7 +843,10 @@ func _input(event: InputEvent) -> void:
 	if event.pressed:
 		for t in touch_nodes:
 			if t.visible and _touch_rect(t).has_point(event.position):
-				_mouse_press(t.action)
+				if t.name == "AutoHit":
+					toggle_auto_hit()
+				else:
+					_mouse_press(t.action)
 				get_viewport().set_input_as_handled()
 				return
 	elif _mouse_action != "":
@@ -817,6 +854,9 @@ func _input(event: InputEvent) -> void:
 		_mouse_action = ""
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.is_action_pressed("auto_hit") and not event.is_echo():
+		toggle_auto_hit()
+		return
 	# a click that no menu or button took: hit
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed \
 			and event.device != InputEvent.DEVICE_ID_EMULATION and not main.on_title() and not main.input_blocked():
@@ -839,6 +879,8 @@ func _layout_touch() -> void:
 	touch_nodes[1].position = Vector2(100, vs.y - 52)
 	touch_nodes[2].position = Vector2(vs.x - 62, vs.y - 104)
 	touch_nodes[3].position = Vector2(vs.x - 112, vs.y - 58)
+	if touch_nodes.size() > 4:
+		touch_nodes[4].position = Vector2(vs.x - 92, vs.y - 132)
 
 func set_touch_visible(on: bool) -> void:
 	for t in touch_nodes:
@@ -900,7 +942,8 @@ func open_panel(key: String) -> void:
 		Sfx.play("open", 0.0)
 	for k in panels:
 		panels[k].visible = k == key
-	main.set_paused(true)
+	# with auto-hit on, the world keeps going behind the bag so you keep swinging
+	main.set_paused(not (key == "bag" and GS.auto_hit))
 	set_touch_visible(false)
 	_place(key)
 	_show_backdrop(key)
@@ -979,9 +1022,9 @@ func toggle_bag() -> void:
 	if panels.bag.visible:
 		close_panels()
 	elif not any_open() and not main.on_title():
-		# the original's auto-attack trick: open the bag while holding A
-		if Input.is_action_pressed("attack") and main.level and main.level.player:
-			main.level.player.auto_attack = true
+		# the original's auto-attack trick: open the bag while holding A turns auto-hit on
+		if Input.is_action_pressed("attack") and main.level and main.level.player and not GS.auto_hit:
+			GS.set_auto_hit(true)
 		bag_mode = "bag"
 		if not bag_tab in ["character", "combine", "menu"]:
 			bag_tab = "combine"

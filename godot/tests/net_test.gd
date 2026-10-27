@@ -13,6 +13,7 @@ var chat_log := []
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
+	GS.auto_hit = false
 	var args := OS.get_cmdline_user_args()
 	var i := args.find("--nettest")
 	if i >= 0 and i + 1 < args.size():

@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (auto hit and cartoon pixel look)
+- **An auto-hit switch:** a little round button left of A. When it's on, the held weapon or tool swings by itself. It keeps going with the bag open (the bag doesn't pause the world then) and stays on through switching items. *Brenden: "Keep the buttons how they were just for the movement and jump also add a little circle button for auto hit to turn on and off so your sword swings automatically even while in inv and stays even while you switch items"*
+- **Food and blocks are never auto-used**, so a potion or a stack of walls isn't wasted by mistake. The "staffs, bows and throwables too" part follows the original's hold-A trick, which already swung those.
+- **The move and jump buttons stay exactly as they were.**
+- **Cartoon pixel look:** *Brenden: "I want a cartoon pixelish look"*. The ground now gets the same colour pop as the sprites (a little more saturation and brightness) and the same near-black outlines, so the world and the characters match.
+
 ## 2026-10-27 (ground and walls remodel)
 - **The ground is drawn like a professional tileset.** Each tile checks its neighbours, so it gets grass caps, outlined and shaded sides, rounded corners and shaded ceilings with roots. *Brenden: "Remodel everything especially the walls around the map like a professional designer would"*
 - **The walls around the map are mossy stone walls.** They carry on up past the top of the map, so they never stop in mid-air. Cave worlds have bedrock at the bottom. Pixel Town gets a stone frame, stone-brick room walls and a stone-brick basement.

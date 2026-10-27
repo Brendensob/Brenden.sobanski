@@ -156,15 +156,22 @@ func _piece_for(x: int, y: int, m: int) -> Image:
 	return _solid_piece(m, v, dark, bits, grassy)
 
 # ---------------------------------------------------------------- the theme's colours
+## The same cartoon pop the sprites get (Art.cartoon): a little more saturation
+## and brightness.
+static func _pop(c: Color) -> Color:
+	return Color.from_hsv(c.h, minf(c.s * 1.15, 1.0), minf(c.v * 1.05, 1.0), c.a)
+
 static func palette(th: Dictionary, town: bool) -> Dictionary:
-	var dirt: Color = th.dirt
+	var dirt: Color = _pop(th.dirt)
+	var grass: Color = _pop(th.top)
 	var p := {
 		"name": th.name + ("_town" if town else ""), "theme": th.name,
-		"grass": th.top, "grass_dark": th.top2, "grass_light": th.top.lightened(0.32),
-		"dirt": dirt, "dirt_dark": th.dirt2, "dirt_light": dirt.lightened(0.15),
-		"line": th.dirt2.darkened(0.62),
-		"rock": dirt.lerp(Color("85828c"), 0.6),
-		"back": th.cave, "moss": th.top2,
+		"grass": grass, "grass_dark": _pop(th.top2), "grass_light": grass.lightened(0.32),
+		"dirt": dirt, "dirt_dark": _pop(th.dirt2), "dirt_light": dirt.lightened(0.15),
+		# bold, nearly black outlines like the sprites', tinted a touch by the ground
+		"line": th.dirt2.darkened(0.62).lerp(Color("1b1a24"), 0.5),
+		"rock": _pop((th.dirt as Color).lerp(Color("85828c"), 0.6)),
+		"back": th.cave, "moss": _pop(th.top2),
 		"back_style": BACK_STYLES.get(th.name, "earth"),
 		"brick": Color("9a94a2"),
 		"wood": Color("a86e3c"), "wood_light": Color("d29a5e"), "wood_dark": Color("6e4426"),

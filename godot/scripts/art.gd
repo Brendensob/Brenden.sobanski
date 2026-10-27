@@ -466,6 +466,39 @@ func touch_tex(kind: String, pressed: bool) -> Texture2D:
 			soft_triangle(img, [Vector2(cx + dirx * s, cy), Vector2(cx - dirx * s * 0.7, cy - s), Vector2(cx - dirx * s * 0.7, cy + s)], Color("e8e8ee"))
 		return to_tex(img))
 
+## The little round auto-hit switch: a sword on grey when off, on gold when on.
+func auto_tex(on: bool, pressed: bool) -> Texture2D:
+	return cached("auto_%s_%s" % [on, pressed], func():
+		var k := TOUCH_K
+		var w := 26
+		var h := 26
+		var img := blank((w + 2) * k, (h + 4) * k)
+		var body := Color("f2a21e") if on else Color("55555c")
+		var sink := 2.0 * k if pressed else 0.0
+		var lip := 0.0 if pressed else 2.0 * k
+		var cx := (w / 2.0 + 1) * k
+		var r := (w / 2.0 - 1) * k
+		var cy := h / 2.0 * k + sink + 1 * k
+		soft_ellipse(img, cx, h / 2.0 * k + 3 * k, r, r, Color(0, 0, 0, 0.28), 2.0 * k)
+		soft_ellipse(img, cx, cy, r, r - 1.5 * k, OUTLINE)
+		soft_ellipse(img, cx, cy, r - 1.5 * k, r - 3 * k, body.darkened(0.35))
+		soft_ellipse(img, cx, cy - lip / 2, r - 1.5 * k, r - 3 * k - lip / 2, body)
+		soft_ellipse(img, cx - r * 0.18, cy - lip / 2 - r * 0.45, r * 0.5, r * 0.25, Color(1, 1, 1, 0.3))
+		# a sword pointing up to the right
+		var c := Vector2(cx, cy - lip / 2) + Vector2(-1.5, 1.5) * k
+		var d := Vector2(1, -1).normalized()
+		var n := Vector2(1, 1).normalized()
+		var blade := Color.WHITE if on else Color("c8c8d0")
+		var hilt := Color("6e4426") if on else Color("3a3a40")
+		var tip := c + d * 8.0 * k
+		soft_triangle(img, [c + n * 1.4 * k, tip, c - n * 1.4 * k], blade)
+		soft_triangle(img, [c + n * 3.6 * k + d * 0.7 * k, c - n * 3.6 * k + d * 0.7 * k, c - n * 3.6 * k - d * 0.7 * k], hilt)
+		soft_triangle(img, [c + n * 3.6 * k + d * 0.7 * k, c + n * 3.6 * k - d * 0.7 * k, c - n * 3.6 * k - d * 0.7 * k], hilt)
+		soft_triangle(img, [c + n * 0.9 * k, c - d * 4.0 * k + n * 0.9 * k, c - d * 4.0 * k - n * 0.9 * k], hilt)
+		soft_triangle(img, [c + n * 0.9 * k, c - n * 0.9 * k, c - d * 4.0 * k - n * 0.9 * k], hilt)
+		soft_ellipse(img, (c - d * 4.6 * k).x, (c - d * 4.6 * k).y, 1.3 * k, 1.3 * k, hilt)
+		return to_tex(img))
+
 ## Puffy cartoon clouds for the far sky.
 func clouds_tex(th: Dictionary) -> Texture2D:
 	return cached("clouds_" + th.name, func():
