@@ -16,4 +16,5 @@ tags: [project, issues]
 - **A Combination Scroll is used up even on an unknown combination.** It's unknown whether PSG2 does this.
 - **Most drop rates are estimates.** Nobody has published them. See [[Numbers and Estimates]].
 - **The player blinks right after entering a map.** That's on purpose: a short safe time. In screenshots it can look like the player is missing.
+- **The free online server sleeps.** After 15 minutes with nobody online, the first player waits about a minute for it to wake. Its saved names can be wiped on a restart; games put themselves back automatically (see [[Online Server]]).
 - **Our emotes are our own drawings**, not the original's, to avoid copying its art.

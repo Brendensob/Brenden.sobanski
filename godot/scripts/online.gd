@@ -1,39 +1,53 @@
 extends Node
 ## Talks to the Pixel Wilds online server (server/pixel_server.py): reserves
 ## player names so each one can only be taken once, keeps friends lists, and
-## tells friends when you're online. Rooms go through the same server's relay
-## (one port up), so no player ever sees another player's IP address.
+## tells friends when you're online. Rooms go through the same server's
+## WebSocket relay (/relay), so no player ever sees another player's IP address,
+## and phones in a browser can join just like computers.
 ##
-## Set ONLINE_SERVER to wherever you run the server before sharing the game.
-## It can also be changed with a server.txt file next to the game holding the
-## address (like 192.168.1.20), or with `-- --server http://address:24566`.
+## ONLINE_SERVER is the shared server everyone uses (hosted on Render, see
+## 03 Tech/Online Server.md in the vault). To use another one, put its address
+## in godot/server.txt, in a server.txt next to the game (like 192.168.1.20),
+## add ?server=https://address to the web game's link, or run the game with
+## `-- --server http://address:24566`.
 
-const ONLINE_SERVER := "http://127.0.0.1:24566"
+const ONLINE_SERVER := "https://pixel-wilds-brendensob.onrender.com"
 const NAME_RULE := "^[A-Za-z0-9_]{3,16}$"
 
 var server := ONLINE_SERVER
 var _presence_t := 0.0
 
 func _ready() -> void:
-	# a server.txt next to the game (or in its save folder) holds the server's address
-	for path in [OS.get_executable_path().get_base_dir().path_join("server.txt"), "user://server.txt"]:
+	# a server.txt in the game, next to it, or in its save folder holds the server's address
+	for path in ["res://server.txt", OS.get_executable_path().get_base_dir().path_join("server.txt"), "user://server.txt"]:
 		if FileAccess.file_exists(path):
 			var t := FileAccess.get_file_as_string(path).strip_edges()
 			if t != "":
 				server = t if t.begins_with("http") else "http://%s:24566" % t
+	if OS.has_feature("web"):
+		var q = JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('server') || ''")
+		if typeof(q) == TYPE_STRING and q.begins_with("http"):
+			server = q
+	server = server.trim_suffix("/")
 	var args := OS.get_cmdline_user_args()
 	var i := args.find("--server")
 	if i >= 0 and i + 1 < args.size():
 		server = args[i + 1]
+	elif args.has("--autotest") or args.has("--nettest"):
+		server = "http://127.0.0.1:24566" # the checks use a server started on this computer
 	fetch_time()
 
 ## Asks the server for the real time, so changing the device clock can't
 ## speed up furnaces or reset daily chests. Offline, the game keeps its own count.
+## This is also the game's first call, so it waits long enough for a free
+## server that was asleep to wake up (about a minute).
 func fetch_time() -> bool:
 	var t0 := Time.get_ticks_msec()
-	var r := await call_api("/time", {})
+	var r := await call_api("/time", {}, 75.0)
 	if not r.get("ok", false) or not r.has("time"):
 		return false
+	if Time.get_ticks_msec() - t0 > 4000:
+		return await fetch_time() # it was asleep: ask again for a time that isn't late
 	# half the round trip went by since the server read its clock
 	GS.set_trusted_time(float(r.time) + (Time.get_ticks_msec() - t0) / 2000.0)
 	return true
@@ -44,10 +58,31 @@ func valid_name(n: String) -> bool:
 	return re.search(n) != null
 
 ## Sends one request and waits for the answer. Never throws: on trouble it
-## returns {"ok": false, "offline": true, "error": ...}.
-func call_api(path: String, body: Dictionary) -> Dictionary:
+## returns {"ok": false, "offline": true, "error": ...}. If the server has
+## forgotten this character (a free host can wipe it when it restarts), the
+## game puts its name and friends back and asks again.
+func call_api(path: String, body: Dictionary, wait := 10.0) -> Dictionary:
+	var r := await _request(path, body, wait)
+	if r.get("unknown", false) and GS.online_token != "" and body.get("token", "") == GS.online_token:
+		if await restore():
+			r = await _request(path, body, wait)
+	if path == "/friends" and r.get("ok", false):
+		var names: Array = []
+		for f in r.get("friends", []):
+			names.append(str(f.name))
+		if names != GS.friend_names:
+			GS.friend_names = names
+			GS.save_game()
+	return r
+
+## Puts this character's name, key and friends back on a wiped server.
+func restore() -> bool:
+	var r := await _request("/restore", {"name": GS.player_name, "token": GS.online_token, "friends": GS.friend_names}, 10.0)
+	return r.get("ok", false)
+
+func _request(path: String, body: Dictionary, wait: float) -> Dictionary:
 	var req := HTTPRequest.new()
-	req.timeout = 6.0
+	req.timeout = wait
 	add_child(req)
 	var err := req.request(server + path, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(body))
 	if err != OK:
@@ -97,14 +132,8 @@ func _process(delta: float) -> void:
 func ping_now() -> void:
 	_presence_t = 0.0
 
-## Where the room relay is: the same server, one port up.
-func relay_address() -> Array:
-	var rest := server.trim_prefix("http://").trim_prefix("https://")
-	rest = rest.split("/")[0]
-	var host := rest
-	var port := 24566
-	var colon := rest.rfind(":")
-	if colon > 0:
-		host = rest.substr(0, colon)
-		port = int(rest.substr(colon + 1))
-	return [host, port + 1]
+## Where the room relay is: the same server and port, as a WebSocket.
+func relay_url() -> String:
+	if server.begins_with("https://"):
+		return "wss://" + server.trim_prefix("https://") + "/relay"
+	return "ws://" + server.trim_prefix("http://") + "/relay"
