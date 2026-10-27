@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (cleaner cartoon look)
+- **The art goes further toward cartoon, but stays pixel art.** Big sprites are smoothed (Scale2x/Scale3x) instead of blown up, and get bold outlines; shadows, glows, clouds and a hazy far mountain range add depth. *Brenden: "make all graohics way cleaner looking more cartoon ish ... give certain things good depth affect and color and use bettere models for anything that may feel off make pop up menus cleangood looking and not annoying"* This answers the open question about how far the cartoon look should go.
+- **Menus are rounded cartoon boxes** that pop in over a dimmed game and close with a tap outside. Messages are small bubbles that count up instead of piling up, and clear when a menu opens. Same orange colours as before, so it still reads like PSG2.
+- **A and B are round buttons**, ◀ ▶ are rounded pads with arrows. Same places on screen as before.
+- **Not changed here:** progression, joining friends and the new characters are other pieces of the same request, handled separately.
+
 ## 2026-10-27
 - **Rooms go over a WebSocket, so phones can join friends.** Brenden plays on his phone in the web build, and browsers can't open the raw connection the relay used, so joining never worked there. The relay now runs as a WebSocket on the server's main port, for every version of the game. *Brenden: "make it so i can join friends had trouble with that".*
 - **The server is hosted free on Render**, set up by `render.yaml` with one Deploy click. It gives https (which the web game needs) and redeploys on every merge. Chosen because it needs no card and no server to look after. The cost is that it sleeps when nobody plays and has no saved disk.

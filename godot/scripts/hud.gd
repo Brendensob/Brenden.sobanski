@@ -842,6 +842,9 @@ func open_panel(key: String) -> void:
 	_show_backdrop(key)
 	if not was_open and key != "title":
 		_pop_in(panels[key])
+		# old messages step aside so they don't cover the menu or what villagers say
+		for t in toasts.get_children():
+			t.queue_free()
 	# the bag covers the whole screen in the original, so the HUD hides behind it
 	hud_root.visible = key != "bag" and not main.on_title()
 	match key:

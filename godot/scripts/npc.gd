@@ -62,7 +62,7 @@ func _process(delta: float) -> void:
 	if data.has("greet"):
 		near = absf(level.player.position.x - position.x) < 64 and absf(level.player.position.y - position.y) < 32
 		name_label.text = data.greet if near else data.name
-		name_label.position = Vector2(-60, -46) if near else Vector2(-30, -36)
+		name_label.position = Vector2(-60, -51) if near else Vector2(-30, -36)
 		name_label.size.x = 120 if near else 60
 	if Data.SHOPS.has(npc_id):
 		say_t -= delta
