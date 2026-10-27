@@ -86,7 +86,8 @@ def friend_view(key, p):
         room = rooms.get(key)
         hosting = room is not None
         count = 1 + len(room["clients"]) if room else 0
-    return {"name": p["name"], "online": online(p) or hosting, "room": hosting, "players": count}
+    public = bool(room and room.get("public"))
+    return {"name": p["name"], "online": online(p) or hosting, "room": hosting, "players": count, "public": public}
 
 
 def handle(path, body, ip):
@@ -148,6 +149,16 @@ def handle(path, body, ip):
         return {"ok": True,
                 "friends": [friend_view(f, players[f]) for f in me["friends"] if f in players and mutual(key, f)],
                 "requests": [players[r]["name"] for r in me["requests"] if r in players]}
+    if path == "/rooms":
+        # public rooms anyone can join (friends' rooms show in the friends list)
+        out = []
+        with relay_lock:
+            for host_key, room in rooms.items():
+                if room.get("public") and host_key != key and host_key in players:
+                    out.append({"name": players[host_key]["name"], "players": 1 + len(room["clients"]),
+                                "full": len(room["clients"]) + 1 >= MAX_ROOM})
+        out.sort(key=lambda r: r["name"].lower())
+        return {"ok": True, "rooms": out}
     if path == "/friends/add":
         other_key = str(body.get("name", "")).strip().lower()
         if other_key == key:
@@ -347,7 +358,7 @@ def relay_session(conn, hello_timeout):
             error(conn, "Claim your name in Friends first.")
             return
         if hello.get("mode") == "host":
-            relay_host(conn, key)
+            relay_host(conn, key, bool(hello.get("public", False)))
         elif hello.get("mode") == "join":
             relay_join(conn, is_friend, host_key, int(hello.get("id", 0)))
     except (ConnectionError, OSError, ValueError, TypeError, json.JSONDecodeError, struct.error):
@@ -356,8 +367,9 @@ def relay_session(conn, hello_timeout):
         conn.close()
 
 
-def relay_host(conn, key):
-    room = {"host": conn, "clients": {}}
+def relay_host(conn, key, public=False):
+    # a public room is listed in /rooms and anyone can join it; otherwise only friends
+    room = {"host": conn, "clients": {}, "public": public}
     with relay_lock:
         old = rooms.get(key)
         if old:
@@ -391,13 +403,12 @@ def relay_host(conn, key):
 
 
 def relay_join(conn, is_friend, host_key, cid):
-    if not is_friend:
-        error(conn, "You can only join friends' rooms.")
-        return
     with relay_lock:
         room = rooms.get(host_key)
         if room is None:
             problem = "Their room isn't open right now."
+        elif not is_friend and not room.get("public"):
+            problem = "You can only join friends' rooms and public games."
         elif len(room["clients"]) + 1 >= MAX_ROOM:
             problem = "That room is full."
         elif cid < 2 or cid in room["clients"]:

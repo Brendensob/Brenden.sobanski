@@ -21,7 +21,7 @@ tags: [project, roadmap]
 - [x] Host the [[Online Server]]: live on Render at https://pixel-wilds-brendensob.onrender.com (2026-10-27).
 
 ## Content still missing
-- [ ] Public rooms for strangers (rooms are friends-only now).
+- [x] Public rooms: Host Public Game and Find Public Game (2026-10-27)
 - [ ] The "Halloween?" Combo Book Z recipe (the wiki doesn't say what it makes).
 - [ ] Phone app export (the web build already plays on phones).
 - [ ] Replace stats taken from the 2.o game with PSG2 numbers when we find them (see [[Known Issues]]).

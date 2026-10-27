@@ -344,20 +344,28 @@ func psg2_complete() -> void:
 	await shot("21_tomb_of_makara")
 	# touching a deadly wall makes you faint
 	var wall_cell := Vector2i(-1, -1)
+	var wall_dir := 1
 	for y in lvl.H:
 		for x in lvl.W:
-			# the bottom of a deadly wall, with floor to stand on just left of it
-			if lvl.grid[lvl.idx(x, y)] == 3 and not lvl.solid(x - 1, y) and not lvl.solid(x - 1, y - 1) and lvl.solid(x - 1, y + 1) and not lvl.is_ledge(x - 1, y + 1) and wall_cell.x < 0:
-				wall_cell = Vector2i(x, y)
+			# the bottom of a deadly wall, with floor to stand on beside it (a climbing
+			# shaft can take the floor away on one side, so try both)
+			if lvl.grid[lvl.idx(x, y)] != 3 or wall_cell.x >= 0:
+				continue
+			for d in [-1, 1]:
+				if not lvl.solid(x + d, y) and not lvl.solid(x + d, y - 1) and lvl.solid(x + d, y + 1) and not lvl.is_ledge(x + d, y + 1):
+					wall_cell = Vector2i(x, y)
+					wall_dir = -d
+					break
 	check(wall_cell.x > 0, "the tomb has a deadly wall to walk into")
-	lvl.player.position = Vector2(wall_cell.x * 16 - 12, wall_cell.y * 16 + 15)
+	lvl.player.position = Vector2(wall_cell.x * 16 + (-12 if wall_dir > 0 else 28), wall_cell.y * 16 + 15)
 	lvl.player.velocity = Vector2.ZERO
-	Input.action_press("move_right")
+	var walk := "move_right" if wall_dir > 0 else "move_left"
+	Input.action_press(walk)
 	for i in 240:
 		await get_tree().physics_frame
 		if lvl.player.dead:
 			break
-	Input.action_release("move_right")
+	Input.action_release(walk)
 	check(lvl.player.dead, "a deadly wall in the tomb makes you faint")
 	main.respawn()
 	await wait(0.3)
@@ -1146,6 +1154,56 @@ func content_check() -> void:
 	GS.coins = keep_coins
 	clear_ground()
 
+## The faint screen and the multiplayer menus.
+func menus_check() -> void:
+	await goto("grass_1")
+	main.level.player.invuln = 0.0
+	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
+	await wait(1.6)
+	var dp: Panel = main.hud.panels.dead
+	check(dp.visible, "fainting shows the faint screen")
+	await shot("60_fainted")
+	var wake: Button = dp.get_node("Wake")
+	var wr := wake.get_global_rect()
+	var pr := dp.get_global_rect()
+	var tl: Label = dp.get_node("Text")
+	check(pr.encloses(wr) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr), "the faint screen's text and button fit inside it without overlapping")
+	wake.pressed.emit()
+	await wait(0.8)
+	check(not dp.visible and main.level.id == "town" and not main.level.player.dead, "Wake up takes you back to Pixel Town on your feet")
+	# Multiplayer: whose name it is, that it's yours, and the four buttons
+	GS.online_token = "test-token"
+	GS.save_game()
+	main.quit_to_title()
+	await wait(0.4)
+	main.hud.menu_step = "mode"
+	main.hud._refresh_title()
+	await wait(0.2)
+	var screen: Node = main.hud.panels.title.get_node("Screen")
+	screen.get_node("Multiplayer").pressed.emit()
+	await wait(0.3)
+	var mp: Node = screen.get_node_or_null("Multi")
+	check(mp != null and (mp.get_node("Name") as Label).text == GS.slot_info(GS.slot).name, "Multiplayer shows the character's name (%s)" % GS.slot_info(GS.slot).name)
+	check((mp.get_node("Owner") as Label).text.contains("yours"), "and says the name is yours")
+	for b in ["Friends", "FindPublic", "HostPublic"]:
+		check(mp.get_node_or_null(b) != null and not mp.get_node(b).disabled, "the %s button is there" % b)
+	await shot("61_multiplayer")
+	mp.get_node("FindPublic").pressed.emit()
+	await wait(1.0)
+	var pub: Node = screen.get_node_or_null("Public")
+	check(pub != null and pub.get_node("List").get_child_count() > 0, "Find Public Game lists games (or says why it can't)")
+	await shot("62_public_games")
+	# the friends list's status lights
+	var red: Control = main.hud._status_dot(Color("d83a2e"))
+	check(red.custom_minimum_size == Vector2(10, 10) and red.get_meta("color") == Color("d83a2e"), "friends get a round status light")
+	red.free()
+	GS.online_token = ""
+	GS.save_game()
+	# back into the game the way the menu does it
+	main.start_game(true)
+	await wait(0.5)
+	check(not main.on_title() and not main.hud.panels.title.visible, "playing again closes the title menus")
+
 ## The systems behind the items: nothing earned is lost, shops, gear, ammo,
 ## mana, keys, furnaces, walls and saving.
 func systems_check() -> void:
@@ -1503,6 +1561,11 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen and multiplayer menu checks
+		await menus_check()
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
 	if OS.has_environment("AT_SYSTEMS"): # set AT_SYSTEMS=1 to run only the systems checks
 		await audio_check()
 		await darkness_check()
@@ -1800,6 +1863,7 @@ func run() -> void:
 	await gameplay_check()
 	await systems_check()
 	await content_check()
+	await menus_check()
 	# survival at night
 	await goto("survival")
 	await wait(0.2)

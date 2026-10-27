@@ -52,7 +52,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
-| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip (2026-10-27) |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27) |
 | Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
@@ -105,6 +105,7 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
+| Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
@@ -209,7 +210,6 @@ The living list of every system and how finished it is. It's updated after each 
 - the collection book and stat icons (from the recording);
 - the rainbow cape cosmetics;
 - the 3 items waiting for approval;
-- public rooms;
 - the Steam build;
 - a real phone-to-phone room test on the hosted server.
 

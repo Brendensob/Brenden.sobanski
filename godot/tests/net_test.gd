@@ -69,8 +69,9 @@ func run_host() -> void:
 	GS.pending_token = reg.get("token", "")
 	GS.new_game("man_in_suit", "HostA")
 	GS.save_game()
+	Net.want_public = true # Host Public Game
 	main.start_game(true)
-	check(Net.is_host(), "starting the game opens the host's own room")
+	check(Net.is_host() and Net.room_public, "Host Public Game opens the host's own room as a public game")
 	check(await until(func(): return GS.trusted_time, 10.0), "the game takes its time from the online server")
 	check(absf(GS.now() - Time.get_unix_time_from_system()) < 3.0, "and that time is right (%.1f s off)" % absf(GS.now() - Time.get_unix_time_from_system()))
 	check(await until(func(): return Net.relay != null and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED, 15.0), "the room is open on the relay")
@@ -159,9 +160,12 @@ func run_client() -> void:
 	GS.new_game("nurse", "Friend1")
 	GS.save_game()
 	await wait(2.0)
-	# not friends yet: the room won't let you in
+	# not friends yet, but HostA's game is public: anyone can join it
+	# (a private room turning strangers away is checked in server/test_server.py)
 	main.join_game("HostA")
-	check(await until(func(): return not Net.active and main.on_title(), 20.0), "a player who isn't a friend can't join the room")
+	check(await until(func(): return Net.active and not main.on_title() and main.level.id == "town", 30.0), "a player who isn't a friend can join a public game")
+	main.quit_to_title()
+	check(await until(func(): return not Net.active, 10.0), "and leave it again")
 	var add := await Online.add_friend("HostA")
 	check(add.get("ok", false), "sent HostA a friend request")
 	var in_room := false
@@ -176,6 +180,16 @@ func run_client() -> void:
 			break
 		await wait(0.5)
 	check(in_room, "HostA shows in the friends list as playing")
+	var pubs := await Online.public_rooms()
+	var listed := false
+	for r in pubs.get("rooms", []):
+		listed = listed or r.name == "HostA"
+	check(listed, "Find Public Game lists HostA's public game")
+	main.hud.menu_step = "public"
+	main.hud.open_panel("title")
+	main.hud._refresh_title()
+	await wait(1.5)
+	await shot("net_client_public")
 	check(not fr_text.contains("127.0.0.1") and not fr_text.contains("ip"), "the friends list never shows an IP address")
 	main.hud.menu_step = "mode"
 	main.hud.open_friends()

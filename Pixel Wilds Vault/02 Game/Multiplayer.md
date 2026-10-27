@@ -3,6 +3,12 @@ tags: [game, multiplayer]
 ---
 # Multiplayer
 
+- **The Multiplayer screen:** your character's name, that it's yours, and Friends, Find Public Game, Host Public Game and Back.
+- **Friends list:** each friend has a round light:
+  - red: offline;
+  - green: online;
+  - green with **Join**: in a game you can join.
+- **Public games:** **Host Public Game** opens your room as public. It's listed under **Find Public Game** with its player count, and anyone can join. Single Player keeps your room friends-only.
 - **Rooms:** your world is your room. Up to 3 friends can join (4 players total).
 - **Friends only:** the relay checks the friends list on the server.
 - **IPs stay private:** all room traffic goes through the [[Online Server]] relay.

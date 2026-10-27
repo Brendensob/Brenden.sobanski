@@ -62,12 +62,18 @@ func my_id() -> int:
 var relay: MultiplayerPeerExtension = null
 var _restored := false # already tried putting this name back on the server this session
 
+## A public room is listed under "Find Public Game" and anyone can join it.
+## Otherwise only friends can (from their friends list).
+var room_public := false
+var want_public := false # set by "Host Public Game" for the next room you open
+
 ## Opens your own room on the relay. Needs a claimed name.
 func host_room() -> String:
 	if GS.online_token == "":
 		return "Claim your name in Friends so friends can join you."
+	room_public = want_public
 	var peer = RelayPeer.new()
-	if peer.start(Online.relay_url(), GS.online_token, true) != OK:
+	if peer.start(Online.relay_url(), GS.online_token, true, "", room_public) != OK:
 		return peer.last_error
 	relay = peer
 	multiplayer.multiplayer_peer = peer

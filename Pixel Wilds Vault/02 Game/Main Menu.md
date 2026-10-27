@@ -25,7 +25,10 @@ Laid out like Brenden's 2026-10-20 recording of the real game (see [[PSG2 Screen
 ![[menu_mode.png]]
 
 - **Single Player**, **Multiplayer** and **Back**, stacked at the bottom left, like the original.
-- Multiplayer opens Friends (see [[Multiplayer]]).
+- **Multiplayer** opens its own screen (see [[Multiplayer]]):
+  - the character's name in green, and whether it's yours: "This name is yours. It belongs to this character, and nobody else can use it." (If the name was never claimed, it says to claim it in Friends.)
+  - **Friends**, **Find Public Game**, **Host Public Game** and **Back**.
+- **The faint screen** fits its text: the button sits under the text (and the tip), never on top of it.
 
 ## Leaving a game
 ![[menu_save_and_leave.png]]

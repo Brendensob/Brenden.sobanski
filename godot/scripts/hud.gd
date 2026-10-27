@@ -1697,6 +1697,10 @@ func _refresh_title(_choosing := false) -> void:
 			inv.icon = Art.ui_icon("friend", 2)
 			inv.custom_minimum_size = Vector2(124, 30)
 			screen.add_child(_at(inv, Vector2(346, 206)))
+		"multi":
+			_multi_screen(screen)
+		"public":
+			_public_screen(screen)
 		"options":
 			var op := _frame(Vector2(140, 50), Vector2(200, 150))
 			screen.add_child(op)
@@ -1785,11 +1789,110 @@ func _refresh_title(_choosing := false) -> void:
 			who.size = Vector2(110, 14)
 			who.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			screen.add_child(_at(who, Vector2(10, 140)))
-			var sp := _menu_button("Single Player", func(): _start_from_menu())
+			var sp := _menu_button("Single Player", func(): Net.want_public = false; _start_from_menu())
 			sp.name = "SinglePlayer"
 			screen.add_child(_at(sp, Vector2(10, 160)))
-			screen.add_child(_at(_menu_button("Multiplayer", func(): open_friends()), Vector2(10, 196)))
+			var mpb := _menu_button("Multiplayer", func(): menu_step = "multi"; _refresh_title())
+			mpb.name = "Multiplayer"
+			screen.add_child(_at(mpb, Vector2(10, 196)))
 			screen.add_child(_at(_menu_button("Back", func(): menu_step = "slots"; _refresh_title()), Vector2(10, 232)))
+
+# ---------------------------------------------------------------- multiplayer menu
+## After Multiplayer: whose name you play as (and that it's yours), then
+## Friends, Find Public Game, Host Public Game and Back.
+func _multi_screen(screen: Control) -> void:
+	var info := GS.slot_info(GS.slot)
+	var mp := _frame(Vector2(110, 22), Vector2(260, 226))
+	mp.name = "Multi"
+	screen.add_child(mp)
+	var h := _heading("Multiplayer", 11)
+	h.size = Vector2(260, 14)
+	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mp.add_child(_at(h, Vector2(0, 8)))
+	var nm := _label(str(info.get("name", "")), 12, C_GOOD, true)
+	nm.name = "Name"
+	nm.size = Vector2(260, 16)
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mp.add_child(_at(nm, Vector2(0, 26)))
+	var owned: bool = str(info.get("token", "")) != ""
+	var msg := "This name is yours. It belongs to this character, and nobody else can use it." if owned \
+		else "This character's name isn't claimed yet. Open Friends to claim it so you can play online."
+	var t := _wrap(msg, 236, C_INK, 8)
+	t.name = "Owner"
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mp.add_child(_at(t, Vector2(12, 44)))
+	var y := 82
+	var fb := _menu_button("Friends", func(): open_friends())
+	fb.name = "Friends"
+	var find := _menu_button("Find Public Game", func(): menu_step = "public"; _refresh_title())
+	find.name = "FindPublic"
+	var hostb := _menu_button("Host Public Game", func(): Net.want_public = true; _start_from_menu())
+	hostb.name = "HostPublic"
+	for b in [fb, find, hostb]:
+		b.custom_minimum_size = Vector2(160, 28)
+		b.disabled = not owned and b != fb
+		mp.add_child(_at(b, Vector2(50, y)))
+		y += 34
+	mp.add_child(_at(_menu_button("Back", func(): menu_step = "mode"; _refresh_title(), true), Vector2(75, y)))
+
+## Public games anyone can join, from the online server.
+func _public_screen(screen: Control) -> void:
+	var pp := _frame(Vector2(90, 22), Vector2(300, 226))
+	pp.name = "Public"
+	screen.add_child(pp)
+	var h := _heading("Public Games", 11)
+	h.size = Vector2(300, 14)
+	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pp.add_child(_at(h, Vector2(0, 8)))
+	var list := VBoxContainer.new()
+	list.name = "List"
+	list.add_theme_constant_override("separation", 4)
+	list.custom_minimum_size = Vector2(276, 150)
+	pp.add_child(_at(list, Vector2(12, 28)))
+	pp.add_child(_at(_menu_button("Refresh", func(): _refresh_title()), Vector2(30, 188)))
+	pp.add_child(_at(_menu_button("Back", func(): menu_step = "multi"; _refresh_title(), true), Vector2(160, 188)))
+	list.add_child(_label("Looking for games...", 9, C_MUTED))
+	if GS.load_game() == false:
+		return
+	var r := await Online.public_rooms()
+	if menu_step != "public" or not is_instance_valid(list):
+		return
+	_clear(list)
+	if not r.get("ok", false):
+		list.add_child(_wrap(r.get("error", "Can't reach the online server."), 276, C_BAD))
+		return
+	var rooms: Array = r.get("rooms", [])
+	if rooms.is_empty():
+		list.add_child(_wrap("No public games right now. Host one, or try again in a bit.", 276, C_MUTED))
+	for room in rooms:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 6)
+		row.add_child(_status_dot(C_GOOD))
+		var l := _label(str(room.name), 9)
+		l.custom_minimum_size = Vector2(120, 0)
+		row.add_child(l)
+		var pl := _label("%d/%d" % [int(room.players), Net.MAX_PLAYERS], 8, C_MUTED)
+		pl.custom_minimum_size = Vector2(40, 0)
+		row.add_child(pl)
+		var host_name: String = room.name
+		var jb := _button("Full" if room.get("full", false) else "Join", func(): _join_friend(host_name), true)
+		jb.name = "Join_" + host_name
+		jb.disabled = room.get("full", false)
+		row.add_child(jb)
+		list.add_child(row)
+
+## A round status light: red offline, green online.
+func _status_dot(c: Color) -> Control:
+	var d := Control.new()
+	d.name = "Dot"
+	d.custom_minimum_size = Vector2(10, 10)
+	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	d.set_meta("color", c)
+	d.draw.connect(func():
+		d.draw_circle(Vector2(5, 5), 5.0, C_DARK)
+		d.draw_circle(Vector2(5, 5), 4.0, c)
+		d.draw_circle(Vector2(4, 4), 1.4, c.lightened(0.45)))
+	return d
 
 func _room_text() -> String:
 	if not Net.active:
@@ -1798,7 +1901,9 @@ func _room_text() -> String:
 	for pid in Net.players:
 		names.append(Net.players[pid].name)
 	var t := "%s\n%d/%d players: %s" % ["Your room" if Net.is_host() else "A friend's room", Net.player_count(), Net.MAX_PLAYERS, ", ".join(names)]
-	if Net.is_host():
+	if Net.is_host() and Net.room_public:
+		t += "\nPublic game: anyone can join from Find Public Game. Nobody sees your IP address."
+	elif Net.is_host():
 		t += "\nFriends join you from their friends list. Nobody sees your IP address."
 	return t
 
@@ -2025,9 +2130,26 @@ func _start_from_menu() -> void:
 func show_dead(text: String) -> void:
 	if Net.active:
 		text = "Your friends can keep going. Get back up at the start of this map."
-	panels.dead.get_node("Wake").text = "Get back up" if Net.active else "Wake up in Pixel Town"
-	panels.dead.get_node("Text").text = text
+	var dp: Panel = panels.dead
+	var wake: Button = dp.get_node("Wake")
+	var tl: Label = dp.get_node("Text")
+	wake.text = "Get back up" if Net.active else "Wake up in Pixel Town"
+	tl.text = text
+	tl.size = Vector2(240, 0)
 	open_panel("dead")
+	_layout_dead.call_deferred()
+
+## Fits the faint screen to its text (a tip can make it longer), with the
+## button centred underneath. Runs a frame later, once the text has wrapped.
+func _layout_dead() -> void:
+	var dp: Panel = panels.dead
+	var wake: Button = dp.get_node("Wake")
+	var tl: Label = dp.get_node("Text")
+	var h := maxf(tl.size.y, tl.get_line_count() * tl.get_line_height())
+	wake.size = wake.get_combined_minimum_size()
+	wake.position = Vector2(roundf((dp.size.x - wake.size.x) / 2), roundf(tl.position.y + h + 8))
+	dp.size.y = wake.position.y + wake.size.y + 10
+	_place("dead")
 
 func open_info(title: String, text: String) -> void:
 	panels.info.get_node("Title").text = title
@@ -2593,15 +2715,12 @@ func _refresh_friends() -> void:
 	for f in fl:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 4)
-		var dot := ColorRect.new()
-		dot.color = C_GOOD if f.online else Color("9a8a7a")
-		dot.custom_minimum_size = Vector2(6, 6)
-		dot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(dot)
+		# red: offline; green: online; green with Join: in a game you can join
+		row.add_child(_status_dot(C_GOOD if f.online or f.room else Color("d83a2e")))
 		var l := _label(str(f.name), 9)
 		l.custom_minimum_size = Vector2(130, 0)
 		row.add_child(l)
-		var status := "Playing (%d/4)" % int(f.get("players", 1)) if f.room else ("Online" if f.online else "Offline")
+		var status := "In a game (%d/4)" % int(f.get("players", 1)) if f.room else ("Online" if f.online else "Offline")
 		var sl := _label(status, 8, C_MUTED)
 		sl.custom_minimum_size = Vector2(80, 0)
 		row.add_child(sl)

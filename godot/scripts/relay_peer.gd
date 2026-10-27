@@ -34,10 +34,10 @@ var _refusing := false
 
 ## Opens your room (as_host) or joins the room of the friend named `room`.
 ## `url` is the relay's address, like wss://server/relay (see Online.relay_url()).
-func start(url: String, token: String, as_host: bool, room: String = "") -> int:
+func start(url: String, token: String, as_host: bool, room: String = "", public := false) -> int:
 	host = as_host
 	my_id = 1 if as_host else randi_range(2, 2147483647)
-	_hello = {"token": token, "mode": "host" if as_host else "join", "room": room, "id": my_id}
+	_hello = {"token": token, "mode": "host" if as_host else "join", "room": room, "id": my_id, "public": public}
 	# a whole map can be sent at once when someone joins
 	ws.inbound_buffer_size = 1 << 22
 	ws.outbound_buffer_size = 1 << 22
