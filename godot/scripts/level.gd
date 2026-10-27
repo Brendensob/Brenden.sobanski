@@ -860,6 +860,7 @@ func _arena_tick(delta: float) -> void:
 				alive = true
 		if not alive:
 			arena_done = true
+			GS.arena_cleared(id)
 			for d in def.boss_drops:
 				if rng.randf() < d[1]:
 					drop(d[0], rng.randi_range(d[2], d[3]), player.position + Vector2(0, -20))
@@ -895,6 +896,7 @@ func _survival_tick(delta: float) -> void:
 				Net.wall_hammer.rpc()
 		s_day += 1
 		GS.best_survival_day = maxi(GS.best_survival_day, s_day)
+		GS.check_character_tasks()
 	if night:
 		spawn_timer -= delta
 		if spawn_timer <= 0:
@@ -1159,6 +1161,7 @@ func apply_tick_state(ts: Dictionary) -> void:
 	bosses_spawned = ts.get("bosses", bosses_spawned)
 	if kind == "arena" and ts.get("done", false) and not arena_done:
 		add_portal(Vector2i(W / 2, 17), "town", "Home", Color("5cbf3f"))
+		GS.arena_cleared(id)
 	arena_done = ts.get("done", arena_done)
 	s_day = ts.get("s_day", s_day)
 	s_night = ts.get("s_night", s_night)

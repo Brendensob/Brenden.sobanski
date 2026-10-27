@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #XX | 2026-10-27 | All 18 characters on Create a character: locked ones show how to unlock them (Miffie quests, arena clears, Survival days, owning one, or gems from a save) |
 | #26 | 2026-10-27 | Joining friends: rooms over a WebSocket so phones can host and join, the online server set up for free hosting on Render (`render.yaml`), names and friends restored after a server wipe |
 | #25 | 2026-10-24 | Progression audit (0 softlocks), tests for every recipe, Crafter item, smelt, shop item and quest, monster AI, item types, damaged and old saves, HUD at 4 window shapes; ready notices, low-health pulse, music for the web build |
 | #24 | 2026-10-24 | Music (7 synthesized loops) and volume settings, new sounds, cave darkness, character-switch confirmation, room-wide town walls, a cheat-proof game clock with server time |

@@ -44,6 +44,7 @@ var pending_token := "" # a name just claimed for a character that's about to be
 var slot := 0 # which character slot is being played
 
 func _ready() -> void:
+	load_unlocks()
 	anchor_to_device()
 	_setup_input()
 	new_game()
@@ -143,6 +144,10 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	add_item("wooden_axe", 1, true)
 	add_item("wooden_pick", 1, true)
 	add_item("small_potion", 3, true)
+	var gives: String = Data.CHARACTERS.get(character, {}).get("gives", "")
+	if gives != "":
+		flags["gave_" + character] = true
+		add_item(gives, 1, true)
 	hp = max_hp()
 	mp = max_mp()
 	st = max_st()
@@ -267,6 +272,8 @@ func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 		gems += n
 		stats_changed.emit()
 		return 0
+	if Data.ITEMS.get(id, {}).get("type", "") == "character":
+		unlock_character(id)
 	var m := stack_size(id)
 	for s in inv:
 		if n <= 0:
@@ -553,6 +560,7 @@ func complete_quest(q: Dictionary) -> void:
 	if q.has("unlock"):
 		flags[q.unlock] = true
 	quests_done.append(q.id)
+	check_character_tasks()
 	Sfx.play("quest", 0.0)
 	inventory_changed.emit()
 	stats_changed.emit()
@@ -579,16 +587,20 @@ func save_game() -> void:
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 		"friends": friend_names,
 	}
-	# write a new file first, keep the last good save as a backup, then swap the
-	# new one in, so a crash or power cut mid-save can never wipe a character
-	var path := slot_path(slot)
+	_write_slot(slot, data)
+
+## Writes a save: a new file first, keeping the last good save as a backup,
+## then the new one is swapped in, so a crash or power cut mid-save can never
+## wipe a character.
+func _write_slot(i: int, data: Dictionary) -> void:
+	var path := slot_path(i)
 	var f := FileAccess.open(path + ".tmp", FileAccess.WRITE)
 	if f == null:
 		return
 	f.store_string(JSON.stringify(data))
 	f.close()
 	if FileAccess.file_exists(path):
-		DirAccess.copy_absolute(_abs(path), _abs(backup_path(slot)))
+		DirAccess.copy_absolute(_abs(path), _abs(backup_path(i)))
 		DirAccess.remove_absolute(_abs(path))
 	DirAccess.rename_absolute(_abs(path + ".tmp"), _abs(path))
 
@@ -793,3 +805,87 @@ func store(i: int, b: int) -> int:
 func retrieve(b: int, k: int) -> int:
 	return _move_stack(storage[b], k, inv)
 
+
+# ---------------------------------------------------------------- unlocked characters
+# Like the original, a new character can only be the Man in Suit or the Nurse at
+# first. Owning a character in any save (from a quest, a chest, a monster or the
+# Gem Shop) or finishing its task in Data.CHARACTER_TASKS unlocks it for good,
+# for every slot on this device.
+const UNLOCKS_PATH := "user://unlocks.json"
+var unlocked: Array = []
+
+func load_unlocks() -> void:
+	unlocked = Data.START_CHARACTERS.duplicate()
+	if not FileAccess.file_exists(UNLOCKS_PATH):
+		return
+	var d = JSON.parse_string(FileAccess.get_file_as_string(UNLOCKS_PATH))
+	if d is Dictionary and d.get("characters") is Array:
+		for c in d.characters:
+			if Data.CHARACTERS.has(str(c)) and not str(c) in unlocked:
+				unlocked.append(str(c))
+
+func _save_unlocks() -> void:
+	var f := FileAccess.open(UNLOCKS_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"characters": unlocked}))
+
+func is_unlocked(c: String) -> bool:
+	return c in unlocked
+
+## Unlocks a character for new characters. Returns false if it already was.
+func unlock_character(c: String) -> bool:
+	if is_unlocked(c) or not Data.CHARACTERS.has(c):
+		return false
+	unlocked.append(c)
+	_save_unlocks()
+	message.emit("%s unlocked! You can pick it for a new character." % Data.CHARACTERS[c].name, "good")
+	return true
+
+## Locks everything again but the starters (used by the tests).
+func reset_unlocks() -> void:
+	unlocked = Data.START_CHARACTERS.duplicate()
+	_save_unlocks()
+
+func character_task_done(t: Dictionary) -> bool:
+	if t.has("survive"):
+		return best_survival_day >= int(t.survive)
+	if t.has("clear"):
+		return flags.get("cleared_" + str(t.clear), false)
+	if t.has("quest"):
+		return str(t.quest) in quests_done
+	return false
+
+## Unlocks any character whose task is now done, and puts one in your bag.
+func check_character_tasks() -> void:
+	for c in Data.CHARACTER_TASKS:
+		if not is_unlocked(c) and character_task_done(Data.CHARACTER_TASKS[c]):
+			give(c, 1) # owning it unlocks it
+
+func arena_cleared(world_id: String) -> void:
+	flags["cleared_" + world_id] = true
+	check_character_tasks()
+
+## Gems saved in a slot, so the Create a character screen can unlock one with them.
+func slot_gems(i: int) -> int:
+	var d = _read_slot(i)
+	return maxi(0, int(d.get("gems", 0))) if d is Dictionary else 0
+
+## The saved character with the most gems, or -1 if none has any.
+func richest_slot() -> int:
+	var best := -1
+	for i in SLOTS:
+		if slot_gems(i) > 0 and (best < 0 or slot_gems(i) > slot_gems(best)):
+			best = i
+	return best
+
+## Unlocks a character with gems from the saved character that has the most.
+func buy_unlock(c: String) -> bool:
+	var price := int(Data.CHARACTERS.get(c, {}).get("gems", 0))
+	var i := richest_slot()
+	if is_unlocked(c) or price <= 0 or i < 0 or slot_gems(i) < price:
+		return false
+	var d: Dictionary = _read_slot(i)
+	d["gems"] = int(d.get("gems", 0)) - price
+	_write_slot(i, d)
+	unlock_character(c)
+	return true

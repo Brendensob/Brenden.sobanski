@@ -122,7 +122,7 @@ The living list of every system and how finished it is. It's updated after each 
 
 | System | | Notes |
 |---|---|---|
-| Main menu and character selection | A | Slots, create, delete with confirm, Single/Multiplayer |
+| Main menu and character selection | A | Slots, create with all 18 characters (locked ones show how to unlock; tasks, owning one, gems tested), delete with confirm, Single/Multiplayer |
 | World selection and transitions | A | Gatekeeper cards, portals, all 23 worlds load, return to town |
 | Movement and combat feedback | A | Jumps, knockback, hit stun, numbers, low-health pulse |
 | Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented |
