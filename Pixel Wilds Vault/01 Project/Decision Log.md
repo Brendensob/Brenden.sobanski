@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (cleaner cartoon look)
+- **The art goes further toward cartoon, but stays pixel art.** Big sprites are smoothed (Scale2x/Scale3x) instead of blown up, and get bold outlines; shadows, glows, clouds and a hazy far mountain range add depth. *Brenden: "make all graohics way cleaner looking more cartoon ish ... give certain things good depth affect and color and use bettere models for anything that may feel off make pop up menus cleangood looking and not annoying"* This answers the open question about how far the cartoon look should go.
+- **Menus are rounded cartoon boxes** that pop in over a dimmed game and close with a tap outside. Messages are small bubbles that count up instead of piling up, and clear when a menu opens. Same orange colours as before, so it still reads like PSG2.
+- **A and B are round buttons**, ◀ ▶ are rounded pads with arrows. Same places on screen as before.
+- **Not changed here:** progression, joining friends and the new characters are other pieces of the same request, handled separately.
+
 ## 2026-10-27
 - **Every character shows on Create a character; most start locked.** The PSG2 wiki says new characters can only be the Man in Suit or the Nurse at first, and the rest are unlocked by quests, the Gem Shop, Master Chests or the Daily Gift. So all 18 characters are tiles on the screen, locked ones darkened with a padlock and a line saying how to get them. *Brenden: "theres only man in suit and nurse add all the others with some being locked behind gems or other tasks".*
 - **Unlocks are for the whole device, not one save.** Owning a character in any save unlocks it for good. A locked one can also be unlocked right on the screen with gems from your saved character that has the most.

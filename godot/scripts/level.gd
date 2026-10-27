@@ -516,13 +516,16 @@ func _make_background() -> void:
 	sky_layer.add_child(sky)
 	parallax_items.append(sky)
 	var base_y := surface[0] * T
-	for spec in [[Art.mountains_tex(th), 0.15, 150, 20], [Art.hills_tex(th), 0.4, 90, 24]]:
+	# far to near: clouds, a hazy far range, the mountains and the hills
+	for spec in [[Art.clouds_tex(th), 0.04, 150, -40, 0.5], [Art.mountains_tex(th, true), 0.08, 150, 4, 1.0],
+			[Art.mountains_tex(th), 0.15, 150, 20, 1.0], [Art.hills_tex(th), 0.4, 90, 24, 1.0]]:
 		var layer := ParallaxLayer.new()
 		layer.motion_scale = Vector2(spec[1], 1.0)
 		layer.motion_mirroring = Vector2(512, 0)
 		var spr := Sprite2D.new()
 		spr.texture = spec[0]
 		spr.centered = false
+		spr.scale = Vector2.ONE * spec[4]
 		spr.position = Vector2(0, base_y + spec[3] - spec[2])
 		layer.add_child(spr)
 		bg.add_child(layer)

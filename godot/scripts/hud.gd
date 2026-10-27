@@ -54,6 +54,8 @@ var room_label: Label
 var room_box: VBoxContainer
 var trade_bag: Array = []
 var busy := false # waiting on the online server
+var backdrop: ColorRect
+var tap_out := {} # panels that a tap outside them closes
 const MobScript := preload("res://scripts/mob.gd")
 const INVITE_URL := "https://brendensob.github.io/Brenden.sobanski/"
 
@@ -77,6 +79,7 @@ func _ready() -> void:
 	add_child(root)
 	_build_hud()
 	_build_touch()
+	_build_backdrop()
 	_build_bag()
 	_build_panels()
 	GS.inventory_changed.connect(_refresh)
@@ -95,20 +98,62 @@ func _tex_box(tex: Texture2D, margin: int, pad: int) -> StyleBoxTexture:
 	s.set_content_margin_all(pad)
 	return s
 
+## The cartoon interface: rounded boxes with a bold rim, a soft drop shadow,
+## and buttons with a thick darker lip at the bottom that sink when pressed.
+func _style(kind: String, pad: int = 3) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.anti_aliasing = true
+	s.set_corner_radius_all(5)
+	s.set_border_width_all(1)
+	var spec: Array = {
+		# kind: [fill, rim, top rim, bottom rim]
+		"frame": ["fbd6a6", "ee8a2e", 3, 3],
+		"button": ["f69b3c", "9a4610", 1, 3],
+		"button_hover": ["fbab52", "9a4610", 1, 3],
+		"button_down": ["d8721e", "8a3e0c", 3, 1],
+		"button_off": ["d9b088", "a07a58", 1, 2],
+		"tab": ["f08c34", "9a4610", 1, 3],
+		"green": ["3fb32c", "125a0e", 1, 3],
+		"green_down": ["2e9420", "0e4a0a", 3, 1],
+		"green_off": ["8aa884", "56704e", 1, 2],
+		"slot": ["fcd3a4", "c98648", 1, 1],
+		"slot_sel": ["d6f6b2", "2e9a1e", 2, 2],
+		"cell": ["f6b882", "c8803e", 1, 1],
+	}.get(kind, ["f69b3c", "9a4610", 1, 3])
+	s.bg_color = Color(spec[0])
+	s.border_color = Color(spec[1])
+	s.border_width_top = spec[2]
+	s.border_width_bottom = spec[3]
+	match kind:
+		"frame":
+			s.set_border_width_all(3)
+			s.set_corner_radius_all(9)
+			s.shadow_color = Color(0.23, 0.08, 0.02, 0.55)
+			s.shadow_size = 3
+			s.shadow_offset = Vector2(0, 2)
+		"slot", "slot_sel", "cell":
+			s.set_corner_radius_all(4)
+			if kind == "slot_sel":
+				s.set_border_width_all(2)
+	s.set_content_margin_all(pad)
+	# a sunk button's label sits lower, as if pressed in
+	if kind.ends_with("_down"):
+		s.content_margin_top = pad + 1
+		s.content_margin_bottom = maxi(pad - 1, 0)
+	return s
+
 func _make_theme() -> void:
 	ui_theme = Theme.new()
 	ui_theme.default_font = Art.font_body
 	ui_theme.default_font_size = 9
 	ui_theme.set_color("font_color", "Label", C_INK)
-	var frame := _tex_box(Art.ui_frame("frame"), 4, 6)
+	var frame := _style("frame", 6)
 	ui_theme.set_stylebox("panel", "Panel", frame)
 	ui_theme.set_stylebox("panel", "PanelContainer", frame)
-	ui_theme.set_stylebox("normal", "Button", _tex_box(Art.ui_frame("button"), 3, 3))
-	ui_theme.set_stylebox("hover", "Button", _tex_box(Art.ui_frame("button"), 3, 3))
-	ui_theme.set_stylebox("pressed", "Button", _tex_box(Art.ui_frame("button_down"), 3, 3))
-	var dis := _tex_box(Art.ui_frame("button_down"), 3, 3)
-	dis.modulate_color = Color(0.75, 0.7, 0.65)
-	ui_theme.set_stylebox("disabled", "Button", dis)
+	ui_theme.set_stylebox("normal", "Button", _style("button", 3))
+	ui_theme.set_stylebox("pressed", "Button", _style("button_down", 3))
+	ui_theme.set_stylebox("hover", "Button", _style("button_hover", 3))
+	ui_theme.set_stylebox("disabled", "Button", _style("button_off", 3))
 	ui_theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	ui_theme.set_color("font_color", "Button", Color("3a1606"))
 	ui_theme.set_color("font_hover_color", "Button", Color("3a1606"))
@@ -116,12 +161,10 @@ func _make_theme() -> void:
 	ui_theme.set_color("font_disabled_color", "Button", Color("7a5a40"))
 	ui_theme.set_font_size("font_size", "Button", 9)
 	ui_theme.set_type_variation("Accent", "Button")
-	ui_theme.set_stylebox("normal", "Accent", _tex_box(Art.ui_frame("green"), 3, 3))
-	ui_theme.set_stylebox("hover", "Accent", _tex_box(Art.ui_frame("green"), 3, 3))
-	ui_theme.set_stylebox("pressed", "Accent", _tex_box(Art.ui_frame("green"), 3, 3))
-	var adis := _tex_box(Art.ui_frame("green"), 3, 3)
-	adis.modulate_color = Color(0.6, 0.6, 0.6)
-	ui_theme.set_stylebox("disabled", "Accent", adis)
+	ui_theme.set_stylebox("normal", "Accent", _style("green", 3))
+	ui_theme.set_stylebox("hover", "Accent", _style("green", 3))
+	ui_theme.set_stylebox("pressed", "Accent", _style("green_down", 3))
+	ui_theme.set_stylebox("disabled", "Accent", _style("green_off", 3))
 	ui_theme.set_color("font_color", "Accent", C_WHITE)
 	ui_theme.set_color("font_hover_color", "Accent", C_WHITE)
 	ui_theme.set_color("font_pressed_color", "Accent", C_WHITE)
@@ -131,10 +174,10 @@ func _make_theme() -> void:
 	# item slots: peach squares with a brown edge; the selected one turns green
 	ui_theme.set_type_variation("Slot", "Button")
 	for st in ["normal", "hover", "pressed", "disabled"]:
-		ui_theme.set_stylebox(st, "Slot", _tex_box(Art.ui_frame("slot"), 1, 1))
+		ui_theme.set_stylebox(st, "Slot", _style("slot", 1))
 	# LineEdit for the character name
-	ui_theme.set_stylebox("normal", "LineEdit", _tex_box(Art.ui_frame("slot"), 1, 4))
-	ui_theme.set_stylebox("focus", "LineEdit", _tex_box(Art.ui_frame("slot_sel"), 2, 4))
+	ui_theme.set_stylebox("normal", "LineEdit", _style("slot", 4))
+	ui_theme.set_stylebox("focus", "LineEdit", _style("slot_sel", 4))
 	ui_theme.set_color("font_color", "LineEdit", C_INK)
 
 func _label(text: String, size: int = 9, color: Color = C_INK, title: bool = false) -> Label:
@@ -221,11 +264,11 @@ func _fill_slot(b: Button, s, ghost: Texture2D = null) -> void:
 
 func _select_style(b: Button, on: bool, color: Color = C_GOOD) -> void:
 	if on and b.theme_type_variation == "Slot":
-		b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("slot_sel"), 2, 1))
-		b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("slot_sel"), 2, 1))
+		b.add_theme_stylebox_override("normal", _style("slot_sel", 1))
+		b.add_theme_stylebox_override("hover", _style("slot_sel", 1))
 	elif on:
-		b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 3))
-		b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 3))
+		b.add_theme_stylebox_override("normal", _style("green", 3))
+		b.add_theme_stylebox_override("hover", _style("green", 3))
 	else:
 		b.remove_theme_stylebox_override("normal")
 		b.remove_theme_stylebox_override("hover")
@@ -324,9 +367,9 @@ func _build_hud() -> void:
 		sb.position = Vector2(101, 37 + i * 18)
 		sb.custom_minimum_size = Vector2(15, 15)
 		sb.size = Vector2(15, 15)
-		sb.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("button"), 3, 0))
-		sb.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("button"), 3, 0))
-		sb.add_theme_stylebox_override("pressed", _tex_box(Art.ui_frame("button_down"), 3, 0))
+		sb.add_theme_stylebox_override("normal", _style("button", 0))
+		sb.add_theme_stylebox_override("hover", _style("button", 0))
+		sb.add_theme_stylebox_override("pressed", _style("button_down", 0))
 		var ic := TextureRect.new()
 		ic.texture = Art.ui_icon(side[i][1])
 		ic.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -341,15 +384,18 @@ func _build_hud() -> void:
 	emote_panel.position = Vector2(5, 93)
 	emote_panel.size = Vector2(155, 71)
 	var eb := StyleBoxFlat.new()
-	eb.bg_color = Color("f9c98a")
+	eb.bg_color = Color("fbd6a6")
 	eb.set_border_width_all(3)
-	eb.border_color = Color("e8862a")
+	eb.border_color = Color("ee8a2e")
+	eb.set_corner_radius_all(8)
+	eb.anti_aliasing = true
 	eb.expand_margin_left = 1
 	eb.expand_margin_right = 1
 	eb.expand_margin_top = 1
 	eb.expand_margin_bottom = 1
-	eb.shadow_color = Color("4a1e08")
-	eb.shadow_size = 1
+	eb.shadow_color = Color(0.23, 0.08, 0.02, 0.5)
+	eb.shadow_size = 2
+	eb.shadow_offset = Vector2(0, 2)
 	emote_panel.add_theme_stylebox_override("panel", eb)
 	emote_panel.visible = false
 	var grid := GridContainer.new()
@@ -430,7 +476,7 @@ func _build_hud() -> void:
 	toasts.position = Vector2(-130, 66)
 	toasts.size = Vector2(260, 60)
 	toasts.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	toasts.add_theme_constant_override("separation", 0)
+	toasts.add_theme_constant_override("separation", 2)
 	hud_root.add_child(toasts)
 	hint_label = _outlined(_label("A/D move   K jump (B)   J use (A)   E bag   1-5 hotbar", 8, C_WHITE))
 	hint_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -448,13 +494,15 @@ func _draw_bars() -> void:
 		var r: Array = rows[i]
 		var y := i * 13
 		var w := 90.0
-		bars.draw_rect(Rect2(0, y, w + 2, 11), C_DARK)
-		bars.draw_rect(Rect2(1, y + 1, w, 9), Color("3a3a44"))
+		# rounded bars: a dark case, the colour with a shiny top, and a darker bottom
+		bars.draw_style_box(_bar_box(C_DARK, 4), Rect2(0, y, w + 2, 11))
+		bars.draw_style_box(_bar_box(Color("3a3a44"), 3), Rect2(1, y + 1, w, 9))
 		var k := clampf(r[0] / maxf(r[1], 1.0), 0, 1)
 		var c: Color = r[2]
-		bars.draw_rect(Rect2(1, y + 1, w * k, 9), c)
-		bars.draw_rect(Rect2(1, y + 1, w * k, 2), c.lightened(0.25))
-		bars.draw_rect(Rect2(1, y + 8, w * k, 2), c.darkened(0.3))
+		if w * k >= 1.0:
+			bars.draw_style_box(_bar_box(c.darkened(0.3), 3), Rect2(1, y + 1, maxf(w * k, 6), 9))
+			bars.draw_style_box(_bar_box(c, 3), Rect2(1, y + 1, maxf(w * k, 6), 7))
+			bars.draw_style_box(_bar_box(Color(1, 1, 1, 0.3), 1), Rect2(3, y + 2, maxf(w * k - 4, 2), 2))
 		if i == 0 and k <= LOW_HP and r[0] > 0:
 			# low health: the bar's border pulses red
 			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 110.0)
@@ -463,6 +511,17 @@ func _draw_bars() -> void:
 		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x
 		bars.draw_string_outline(f, Vector2(1 + (w - tw) / 2, y + 9), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, 3, C_DARK)
 		bars.draw_string(f, Vector2(1 + (w - tw) / 2, y + 9), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, C_WHITE)
+
+var _bar_boxes := {}
+func _bar_box(c: Color, r: int) -> StyleBoxFlat:
+	var key := "%s_%d" % [c.to_html(), r]
+	if not _bar_boxes.has(key):
+		var b := StyleBoxFlat.new()
+		b.bg_color = c
+		b.set_corner_radius_all(r)
+		b.anti_aliasing = true
+		_bar_boxes[key] = b
+	return _bar_boxes[key]
 
 ## The sky disc turns once a day: day (blue, with the sun), sunset (yellow,
 ## orange, purple) and night (dark, with stars). The bottom middle, behind the
@@ -580,6 +639,8 @@ func _refresh() -> void:
 		_refresh_bag()
 
 ## A line of text under the clock, like "Wood obtained". Fades after a moment.
+## A message in a small dark bubble under the clock. The same message again
+## just counts up ("x2") instead of stacking, and only three show at once.
 func toast(text: String, kind: String = "") -> void:
 	var color := C_WHITE
 	match kind:
@@ -587,34 +648,81 @@ func toast(text: String, kind: String = "") -> void:
 		"danger": color = Color("ff7a6a")
 		"big": color = C_YELLOW
 		"good": color = Color("c8ffb0")
-	var l := _outlined(_label(text, 9, color))
+	var last: Control = toasts.get_child(toasts.get_child_count() - 1) if toasts.get_child_count() > 0 else null
+	if last and not last.is_queued_for_deletion() and last.get_meta("text", "") == text:
+		var n: int = last.get_meta("n", 1) + 1
+		last.set_meta("n", n)
+		last.get_node("Text").text = "%s  x%d" % [text, n]
+		_toast_life(last)
+		return
+	var box := PanelContainer.new()
+	box.set_meta("text", text)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.1, 0.06, 0.14, 0.62)
+	bg.set_corner_radius_all(6)
+	bg.anti_aliasing = true
+	bg.content_margin_left = 7
+	bg.content_margin_right = 7
+	bg.content_margin_top = 1
+	bg.content_margin_bottom = 2
+	if kind == "big" or kind == "danger":
+		bg.border_color = Color(color, 0.7)
+		bg.border_width_bottom = 1
+	box.add_theme_stylebox_override("panel", bg)
+	var l := _label(text, 8, color)
+	l.name = "Text"
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
+	l.add_theme_constant_override("outline_size", 2)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(260, 0)
-	toasts.add_child(l)
-	while toasts.get_child_count() > 5:
+	l.custom_minimum_size = Vector2(minf(Art.font_body.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 2, 240), 0)
+	box.add_child(l)
+	toasts.add_child(box)
+	while toasts.get_child_count() > 3:
 		toasts.get_child(0).free()
-	var tw := l.create_tween()
-	tw.tween_interval(2.4)
-	tw.tween_property(l, "modulate:a", 0.0, 0.4)
-	tw.tween_callback(l.queue_free)
+	box.modulate.a = 0.0
+	_toast_life(box)
+
+func _toast_life(box: Control) -> void:
+	if box.has_meta("tween"):
+		var old: Tween = box.get_meta("tween")
+		if old and old.is_valid():
+			old.kill()
+	var tw := box.create_tween()
+	box.set_meta("tween", tw)
+	tw.tween_property(box, "modulate:a", 1.0, 0.12)
+	tw.tween_interval(2.6)
+	tw.tween_property(box, "modulate:a", 0.0, 0.35)
+	tw.tween_callback(box.queue_free)
 
 # ---------------------------------------------------------------- touch controls
 func _build_touch() -> void:
-	# grey ◀ ▶ on the left, red A above green B on the right, as in the original
-	var specs := [["move_left", "<", Color("4a4a4c"), 90, 34, Color("b8b8bc")], ["move_right", ">", Color("4a4a4c"), 90, 34, Color("b8b8bc")],
-		["attack", "A", Color("c01a12"), 68, 34, Color("f0a0a0")], ["jump", "B", Color("2a9a1e"), 68, 34, Color("b8f090")]]
+	# grey ◀ ▶ pads on the left, a round red A above a round green B on the right, as in the original
+	var specs := [["move_left", "left", ""], ["move_right", "right", ""], ["attack", "A", "A"], ["jump", "B", "B"]]
+	var k := float(Art.TOUCH_K)
 	for s in specs:
 		var t := TouchScreenButton.new()
-		t.texture_normal = Art.button_tex(s[3], s[4], s[2])
-		t.texture_pressed = Art.button_tex(s[3], s[4], s[2].darkened(0.25))
+		t.texture_normal = Art.touch_tex(s[1], false)
+		t.texture_pressed = Art.touch_tex(s[1], true)
+		t.scale = Vector2.ONE / k
 		t.action = s[0]
 		t.passby_press = true
-		var l := _label(s[1], 16, s[5], true)
-		l.size = Vector2(s[3], s[4])
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		t.add_child(l)
+		t.modulate = Color(1, 1, 1, 0.92)
+		if s[2] != "":
+			# the letter is scaled back up so it's drawn as sharp as the rest of the text
+			var l := _label(s[2], 17, Color(1, 1, 1, 0.95), true)
+			l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.35))
+			l.add_theme_constant_override("outline_size", 3)
+			l.scale = Vector2(k, k)
+			l.size = Vector2(46, 44)
+			l.position = Vector2(0, -1 * k)
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			t.add_child(l)
+			t.pressed.connect(func(): l.position.y = 1 * k)
+			t.released.connect(func(): l.position.y = -1 * k)
 		add_child(t)
 		touch_nodes.append(t)
 	force_touch = "--touch" in OS.get_cmdline_user_args()
@@ -663,10 +771,10 @@ func _layout_touch() -> void:
 	var vs := get_viewport().get_visible_rect().size
 	if touch_nodes.size() < 4:
 		return
-	touch_nodes[0].position = Vector2(20, vs.y - 58)
-	touch_nodes[1].position = Vector2(127, vs.y - 58)
-	touch_nodes[2].position = Vector2(vs.x - 88, vs.y - 96)
-	touch_nodes[3].position = Vector2(vs.x - 127, vs.y - 54)
+	touch_nodes[0].position = Vector2(16, vs.y - 52)
+	touch_nodes[1].position = Vector2(100, vs.y - 52)
+	touch_nodes[2].position = Vector2(vs.x - 62, vs.y - 104)
+	touch_nodes[3].position = Vector2(vs.x - 112, vs.y - 58)
 
 func set_touch_visible(on: bool) -> void:
 	for t in touch_nodes:
@@ -688,6 +796,7 @@ func _panel(key: String, size: Vector2, title: String = "", closable := true) ->
 	t.position = Vector2(9, 6)
 	p.add_child(t)
 	if closable:
+		tap_out[key] = true
 		var x := _close_button(func(): close_panels())
 		x.position = Vector2(size.x - 26, 5)
 		p.add_child(x)
@@ -722,13 +831,20 @@ func any_open() -> bool:
 func open_panel(key: String) -> void:
 	if main.on_title() and not key in ["title", "friends", "trade_invite"]:
 		return
-	if not panels[key].visible:
+	var was_open: bool = panels[key].visible
+	if not was_open:
 		Sfx.play("open", 0.0)
 	for k in panels:
 		panels[k].visible = k == key
 	main.set_paused(true)
 	set_touch_visible(false)
 	_place(key)
+	_show_backdrop(key)
+	if not was_open and key != "title":
+		_pop_in(panels[key])
+		# old messages step aside so they don't cover the menu or what villagers say
+		for t in toasts.get_children():
+			t.queue_free()
 	# the bag covers the whole screen in the original, so the HUD hides behind it
 	hud_root.visible = key != "bag" and not main.on_title()
 	match key:
@@ -745,12 +861,44 @@ func close_panels() -> void:
 		Sfx.play("close", 0.0)
 	for k in panels:
 		panels[k].visible = false
+	backdrop.visible = false
+	backdrop.color.a = 0.0
 	station = null
 	main.set_paused(false)
 	set_touch_visible(true)
 	hud_root.visible = not main.on_title()
 	if main.on_title():
 		panels.title.visible = true
+
+## A soft dark veil behind open menus, so they stand out from the game.
+## Tapping it closes menus that have a close button.
+func _build_backdrop() -> void:
+	backdrop = ColorRect.new()
+	backdrop.name = "Backdrop"
+	backdrop.color = Color(0.06, 0.03, 0.1, 0.0)
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.visible = false
+	backdrop.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			for k in panels:
+				if panels[k].visible and tap_out.has(k):
+					close_panels()
+					return)
+	root.add_child(backdrop)
+
+func _show_backdrop(key: String) -> void:
+	backdrop.visible = key != "title" and key != "bag"
+	var a := 0.18 if key == "npc" else 0.38
+	backdrop.create_tween().tween_property(backdrop, "color:a", a, 0.15)
+
+## Menus pop in: a quick grow from slightly smaller, with a tiny overshoot.
+func _pop_in(pn: Control) -> void:
+	pn.pivot_offset = pn.size / 2
+	pn.scale = Vector2(0.9, 0.9)
+	pn.modulate.a = 0.0
+	var tw := pn.create_tween().set_parallel()
+	tw.tween_property(pn, "scale", Vector2.ONE, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(pn, "modulate:a", 1.0, 0.1)
 
 ## Centres a panel on screen; villager dialogs sit at the bottom.
 func _place(key: String) -> void:
@@ -787,7 +935,7 @@ func _build_bag() -> void:
 		var slot: String = GS.EQUIP_SLOTS[i]
 		var b := _slot(30)
 		b.position = Vector2(0, 2 + i * 32)
-		b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("tab"), 4, 2))
+		b.add_theme_stylebox_override("normal", _style("tab", 2))
 		var sname := slot
 		b.tooltip_text = slot.capitalize()
 		b.pressed.connect(func():
@@ -916,8 +1064,8 @@ func _refresh_bag() -> void:
 			craft_scroll = 0
 			_refresh_bag())
 		if key == bag_tab or (bag_mode == "storage" and key == "pack%d" % storage_page):
-			b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 3))
-			b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 3))
+			b.add_theme_stylebox_override("normal", _style("green", 3))
+			b.add_theme_stylebox_override("hover", _style("green", 3))
 		tab_row.add_child(b)
 	_clear(page)
 	if bag_mode == "storage":
@@ -996,7 +1144,7 @@ func _page_combine() -> void:
 	var out := _slot(50)
 	out.position = Vector2(82, 34)
 	out.disabled = true
-	out.add_theme_stylebox_override("disabled", _tex_box(Art.ui_frame("button"), 3, 1))
+	out.add_theme_stylebox_override("disabled", _style("button", 1))
 	if pv.ready and pv.known:
 		_fill_slot(out, {"id": pv.recipe.out, "n": pv.recipe.get("n", 1)})
 	else:
@@ -1006,7 +1154,7 @@ func _page_combine() -> void:
 	sc.name = "Scroll"
 	sc.position = Vector2(150, 46)
 	sc.tooltip_text = "Combination Scroll (+35%)"
-	sc.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("button"), 3, 1))
+	sc.add_theme_stylebox_override("normal", _style("button", 1))
 	if GS.count("combination_scroll") == 0:
 		use_scroll = false
 	_fill_slot(sc, {"id": "combination_scroll", "n": 1} if use_scroll else null)
@@ -1029,8 +1177,8 @@ func _page_combine() -> void:
 			_refresh_bag())
 		_fill_slot(b, GS.inv[combo[i]] if combo[i] >= 0 else null)
 		if combo[i] < 0 and i == combo_target:
-			b.add_theme_stylebox_override("normal", _tex_box(Art.ui_frame("green"), 3, 1))
-			b.add_theme_stylebox_override("hover", _tex_box(Art.ui_frame("green"), 3, 1))
+			b.add_theme_stylebox_override("normal", _style("green", 1))
+			b.add_theme_stylebox_override("hover", _style("green", 1))
 		page.add_child(b)
 	var go := _button("Combine", func(): _do_combine())
 	go.name = "Go"
@@ -1118,7 +1266,7 @@ func _page_craft() -> void:
 	out.name = "Result"
 	out.position = Vector2(4, 124)
 	out.disabled = true
-	out.add_theme_stylebox_override("disabled", _tex_box(Art.ui_frame("button"), 3, 1))
+	out.add_theme_stylebox_override("disabled", _style("button", 1))
 	_fill_slot(out, {"id": r.out, "n": 1})
 	page.add_child(out)
 	var title := _heading(Data.ITEMS[r.out].name, 10)
@@ -1292,7 +1440,7 @@ func _build_panels() -> void:
 	var m := Panel.new()
 	m.size = Vector2(344, 206)
 	m.visible = false
-	m.add_theme_stylebox_override("panel", _tex_box(Art.ui_frame("frame"), 4, 4))
+	m.add_theme_stylebox_override("panel", _style("frame", 4))
 	root.add_child(m)
 	panels["map"] = m
 	var board := ColorRect.new()
@@ -1834,8 +1982,7 @@ func _refresh_npc(npc_id: String, said: String = "") -> void:
 	var face: TextureRect = p.get_node("Face")
 	var full: Image = Art.character(npc.look, "stand", 1).get_image()
 	var head := full.get_region(Rect2i(0, 2, full.get_width(), 14))
-	head.resize(head.get_width() * 3, head.get_height() * 3, Image.INTERPOLATE_NEAREST)
-	face.texture = ImageTexture.create_from_image(head)
+	face.texture = ImageTexture.create_from_image(Art.upscale(head, 3))
 	var row: HBoxContainer = p.get_node("Row")
 	_clear(row)
 	var text: String = said if said != "" else npc.talk
@@ -2061,7 +2208,13 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color("fdd08c")
 	bg.border_color = Color("e8862a")
+	bg.set_border_width_all(2)
 	bg.border_width_top = 4
+	bg.set_corner_radius_all(8)
+	bg.anti_aliasing = true
+	bg.shadow_color = Color(0.23, 0.08, 0.02, 0.45)
+	bg.shadow_size = 2
+	bg.shadow_offset = Vector2(0, 2)
 	card.add_theme_stylebox_override("panel", bg)
 	var t := _outlined(_label(title, 11, Color("3fd06a"), true))
 	t.add_theme_color_override("font_outline_color", Color("1e5a1e"))
@@ -2076,18 +2229,23 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.clip_text = true
 	card.add_child(sub)
-	var dark := ColorRect.new()
-	dark.color = Color("0a0a0c")
-	dark.position = Vector2(0, 46)
-	dark.size = Vector2(150, 84)
+	var dark := Panel.new()
+	var db := StyleBoxFlat.new()
+	db.bg_color = Color("1e1a28")
+	db.set_corner_radius_all(5)
+	db.anti_aliasing = true
+	dark.add_theme_stylebox_override("panel", db)
+	dark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dark.position = Vector2(6, 46)
+	dark.size = Vector2(138, 84)
 	card.add_child(dark)
 	var pic := TextureRect.new()
 	pic.texture = _world_preview(wid)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	pic.position = Vector2(0, 46)
-	pic.size = Vector2(150, 84)
+	pic.position = Vector2(8, 48)
+	pic.size = Vector2(134, 80)
 	card.add_child(pic)
 	var w: Dictionary = Data.WORLDS[wid]
 	var target: String = wid
@@ -2099,9 +2257,9 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 		act.add_theme_color_override(k, C_WHITE)
 	act.add_theme_color_override("font_outline_color", Color("6a3a10"))
 	act.add_theme_constant_override("outline_size", 3)
-	act.position = Vector2(0, 140)
-	act.custom_minimum_size = Vector2(150, 34)
-	act.size = Vector2(150, 34)
+	act.position = Vector2(6, 138)
+	act.custom_minimum_size = Vector2(138, 32)
+	act.size = Vector2(138, 32)
 	if w.has("needs") and not GS.flags.get(w.needs, false):
 		act.disabled = true
 		act.text = "Locked"

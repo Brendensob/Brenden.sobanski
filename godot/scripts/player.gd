@@ -70,6 +70,7 @@ func _ready() -> void:
 	shape.shape = rect
 	shape.position = Vector2(0, -7.5)
 	add_child(shape)
+	Art.add_shadow(self, 9)
 	held_sprite = Sprite2D.new()
 	add_child(held_sprite)
 	body_sprite = Sprite2D.new()

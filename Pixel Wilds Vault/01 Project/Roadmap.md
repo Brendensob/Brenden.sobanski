@@ -18,7 +18,7 @@ tags: [project, roadmap]
   - swap the room relay for Steam's relay with GodotSteam (`relay_peer.gd` is already a separate piece);
   - add achievements;
   - make the store page.
-- [ ] Host the [[Online Server]]: `render.yaml` and the game's address are ready (2026-10-27). Waiting on Brenden pressing Deploy on Render once.
+- [x] Host the [[Online Server]]: live on Render at https://pixel-wilds-brendensob.onrender.com (2026-10-27).
 
 ## Content still missing
 - [ ] Public rooms for strangers (rooms are friends-only now).

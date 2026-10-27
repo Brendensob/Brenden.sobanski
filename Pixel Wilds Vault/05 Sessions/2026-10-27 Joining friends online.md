@@ -19,6 +19,7 @@ tags: [session]
 
 **Decisions:** see [[Decision Log]] 2026-10-27.
 
+**Later the same day:** Brenden deployed it. The server answers at https://pixel-wilds-brendensob.onrender.com: server time, the browser's CORS check and the WebSocket handshake on `/relay` all work.
+
 **Next:**
-- Brenden presses Deploy once on Render (link in [[Online Server]]). If the address differs, put it in `godot/server.txt`.
-- Then a real phone-to-phone test.
+- A real phone-to-phone test.
