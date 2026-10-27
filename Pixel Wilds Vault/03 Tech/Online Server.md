@@ -19,7 +19,8 @@ The game uses the WebSocket relay everywhere, so the **phone/browser build can h
 
 ## Hosting (Render, free)
 - `render.yaml` at the repo root sets it up as a free Render web service named `pixel-wilds-brendensob`.
-- **One-time setup by Brenden:** open https://render.com/deploy?repo=https://github.com/Brendensob/Brenden.sobanski, sign in with GitHub, press Deploy.
+- **Live** since 2026-10-27 (Brenden deployed it).
+- **One-time setup (done):** open https://render.com/deploy?repo=https://github.com/Brendensob/Brenden.sobanski, sign in with GitHub, press Deploy.
 - The game looks for it at `https://pixel-wilds-brendensob.onrender.com` (`ONLINE_SERVER` in `scripts/online.gd`). If Render gives a different address, put it in `godot/server.txt`.
 - Every merge to `main` redeploys it.
 - **Sleeps** after 15 minutes with nobody on; the first request wakes it in about a minute. The game's first call (server time) waits up to 75 s for this.
