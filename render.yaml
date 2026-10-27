@@ -1,0 +1,15 @@
+# The Pixel Wilds online server (names, friends and rooms), on Render's free plan.
+# One click to set it up: https://render.com/deploy?repo=https://github.com/Brendensob/Brenden.sobanski
+# Render gives it an https address and redeploys it whenever main changes.
+# The game looks for it at https://pixel-wilds-brendensob.onrender.com
+# (ONLINE_SERVER in godot/scripts/online.gd, or put another address in godot/server.txt).
+services:
+  - type: web
+    name: pixel-wilds-brendensob
+    runtime: python
+    plan: free
+    rootDir: godot/server
+    buildCommand: python3 --version
+    startCommand: python3 pixel_server.py --no-raw-relay --data /tmp/names.json
+    healthCheckPath: /
+    autoDeploy: true

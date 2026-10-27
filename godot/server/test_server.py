@@ -1,4 +1,6 @@
 """Checks the name and friends server: python3 test_server.py"""
+import base64
+import hashlib
 import json
 import os
 import socket
@@ -85,7 +87,7 @@ class RelayTest(unittest.TestCase):
         return s
 
     def frame(self, s):
-        return ps.read_frame(s)
+        return ps.Conn(s).recv()
 
     def test_room_traffic(self):
         a = ps.handle("/register", {"name": "Host1"}, "1.1.1.1")["token"]
@@ -118,6 +120,121 @@ class RelayTest(unittest.TestCase):
         # the host leaves: the room closes for the guest
         host.close()
         self.assertEqual(self.frame(guest)[0], 0x86)
+
+
+class WebSocketRelayTest(unittest.TestCase):
+    """Phones and browsers reach the same relay as a WebSocket on the main port."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        ps.data_path = os.path.join(self.dir, "names.json")
+        ps.db = {"players": {}}
+        ps.rooms.clear()
+        self.http = ps.ThreadingHTTPServer(("127.0.0.1", 0), ps.Handler)
+        self.http.daemon_threads = True
+        self.port = self.http.server_address[1]
+        threading.Thread(target=self.http.serve_forever, daemon=True).start()
+
+    def tearDown(self):
+        self.http.shutdown()
+        self.http.server_close()
+
+    def ws(self, hello):
+        s = socket.create_connection(("127.0.0.1", self.port))
+        s.settimeout(5)
+        key = base64.b64encode(os.urandom(16)).decode()
+        s.sendall(("GET /relay HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                   "Sec-WebSocket-Key: %s\r\nSec-WebSocket-Version: 13\r\n\r\n" % key).encode())
+        head = b""
+        while b"\r\n\r\n" not in head:
+            head += s.recv(1)
+        self.assertIn(b"101", head.split(b"\r\n")[0])
+        want = base64.b64encode(hashlib.sha1((key + ps.WS_GUID).encode()).digest())
+        self.assertIn(want, head)
+        self.send(s, 1, json.dumps(hello).encode())
+        return s
+
+    def send(self, s, typ, payload, split=False):
+        # browsers always mask what they send; also try a message split in two
+        data = bytes([typ]) + payload
+        parts = [data[:3], data[3:]] if split else [data]
+        for i, part in enumerate(parts):
+            mask = os.urandom(4)
+            fin = 0x80 if i == len(parts) - 1 else 0
+            op = 0x2 if i == 0 else 0x0
+            n = len(part)
+            head = struct.pack("!BB", fin | op, 0x80 | n) if n < 126 else struct.pack("!BBH", fin | op, 0x80 | 126, n)
+            s.sendall(head + mask + bytes(c ^ mask[j % 4] for j, c in enumerate(part)))
+
+    def frame(self, s):
+        b0, b1 = ps.read_exact(s.recv, 2)
+        n = b1 & 0x7F
+        if n == 126:
+            (n,) = struct.unpack("!H", ps.read_exact(s.recv, 2))
+        elif n == 127:
+            (n,) = struct.unpack("!Q", ps.read_exact(s.recv, 8))
+        data = ps.read_exact(s.recv, n)
+        return data[0], data[1:]
+
+    def test_room_over_websocket(self):
+        a = ps.handle("/register", {"name": "WebHost"}, "")["token"]
+        b = ps.handle("/register", {"name": "PhoneGuy"}, "")["token"]
+        ps.handle("/friends/add", {"token": b, "name": "WebHost"}, "")
+        ps.handle("/friends/answer", {"token": a, "name": "PhoneGuy", "accept": True}, "")
+        host = self.ws({"token": a, "mode": "host"})
+        self.assertEqual(self.frame(host)[0], 0x81)
+        guest = self.ws({"token": b, "mode": "join", "room": "webhost", "id": 9})
+        self.assertEqual(self.frame(guest)[0], 0x81)
+        self.assertEqual(self.frame(host), (0x83, struct.pack("<i", 9)))
+        big = os.urandom(70000)
+        self.send(guest, 2, struct.pack("<iBB", 1, 0, 2) + b"split", split=True)
+        typ, body = self.frame(host)
+        self.assertEqual((typ, struct.unpack("<i", body[:4])[0], body[6:]), (0x85, 9, b"split"))
+        # a big message (a whole map) goes through in one piece
+        mask = os.urandom(4)
+        data = bytes([2]) + struct.pack("<iBB", 1, 0, 2) + big
+        guest.sendall(struct.pack("!BBQ", 0x82, 0x80 | 127, len(data)) + mask + ps._unmask(data, mask))
+        typ, body = self.frame(host)
+        self.assertEqual(body[6:], big)
+        self.send(host, 2, struct.pack("<iBB", 0, 0, 2) + b"yo")
+        self.assertEqual(self.frame(guest)[1][6:], b"yo")
+        host.close()
+        self.assertEqual(self.frame(guest)[0], 0x86)
+
+    def test_web_build_can_ask(self):
+        # browsers check first (CORS), then post
+        s = socket.create_connection(("127.0.0.1", self.port))
+        s.sendall(b"OPTIONS /time HTTP/1.1\r\nHost: x\r\nOrigin: https://brendensob.github.io\r\n\r\n")
+        reply = s.recv(4096)
+        self.assertIn(b"204", reply)
+        self.assertIn(b"Access-Control-Allow-Origin: *", reply)
+
+
+class RestoreTest(unittest.TestCase):
+    """A free host can wipe the server; the games put their names and friends back."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+        ps.data_path = os.path.join(self.dir, "names.json")
+        ps.db = {"players": {}}
+
+    def test_restore_after_wipe(self):
+        a = ps.handle("/register", {"name": "Alice"}, "")["token"]
+        b = ps.handle("/register", {"name": "Bob"}, "")["token"]
+        ps.handle("/friends/add", {"token": a, "name": "Bob"}, "")
+        ps.handle("/friends/answer", {"token": b, "name": "Alice", "accept": True}, "")
+        ps.db = {"players": {}}  # the server restarted with an empty file
+        self.assertTrue(ps.handle("/friends", {"token": a}, "").get("unknown"))
+        self.assertTrue(ps.handle("/restore", {"name": "Alice", "token": a, "friends": ["Bob"]}, "")["ok"])
+        # Bob isn't back yet, so he isn't a friend yet
+        self.assertEqual(ps.handle("/friends", {"token": a}, "")["friends"], [])
+        ps.handle("/restore", {"name": "Bob", "token": b, "friends": ["alice"]}, "")
+        self.assertEqual([f["name"] for f in ps.handle("/friends", {"token": a}, "")["friends"]], ["Bob"])
+        # nobody can take a restored name with a different key, or fake a friendship
+        self.assertFalse(ps.handle("/restore", {"name": "Alice", "token": "0" * 32}, "")["ok"])
+        c = ps.handle("/register", {"name": "Mallory"}, "")["token"]
+        ps.handle("/restore", {"name": "Mallory", "token": c, "friends": ["Alice"]}, "")
+        self.assertNotIn("Alice", [f["name"] for f in ps.handle("/friends", {"token": c}, "")["friends"]])
 
 
 if __name__ == "__main__":

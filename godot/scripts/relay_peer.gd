@@ -5,7 +5,9 @@ extends MultiplayerPeerExtension
 ##
 ## The host's game is peer 1. Guests pick a random id, and the relay passes
 ## their messages to the host, who passes things on to everyone else.
-## Frames: [u32 length][u8 type][payload], little-endian (see server/pixel_server.py).
+## It's a WebSocket (wss:// when the server has https), so it works the same
+## on phones, in browsers and on computers, through one port.
+## Each binary message is [u8 type][payload], little-endian (see server/pixel_server.py).
 
 const HELLO := 1
 const DATA := 2
@@ -17,7 +19,7 @@ const PEER_LEAVE := 0x84
 const IN_DATA := 0x85
 const ROOM_CLOSED := 0x86
 
-var tcp := StreamPeerTCP.new()
+var ws := WebSocketPeer.new()
 var status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
 var host := false
 var my_id := 0
@@ -27,58 +29,53 @@ var _sent_hello := false
 var _target := 0
 var _mode: int = MultiplayerPeer.TRANSFER_MODE_RELIABLE
 var _channel := 0
-var _buf := PackedByteArray()
 var _incoming: Array = [] # [from, channel, mode, bytes]
 var _refusing := false
 
 ## Opens your room (as_host) or joins the room of the friend named `room`.
-func start(address: String, port: int, token: String, as_host: bool, room: String = "") -> int:
+## `url` is the relay's address, like wss://server/relay (see Online.relay_url()).
+func start(url: String, token: String, as_host: bool, room: String = "") -> int:
 	host = as_host
 	my_id = 1 if as_host else randi_range(2, 2147483647)
 	_hello = {"token": token, "mode": "host" if as_host else "join", "room": room, "id": my_id}
-	var err := tcp.connect_to_host(address, port)
+	# a whole map can be sent at once when someone joins
+	ws.inbound_buffer_size = 1 << 22
+	ws.outbound_buffer_size = 1 << 22
+	ws.max_queued_packets = 8192
+	var err := ws.connect_to_url(url)
 	if err != OK:
 		last_error = "Can't reach the online server."
 		return err
-	tcp.set_no_delay(true)
 	status = MultiplayerPeer.CONNECTION_CONNECTING
 	return OK
 
 func _send_frame(typ: int, payload: PackedByteArray) -> void:
-	var head := PackedByteArray()
-	head.resize(5)
-	head.encode_u32(0, payload.size() + 1)
-	head.encode_u8(4, typ)
-	tcp.put_data(head + payload)
+	if ws.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		return
+	var msg := PackedByteArray([typ])
+	msg.append_array(payload)
+	ws.put_packet(msg)
 
 func _poll() -> void:
 	if status == MultiplayerPeer.CONNECTION_DISCONNECTED:
 		return
-	tcp.poll()
-	var st := tcp.get_status()
-	if st == StreamPeerTCP.STATUS_ERROR or (st == StreamPeerTCP.STATUS_NONE and _sent_hello):
+	ws.poll()
+	var st := ws.get_ready_state()
+	if st == WebSocketPeer.STATE_CLOSED or st == WebSocketPeer.STATE_CLOSING:
 		if last_error == "":
-			last_error = "Lost the connection to the online server."
+			last_error = "Lost the connection to the online server." if status == MultiplayerPeer.CONNECTION_CONNECTED else "Can't reach the online server."
 		_drop()
 		return
-	if st != StreamPeerTCP.STATUS_CONNECTED:
+	if st != WebSocketPeer.STATE_OPEN:
 		return
 	if not _sent_hello:
 		_sent_hello = true
 		_send_frame(HELLO, JSON.stringify(_hello).to_utf8_buffer())
-	var avail := tcp.get_available_bytes()
-	if avail > 0:
-		var got: Array = tcp.get_partial_data(avail)
-		if got[0] == OK:
-			_buf.append_array(got[1])
-	while _buf.size() >= 5:
-		var length := _buf.decode_u32(0)
-		if _buf.size() < 4 + length:
-			break
-		var typ := _buf.decode_u8(4)
-		var payload := _buf.slice(5, 4 + length)
-		_buf = _buf.slice(4 + length)
-		_handle(typ, payload)
+	while ws.get_available_packet_count() > 0:
+		var msg := ws.get_packet()
+		if msg.is_empty():
+			continue
+		_handle(msg[0], msg.slice(1))
 		if status == MultiplayerPeer.CONNECTION_DISCONNECTED:
 			return
 
@@ -109,7 +106,7 @@ func _handle(typ: int, payload: PackedByteArray) -> void:
 func _drop() -> void:
 	var was := status
 	status = MultiplayerPeer.CONNECTION_DISCONNECTED
-	tcp.disconnect_from_host()
+	ws.close()
 	if was == MultiplayerPeer.CONNECTION_CONNECTED and not host:
 		emit_signal("peer_disconnected", 1)
 
@@ -173,7 +170,7 @@ func _get_connection_status() -> MultiplayerPeer.ConnectionStatus:
 
 func _close() -> void:
 	if status != MultiplayerPeer.CONNECTION_DISCONNECTED:
-		tcp.disconnect_from_host()
+		ws.close()
 	status = MultiplayerPeer.CONNECTION_DISCONNECTED
 
 func _disconnect_peer(p_peer: int, _p_force: bool) -> void:

@@ -19,10 +19,12 @@ xvfb-run -a <godot> --path . --resolution 960x540 -- --autotest --touch
 2. Run two copies: `-- --nettest host` and `-- --nettest client`.
 3. Both must print `NETTEST ... DONE, 0 failures`.
 
+Both copies talk to `http://127.0.0.1:24566` by default (the real game uses the hosted server), and rooms go through the WebSocket relay, the same path phones use.
+
 It checks joining, following through portals, drops, chat, **emotes**, walls, trading and leaving.
 
 ## Server checks
-`python3 server/test_server.py`
+`python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 
 ## Data audit
 ```
