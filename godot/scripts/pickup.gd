@@ -22,6 +22,10 @@ func _ready() -> void:
 	sprite.texture = Art.prop_tex("coin") if item == "coin" else Art.icon(item)
 	sprite.position = Vector2(0, -6)
 	add_child(sprite)
+	# drops glow softly and cast a little shadow, so they stand out from the ground
+	var g := Art.glow_sprite(Color(1, 0.95, 0.7, 0.4), 22)
+	sprite.add_child(g)
+	Art.add_shadow(self, 5)
 
 func _process(delta: float) -> void:
 	life += delta

@@ -17,6 +17,7 @@ func setup(id: String, lvl: Node) -> void:
 	level = lvl
 
 func _ready() -> void:
+	Art.add_shadow(self, 10)
 	sprite = Sprite2D.new()
 	sprite.texture = Art.character(data.look)
 	sprite.position = Vector2(0, -sprite.texture.get_height() / 2.0)
@@ -56,17 +57,26 @@ func _process(delta: float) -> void:
 		badge.text = ""
 	sprite.flip_h = level.player.position.x < position.x
 	# walk up to a villager and they call out to you, like the original
+	# the greeting sits a line higher, so it never covers your own name
+	var near := false
 	if data.has("greet"):
-		var near: bool = absf(level.player.position.x - position.x) < 64 and absf(level.player.position.y - position.y) < 32
+		near = absf(level.player.position.x - position.x) < 64 and absf(level.player.position.y - position.y) < 32
 		name_label.text = data.greet if near else data.name
-		name_label.position.x = -60 if near else -30
+		name_label.position = Vector2(-60, -46) if near else Vector2(-30, -36)
 		name_label.size.x = 120 if near else 60
 	if Data.SHOPS.has(npc_id):
 		say_t -= delta
 		if say_t <= 0:
 			say.visible = not say.visible
 			say_t = 4.0 if say.visible else randf_range(10.0, 18.0)
-		badge.visible = not say.visible
+		if near:
+			say.visible = false
+		badge.visible = not say.visible and not near
+	else:
+		badge.visible = not near
+	# names fade while you stand right on top of a villager, so the two don't mix
+	var on_top: bool = absf(level.player.position.x - position.x) < 18 and absf(level.player.position.y - position.y) < 20
+	name_label.modulate.a = move_toward(name_label.modulate.a, 0.0 if on_top and not near else 1.0, delta * 6)
 
 func interact(_player: Node) -> void:
 	level.main.hud.open_npc(npc_id)
