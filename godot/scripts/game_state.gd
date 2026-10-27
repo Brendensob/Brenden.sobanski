@@ -6,6 +6,7 @@ signal stats_changed
 signal message(text: String, kind: String)
 ## Items that didn't fit in the bag; the HUD drops them at the player's feet.
 signal overflow(id: String, n: int)
+signal auto_hit_changed
 
 const VERSION := 3
 const SLOTS := 3 # character slots on the main menu, like the original
@@ -42,18 +43,34 @@ var online_token := "" # the key that proves this character owns its name on the
 var friend_names: Array = [] # last friends list seen online, so it can be put back if the server is wiped
 var pending_token := "" # a name just claimed for a character that's about to be made
 var slot := 0 # which character slot is being played
+## The auto-hit switch: the weapon or tool you hold keeps swinging by itself, even
+## with the bag open and after switching items. A setting of the device, kept
+## with the sound settings.
+var auto_hit := false
+const SETTINGS := "user://settings.cfg"
 
 func _ready() -> void:
 	load_unlocks()
 	anchor_to_device()
 	_setup_input()
+	var cfg := ConfigFile.new()
+	if cfg.load(SETTINGS) == OK:
+		auto_hit = bool(cfg.get_value("controls", "auto_hit", false))
 	new_game()
+
+func set_auto_hit(on: bool) -> void:
+	auto_hit = on
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS)
+	cfg.set_value("controls", "auto_hit", on)
+	cfg.save(SETTINGS)
+	auto_hit_changed.emit()
 
 func _setup_input() -> void:
 	var keys := {
 		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
 		"jump": [KEY_K, KEY_SPACE, KEY_W, KEY_UP], "attack": [KEY_J, KEY_X, KEY_ENTER],
-		"bag": [KEY_E, KEY_I, KEY_TAB], "pause": [KEY_ESCAPE, KEY_P],
+		"bag": [KEY_E, KEY_I, KEY_TAB], "pause": [KEY_ESCAPE, KEY_P], "auto_hit": [KEY_Q],
 		"slot_1": [KEY_1], "slot_2": [KEY_2], "slot_3": [KEY_3], "slot_4": [KEY_4], "slot_5": [KEY_5],
 	}
 	for action in keys:

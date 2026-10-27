@@ -114,6 +114,7 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | HUD, menus and panels like PSG2 | ✅ | 2026-10-27: rounded cartoon boxes, pop-in, dimmed backdrop, tap outside to close, message bubbles that count up |
 | Depth and cartoon finish | ✅ | 2026-10-27: shadows, portal/drop/ore glows, smooth big sprites, clouds and hazy far mountains. Checked in the autotest screenshots |
+| Ground, map walls and backdrops | ✅ | 2026-10-27 remodel: tiles that look at their neighbours, stone map walls, themed back walls, plank ledges, spiked deadly walls, depth shading, new mountains and tree line. Every world checked by `look_check()` (builds under 3 s, stone at the edges) and its screenshots |
 | Damage numbers and death puffs | ✅ | |
 | Low-health warning | ✅ | The health bar's border pulses red under 25% |
 | HUD at different window shapes | ✅ | 16:9, 21:9, 4:3 and portrait 3:4: nothing off screen, no overlapping buttons |
@@ -122,6 +123,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Sound and Music volume | ✅ | Off to 100% in 25% steps, saved |
 | Dark screen edges in caves | ✅ | Dark worlds and deep caves; under the HUD; tested at 3 window shapes |
 | Character switch confirmation | ✅ | Cancel and Become tested |
+| Auto-hit button | ✅ | 2026-10-27: round AUTO button left of A (and Q). Tested: lights up, swings with the bag open, the bag doesn't pause, stays on through A and item switches, turns off, pauses again when off, saved |
 
 ## Phase 2 review: every system, A to E
 **A** complete and working · **B** implemented but incomplete · **C** in the data but not connected · **D** missing · **E** blocked on unknown PSG2 facts

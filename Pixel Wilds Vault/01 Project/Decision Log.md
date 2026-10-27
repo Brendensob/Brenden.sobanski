@@ -5,6 +5,20 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (auto hit and cartoon pixel look)
+- **An auto-hit switch:** a little round button left of A. When it's on, the held weapon or tool swings by itself. It keeps going with the bag open (the bag doesn't pause the world then) and stays on through switching items. *Brenden: "Keep the buttons how they were just for the movement and jump also add a little circle button for auto hit to turn on and off so your sword swings automatically even while in inv and stays even while you switch items"*
+- **Food and blocks are never auto-used**, so a potion or a stack of walls isn't wasted by mistake. The "staffs, bows and throwables too" part follows the original's hold-A trick, which already swung those.
+- **The move and jump buttons stay exactly as they were.**
+- **Cartoon pixel look:** *Brenden: "I want a cartoon pixelish look"*. The ground now gets the same colour pop as the sprites (a little more saturation and brightness) and the same near-black outlines, so the world and the characters match.
+
+## 2026-10-27 (ground and walls remodel)
+- **The ground is drawn like a professional tileset.** Each tile checks its neighbours, so it gets grass caps, outlined and shaded sides, rounded corners and shaded ceilings with roots. *Brenden: "Remodel everything especially the walls around the map like a professional designer would"*
+- **The walls around the map are mossy stone walls.** They carry on up past the top of the map, so they never stop in mid-air. Cave worlds have bedrock at the bottom. Pixel Town gets a stone frame, stone-brick room walls and a stone-brick basement.
+- **The dark worlds' back walls are brick with moss.** This comes from Brenden's Darklands recording ("dark crisscross brick walls with mossy edges", [[PSG2 Screenshot Notes]]). The tomb gets sandstone blocks and the icy worlds get ice blocks.
+- **Jump-through ledges are wooden planks underground**, so they're easy to tell apart from solid ground.
+- **The backdrops were redrawn:** better mountains, and a tree line instead of round blobs.
+- **No map layouts changed**; only how they look. Characters, monsters, houses and the HUD weren't part of this pass.
+
 ## 2026-10-27 (multiplayer menu)
 - **Pressing Multiplayer opens its own screen.** It shows the character's name in green and says the name is yours and belongs to this character. Under that are buttons for Friends, Find Public Game and Host Public Game. *Brenden: "when clicked multiplayer make sure player knows they own the name and that's the name of that character they own and there a button for friends list ... and there's also a button for find public or host public".*
 - **Friends have a round light:** red when offline, green when online, and green with a Join button when they're in a game. *Brenden: "a blank circle that's red if offline or green if online and green with a join button if in game".*

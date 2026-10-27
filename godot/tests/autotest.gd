@@ -1006,7 +1006,7 @@ func gameplay_check() -> void:
 			if c:
 				rects[n] = c.get_global_rect()
 		rects["bars"] = main.hud.bars.get_global_rect()
-		var tn := ["left", "right", "A", "B"]
+		var tn := ["left", "right", "A", "B", "auto"]
 		for i in main.hud.touch_nodes.size():
 			var t: Node = main.hud.touch_nodes[i]
 			if t.visible:
@@ -1155,6 +1155,104 @@ func content_check() -> void:
 	clear_ground()
 
 ## The faint screen and the multiplayer menus.
+## The auto-hit switch: a little round button left of A. On, the held weapon or
+## tool swings by itself, even with the bag open, and it stays on through
+## pressing A and switching items.
+func auto_hit_check() -> void:
+	var p: Node = main.level.player
+	var ab: TouchScreenButton = main.hud.touch_nodes[4]
+	check(ab.name == "AutoHit" and ab.visible, "there's a round auto-hit button")
+	var off_tex := ab.texture_normal
+	# hold A and open the bag: auto-hit, like the original's trick
+	Input.action_press("attack")
+	main.hud.toggle_bag()
+	Input.action_release("attack")
+	check(GS.auto_hit and ab.texture_normal != off_tex, "holding A while opening the bag turns auto-hit on, and the button lights up")
+	check(main.level.process_mode != Node.PROCESS_MODE_DISABLED, "with auto-hit on the bag doesn't pause the world")
+	GS.sel = 0
+	GS.inventory_changed.emit()
+	GS.st = GS.max_st()
+	var s0: int = p.swings
+	await wait(1.2)
+	check(p.swings >= s0 + 2, "auto-hit keeps swinging with the bag open (%d swings)" % (p.swings - s0))
+	main.hud.close_panels()
+	await tap("attack")
+	main.hud.close_panels() # in case A opened a villager's chat
+	GS.sel = 1
+	GS.inventory_changed.emit()
+	GS.st = GS.max_st()
+	s0 = p.swings
+	await wait(1.2)
+	check(GS.auto_hit and p.swings >= s0 + 2, "auto-hit stays on after pressing A and switching items")
+	await shot("09c_auto_hit_on")
+	# the button turns it off
+	ab.pressed.emit()
+	await wait(0.1)
+	check(not GS.auto_hit and ab.texture_normal == off_tex, "the round button turns auto-hit off")
+	s0 = p.swings
+	await wait(0.8)
+	check(p.swings == s0, "with auto-hit off nothing swings by itself")
+	main.hud.toggle_bag()
+	check(main.level.process_mode == Node.PROCESS_MODE_DISABLED, "with auto-hit off the bag pauses the world again")
+	main.hud.close_panels()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_Q
+	key.pressed = true
+	Input.parse_input_event(key)
+	await wait(0.1)
+	key = key.duplicate()
+	key.pressed = false
+	Input.parse_input_event(key)
+	check(GS.auto_hit, "and Q turns it back on")
+	var cfg := ConfigFile.new()
+	cfg.load(GS.SETTINGS)
+	check(cfg.get_value("controls", "auto_hit", false) == true, "the switch is saved")
+	GS.set_auto_hit(false)
+
+## The ground's art: every world bakes its ground quickly, the map's edges are
+## rock and the back walls are drawn; screenshots of the surface and the caves.
+func look_check() -> void:
+	var slow := []
+	var empty := []
+	for w in Data.WORLDS:
+		main.hud.close_panels()
+		var t0 := Time.get_ticks_usec()
+		main.change_level(w)
+		var ms := (Time.get_ticks_usec() - t0) / 1000.0
+		var lvl: Node = main.level
+		var terrain: Node = lvl.get_node("Terrain")
+		print("  %s built in %d ms, %d ground pictures" % [w, ms, terrain.chunks.size()])
+		if ms > 3000:
+			slow.append(w)
+		if terrain.chunks.is_empty() or terrain.mat(0, lvl.H / 2) != terrain.ROCK:
+			empty.append(w)
+		lvl.player.invuln = 9999.0
+		await wait(0.6)
+		await shot("70_" + w)
+		if lvl.kind == "explore":
+			# a spot in the caves, a third of the way in
+			var best := Vector2i(-1, -1)
+			for c in lvl.floor_cells():
+				if c.y > lvl.surface[c.x] + 4 and (best.x < 0 or absi(c.x - lvl.W / 3) + absi(c.y - 30) < absi(best.x - lvl.W / 3) + absi(best.y - 30)):
+					best = c
+			if best.x >= 0:
+				lvl.player.position = lvl.cell_pos(best)
+				main.camera.position = lvl.player.position
+				main.camera.reset_smoothing()
+				await wait(0.5)
+				await shot("71_%s_cave" % w)
+	check(slow.is_empty(), "every world builds in under 3 s %s" % [slow])
+	check(empty.is_empty(), "every world has baked ground with rock at its edges %s" % [empty])
+	# Pixel Town upstairs and in the basement
+	await goto("town")
+	var town: Node = main.level
+	for spot in [["72_town_upstairs", Vector2i(24, town.TOWN_TOP - 1)], ["73_town_basement", Vector2i(40, town.TOWN_BASE - 1)], ["74_town_west", Vector2i(3, town.TOWN_MID - 1)]]:
+		town.player.position = town.cell_pos(spot[1])
+		main.camera.position = town.player.position
+		main.camera.reset_smoothing()
+		await wait(0.5)
+		await shot(spot[0])
+
 func menus_check() -> void:
 	await goto("grass_1")
 	main.level.player.invuln = 0.0
@@ -1505,6 +1603,7 @@ func check_character_unlocks() -> void:
 	main.hud._refresh_title()
 
 func run() -> void:
+	GS.set_auto_hit(false)
 	await wait(1.0)
 	await shot("01_title")
 	check_data()
@@ -1561,8 +1660,15 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
-	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen and multiplayer menu checks
+	if OS.has_environment("AT_LOOK"): # set AT_LOOK=1 to run only the ground art checks
+		await look_check()
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
+	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen, multiplayer menu and auto-hit checks
 		await menus_check()
+		await goto("grass_1")
+		await auto_hit_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 		get_tree().quit()
 		return
@@ -1694,6 +1800,12 @@ func run() -> void:
 		for i in 14:
 			if not tree.alive:
 				break
+			# a monster can knock you away mid-chop: clear them and step back to the tree
+			for e in lvl.entities.get_children():
+				if e.has_method("die") and e.position.distance_to(tree.position) < 200:
+					e.queue_free()
+			if p.position.distance_to(tree.position) > 14:
+				await stand_by(tree)
 			p.cooldown = 0
 			await tap("attack")
 			await wait(0.55)
@@ -1739,14 +1851,7 @@ func run() -> void:
 	main.hud._refresh_bag()
 	await shot("09b_bag_character")
 	main.hud.close_panels()
-	# hold A and open the bag: auto-attack, like the original
-	Input.action_press("attack")
-	main.hud.toggle_bag()
-	Input.action_release("attack")
-	check(main.level.player.auto_attack, "holding A while opening the bag turns on auto-attack")
-	main.hud.close_panels()
-	await tap("attack")
-	check(not main.level.player.auto_attack, "pressing A stops auto-attack")
+	await auto_hit_check()
 	# the bomb button sends you home
 	main.level.player.invuln = 0.0
 	main.level.player.self_destruct()
@@ -1864,6 +1969,7 @@ func run() -> void:
 	await systems_check()
 	await content_check()
 	await menus_check()
+	await look_check()
 	# survival at night
 	await goto("survival")
 	await wait(0.2)

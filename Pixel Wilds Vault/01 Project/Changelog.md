@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #32 | 2026-10-27 | Auto-hit button (swings by itself, even with the bag open; stays on through switching items; Q on a keyboard); the ground gets the sprites' cartoon colour pop and outlines. Ground and walls remodel: tiles with grass caps, outlined sides, rounded corners and rooty ceilings; mossy stone walls at the map edges, bedrock, Pixel Town's stone frame and brick basement; brick, sandstone and ice back walls; plank ledges; spiked deadly walls; smooth depth shading; new mountains and tree line |
 | #31 | 2026-10-27 | Faint screen fixed (button under the text); Multiplayer screen with the name you own, Friends, Find and Host Public Game; red/green friend lights with Join; public rooms on the server; tomb test tries both sides of a deadly wall |
 | #30 | 2026-10-27 | Solid progression: a fight test that plays every world up to Hell, starter sword attack 4, starting health 10, 1 s of safety after a hit, stronger potions, flying monsters tumble longer; a goal card that says what to do next, danger badges on world cards, a tip when you faint |
 | #29 | 2026-10-27 | All 18 characters on Create a character: locked ones show how to unlock them (Miffie quests, arena clears, Survival days, owning one, or gems from a save) |

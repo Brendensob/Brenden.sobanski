@@ -26,6 +26,10 @@ const SWING_TIME := 0.23
 const SWING_KEYS := [[0.0, 0.35], [0.2, -0.44], [0.42, 1.13], [0.72, 1.13], [1.0, 0.35]]
 const SWING_HIT_AT := 0.4
 
+## What holding A, or the auto-hit switch, keeps swinging: weapons, tools, staffs,
+## bows, throwables and bare hands, never food or blocks.
+const AUTO_TYPES := ["weapon", "axe", "pick", "staff", "bow", "throw", ""]
+
 var level: Node
 var facing := 1
 var anim := 0.0
@@ -51,7 +55,6 @@ var light: PointLight2D
 var name_label: Label
 ## Like the original: hold A and open the bag, and you keep attacking on your own
 ## until you press A again or faint.
-var auto_attack := false
 var cur_frame := "stand"
 ## Time since the last jump, for the flip (stays big when not flipping).
 var flip_t := 99.0
@@ -122,7 +125,6 @@ func _physics_process(delta: float) -> void:
 				_jump()
 				level.burst(position, Color("8fe05a"), 4)
 		if Input.is_action_just_pressed("attack"):
-			auto_attack = false
 			if cooldown > 0:
 				attack_buffer = ATTACK_BUFFER
 			else:
@@ -130,8 +132,11 @@ func _physics_process(delta: float) -> void:
 		elif attack_buffer > 0 and cooldown <= 0:
 			attack_buffer = 0
 			use_held(true)
-		elif (Input.is_action_pressed("attack") or auto_attack) and cooldown <= 0 and held_type() in ["weapon", "axe", "pick", "staff", "bow", "throw", ""]:
+		elif (Input.is_action_pressed("attack") or GS.auto_hit) and cooldown <= 0 and held_type() in AUTO_TYPES:
 			use_held(false)
+	elif GS.auto_hit and cooldown <= 0 and held_type() in AUTO_TYPES:
+		# auto-hit keeps swinging while the bag is open (the bag doesn't pause it)
+		use_held(false)
 	if not is_on_floor():
 		var g := FALL_GRAVITY
 		if velocity.y < -APEX_SPEED:
@@ -531,7 +536,6 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 
 func _die() -> void:
 	level.burst(position + Vector2(0, -8), Color("d8433a"), 16)
-	auto_attack = false
 	GS.hp = 0
 	dead = true
 	body_sprite.rotation = PI / 2 * facing

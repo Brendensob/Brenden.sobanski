@@ -47,5 +47,16 @@ Laid out like Brenden's PSG2 screenshots.
 | Menu | Esc | Compass |
 | Chat | T | Chat.. box |
 | Back to town | | Bomb |
+| Auto hit on/off | Q | The little round **AUTO** button left of A |
 
-Holding A while you open the bag turns on auto-attack.
+## Auto hit (2026-10-27)
+
+![[auto_hit.png]]
+
+A little round button just left of A, with a sword on it and "AUTO" under it. It's grey when off and gold when on. *Brenden: "Keep the buttons how they were just for the movement and jump also add a little circle button for auto hit to turn on and off so your sword swings automatically even while in inv and stays even while you switch items"*
+- **On:** the weapon or tool you hold swings by itself, over and over. That covers swords, axes, pickaxes, staffs, bows, throwables and bare hands. Food and blocks are never used by themselves.
+- It **keeps swinging with the bag open**: while auto hit is on, the bag doesn't pause the world.
+- It **stays on** when you press A, switch items or faint. Only the button (or Q) turns it off.
+- It's saved on the device, like the sound settings.
+- The original's trick still works: holding A while you open the bag turns auto hit on.
+- The move and jump buttons are unchanged.

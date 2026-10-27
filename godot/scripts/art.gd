@@ -466,6 +466,39 @@ func touch_tex(kind: String, pressed: bool) -> Texture2D:
 			soft_triangle(img, [Vector2(cx + dirx * s, cy), Vector2(cx - dirx * s * 0.7, cy - s), Vector2(cx - dirx * s * 0.7, cy + s)], Color("e8e8ee"))
 		return to_tex(img))
 
+## The little round auto-hit switch: a sword on grey when off, on gold when on.
+func auto_tex(on: bool, pressed: bool) -> Texture2D:
+	return cached("auto_%s_%s" % [on, pressed], func():
+		var k := TOUCH_K
+		var w := 26
+		var h := 26
+		var img := blank((w + 2) * k, (h + 4) * k)
+		var body := Color("f2a21e") if on else Color("55555c")
+		var sink := 2.0 * k if pressed else 0.0
+		var lip := 0.0 if pressed else 2.0 * k
+		var cx := (w / 2.0 + 1) * k
+		var r := (w / 2.0 - 1) * k
+		var cy := h / 2.0 * k + sink + 1 * k
+		soft_ellipse(img, cx, h / 2.0 * k + 3 * k, r, r, Color(0, 0, 0, 0.28), 2.0 * k)
+		soft_ellipse(img, cx, cy, r, r - 1.5 * k, OUTLINE)
+		soft_ellipse(img, cx, cy, r - 1.5 * k, r - 3 * k, body.darkened(0.35))
+		soft_ellipse(img, cx, cy - lip / 2, r - 1.5 * k, r - 3 * k - lip / 2, body)
+		soft_ellipse(img, cx - r * 0.18, cy - lip / 2 - r * 0.45, r * 0.5, r * 0.25, Color(1, 1, 1, 0.3))
+		# a sword pointing up to the right
+		var c := Vector2(cx, cy - lip / 2) + Vector2(-1.5, 1.5) * k
+		var d := Vector2(1, -1).normalized()
+		var n := Vector2(1, 1).normalized()
+		var blade := Color.WHITE if on else Color("c8c8d0")
+		var hilt := Color("6e4426") if on else Color("3a3a40")
+		var tip := c + d * 8.0 * k
+		soft_triangle(img, [c + n * 1.4 * k, tip, c - n * 1.4 * k], blade)
+		soft_triangle(img, [c + n * 3.6 * k + d * 0.7 * k, c - n * 3.6 * k + d * 0.7 * k, c - n * 3.6 * k - d * 0.7 * k], hilt)
+		soft_triangle(img, [c + n * 3.6 * k + d * 0.7 * k, c + n * 3.6 * k - d * 0.7 * k, c - n * 3.6 * k - d * 0.7 * k], hilt)
+		soft_triangle(img, [c + n * 0.9 * k, c - d * 4.0 * k + n * 0.9 * k, c - d * 4.0 * k - n * 0.9 * k], hilt)
+		soft_triangle(img, [c + n * 0.9 * k, c - n * 0.9 * k, c - d * 4.0 * k - n * 0.9 * k], hilt)
+		soft_ellipse(img, (c - d * 4.6 * k).x, (c - d * 4.6 * k).y, 1.3 * k, 1.3 * k, hilt)
+		return to_tex(img))
+
 ## Puffy cartoon clouds for the far sky.
 func clouds_tex(th: Dictionary) -> Texture2D:
 	return cached("clouds_" + th.name, func():
@@ -1647,63 +1680,6 @@ func theme(name: String) -> Dictionary:
 			d[k] = Color(t[k])
 	return d
 
-## Tiles: [grass top, dirt, cave back wall]
-func ground_tiles(th: Dictionary) -> Array:
-	var key: String = "ground_" + th.name
-	if _cache.has(key):
-		return _cache[key]
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash(th.name)
-	var top := blank(16, 16)
-	top.fill(th.dirt)
-	for i in 10:
-		px(top, rng.randi_range(0, 15), rng.randi_range(6, 15), th.dirt2)
-	# cartoon grass: a dark line on top, a bright rim under it and round
-	# scallops hanging into the dirt with a dark edge
-	for x in 16:
-		var d := 5 + int(round(1.6 * sin(x * TAU / 8.0)))
-		rect(top, x, 0, 1, d, th.top)
-		px(top, x, d, th.top2)
-		px(top, x, d + 1, th.dirt2.darkened(0.35))
-		px(top, x, 1, th.top.lightened(0.3))
-		px(top, x, 0, th.top2.darkened(0.45))
-	for i in 3:
-		px(top, rng.randi_range(0, 15), rng.randi_range(2, 3), th.top.lightened(0.3))
-	var fill := blank(16, 16)
-	fill.fill(th.dirt)
-	for i in 14:
-		rect(fill, rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1, th.dirt2 if i % 3 else th.dirt.lightened(0.12))
-	var back := blank(16, 16)
-	back.fill(th.cave)
-	for i in 8:
-		rect(back, rng.randi_range(0, 14), rng.randi_range(0, 14), 2, 1, th.cave.lightened(0.08))
-	if th.name == "tomb":
-		# the tomb's sandy walls have a zig-zag pattern
-		for x in 16:
-			px(fill, x, 4 + absi((x % 8) - 4), th.dirt2)
-			px(fill, x, 12 + absi((x % 8) - 4) - 4, th.dirt.lightened(0.15))
-	var ledge := fill.duplicate()
-	rect(ledge, 0, 0, 16, 3, th.dirt.lightened(0.18))
-	rect(ledge, 0, 0, 16, 1, th.dirt2.darkened(0.45))
-	for x in 16:
-		px(ledge, x, 3 + (x * 7) % 2, th.dirt2)
-	var tex := [to_tex(top), to_tex(fill), to_tex(back), to_tex(ledge)]
-	_cache[key] = tex
-	return tex
-
-## A wall in the Tomb of Makara that kills on touch: dark red stone with spikes.
-func deadly_tile(th: Dictionary) -> Texture2D:
-	return cached("deadly_" + th.name, func():
-		var img := blank(16, 16)
-		img.fill(Color("5a1414"))
-		for y in range(0, 16, 4):
-			for x in range(0, 16, 4):
-				px(img, x + 1, y + 1, Color("d8433a"))
-				px(img, x + 2, y + 2, Color("f06a5a"))
-		rect(img, 0, 0, 16, 1, Color("f06a5a"))
-		rect(img, 0, 15, 16, 1, Color("2a0a0a"))
-		return to_tex(img))
-
 func node_tex(kind: String, th: Dictionary) -> Texture2D:
 	return cached("node_%s_%s" % [kind, th.name], func():
 		var rng := RandomNumberGenerator.new()
@@ -1921,8 +1897,9 @@ func portal_tex(frame: int, tint: Color) -> Texture2D:
 			px(img, int(9 + cos(a) * 5), int(17 + sin(a) * 11), Color.WHITE)
 		return to_tex(outline(img)))
 
-## Mountains with a sunny left face and a shaded right face. The far range is
-## paler, as if seen through haze, which gives the sky some depth.
+## Mountains: a sunny left face and a shaded right face on every peak, a ragged
+## ridge, snow caps with a jagged lower edge, and haze toward the bottom. The far
+## range is paler and closer to the sky's colour, so it reads as further away.
 func mountains_tex(th: Dictionary, far := false) -> Texture2D:
 	return cached("mount_%s_%s" % [th.name, far], func():
 		var w := 512
@@ -1931,28 +1908,49 @@ func mountains_tex(th: Dictionary, far := false) -> Texture2D:
 		var peaks := [[40, 70], [120, 40], [200, 80], [270, 30], [350, 64], [430, 46], [500, 74]]
 		if far:
 			peaks = [[0, 50], [90, 22], [170, 56], [240, 34], [320, 18], [400, 48], [470, 28]]
-		var base: Color = th.mount.lerp(th.sky[1], 0.45) if far else th.mount
-		var snow: Color = th.snow.lerp(th.sky[1], 0.35) if far else th.snow
+		var haze: Color = th.sky[1]
+		var base: Color = th.mount.lerp(haze, 0.45) if far else th.mount
+		var snow: Color = th.snow.lerp(haze, 0.35) if far else th.snow
 		var slope := 0.75 if far else 0.9
+		var lit := base.lightened(0.07)
+		var shade := base.darkened(0.16)
 		for x in w:
-			var top := h
+			# the highest slope over this column wins; the ridge gets a little roughness
+			var top := 999.0
 			var side := 0.0
+			var dist := 0.0
 			for p in peaks:
 				for o in [-w, 0, w]:
-					var t := int(p[1] + absf(x - (p[0] + o)) * slope)
+					var dx := float(x - (p[0] + o))
+					var t: float = p[1] + absf(dx) * slope
 					if t < top:
 						top = t
-						side = signf(x - (p[0] + o))
-			var c: Color = base.darkened(0.12) if side > 0 else base.lightened(0.04)
-			rect(img, x, top, 1, h - top, c)
-			for p in peaks:
-				for o in [-w, 0, w]:
-					var d2 := absf(x - (p[0] + o))
-					if int(p[1] + d2 * slope) == top and d2 < 16:
-						var sc: Color = snow.darkened(0.1) if side > 0 else snow
-						rect(img, x, top, 1, maxi(10 - int(d2 / 3) + (x * 7) % 3, 2), sc)
+						side = signf(dx)
+						dist = absf(dx)
+			var rough := roundf(1.2 * sin(x * 0.31) + 0.8 * sin(x * 0.113 + 2.0))
+			var ty := clampi(int(top + rough), 0, h)
+			for y in range(ty, h):
+				var c := lit if side <= 0 else shade
+				# a few creases running down the faces
+				if posmod(int(dist * 0.5) + y / 3, 23) == 0 and y > ty + 6:
+					c = c.darkened(0.08) if side <= 0 else c.lightened(0.04)
+				# snow on the peaks, with a zig-zag lower edge
+				var cap := 17.0 - dist * 0.5 + absf(posmod(x, 10) - 5.0) * 0.9
+				if y < ty + cap and dist < 34:
+					c = snow if side <= 0 else snow.darkened(0.13)
+					if y == ty and side <= 0:
+						c = snow.lightened(0.3)
+				# haze toward the bottom
+				var k := clampf((y - (h - 60)) / 60.0, 0.0, 1.0) * (0.55 if far else 0.35)
+				img.set_pixel(x, y, c.lerp(haze, k))
+			# a lit rim along the sunny ridges
+			if side <= 0 and dist > 2 and ty < h:
+				img.set_pixel(x, ty, img.get_pixel(x, ty).lightened(0.12))
 		return to_tex(img))
 
+## A tree line: two rows of round treetops, the back row darker. Each bump is lit
+## along its top edge and speckled with leaves, and a band of bushes closes the
+## bottom. Tinted by the world's colours, so dark worlds get dark forests.
 func hills_tex(th: Dictionary) -> Texture2D:
 	return cached("hills_" + th.name, func():
 		var w := 512
@@ -1960,13 +1958,30 @@ func hills_tex(th: Dictionary) -> Texture2D:
 		var img := blank(w, h)
 		var rng := RandomNumberGenerator.new()
 		rng.seed = 7
-		for i in 40:
-			var x := rng.randi_range(0, w)
-			var r := rng.randi_range(10, 22)
-			for o in [-w, 0, w]:
-				ellipse(img, x + o, h - 30 + rng.randi_range(-6, 6), r, r * 1.3, th.hills)
-				ellipse(img, x + o - r * 0.3, h - 36, r * 0.4, r * 0.4, th.hills.lightened(0.12))
-		rect(img, 0, h - 20, w, 20, th.hills)
+		var col: Color = th.hills
+		for row in 2:
+			var mask := blank(w, h)
+			var n := 30 if row == 0 else 44
+			for i in n:
+				var x := rng.randi_range(0, w)
+				var r := rng.randi_range(13, 21) if row == 0 else rng.randi_range(9, 15)
+				var cy := (h - 40 if row == 0 else h - 26) + rng.randi_range(-6, 6)
+				for o in [-w, 0, w]:
+					ellipse(mask, x + o, cy, r, r * 1.1, Color.WHITE)
+			rect(mask, 0, h - (26 if row == 0 else 14), w, 26 if row == 0 else 14, Color.WHITE)
+			var c := col.darkened(0.18) if row == 0 else col
+			for y in h:
+				for x in w:
+					if mask.get_pixel(x, y).a == 0.0:
+						continue
+					var pc := c
+					if y == 0 or mask.get_pixel(x, y - 1).a == 0.0:
+						pc = c.lightened(0.22)
+					elif y < 2 or mask.get_pixel(x, y - 2).a == 0.0:
+						pc = c.lightened(0.1)
+					elif posmod(x * 7 + y * 13, 29) == 0:
+						pc = c.darkened(0.12)
+					img.set_pixel(x, y, pc)
 		return to_tex(img))
 
 func light_tex() -> Texture2D:
