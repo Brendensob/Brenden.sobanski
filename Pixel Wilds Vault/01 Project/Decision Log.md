@@ -5,6 +5,17 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (solid progression)
+- **Fights are checked by playing them.** A new fight test has a bot fight two monsters at once in every world up to Hell, with the gear you can have by then. Before the changes it lost to Shellys in Grasslands 1 with the starter kit, to Octopuses in Grasslands 2, and to Dark Slimes, Worms and UFOs after that. *Brenden: "make the game progression solid test it and make sure fights arnt impossible and players know what to do".*
+- **Starting health 10 instead of 5, and 1 second of safety after a hit instead of 0.6.** Both were our own numbers, not the wiki's. With 5 health a Mummy's 3 left one hit before fainting, and an Octopus's 5 was an instant faint.
+- **The starter Sword Cast hits a little harder** (attack 4, was 3), so a brand-new character beats a Shelly plus another monster 7 times in 8 instead of about half the time. The coordinator's brief allowed changing starter damage for this.
+- **Potions heal more:** Small 5, Potion 12, Medium 25, Big 60 (were 3, 6, 15, 35). Potion strength was always an estimate; with more health the old ones barely helped.
+- **Flying monsters stay knocked back longer** (1 s instead of 0.4 s), so you can fight a UFO.
+- **No wiki monster number was changed.** The UFO really hits 15 in the Darklands (wiki), so it stays the toughest common monster there: with iron gear the bot beats one UFO 7 times in 8, but a UFO plus another monster only about a third of the time.
+- **A goal card shows what to do next**, with progress and a tap for how, from "Visit the Grasslands" to "Enter Hell", then Miffie's quests. See [[Goals and Guidance]].
+- **World cards say how dangerous a world is for your gear** (Easy, Fair, Hard, Deadly), and the faint screen gives one tip.
+- Drop rates were not touched (Brenden sets those).
+
 ## 2026-10-27 (cleaner cartoon look)
 - **The art goes further toward cartoon, but stays pixel art.** Big sprites are smoothed (Scale2x/Scale3x) instead of blown up, and get bold outlines; shadows, glows, clouds and a hazy far mountain range add depth. *Brenden: "make all graohics way cleaner looking more cartoon ish ... give certain things good depth affect and color and use bettere models for anything that may feel off make pop up menus cleangood looking and not annoying"* This answers the open question about how far the cartoon look should go.
 - **Menus are rounded cartoon boxes** that pop in over a dimmed game and close with a tap outside. Messages are small bubbles that count up instead of piling up, and clear when a menu opens. Same orange colours as before, so it still reads like PSG2.

@@ -13,7 +13,7 @@ The living list of every system and how finished it is. It's updated after each 
 | ⛔ | Missing |
 | 🔒 | Blocked: needs data we don't have (see [[Known Issues]]) |
 
-*Last update: 2026-10-24, the polish pass (see [[2026-10-24 Polish pass phase 1]] and [[2026-10-24 Polish pass phases 2-5]]). The full audit was on 2026-10-22 ([[2026-10-22 Full game audit]]).*
+*Last update: 2026-10-27, solid progression (see [[2026-10-27 Solid progression]]). Before that 2026-10-24, the polish pass (see [[2026-10-24 Polish pass phase 1]] and [[2026-10-24 Polish pass phases 2-5]]). The full audit was on 2026-10-22 ([[2026-10-22 Full game audit]]).*
 
 ## Game data
 | System | Status | Notes |
@@ -52,7 +52,9 @@ The living list of every system and how finished it is. It's updated after each 
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
-| Fainting and respawn | ✅ | Nothing is lost when you faint |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip (2026-10-27) |
+| Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
+| Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
 ## Gathering and crafting
 | System | Status | Notes |
@@ -79,6 +81,8 @@ The living list of every system and how finished it is. It's updated after each 
 ## Quests and progression
 | System | Status | Notes |
 |---|---|---|
+| Goal card: what to do next | ✅ | 17 goals, then Miffie's quests; progress, tap for how, older saves skip ahead (2026-10-27) |
+| Danger badge on world cards | ✅ | Easy / Fair / Hard / Deadly for your gear; matched to the fight test (2026-10-27) |
 | Quest order, rewards, unlocks | ✅ | All 75 quests, in order, take their items and pay |
 | Rewards paid once | ✅ | |
 | Miffie's daily bounty | ✅ | |

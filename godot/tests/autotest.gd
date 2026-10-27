@@ -1375,6 +1375,36 @@ func systems_check() -> void:
 	GS.inventory_changed.emit()
 	p.invuln = 0.0
 
+## The goal card, the danger badges on the world cards and the tip after fainting.
+func guidance_check() -> void:
+	var hud: Node = main.hud
+	await wait(0.4)
+	check(GS.current_goal().get("text", "") == "Visit the Grasslands", "a new game's goal is to visit the Grasslands")
+	check(hud.goal_btn.visible and "Grasslands" in hud.goal_text.text, "the goal card shows it on screen")
+	GS.flags["been_grass_1"] = true
+	GS.give("jelly", 3)
+	hud.refresh_goal()
+	check(hud.goal_text.text == "Bring Miffie 10 Jellies  3/10", "the next goal counts Jellies (%s)" % hud.goal_text.text)
+	hud.goal_btn.pressed.emit()
+	check(hud.panels.info.visible and "Slimes" in hud.panels.info.get_node("Text").text, "tapping the goal card says how")
+	await shot("01f_goal_card")
+	hud.close_panels()
+	# older saves skip the early goals: the first goal after the last one done
+	GS.quests_done.append("mira_3")
+	check(GS.current_goal().text == "Make a Copper Pickaxe", "goals before the last one done are skipped (%s)" % GS.current_goal().text)
+	GS.quests_done.erase("mira_3")
+	GS.take_all({"jelly": 3})
+	GS.flags.erase("been_grass_1")
+	# danger for a starter: the Grasslands are fine, Hell is deadly
+	check(GS.world_danger("grass_1") <= 1, "the Grasslands aren't Hard for a starter (%d)" % GS.world_danger("grass_1"))
+	check(GS.world_danger("hell_1") == 3, "Hell is Deadly for a starter")
+	hud.open_panel("map")
+	var card: Node = hud.panels.map.find_child("Danger", true, false)
+	check(card != null and card.text in ["Easy", "Fair"], "world cards show a danger badge")
+	await shot("01g_world_danger")
+	hud.close_panels()
+	check("Wooden Armor" in main.faint_tip(), "fainting without armor suggests Wooden Armor")
+
 ## Every character is on the Create a character screen; only the starters can
 ## be picked until one is unlocked by a task, by owning it, or with gems.
 func check_character_unlocks() -> void:
@@ -1446,6 +1476,7 @@ func run() -> void:
 	check(GS.look == "nurse" and GS.player_name == "Tester", "a new game starts as the Nurse named Tester")
 	check(GS.slot_info(0).get("name", "") == "Tester", "the character is saved in slot 1")
 	check(GS.clock == 0.0 and not GS.is_night(), "a new game starts in the morning")
+	await guidance_check()
 	GS.clock = 0.5
 	check(GS.darkness() > 0.0 and not GS.is_night(), "sunset starts after 11 of 24 hours")
 	GS.clock = 0.7

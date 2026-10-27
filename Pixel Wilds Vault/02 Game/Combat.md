@@ -8,6 +8,11 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Your hits:** a random number from **atk + 1 to atk + weapon damage**. Critical hits are yellow.
 - **Monster hits:** `max(0, hit − random(0 … your defense))`. Defense can soak a whole hit to **0**, as in the trailer.
 - **Knockback:** a knockback weapon throws a monster back about a tile (≈16 px: KNOCK_SPEED 160, slowing by 800/s). Heavy monsters and bosses don't move. Monsters barely push you (KNOCKBACK 60). Changed 2026-10-24: the old 7 px nudge made the Grasslands too hard for a starter (see [[Decision Log]]).
+- **Starter sword:** the Sword Cast hits for 2–5 (attack 4, was 3 before 2026-10-27).
+- **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
+- **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.
+- **Potions:** Small Potion heals 5, Potion 12, Medium 25, Big 60 (raised 2026-10-27; these were always our estimates).
+- **Flying monsters tumble longer:** a knockback hit leaves a flying monster knocked about for 1 s instead of 0.4 s, since it has nothing to land on.
 - **Hit stun:** every hit dazes an ordinary monster. It stops for a moment (0.4 s after knockback, 0.3 s without) and **can't hurt you by touch while dazed**. A hit also stops a Mummy's charge.
 - **Bounce off:** a monster that touches you bounces back a little instead of sitting on you.
 - **Hit feel:** a tiny freeze (0.06 s) when a blow lands, a white spark, the monster squashes, and the screen shakes a little.
@@ -20,5 +25,20 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Walls:** swings and pets can't hit monsters on the other side of a wall (thin ledges don't block).
 - **Healing staffs** don't cast, or spend mana, at full health.
 - **Status effects:** poison, fatigue, slow and cold, each for 10 s. Most Hell monsters can poison you.
+
+## Can you win? (the fight test)
+`tests/fight_test.gd` plays real fights with a bot that walks up and holds A, against **two monsters at once** (one in front, one from behind), with the gear you'd have by then. The toughest ones (Rexy, UFO, Darklands Worm) are fought one at a time. See [[Testing#Fight test]] and [[Goals and Guidance]].
+
+| Place | Gear by then | Result |
+|---|---|---|
+| Grasslands 1 | starter Sword Cast, 3 Small Potions | every monster beaten |
+| Grasslands 1 | Gradius, wooden helmet, armor, shield | every monster beaten |
+| Grasslands 2 | Golden Night, Stone Armor | every monster beaten, Octopuses too |
+| Grasslands 3 | Golden Night, copper gear | every common monster beaten; Rexy one at a time |
+| Darklands 1 | Blue Night, iron gear | every common monster beaten; a UFO or Worm one at a time (two UFOs at once usually win) |
+| Darklands 2 | Kings Mace, gold gear | every common monster beaten; a UFO or Worm one at a time |
+| Hell 1 | Kings Mace, Chainmail, Fear Helmet | not yet: Hell wants Hell-tier gear |
+
+Hands, Dark Rexy and arena bosses are listed but don't count: they're mini-bosses.
 
 Code: `GS.roll_attack` and the damage formula in game_state.gd, `take_damage`, `can_knock` and `_hit_fx` in mob.gd, `_do_hit` and the tap buffer in player.gd, numbers in fx.gd.

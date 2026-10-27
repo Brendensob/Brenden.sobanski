@@ -23,6 +23,16 @@ Both copies talk to `http://127.0.0.1:24566` by default (the real game uses the 
 
 It checks joining, following through portals, drops, chat, **emotes**, walls, trading and leaving.
 
+## Fight test
+```
+cd godot
+<godot> --headless --path . --fixed-fps 60 -- --fighttest
+```
+- A bot fights **two monsters at once** in every world from Grasslands 1 to Hell 1, with the gear you can make before getting there, 6 times each. It uses the real player, monster AI, knockback, daze and the world's health and damage. It drinks a potion under 40% health.
+- Monsters have to be beaten 3 times in 4. "Tough" ones (Rexy in Grasslands 3, the Darklands UFO and Worm) are fought one at a time. Mini-bosses are only printed.
+- It also checks that no world on the normal path says **Deadly** on its card with that gear.
+- Ends with `FIGHTTEST DONE, 0 failures` and a table. It takes about 20 minutes; `FIGHT_ONLY=grass_1,dark_1` picks worlds, `FIGHT_MOB=ufo` one monster, `FIGHT_TRIALS=n` the tries, `PACK=1` or `PACK=3` the pack size. Run a few at once with different `FIGHT_ONLY` to go faster.
+
 ## Server checks
 `python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 

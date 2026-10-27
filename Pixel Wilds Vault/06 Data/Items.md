@@ -166,10 +166,10 @@ tags: [data, generated]
 
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
-| Small Potion | `small_potion` | 3 | heal 3 | Restores 3 health. |
-| Potion | `potion` | 6 | heal 6 | Restores 6 health. |
-| Medium Potion | `medium_potion` | 12 | heal 15 | Restores 15 health. |
-| Big Potion | `big_potion` | 25 | heal 35 | Restores 35 health. |
+| Small Potion | `small_potion` | 3 | heal 5 | Restores 5 health. |
+| Potion | `potion` | 6 | heal 12 | Restores 12 health. |
+| Medium Potion | `medium_potion` | 12 | heal 25 | Restores 25 health. |
+| Big Potion | `big_potion` | 25 | heal 60 | Restores 60 health. |
 | Small Mana Potion | `small_mana_potion` | 3 | mana 3 | Restores 3 mana. |
 | Mana Potion | `mana_potion` | 6 | mana 6 | Restores 6 mana. |
 | Medium Mana Potion | `medium_mana_potion` | 12 | mana 15 | Restores 15 mana. |
@@ -553,7 +553,7 @@ tags: [data, generated]
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
 | Fist | `fist` | 0 | dmg 1, spd 0.5, reach 14, kb false |  |
-| Sword Cast | `sword_cast` | 10 | dmg 3, spd 0.5, reach 16, kb true | A short practice blade. |
+| Sword Cast | `sword_cast` | 10 | dmg 4, spd 0.5, reach 16, kb true | A short practice blade. |
 | Copper Sword Cast | `copper_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
 | Iron Sword Cast | `iron_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword, and of the Hell Sword. |
 | Gold Sword Cast | `gold_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |

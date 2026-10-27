@@ -17,6 +17,7 @@ const MAX_FALL := 120.0
 const FLIP_TIME := 0.33
 const AIR_JUMP_COST := 1.0
 const KNOCKBACK := 60.0
+const HURT_SAFE := 1.0 # after a hit you can't be hit again for this long
 const STAMINA_COST := 0.5
 ## The PSG2 swing, timed from the trailer: the blade snaps up, slams down
 ## past level, holds low for a moment and comes back up. Same for every
@@ -508,7 +509,7 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if pen.size() == 2 and GS.stat("def") < int(pen[0]):
 		dmg += int(pen[1])
 	var r := GS.roll_monster_hit(dmg, crit_chance)
-	invuln = 0.6
+	invuln = HURT_SAFE
 	# the number floats over your head in white, like the original (a critical hit in yellow)
 	level.number(position + Vector2(0, -24), str(r.dmg), Color("f2cf5b") if r.crit else Color.WHITE)
 	if r.dmg <= 0:

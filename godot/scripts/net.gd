@@ -326,6 +326,8 @@ func placed_gone(world_id: String, nid: int) -> void:
 func announce(text: String, kind: String) -> void:
 	if main:
 		main.hud.toast(text, kind)
+		if text == "Arena cleared!" and main.level:
+			GS.arena_cleared(main.level.id) # guests count it too, for the goal card and character tasks
 
 ## Survival Grasslands: everyone who lived through the night gets the tokens.
 @rpc("authority", "reliable")

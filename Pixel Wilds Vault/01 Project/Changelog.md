@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #30 | 2026-10-27 | Solid progression: a fight test that plays every world up to Hell, starter sword attack 4, starting health 10, 1 s of safety after a hit, stronger potions, flying monsters tumble longer; a goal card that says what to do next, danger badges on world cards, a tip when you faint |
 | #29 | 2026-10-27 | All 18 characters on Create a character: locked ones show how to unlock them (Miffie quests, arena clears, Survival days, owning one, or gems from a save) |
 | #28 | 2026-10-27 | Cleaner cartoon look: rounded menus that pop in over a dimmed game and close with a tap outside, message bubbles that count up, round A/B buttons, rounded bars, smooth big bosses and icons, shadows, portal/drop/ore glows, clouds and hazy far mountains |
 | #27 | 2026-10-27 | Vault: the online server is live on Render |
