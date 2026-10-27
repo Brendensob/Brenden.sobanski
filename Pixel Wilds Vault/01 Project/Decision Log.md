@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (multiplayer menu)
+- **Pressing Multiplayer opens its own screen.** It shows the character's name in green and says the name is yours and belongs to this character. Under that are buttons for Friends, Find Public Game and Host Public Game. *Brenden: "when clicked multiplayer make sure player knows they own the name and that's the name of that character they own and there a button for friends list ... and there's also a button for find public or host public".*
+- **Friends have a round light:** red when offline, green when online, and green with a Join button when they're in a game. *Brenden: "a blank circle that's red if offline or green if online and green with a join button if in game".*
+- **Public games:** Host Public Game opens a room that anyone can join from Find Public Game. A normal host still means friends only. The server decides who may join.
+- **Faint screen fixed:** the Wake Up button now sits under the text instead of over the tip. *Brenden: "Make the menu when death fixed".*
+
 ## 2026-10-27 (solid progression)
 - **Fights are checked by playing them.** A new fight test has a bot fight two monsters at once in every world up to Hell, with the gear you can have by then. Before the changes it lost to Shellys in Grasslands 1 with the starter kit, to Octopuses in Grasslands 2, and to Dark Slimes, Worms and UFOs after that. *Brenden: "make the game progression solid test it and make sure fights arnt impossible and players know what to do".*
 - **Starting health 10 instead of 5, and 1 second of safety after a hit instead of 0.6.** Both were our own numbers, not the wiki's. With 5 health a Mummy's 3 left one hit before fainting, and an Octopus's 5 was an instant faint.

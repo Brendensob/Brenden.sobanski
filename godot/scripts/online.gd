@@ -108,6 +108,10 @@ func release(token: String) -> void:
 	if token != "":
 		await call_api("/release", {"token": token})
 
+## Rooms anyone can join ("Find Public Game"): [{name, players, full}].
+func public_rooms() -> Dictionary:
+	return await call_api("/rooms", {"token": GS.online_token})
+
 func friends() -> Dictionary:
 	return await call_api("/friends", {"token": GS.online_token})
 

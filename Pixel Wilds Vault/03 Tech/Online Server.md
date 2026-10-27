@@ -34,4 +34,5 @@ The game uses the WebSocket relay everywhere, so the **phone/browser build can h
 | Web link | `https://brendensob.github.io/Brenden.sobanski/?server=https://...` |
 | Command line | `-- --server http://127.0.0.1:24566` (the autotest and nettest use this address by default) |
 
+- **Public games:** a host's hello can say `"public": true`. `/rooms` lists public rooms (name, players, full) and anyone may join one; other rooms stay friends-only. `/friends` also says whether a friend's room is public.
 - **For Steam:** swap `relay_peer.gd` for Steam's relay (GodotSteam).

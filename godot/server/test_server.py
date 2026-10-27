@@ -122,6 +122,35 @@ class RelayTest(unittest.TestCase):
         self.assertEqual(self.frame(guest)[0], 0x86)
 
 
+class PublicRoomTest(RelayTest):
+    """A public room is listed and anyone can join it; a private one stays friends-only."""
+
+    def test_public_room(self):
+        a = ps.handle("/register", {"name": "PubHost"}, "1.1.1.1")["token"]
+        c = ps.handle("/register", {"name": "Anyone"}, "3.3.3.3")["token"]
+        d = ps.handle("/register", {"name": "Private"}, "4.4.4.4")["token"]
+        pub = self.connect({"token": a, "mode": "host", "public": True})
+        self.assertEqual(self.frame(pub)[0], 0x81)
+        priv = self.connect({"token": d, "mode": "host"})
+        self.assertEqual(self.frame(priv)[0], 0x81)
+        listed = ps.handle("/rooms", {"token": c}, "")["rooms"]
+        self.assertEqual([r["name"] for r in listed], ["PubHost"])
+        self.assertEqual(listed[0]["players"], 1)
+        # your own public room isn't listed to you
+        self.assertEqual(ps.handle("/rooms", {"token": a}, "")["rooms"], [])
+        # a stranger joins the public room...
+        g = self.connect({"token": c, "mode": "join", "room": "pubhost", "id": 50})
+        self.assertEqual(json.loads(self.frame(g)[1])["id"], 50)
+        self.assertEqual(ps.handle("/rooms", {"token": d}, "")["rooms"][0]["players"], 2)
+        # ...but not the private one
+        g2 = self.connect({"token": c, "mode": "join", "room": "private", "id": 51})
+        typ, body = self.frame(g2)
+        self.assertEqual(typ, 0x82)
+        self.assertIn("public", json.loads(body)["error"])
+        pub.close()
+        priv.close()
+
+
 class WebSocketRelayTest(unittest.TestCase):
     """Phones and browsers reach the same relay as a WebSocket on the main port."""
 
