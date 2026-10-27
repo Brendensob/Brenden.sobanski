@@ -99,7 +99,9 @@ The living list of every system and how finished it is. It's updated after each 
 ## Multiplayer
 | System | Status | Notes |
 |---|---|---|
-| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test |
+| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
+| Online on phones (web build) | 🟡 | WebSocket relay and CORS done and tested against the local server; needs the Render server deployed, then a real phone test |
+| Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
 ## UI and feel
@@ -204,7 +206,7 @@ The living list of every system and how finished it is. It's updated after each 
 - the 3 items waiting for approval;
 - public rooms;
 - the Steam build;
-- hosting the online server.
+- hosting the online server (setup ready, waiting on one Deploy click on Render).
 
 **7. Not verifiable from PSG2 sources:**
 - drop rates;
@@ -216,7 +218,7 @@ The living list of every system and how finished it is. It's updated after each 
 - which night gives the Wall Hammer;
 - sources for the Blood Long Sword, Stone Wall and Torch Stand.
 
-**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is still `127.0.0.1` and must be set before release.
+**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); it works once the Render service is deployed.
 
 **9. Performance and save risks:**
 - Music building takes about 2 s of a background thread at start. On the web it's sliced at about 3 ms per frame, which is untested in a real browser.

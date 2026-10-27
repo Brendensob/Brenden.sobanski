@@ -39,6 +39,7 @@ var best_survival_day := 0
 var look := "man_in_suit" # which character you look like
 var player_name := "Player"
 var online_token := "" # the key that proves this character owns its name on the online server
+var friend_names: Array = [] # last friends list seen online, so it can be put back if the server is wiped
 var pending_token := "" # a name just claimed for a character that's about to be made
 var slot := 0 # which character slot is being played
 
@@ -112,6 +113,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	player_name = pname if pname != "" else default_name()
 	online_token = pending_token
 	pending_token = ""
+	friend_names = []
 	inv.clear()
 	inv.resize(BAG)
 	storage = []
@@ -575,6 +577,7 @@ func save_game() -> void:
 		"v": VERSION, "inv": inv, "storage": storage, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
+		"friends": friend_names,
 	}
 	# write a new file first, keep the last good save as a backup, then swap the
 	# new one in, so a crash or power cut mid-save can never wipe a character
@@ -693,6 +696,7 @@ func load_game() -> bool:
 	look = str(d.get("look", "man_in_suit"))
 	player_name = str(d.get("name", "Player"))
 	online_token = str(d.get("token", ""))
+	friend_names = Array(d.get("friends", [])).filter(func(f): return typeof(f) == TYPE_STRING)
 	if not Data.CHARACTERS.has(look):
 		look = "man_in_suit"
 	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())

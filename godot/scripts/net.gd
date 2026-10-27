@@ -60,14 +60,14 @@ func my_id() -> int:
 
 # ---------------------------------------------------------------- rooms
 var relay: MultiplayerPeerExtension = null
+var _restored := false # already tried putting this name back on the server this session
 
 ## Opens your own room on the relay. Needs a claimed name.
 func host_room() -> String:
 	if GS.online_token == "":
 		return "Claim your name in Friends so friends can join you."
-	var r: Array = Online.relay_address()
 	var peer = RelayPeer.new()
-	if peer.start(r[0], r[1], GS.online_token, true) != OK:
+	if peer.start(Online.relay_url(), GS.online_token, true) != OK:
 		return peer.last_error
 	relay = peer
 	multiplayer.multiplayer_peer = peer
@@ -80,9 +80,8 @@ func host_room() -> String:
 func join_room(friend: String) -> String:
 	if GS.online_token == "":
 		return "Claim your name in Friends first."
-	var r: Array = Online.relay_address()
 	var peer = RelayPeer.new()
-	if peer.start(r[0], r[1], GS.online_token, false, friend) != OK:
+	if peer.start(Online.relay_url(), GS.online_token, false, friend) != OK:
 		return peer.last_error
 	relay = peer
 	multiplayer.multiplayer_peer = peer
@@ -216,6 +215,12 @@ func request_level(target: String) -> void:
 	if is_host() and Data.WORLDS.has(target):
 		main.change_level(target)
 
+func _reopen_after_restore() -> void:
+	if await Online.restore():
+		main.open_my_room()
+	else:
+		main.hud.toast("Your room is closed; you can keep playing.", "warn")
+
 func _process(delta: float) -> void:
 	if not active or main == null or main.level == null or main.on_title():
 		return
@@ -225,6 +230,11 @@ func _process(delta: float) -> void:
 		for pid in players.keys():
 			_on_peer_disconnected(pid)
 		leave()
+		if why.begins_with("Claim your name") and not _restored:
+			# the server was wiped and forgot this name: put it back and reopen
+			_restored = true
+			_reopen_after_restore()
+			return
 		main.hud.toast("%s Your room is closed; you can keep playing." % why, "warn")
 		return
 	if multiplayer.multiplayer_peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
