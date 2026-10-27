@@ -3,7 +3,7 @@ tags: [game, town]
 ---
 # Pixel Town
 
-Small and closed in on all sides (a roof on top), with three floors. The layout comes from Brenden's sketch (2026-10-09) and his screenshots (2026-10-17). In code it's `level.gd` → the town generator. The map is **64 × 28 tiles**.
+Small and closed in on all sides (a roof on top), with three floors. Since 2026-10-27 the roof and outer walls are drawn as mossy stone, the two room walls as stone brick, and the basement has a stone-brick back wall and a cobbled floor (see [[Art Style]]). The layout comes from Brenden's sketch (2026-10-09) and his screenshots (2026-10-17). In code it's `level.gd` → the town generator. The map is **64 × 28 tiles**.
 
 ## Up top (west → east)
 - **Trading Center**: a closed room behind a wooden wall. Burn the wall with a Torch. Inside are the Trader and two trading tables (see [[Multiplayer]]).

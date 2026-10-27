@@ -87,5 +87,8 @@ Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releas
 - **The HUD at 4 window shapes.**
 - **All the content:** every combination, Crafter recipe, smelt, shop item and quest.
 
+## Only the ground art checks
+`AT_LOOK=1` runs only `look_check()` (also part of the full run). It builds every world, checks each builds in under 3 s with stone at its edges, and saves screenshots of every world's surface (`70_<world>`), a cave spot (`71_<world>_cave`) and Pixel Town upstairs, in the basement and at the west wall (`72`–`74`).
+
 ## Only the systems checks
 `AT_SYSTEMS=1` runs only `systems_check()`, about a minute instead of 12. It covers rewards on a full bag, shops, gear, ammo, mana, keys, furnaces, quests, walls, tool tiers, the token shop, cures, characters and saving.

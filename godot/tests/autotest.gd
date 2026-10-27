@@ -1155,6 +1155,50 @@ func content_check() -> void:
 	clear_ground()
 
 ## The faint screen and the multiplayer menus.
+## The ground's art: every world bakes its ground quickly, the map's edges are
+## rock and the back walls are drawn; screenshots of the surface and the caves.
+func look_check() -> void:
+	var slow := []
+	var empty := []
+	for w in Data.WORLDS:
+		main.hud.close_panels()
+		var t0 := Time.get_ticks_usec()
+		main.change_level(w)
+		var ms := (Time.get_ticks_usec() - t0) / 1000.0
+		var lvl: Node = main.level
+		var terrain: Node = lvl.get_node("Terrain")
+		print("  %s built in %d ms, %d ground pictures" % [w, ms, terrain.chunks.size()])
+		if ms > 3000:
+			slow.append(w)
+		if terrain.chunks.is_empty() or terrain.mat(0, lvl.H / 2) != terrain.ROCK:
+			empty.append(w)
+		lvl.player.invuln = 9999.0
+		await wait(0.6)
+		await shot("70_" + w)
+		if lvl.kind == "explore":
+			# a spot in the caves, a third of the way in
+			var best := Vector2i(-1, -1)
+			for c in lvl.floor_cells():
+				if c.y > lvl.surface[c.x] + 4 and (best.x < 0 or absi(c.x - lvl.W / 3) + absi(c.y - 30) < absi(best.x - lvl.W / 3) + absi(best.y - 30)):
+					best = c
+			if best.x >= 0:
+				lvl.player.position = lvl.cell_pos(best)
+				main.camera.position = lvl.player.position
+				main.camera.reset_smoothing()
+				await wait(0.5)
+				await shot("71_%s_cave" % w)
+	check(slow.is_empty(), "every world builds in under 3 s %s" % [slow])
+	check(empty.is_empty(), "every world has baked ground with rock at its edges %s" % [empty])
+	# Pixel Town upstairs and in the basement
+	await goto("town")
+	var town: Node = main.level
+	for spot in [["72_town_upstairs", Vector2i(24, town.TOWN_TOP - 1)], ["73_town_basement", Vector2i(40, town.TOWN_BASE - 1)], ["74_town_west", Vector2i(3, town.TOWN_MID - 1)]]:
+		town.player.position = town.cell_pos(spot[1])
+		main.camera.position = town.player.position
+		main.camera.reset_smoothing()
+		await wait(0.5)
+		await shot(spot[0])
+
 func menus_check() -> void:
 	await goto("grass_1")
 	main.level.player.invuln = 0.0
@@ -1561,6 +1605,11 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	if OS.has_environment("AT_LOOK"): # set AT_LOOK=1 to run only the ground art checks
+		await look_check()
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
 	if OS.has_environment("AT_MENUS"): # set AT_MENUS=1 to run only the faint screen and multiplayer menu checks
 		await menus_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
@@ -1694,6 +1743,12 @@ func run() -> void:
 		for i in 14:
 			if not tree.alive:
 				break
+			# a monster can knock you away mid-chop: clear them and step back to the tree
+			for e in lvl.entities.get_children():
+				if e.has_method("die") and e.position.distance_to(tree.position) < 200:
+					e.queue_free()
+			if p.position.distance_to(tree.position) > 14:
+				await stand_by(tree)
 			p.cooldown = 0
 			await tap("attack")
 			await wait(0.55)
@@ -1864,6 +1919,7 @@ func run() -> void:
 	await systems_check()
 	await content_check()
 	await menus_check()
+	await look_check()
 	# survival at night
 	await goto("survival")
 	await wait(0.2)

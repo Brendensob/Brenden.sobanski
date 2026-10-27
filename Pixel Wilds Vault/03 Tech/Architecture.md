@@ -10,7 +10,8 @@ Godot **4.3**, renderer `gl_compatibility`.
 | File (`godot/`) | What it does |
 |---|---|
 | `scripts/data.gd` | Items, recipes, monsters, worlds, NPCs, shops, chests, pets, `WORLD_CARDS`, `EMOTES` |
-| `scripts/art.gd` | All pixel art in code: characters, monsters, icons, tiles, UI, emotes, the cartoon finish |
+| `scripts/art.gd` | All pixel art in code: characters, monsters, icons, UI, emotes, backdrops, the cartoon finish |
+| `scripts/terrain.gd` | Draws the ground: tiles that look at their neighbours, map walls, back walls, ledges; baked into pictures per map. `shaders/ground_depth.gdshader` darkens it with depth |
 | `scripts/game_state.gd` | Inventory, storage, equipment, stats, combat formulas, saving |
 | `scripts/main.gd` | Map changes, day clock, fainting, title screen, network signal wiring |
 | `scripts/level.gd` | Builds every map (town, explore, arena, survival, maze), puppets, numbers, emotes |

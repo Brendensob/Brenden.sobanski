@@ -29,6 +29,8 @@ The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's scr
 | 18 | Eggcellence | To feast, or be feasted on. |
 
 ## Kinds
+Every world is walled in by mossy stone at its left and right edges; cave worlds have bedrock at the bottom. Each world's cave back wall is themed (see [[Art Style]]).
+
 - **Exploration:** Grasslands 1–3, Darklands 1–2, Hell 1–2, Ice Cavern, Modina Ruins, Nightmare Valley, Forbidden City, Snow Valley. Deeper levels are reached through a purple portal hidden underground.
 - **Arenas:** monsters keep coming, and the boss arrives after 3 minutes.
 - **Survival Grasslands:**

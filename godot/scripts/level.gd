@@ -17,6 +17,7 @@ const EmoteScript := preload("res://scripts/emote.gd")
 const PetScript := preload("res://scripts/pet.gd")
 const PuppetScript := preload("res://scripts/remote_player.gd")
 const ProjectileScript := preload("res://scripts/projectile.gd")
+const TerrainScript := preload("res://scripts/terrain.gd")
 
 var id := ""
 var def: Dictionary
@@ -72,6 +73,10 @@ func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Diction
 		"survival": _gen_survival()
 	_build_collision()
 	_make_background()
+	var terrain := TerrainScript.new()
+	terrain.name = "Terrain"
+	add_child(terrain)
+	terrain.bake(self)
 	props = Node2D.new()
 	add_child(props)
 	entities = Node2D.new()
@@ -97,7 +102,6 @@ func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Diction
 		if not st.is_empty():
 			update_puppet(peer, Net.players[peer].name, st)
 	live = true
-	queue_redraw()
 
 func spawn_pet() -> void:
 	if pet:
@@ -479,21 +483,6 @@ func _build_collision() -> void:
 			body.add_child(shape)
 
 
-func _draw() -> void:
-	var tiles := Art.ground_tiles(th)
-	for y in H:
-		for x in W:
-			var p := Vector2(x * T, y * T)
-			if grid[idx(x, y)] == 3:
-				draw_texture(Art.deadly_tile(th), p)
-			elif solid(x, y):
-				var open_above := y > 0 and not solid(x, y - 1)
-				if open_above and (kind == "explore" or kind == "town") and y > surface[x]:
-					draw_texture(tiles[3], p)
-				else:
-					draw_texture(tiles[0] if open_above else tiles[1], p)
-			elif (kind == "explore" or kind == "town") and y > surface[x]:
-				draw_texture(tiles[2], p)
 
 func _make_background() -> void:
 	var bg := ParallaxBackground.new()
