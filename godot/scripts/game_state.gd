@@ -139,6 +139,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	reward_chests = {}
 	clock = 0.0
 	day = 1
+	best_survival_day = 0
 	world = "town"
 	add_item("sword_cast", 1, true)
 	add_item("wooden_axe", 1, true)

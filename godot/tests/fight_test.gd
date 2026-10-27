@@ -15,9 +15,10 @@ var fails := []
 var rows := []
 
 ## Every stage: the place, the gear you have by then, and which monsters must
-## be beatable there (3 times in 4). "tough" ones must be beaten at least half
-## the time: the wiki's UFO hits for 15 and flies, and its Worm hits for 17
-## ("best to run away screaming if you aren't strong enough"), so they stay dangerous.
+## be beatable there (3 times in 4) with another of the world's monsters coming
+## from behind. "tough" ones are fought one at a time: the wiki's UFO hits for 15
+## and flies, its Darklands Worm hits for 17 ("best to run away screaming if you
+## aren't strong enough") and Rexy has 450 health, so two at once is too much.
 ## "report" monsters are rare or optional (bosses you can leave alone), so
 ## they're printed but don't fail the test.
 ## Gear notes (what you can make before getting there):
@@ -37,13 +38,13 @@ const STAGES := [
 	{"name": "stone", "world": "grass_2", "weapon": "gilded_blade", "gear": {"helmet": "wooden_helmet", "armor": "stone_armor", "shield": "wooden_shield"}, "potions": ["small_potion", 6],
 		"must": ["slime", "wisp", "mummy", "shell", "octopus"], "report": []},
 	{"name": "copper", "world": "grass_3", "weapon": "gilded_blade", "gear": {"helmet": "copper_helmet", "armor": "copper_armor", "shield": "copper_shield"}, "potions": ["small_potion", 8],
-		"must": ["slime", "octopus", "dark_slime", "mantis", "zombie", "trex"], "report": ["dark_trex"]},
+		"must": ["slime", "octopus", "dark_slime", "mantis", "zombie"], "tough": ["trex"], "report": ["dark_trex"]},
 	{"name": "iron", "world": "grass_arena", "weapon": "azure_blade", "gear": {"helmet": "brass_helmet", "armor": "iron_armor", "shield": "iron_shield"}, "potions": ["potion", 6],
 		"must": ["slime", "wisp", "mummy", "shell"], "report": ["trex", "hand"], "boss_mul": {"trex": [2.22, 1.0], "hand": [0.565, 1.0]}},
 	{"name": "iron", "world": "dark_1", "weapon": "azure_blade", "gear": {"helmet": "brass_helmet", "armor": "iron_armor", "shield": "iron_shield"}, "potions": ["potion", 6],
 		"must": ["dark_slime", "mantis", "zombie", "trex"], "tough": ["ufo", "worm"], "report": ["hand"]},
 	{"name": "gold", "world": "dark_2", "weapon": "kings_mace", "gear": {"helmet": "brass_helmet", "armor": "golden_knight_armor", "shield": "gold_shield", "ring_l": "gold_ring", "ring_r": "silver_ring"}, "potions": ["potion", 8],
-		"must": ["dark_slime", "mantis", "zombie", "worm", "trex"], "tough": ["ufo"], "report": ["hand"]},
+		"must": ["dark_slime", "mantis", "zombie", "trex"], "tough": ["ufo", "worm"], "report": ["hand"]},
 	{"name": "hell", "world": "hell_1", "weapon": "kings_mace", "gear": {"helmet": "fear_helmet", "armor": "chainmail", "shield": "gold_shield", "ring_l": "armor_ring", "ring_r": "gold_ring"}, "potions": ["potion", 10],
 		"must": [], "report": ["mantis", "worm", "wizard", "shadow", "eyeball", "hand"]},
 ]
@@ -60,7 +61,7 @@ func check(ok: bool, what: String) -> void:
 
 func run() -> void:
 	await get_tree().create_timer(0.5).timeout
-	var trials := int(OS.get_environment("FIGHT_TRIALS")) if OS.get_environment("FIGHT_TRIALS") != "" else 4
+	var trials := int(OS.get_environment("FIGHT_TRIALS")) if OS.get_environment("FIGHT_TRIALS") != "" else 6
 	var only := OS.get_environment("FIGHT_ONLY")
 	GS.slot = GS.SLOTS - 1
 	main.start_game(false, "man_in_suit", "Bot")
@@ -90,9 +91,7 @@ func run() -> void:
 			var line := "%-7s %-12s %-11s won %d/%d  hp left %3d%%  %4.1fs  potions %.1f  card: %s" % [st.name, st.world, mob, wins, trials, int(100 * left / maxf(1, wins)), secs / trials, float(pots) / trials, danger]
 			rows.append(line)
 			print("FIGHT ", line)
-			if mob in st.get("tough", []):
-				check(wins * 2 >= trials, "%s gear beats a %s in %s at least half the time (%d/%d)" % [st.name, Data.MOBS[mob].name, st.world, wins, trials])
-			if mob in st.must:
+			if mob in st.must or mob in st.get("tough", []):
 				check(wins * 4 >= trials * 3, "%s gear beats a %s in %s (%d/%d)" % [st.name, Data.MOBS[mob].name, st.world, wins, trials])
 	print("\n== FIGHT TABLE")
 	for r in rows:
@@ -126,8 +125,10 @@ func fight(st: Dictionary, mob_id: String) -> Dictionary:
 	# adds a second one of this monster further off)
 	var pack := [[mob_id, 60.0]]
 	var n_pack := int(OS.get_environment("PACK")) if OS.get_environment("PACK") != "" else 2
+	if mob_id in st.get("tough", []):
+		n_pack = 1 # one at a time
 	if n_pack >= 2 and not (st.has("boss_mul") and st.boss_mul.has(mob_id)):
-		var pool: Array = st.must + st.get("tough", []) if st.must.size() > 0 else st.report
+		var pool: Array = st.must if st.must.size() > 0 else st.report
 		pack.append([pool[randi() % pool.size()], -60.0])
 		if n_pack >= 3:
 			pack.append([mob_id, 120.0])

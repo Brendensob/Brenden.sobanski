@@ -6,6 +6,8 @@ tags: [game, guidance]
 Added 2026-10-27 so a new player always knows what to do next. Brenden asked that "players know what to do".
 
 ## The goal card
+![[goal_card.png]]
+
 - A small dark card under the bars (top left) says the **goal** and how far along you are, like "Bring Miffie 10 Jellies 3/10".
 - **Tap it** for how to do it (where to go, who to hit, what to combine).
 - When a goal is done, "Goal done! Next: …" shows under the clock.
@@ -34,6 +36,8 @@ Added 2026-10-27 so a new player always knows what to do next. Brenden asked tha
 | 17 | Enter Hell | been there |
 
 ## Danger on the world cards
+![[world_danger.png]]
+
 Each Gatekeeper card has a badge in the corner of its picture: **Easy**, **Fair**, **Hard** or **Deadly**, worked out from *your* gear right now. It compares the hits you need to beat each common monster with the hits it needs to make you faint (flying monsters count double, charging ones much less, because a hit stops a charge). Mini-bosses that take over 150 hits, like the Hand, don't count: walk away from those. The limits were matched to the [[Testing#Fight test|fight test]].
 
 | Gear | Grasslands 1 | Grasslands 2 | Grasslands 3 | Darklands 1 | Darklands 2 | Hell 1 |

@@ -13,7 +13,7 @@ const GRAVITY := 720.0
 const KNOCK_SPEED := 160.0
 const KNOCK_DRAG := 800.0
 const KNOCK_TIME := 0.4
-const FLY_TUMBLE := 1.75 # flying monsters stay knocked about this much longer
+const FLY_TUMBLE := 2.5 # flying monsters stay knocked about this much longer
 ## Every hit, with or without knockback, stuns a monster this long: it stops,
 ## and it can't hurt you by touch until it recovers.
 const STUN_TIME := 0.3

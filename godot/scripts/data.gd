@@ -124,7 +124,7 @@ func _items_weapons() -> void:
 	# [id, name, attack, seconds per swing, reach, knockback, sell, desc]
 	var w := [
 		["fist", "Fist", 1, 0.5, 14, false, 0, ""],
-		["sword_cast", "Sword Cast", 3, 0.5, 16, true, 10, "A short practice blade."],
+		["sword_cast", "Sword Cast", 4, 0.5, 16, true, 10, "A short practice blade."],
 		["copper_sword_cast", "Copper Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword."],
 		["iron_sword_cast", "Iron Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword, and of the Hell Sword."],
 		["gold_sword_cast", "Gold Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword."],

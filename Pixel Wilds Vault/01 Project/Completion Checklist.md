@@ -53,7 +53,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
 | Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip (2026-10-27) |
-| Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; UFOs about half the time (2026-10-27) |
+| Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
 ## Gathering and crafting

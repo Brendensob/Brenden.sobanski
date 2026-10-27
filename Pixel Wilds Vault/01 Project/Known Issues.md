@@ -14,7 +14,7 @@ tags: [project, issues]
 - **The Nightmare Long Sword Shield** is on the wiki's Master Chest list but isn't in our items: its stats aren't known.
 - **Offline clock change while the game is closed:** with no server reachable, moving the clock forward *before starting the game* still counts once, the same as real time away. Changes while playing do nothing, and moving it back can't rewind. With the server reachable, its time is used.
 - **A Combination Scroll is used up even on an unknown combination.** It's unknown whether PSG2 does this.
-- **UFOs stay tough in the Darklands.** They hit 15 (wiki) and fly. With Blue Night and iron gear the fight test beats a UFO plus another monster about half the time. Better defense or armor helps most.
+- **UFOs stay tough in the Darklands.** They hit 15 (wiki) and fly. With Blue Night and iron gear the fight test beats one UFO 7 times in 8, but a UFO plus another monster only about a third of the time. Better defense or armor helps most.
 - **Arena bosses and mini-bosses are slow fights.** With iron gear, the Grassland Arena's Rexy (about 1,000 health) isn't beaten in 90 seconds by a bot that only holds A. Hands in the Darklands are too strong to fight early. Both are optional.
 - **Most drop rates are estimates.** Nobody has published them. See [[Numbers and Estimates]].
 - **The player blinks right after entering a map.** That's on purpose: a short safe time. In screenshots it can look like the player is missing.

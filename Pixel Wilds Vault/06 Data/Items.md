@@ -553,7 +553,7 @@ tags: [data, generated]
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
 | Fist | `fist` | 0 | dmg 1, spd 0.5, reach 14, kb false |  |
-| Sword Cast | `sword_cast` | 10 | dmg 3, spd 0.5, reach 16, kb true | A short practice blade. |
+| Sword Cast | `sword_cast` | 10 | dmg 4, spd 0.5, reach 16, kb true | A short practice blade. |
 | Copper Sword Cast | `copper_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
 | Iron Sword Cast | `iron_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword, and of the Hell Sword. |
 | Gold Sword Cast | `gold_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
