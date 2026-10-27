@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #29 | 2026-10-27 | All 18 characters on Create a character: locked ones show how to unlock them (Miffie quests, arena clears, Survival days, owning one, or gems from a save) |
 | #28 | 2026-10-27 | Cleaner cartoon look: rounded menus that pop in over a dimmed game and close with a tap outside, message bubbles that count up, round A/B buttons, rounded bars, smooth big bosses and icons, shadows, portal/drop/ore glows, clouds and hazy far mountains |
 | #27 | 2026-10-27 | Vault: the online server is live on Render |
 | #26 | 2026-10-27 | Joining friends: rooms over a WebSocket so phones can host and join, the online server set up for free hosting on Render (`render.yaml`), names and friends restored after a server wipe |

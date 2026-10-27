@@ -12,6 +12,10 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Not changed here:** progression, joining friends and the new characters are other pieces of the same request, handled separately.
 
 ## 2026-10-27
+- **Every character shows on Create a character; most start locked.** The PSG2 wiki says new characters can only be the Man in Suit or the Nurse at first, and the rest are unlocked by quests, the Gem Shop, Master Chests or the Daily Gift. So all 18 characters are tiles on the screen, locked ones darkened with a padlock and a line saying how to get them. *Brenden: "theres only man in suit and nurse add all the others with some being locked behind gems or other tasks".*
+- **Unlocks are for the whole device, not one save.** Owning a character in any save unlocks it for good. A locked one can also be unlocked right on the screen with gems from your saved character that has the most.
+- **Tasks:** Miffie's three character quests come from the wiki (Pirate, Bad Man, Soldier). The others are ours: arena clears and Survival Grasslands days, chosen to match each character's gem tier. The Buns, Ninja and Iron Bot stay Gem Shop or chest only. See [[Characters]].
+- **Starting as a character with a weapon gives that weapon**, the same as becoming it from the bag.
 - **Rooms go over a WebSocket, so phones can join friends.** Brenden plays on his phone in the web build, and browsers can't open the raw connection the relay used, so joining never worked there. The relay now runs as a WebSocket on the server's main port, for every version of the game. *Brenden: "make it so i can join friends had trouble with that".*
 - **The server is hosted free on Render**, set up by `render.yaml` with one Deploy click. It gives https (which the web game needs) and redeploys on every merge. Chosen because it needs no card and no server to look after. The cost is that it sleeps when nobody plays and has no saved disk.
 - **Games put themselves back on a wiped server.** Each character keeps its name key and friends list, and restores them when the server doesn't know it. A friendship counts only when both sides restore it.

@@ -2000,6 +2000,7 @@ const UI_GRIDS := {
 	"bomb": ["......yo", ".....n..", "...DDn..", ".DDDDDD.", "DDwwDDDD", "DwDwDDDD", "DDwwDDDD", "DDDDDDDD", ".DDDDDD.", "..DDDD.."],
 	"hammer": [".aaaa.....", "aAAAAa....", "aAAAAan...", ".aaaa.nl..", "......nl..", ".......nl.", "........nl"],
 	"trash": ["...kk...", "kkkkkkkk", ".kkkkkk.", ".kOkOkk.", ".kOkOkk.", ".kOkOkk.", ".kkkkkk."],
+	"lock": ["..kkkk..", ".k....k.", ".k....k.", "YYYYYYYY", "YggggggY", "YgggkggY", "YgggkggY", "YggggggY", "YYYYYYYY"],
 	"close": ["kk....kk", ".kk..kk.", "..kkkk..", "...kk...", "..kkkk..", ".kk..kk.", "kk....kk"],
 	"plus": ["..g..", "..g..", "ggggg", "..g..", "..g.."],
 	"friend": ["..kk....", ".kkkk...", ".kkkk.k.", "..kk.kkk", ".kkkk.k.", "kkkkkk..", "kkkkkk.."],

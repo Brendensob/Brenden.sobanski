@@ -1375,6 +1375,47 @@ func systems_check() -> void:
 	GS.inventory_changed.emit()
 	p.invuln = 0.0
 
+## Every character is on the Create a character screen; only the starters can
+## be picked until one is unlocked by a task, by owning it, or with gems.
+func check_character_unlocks() -> void:
+	var screen: Control = main.hud.panels.title.get_node("Screen")
+	var all_there := true
+	for c in Data.CHARACTERS:
+		all_there = all_there and screen.get_node_or_null("Pick_" + c) != null
+	check(all_there and Data.CHARACTERS.size() == 18, "Create a character shows all 18 characters")
+	check(GS.unlocked == Data.START_CHARACTERS, "only Man in Suit and Nurse are unlocked at first")
+	main.hud.new_char = "pirate"
+	main.hud._refresh_title()
+	await shot("01b2_locked_character")
+	check((screen.get_node("CreateOK") as Button).disabled, "a locked character can't be made")
+	check("Miffie" in (screen.get_node("Chosen/Lines/How") as Label).text, "and it says how to unlock it")
+	GS.best_survival_day = 7
+	GS.check_character_tasks()
+	check(GS.is_unlocked("cavemun") and GS.count("cavemun") == 1, "reaching day 7 in Survival unlocks the Cavemun and gives one")
+	GS.give("ninja", 1)
+	check(GS.is_unlocked("ninja"), "owning a character (from a chest or the Gem Shop) unlocks it")
+	GS.slot = 1
+	GS.new_game("man_in_suit", "Rich")
+	GS.gems = 500
+	GS.save_game()
+	GS.slot = 0
+	main.hud.new_char = "chuchu"
+	main.hud._refresh_title()
+	check(screen.get_node_or_null("Chosen/Unlock") != null, "a saved character's gems can unlock a locked one")
+	await shot("01b3_unlock_with_gems")
+	(screen.get_node("Chosen/Unlock") as Button).pressed.emit()
+	check(GS.is_unlocked("chuchu") and GS.slot_gems(1) == 200, "unlocking ChuChu takes 300 of Rich's gems")
+	check(not (screen.get_node("CreateOK") as Button).disabled, "and then ChuChu can be made")
+	GS.load_unlocks()
+	check(GS.is_unlocked("chuchu") and GS.is_unlocked("cavemun"), "unlocks are kept on the device")
+	GS.new_game("pirate", "Arr")
+	check(GS.count("gilded_blade") == 1, "starting as the Pirate comes with its Golden Night")
+	GS.delete_slot(1)
+	GS.reset_unlocks()
+	GS.slot = 0
+	main.hud.new_char = "man_in_suit"
+	main.hud._refresh_title()
+
 func run() -> void:
 	await wait(1.0)
 	await shot("01_title")
@@ -1384,9 +1425,11 @@ func run() -> void:
 	main.hud.menu_step = "slots"
 	main.hud._refresh_title()
 	await shot("01a_slots")
+	GS.reset_unlocks()
 	GS.slot = 0
 	main.hud._refresh_title(true)
 	await shot("01b_create_character")
+	await check_character_unlocks()
 	main.hud.menu_step = "mode"
 	main.hud._refresh_title()
 	await shot("01c_mode")

@@ -1689,29 +1689,20 @@ func _refresh_title(_choosing := false) -> void:
 			var head2 := _heading("Create a character", 12)
 			head2.size = Vector2(480, 16)
 			head2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			screen.add_child(_at(head2, Vector2(0, 12)))
-			for k in Data.START_CHARACTERS.size():
-				var c: String = Data.START_CHARACTERS[k]
-				var card := _frame(Vector2(110 + k * 140, 34), Vector2(120, 140))
-				card.mouse_filter = Control.MOUSE_FILTER_PASS
-				screen.add_child(card)
-				var pic := _icon_button(Art.character(c, "stand", 4), Vector2(104, 100), func(): new_char = c; _refresh_title())
-				pic.position = Vector2(8, 8)
-				card.add_child(pic)
-				var nb := _button(Data.CHARACTERS[c].name, func(): new_char = c; _refresh_title(), c == new_char)
-				nb.position = Vector2(10, 112)
-				nb.custom_minimum_size = Vector2(100, 20)
-				card.add_child(nb)
-			screen.add_child(_at(_heading("Name", 10), Vector2(110, 186)))
+			screen.add_child(_at(head2, Vector2(0, 8)))
+			_character_picker(screen)
+			screen.add_child(_at(_heading("Name", 10), Vector2(110, 198)))
 			var keep := name_edit.text if name_edit and is_instance_valid(name_edit) else GS.default_name()
 			name_edit = LineEdit.new()
 			name_edit.text = keep
 			name_edit.max_length = 16
-			name_edit.position = Vector2(150, 182)
+			name_edit.position = Vector2(150, 194)
 			name_edit.size = Vector2(220, 20)
 			screen.add_child(name_edit)
 			screen.add_child(_at(_button("Back", func(): menu_step = "slots"; _refresh_title()), Vector2(150, 232)))
-			var ok := _button("OK", func(): _create_ok(), true)
+			var ok := _button("OK" if GS.is_unlocked(new_char) else "Locked", func(): _create_ok(), true)
+			ok.name = "CreateOK"
+			ok.disabled = not GS.is_unlocked(new_char)
 			ok.custom_minimum_size = Vector2(80, 22)
 			screen.add_child(_at(ok, Vector2(250, 230)))
 		"connecting":
@@ -1783,10 +1774,97 @@ func _send_chat() -> void:
 	chat_edit.text = ""
 	close_panels()
 
+## Create a character: the chosen one, big, on the left, with its stats and how
+## to unlock it if it's locked; every character as a tile on the right, locked
+## ones darkened with a padlock, like the original's character list.
+func _character_picker(screen: Control) -> void:
+	var c := new_char
+	var locked := not GS.is_unlocked(c)
+	var card := _frame(Vector2(14, 28), Vector2(158, 158))
+	card.name = "Chosen"
+	screen.add_child(card)
+	var pic := TextureRect.new()
+	pic.texture = Art.character(c, "stand", 4)
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	pic.size = Vector2(70, 62)
+	pic.position = Vector2(44, 6)
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if locked:
+		pic.modulate = Color(0.45, 0.45, 0.5)
+	card.add_child(pic)
+	var nm := _outlined(_label(Data.CHARACTERS[c].name, 10, C_WHITE, true))
+	nm.size = Vector2(158, 14)
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card.add_child(_at(nm, Vector2(0, 68)))
+	# stats, weapon and how to unlock it, stacked so long lines never overlap
+	var lines := VBoxContainer.new()
+	lines.name = "Lines"
+	lines.position = Vector2(8, 84)
+	lines.size = Vector2(142, 40)
+	lines.add_theme_constant_override("separation", 1)
+	lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(lines)
+	var st: Dictionary = Data.CHARACTERS[c].get("stats", {})
+	var parts := []
+	for k in ["atk", "def", "hp", "mp"]:
+		if st.get(k, 0) > 0:
+			parts.append("%s +%d" % [{"atk": "Atk", "def": "Def", "hp": "HP", "mp": "MP"}[k], st[k]])
+	var info := "  ".join(parts) if parts.size() > 0 else "Starting stats"
+	var weapon: String = Data.CHARACTERS[c].get("gives", "")
+	if weapon != "":
+		info += "\nComes with a %s" % Data.ITEMS[weapon].name
+	var it := _wrap(info, 142, C_INK, 8)
+	it.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lines.add_child(it)
+	if locked:
+		var how := _wrap(Data.character_unlock_text(c), 142, C_BAD, 8)
+		how.name = "How"
+		how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lines.add_child(how)
+		var price := int(Data.CHARACTERS[c].get("gems", 0))
+		var from := GS.richest_slot()
+		if price > 0 and from >= 0 and GS.slot_gems(from) >= price:
+			var buy := _button("Unlock: %d gems" % price, func():
+				if GS.buy_unlock(c):
+					Sfx.play("coin", 0.0)
+					toast("%s unlocked with %s's gems!" % [Data.CHARACTERS[c].name, GS.slot_info(from).get("name", "")], "good")
+				_refresh_title(), true)
+			buy.name = "Unlock"
+			buy.custom_minimum_size = Vector2(120, 18)
+			card.add_child(_at(buy, Vector2(19, 136)))
+	var order := Data.character_order()
+	for k in order.size():
+		var id: String = order[k]
+		var tile := _button("", func(): new_char = id; _refresh_title(), id == c)
+		tile.name = "Pick_" + id
+		tile.custom_minimum_size = Vector2(46, 46)
+		tile.size = tile.custom_minimum_size
+		tile.tooltip_text = Data.CHARACTERS[id].name
+		screen.add_child(_at(tile, Vector2(180 + (k % 6) * 49, 28 + (k / 6) * 51)))
+		var face := TextureRect.new()
+		face.texture = Art.character(id, "stand", 2)
+		face.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		face.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		face.position = Vector2(4, 3)
+		face.size = Vector2(38, 40)
+		face.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tile.add_child(face)
+		if not GS.is_unlocked(id):
+			face.modulate = Color(0.12, 0.1, 0.16, 0.85)
+			var lock := TextureRect.new()
+			lock.texture = Art.ui_icon("lock", 2)
+			lock.position = Vector2(15, 14)
+			lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			tile.add_child(lock)
+
 ## Makes the new character: the name must be free on this device and on the
 ## online server (each name can only be taken once).
 func _create_ok() -> void:
 	if busy:
+		return
+	if not GS.is_unlocked(new_char):
+		toast("%s is locked. %s" % [Data.CHARACTERS[new_char].name, Data.character_unlock_text(new_char)], "warn")
 		return
 	var nm := name_edit.text.strip_edges()
 	if not Online.valid_name(nm):
