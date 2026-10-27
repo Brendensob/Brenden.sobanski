@@ -432,33 +432,28 @@ const TOUCH_K := 3 # the touch buttons are drawn 3x bigger and shown at 1/3 so t
 
 ## The on-screen buttons: round red A and green B, and soft grey arrow pads,
 ## with a drop shadow and a shiny top; pressed ones sink down.
+## The on-screen buttons keep the sizes they had before the cartoon pass
+## (Brenden, 2026-10-27): ◀ ▶ 90 x 34, A and B 68 x 34.
+const TOUCH_SIZE := {"left": Vector2i(90, 34), "right": Vector2i(90, 34), "A": Vector2i(68, 34), "B": Vector2i(68, 34)}
+
 func touch_tex(kind: String, pressed: bool) -> Texture2D:
 	return cached("touch_%s_%s" % [kind, pressed], func():
 		var k := TOUCH_K
-		var is_round := kind == "A" or kind == "B"
-		var w := 44 if is_round else 76
-		var h := 44 if is_round else 36
+		var w: int = TOUCH_SIZE[kind].x
+		var h: int = TOUCH_SIZE[kind].y
 		var img := blank((w + 2) * k, (h + 4) * k)
 		var body: Color = {"A": Color("e0302a"), "B": Color("34b02a"), "left": Color("55555c"), "right": Color("55555c")}[kind]
 		var sink := 2.0 * k if pressed else 0.0
 		var lip := 0.0 if pressed else 3.0 * k
 		var rim := Color("1b1a24")
-		if is_round:
-			var cx := (w / 2.0 + 1) * k
-			var r := (w / 2.0 - 1) * k
-			soft_ellipse(img, cx, h / 2.0 * k + 3 * k, r, r, Color(0, 0, 0, 0.28), 2.0 * k)
-			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k, r, r - 1.5 * k, rim)
-			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k, r - 1.5 * k, r - 3 * k, body.darkened(0.35))
-			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k - lip / 2, r - 1.5 * k, r - 3 * k - lip / 2, body)
-			soft_ellipse(img, cx - r * 0.18, h / 2.0 * k + sink - r * 0.42, r * 0.55, r * 0.3, Color(1, 1, 1, 0.35))
-		else:
-			var x0 := 1.0 * k
-			var r := 9.0 * k
-			soft_rrect(img, x0, 3.0 * k, w * k, h * k, r, Color(0, 0, 0, 0.22))
-			soft_rrect(img, x0, sink, w * k, (h - 1) * k, r, rim)
-			soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k, r - 1.5 * k, body.darkened(0.3))
-			soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k - lip, r - 1.5 * k, body)
-			soft_rrect(img, x0 + 5 * k, sink + 3.5 * k, (w - 10) * k, 6 * k, 3 * k, Color(1, 1, 1, 0.16))
+		var x0 := 1.0 * k
+		var r := 9.0 * k
+		soft_rrect(img, x0, 3.0 * k, w * k, h * k, r, Color(0, 0, 0, 0.22))
+		soft_rrect(img, x0, sink, w * k, (h - 1) * k, r, rim)
+		soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k, r - 1.5 * k, body.darkened(0.3))
+		soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k - lip, r - 1.5 * k, body)
+		soft_rrect(img, x0 + 5 * k, sink + 3.5 * k, (w - 10) * k, 6 * k, 3 * k, Color(1, 1, 1, 0.16 if kind in ["left", "right"] else 0.24))
+		if kind in ["left", "right"]:
 			var cx := (w / 2.0 + 1) * k
 			var cy := sink + ((h - 4) / 2.0 + 1) * k - lip / 2
 			var s := 8.0 * k

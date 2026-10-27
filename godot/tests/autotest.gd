@@ -588,6 +588,11 @@ func jump_and_underground() -> void:
 	await click(b_btn.global_position + Vector2(10, 10))
 	await get_tree().physics_frame
 	check(not p.is_on_floor(), "clicking the green B button jumps")
+	var sizes := []
+	for i in 4:
+		var r: Rect2 = main.hud._touch_rect(main.hud.touch_nodes[i])
+		sizes.append(Vector2i(roundi(r.size.x) - 2, roundi(r.size.y) - 4))
+	check(sizes == [Vector2i(90, 34), Vector2i(90, 34), Vector2i(68, 34), Vector2i(68, 34)], "the move, A and B buttons keep their old sizes %s" % [sizes])
 	await until_floor(p)
 	# three floors, like the original: jump up through the opening in the upper floor
 	p.position = lvl.cell_pos(Vector2i(lvl.TOWN_OPENING[0] + 1, lvl.TOWN_MID - 1))

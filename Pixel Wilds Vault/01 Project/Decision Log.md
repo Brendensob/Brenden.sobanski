@@ -5,10 +5,16 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-27 (buttons back to their old size)
+- **The ◀ ▶, A and B buttons are back at the sizes and places they had before the cartoon pass:** ◀ ▶ 90 × 34 at the bottom left, A 68 × 34 above B 68 × 34 at the bottom right. They keep the cartoon finish (rounded corners, shine, sink when pressed), so A and B are rounded rectangles again, not circles. *Brenden: "Revert buttons to the same size as before"*
+- This is also what his earlier "Keep the buttons how they were just for the movement and jump" meant. That was first read as "don't change them", which was wrong. The entry below is corrected.
+- The AUTO switch moved to just above A.
+- A test checks the four sizes.
+
 ## 2026-10-27 (auto hit and cartoon pixel look)
-- **An auto-hit switch:** a little round button left of A. When it's on, the held weapon or tool swings by itself. It keeps going with the bag open (the bag doesn't pause the world then) and stays on through switching items. *Brenden: "Keep the buttons how they were just for the movement and jump also add a little circle button for auto hit to turn on and off so your sword swings automatically even while in inv and stays even while you switch items"*
+- **An auto-hit switch:** a little round button left of A (moved above A with the button revert). When it's on, the held weapon or tool swings by itself. It keeps going with the bag open (the bag doesn't pause the world then) and stays on through switching items. *Brenden: "Keep the buttons how they were just for the movement and jump also add a little circle button for auto hit to turn on and off so your sword swings automatically even while in inv and stays even while you switch items"*
 - **Food and blocks are never auto-used**, so a potion or a stack of walls isn't wasted by mistake. The "staffs, bows and throwables too" part follows the original's hold-A trick, which already swung those.
-- **The move and jump buttons stay exactly as they were.**
+- ~~The move and jump buttons stay exactly as they were.~~ Misread: he meant "put them back how they were". Done in the entry above.
 - **Cartoon pixel look:** *Brenden: "I want a cartoon pixelish look"*. The ground now gets the same colour pop as the sprites (a little more saturation and brightness) and the same near-black outlines, so the world and the characters match.
 
 ## 2026-10-27 (ground and walls remodel)
@@ -39,7 +45,7 @@ Newest first. Each entry gives the decision, why, and where it came from.
 ## 2026-10-27 (cleaner cartoon look)
 - **The art goes further toward cartoon, but stays pixel art.** Big sprites are smoothed (Scale2x/Scale3x) instead of blown up, and get bold outlines; shadows, glows, clouds and a hazy far mountain range add depth. *Brenden: "make all graohics way cleaner looking more cartoon ish ... give certain things good depth affect and color and use bettere models for anything that may feel off make pop up menus cleangood looking and not annoying"* This answers the open question about how far the cartoon look should go.
 - **Menus are rounded cartoon boxes** that pop in over a dimmed game and close with a tap outside. Messages are small bubbles that count up instead of piling up, and clear when a menu opens. Same orange colours as before, so it still reads like PSG2.
-- **A and B are round buttons**, ◀ ▶ are rounded pads with arrows. Same places on screen as before.
+- **A and B are round buttons**, ◀ ▶ are rounded pads with arrows. Same places on screen as before. *(Sizes reverted 2026-10-27, see above.)*
 - **Not changed here:** progression, joining friends and the new characters are other pieces of the same request, handled separately.
 
 ## 2026-10-27
