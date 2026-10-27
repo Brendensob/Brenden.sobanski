@@ -12,6 +12,6 @@ tags: [game, multiplayer]
 - **Chat:** the Chat.. box under the bars, or press T.
 - **Emotes:** shown to everyone in the room (see [[Emotes]]).
 - **Trading:** at the Trading Center tables in [[Pixel Town]]. Each side puts up to 6 stacks plus coins, and both press Ready.
-- The browser version can't go online yet; single player works there.
+- **Phones and browsers can play online** (since 2026-10-27): rooms go over a WebSocket, so the web build hosts and joins like the computer version. It needs the hosted [[Online Server]].
 
 Code: `net.gd`, `relay_peer.gd`, `remote_player.gd`, `online.gd`. Tested by the two-player test (see [[Testing]]).

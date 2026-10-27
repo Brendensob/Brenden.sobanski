@@ -5,7 +5,7 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
-## 2026-10-27
+## 2026-10-27 (solid progression)
 - **Fights are checked by playing them.** A new fight test has a bot fight two monsters at once in every world up to Hell, with the gear you can have by then. Before the changes it lost to Shellys in Grasslands 1 with the starter kit, to Octopuses in Grasslands 2, and to Dark Slimes, Worms and UFOs after that. *Brenden: "make the game progression solid test it and make sure fights arnt impossible and players know what to do".*
 - **Starting health 10 instead of 5, and 1 second of safety after a hit instead of 0.6.** Both were our own numbers, not the wiki's. With 5 health a Mummy's 3 left one hit before fainting, and an Octopus's 5 was an instant faint.
 - **Potions heal more:** Small 5, Potion 12, Medium 25, Big 60 (were 3, 6, 15, 35). Potion strength was always an estimate; with more health the old ones barely helped.
@@ -14,6 +14,21 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **A goal card shows what to do next**, with progress and a tap for how, from "Visit the Grasslands" to "Enter Hell", then Miffie's quests. See [[Goals and Guidance]].
 - **World cards say how dangerous a world is for your gear** (Easy, Fair, Hard, Deadly), and the faint screen gives one tip.
 - Drop rates were not touched (Brenden sets those).
+
+## 2026-10-27 (cleaner cartoon look)
+- **The art goes further toward cartoon, but stays pixel art.** Big sprites are smoothed (Scale2x/Scale3x) instead of blown up, and get bold outlines; shadows, glows, clouds and a hazy far mountain range add depth. *Brenden: "make all graohics way cleaner looking more cartoon ish ... give certain things good depth affect and color and use bettere models for anything that may feel off make pop up menus cleangood looking and not annoying"* This answers the open question about how far the cartoon look should go.
+- **Menus are rounded cartoon boxes** that pop in over a dimmed game and close with a tap outside. Messages are small bubbles that count up instead of piling up, and clear when a menu opens. Same orange colours as before, so it still reads like PSG2.
+- **A and B are round buttons**, ◀ ▶ are rounded pads with arrows. Same places on screen as before.
+- **Not changed here:** progression, joining friends and the new characters are other pieces of the same request, handled separately.
+
+## 2026-10-27
+- **Every character shows on Create a character; most start locked.** The PSG2 wiki says new characters can only be the Man in Suit or the Nurse at first, and the rest are unlocked by quests, the Gem Shop, Master Chests or the Daily Gift. So all 18 characters are tiles on the screen, locked ones darkened with a padlock and a line saying how to get them. *Brenden: "theres only man in suit and nurse add all the others with some being locked behind gems or other tasks".*
+- **Unlocks are for the whole device, not one save.** Owning a character in any save unlocks it for good. A locked one can also be unlocked right on the screen with gems from your saved character that has the most.
+- **Tasks:** Miffie's three character quests come from the wiki (Pirate, Bad Man, Soldier). The others are ours: arena clears and Survival Grasslands days, chosen to match each character's gem tier. The Buns, Ninja and Iron Bot stay Gem Shop or chest only. See [[Characters]].
+- **Starting as a character with a weapon gives that weapon**, the same as becoming it from the bag.
+- **Rooms go over a WebSocket, so phones can join friends.** Brenden plays on his phone in the web build, and browsers can't open the raw connection the relay used, so joining never worked there. The relay now runs as a WebSocket on the server's main port, for every version of the game. *Brenden: "make it so i can join friends had trouble with that".*
+- **The server is hosted free on Render**, set up by `render.yaml` with one Deploy click. It gives https (which the web game needs) and redeploys on every merge. Chosen because it needs no card and no server to look after. The cost is that it sleeps when nobody plays and has no saved disk.
+- **Games put themselves back on a wiped server.** Each character keeps its name key and friends list, and restores them when the server doesn't know it. A friendship counts only when both sides restore it.
 
 ## 2026-10-24
 - **Stronger knockback and a hit stun, so the Grasslands are fair for a new character.** The starter Sword Cast does 2–4 a hit, so a Mummy (45 HP) or Shelly (50 HP) takes about 15 hits, while they hit back for 3 and 2 on 5 HP. With the old 7 px push they came right back and traded hits. Now a knockback hit throws a monster about a tile, every hit dazes it so it can't hurt you by touch for a moment, and monsters bounce off you. Health and damage numbers from the wiki were not changed. *Brenden: "its really hard to kill things in grasslands at a starter make the kockback better and the whole cobat better".* This replaces the 2026-10-10 "small knockback from the trailer" rule.

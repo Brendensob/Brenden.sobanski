@@ -20,6 +20,7 @@ const Player := preload("res://scripts/player.gd")
 
 func setup(peer_id: int, pname: String) -> void:
 	peer = peer_id
+	Art.add_shadow(self, 9)
 	body = Sprite2D.new()
 	add_child(body)
 	held = Sprite2D.new()

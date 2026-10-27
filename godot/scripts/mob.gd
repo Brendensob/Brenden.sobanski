@@ -88,6 +88,8 @@ func _ready() -> void:
 	sprite.scale = Vector2.ONE * def.get("scale", 1.0)
 	sprite.position = Vector2(0, -size.y / 2 + 1)
 	add_child(sprite)
+	if not flying:
+		Art.add_shadow(self, maxf(size.x * 0.8 * def.get("scale", 1.0), 6))
 	home = position
 	dir = 1 if randf() < 0.5 else -1
 	hop = randf_range(0.2, 1.2)

@@ -156,13 +156,22 @@ later in Friends.
 
 Names, friends lists and rooms need one small server that everyone's game talks to:
 `server/pixel_server.py` (plain Python 3, nothing to install). It claims names, keeps
-friends lists, and relays room traffic so players never see each other's IP.
+friends lists, and relays room traffic so players never see each other's IP. Rooms go
+over a WebSocket (`/relay` on the same port), so phones playing the web build can join
+and host just like computers.
 
-1. Run it on a computer or cheap server that stays on: `python3 server/pixel_server.py --port 24566`
-   (names and friends are saved to `names.json` next to it).
-2. Open TCP ports 24566 (names and friends) and 24567 (room relay) to it.
-3. In `scripts/online.gd`, set `ONLINE_SERVER` to `http://<its address>:24566` before
-   sharing the game. (For testing: `godot --path . -- --server http://address:24566`.)
+**Hosted (the normal way):** the repo has a `render.yaml`, so the server runs free on
+Render. Open https://render.com/deploy?repo=https://github.com/Brendensob/Brenden.sobanski,
+sign in with GitHub and press Deploy. The game already points at
+`https://pixel-wilds-brendensob.onrender.com`; if Render gives another address, put it in
+`godot/server.txt` (or set `ONLINE_SERVER` in `scripts/online.gd`). A free server sleeps
+after 15 minutes alone and takes about a minute to wake; the game waits for it. If Render
+wipes its saved names when it restarts, each game quietly puts its own name and friends
+back the next time it talks to the server.
+
+**On your own computer:** `python3 server/pixel_server.py --port 24566`, then use
+`-- --server http://address:24566` (or a `server.txt` next to the game). For the web build,
+add `?server=https://address` to the page's link; browsers need https for that.
 
 Without the server, single player still works; names just aren't checked online, the
 friends list says it can't connect, and rooms don't open. Run its checks with `python3 server/test_server.py`.

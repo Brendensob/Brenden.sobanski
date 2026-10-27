@@ -589,8 +589,10 @@ func _items_misc() -> void:
 # characters in Cowbeans' Pixel Survival Game 2.o (Badmun, Cavemun, Hook, Spi,
 # Da Ninja, Ironmun...), counted on top of its starting character; the rest are
 # estimates in the same tiers.
-# Man in Suit and Nurse are the starting choices. The others are unlocked from
-# quests, chests and monsters, and the Crafter turns them into hats.
+# Man in Suit and Nurse are the starting choices. Like the original, the others
+# are locked on the Create a character screen until you own one in any save
+# (from a quest, a chest, a monster or the Gem Shop), or finish its task below.
+# The Crafter turns them into hats.
 var CHARACTERS := {
 	"man_in_suit": {"name": "Man in Suit", "gems": 0}, "nurse": {"name": "Nurse", "gems": 0},
 	"cavemun": {"name": "Cavemun", "gives": "timber_club", "gems": 100, "stats": {"def": 3, "mp": 1}},
@@ -611,6 +613,38 @@ var CHARACTERS := {
 	"iron_bot": {"name": "Iron Bot", "gives": "iron_fist", "gems": 2000, "stats": {"atk": 5, "def": 9, "hp": 16, "mp": 14}},
 }
 const START_CHARACTERS := ["man_in_suit", "nurse"]
+# Tasks that unlock a character for every slot and put one in your bag. The
+# quests are Miffie's from the wiki; the rest are ours, picked so each tier of
+# character comes at about the point of the game its price fits. The Buns, the
+# Ninja and the Iron Bot have no task: they come from the Gem Shop or a chest.
+const CHARACTER_TASKS := {
+	"cavemun": {"survive": 7, "text": "Reach day 7 in Survival Grasslands."},
+	"backstreet_boy": {"clear": "grass_arena", "text": "Clear the Grasslands Arena."},
+	"pirate": {"quest": "mira_9", "text": "Bring Miffie 99 Scarabs (her 9th quest)."},
+	"bad_man": {"quest": "mira_10", "text": "Bring Miffie 99 Stink Bugs (her 10th quest)."},
+	"school_girl": {"clear": "dark_arena", "text": "Clear the Darklands Arena."},
+	"soldier": {"quest": "mira_12", "text": "Bring Miffie 99 Fire Bugs (her 12th quest)."},
+	"the_spi": {"clear": "hell_arena", "text": "Clear the Hell Arena."},
+	"chuchu": {"survive": 19, "text": "Reach day 19 in Survival Grasslands."},
+	"sailor_moons": {"clear": "dream_arena", "text": "Clear the Dream Arena."},
+	"dark_knight": {"clear": "ghost_arena", "text": "Clear the Ghost Arena."},
+	"drone": {"survive": 45, "text": "Reach day 45 in Survival Grasslands."},
+}
+## The order characters are shown in when you make a new one: the two starters,
+## then by Gem Shop price.
+func character_order() -> Array:
+	var rest := CHARACTERS.keys().filter(func(c): return not c in START_CHARACTERS)
+	rest.sort_custom(func(a, b): return CHARACTERS[a].gems < CHARACTERS[b].gems)
+	return START_CHARACTERS + rest
+
+## How a locked character is unlocked, in one or two short lines.
+func character_unlock_text(c: String) -> String:
+	var ways := []
+	if CHARACTER_TASKS.has(c):
+		ways.append(CHARACTER_TASKS[c].text)
+	if int(CHARACTERS[c].get("gems", 0)) > 0:
+		ways.append("Or buy it for %d gems." % CHARACTERS[c].gems if ways.size() > 0 else "Buy it for %d gems." % CHARACTERS[c].gems)
+	return " ".join(ways)
 
 # ---------------------------------------------------------------- pets
 var PETS := {

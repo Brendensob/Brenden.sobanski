@@ -516,13 +516,16 @@ func _make_background() -> void:
 	sky_layer.add_child(sky)
 	parallax_items.append(sky)
 	var base_y := surface[0] * T
-	for spec in [[Art.mountains_tex(th), 0.15, 150, 20], [Art.hills_tex(th), 0.4, 90, 24]]:
+	# far to near: clouds, a hazy far range, the mountains and the hills
+	for spec in [[Art.clouds_tex(th), 0.04, 150, -40, 0.5], [Art.mountains_tex(th, true), 0.08, 150, 4, 1.0],
+			[Art.mountains_tex(th), 0.15, 150, 20, 1.0], [Art.hills_tex(th), 0.4, 90, 24, 1.0]]:
 		var layer := ParallaxLayer.new()
 		layer.motion_scale = Vector2(spec[1], 1.0)
 		layer.motion_mirroring = Vector2(512, 0)
 		var spr := Sprite2D.new()
 		spr.texture = spec[0]
 		spr.centered = false
+		spr.scale = Vector2.ONE * spec[4]
 		spr.position = Vector2(0, base_y + spec[3] - spec[2])
 		layer.add_child(spr)
 		bg.add_child(layer)
@@ -860,7 +863,7 @@ func _arena_tick(delta: float) -> void:
 				alive = true
 		if not alive:
 			arena_done = true
-			GS.flags["cleared_" + id] = true
+			GS.arena_cleared(id)
 			for d in def.boss_drops:
 				if rng.randf() < d[1]:
 					drop(d[0], rng.randi_range(d[2], d[3]), player.position + Vector2(0, -20))
@@ -896,6 +899,7 @@ func _survival_tick(delta: float) -> void:
 				Net.wall_hammer.rpc()
 		s_day += 1
 		GS.best_survival_day = maxi(GS.best_survival_day, s_day)
+		GS.check_character_tasks()
 	if night:
 		spawn_timer -= delta
 		if spawn_timer <= 0:
@@ -1160,6 +1164,7 @@ func apply_tick_state(ts: Dictionary) -> void:
 	bosses_spawned = ts.get("bosses", bosses_spawned)
 	if kind == "arena" and ts.get("done", false) and not arena_done:
 		add_portal(Vector2i(W / 2, 17), "town", "Home", Color("5cbf3f"))
+		GS.arena_cleared(id)
 	arena_done = ts.get("done", arena_done)
 	s_day = ts.get("s_day", s_day)
 	s_night = ts.get("s_night", s_night)

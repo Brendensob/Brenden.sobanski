@@ -262,6 +262,232 @@ func ellipse(img: Image, cx: float, cy: float, rx: float, ry: float, c: Color) -
 			if dx * dx + dy * dy <= 1.0:
 				px(img, x, y, c)
 
+# ---------------------------------------------------------------- clean upscaling
+## Makes pixel art bigger without the jagged staircase look: Scale2x and Scale3x
+## round off diagonal edges, so big bosses and big icons look drawn, not blown up.
+func upscale(src: Image, k: int) -> Image:
+	match k:
+		1: return src
+		2: return _scale2x(src)
+		3: return _scale3x(src)
+		4: return _scale2x(_scale2x(src))
+		6: return _scale2x(_scale3x(src))
+	var img := src.duplicate()
+	img.resize(img.get_width() * k, img.get_height() * k, Image.INTERPOLATE_NEAREST)
+	return img
+
+func _at(img: Image, x: int, y: int) -> Color:
+	if x < 0 or y < 0 or x >= img.get_width() or y >= img.get_height():
+		return Color(0, 0, 0, 0)
+	var c := img.get_pixel(x, y)
+	return c if c.a > 0.01 else Color(0, 0, 0, 0)
+
+func _scale2x(src: Image) -> Image:
+	var w := src.get_width()
+	var h := src.get_height()
+	var img := Image.create(w * 2, h * 2, false, Image.FORMAT_RGBA8)
+	for y in h:
+		for x in w:
+			var e := _at(src, x, y)
+			var b := _at(src, x, y - 1)
+			var d := _at(src, x - 1, y)
+			var f := _at(src, x + 1, y)
+			var hh := _at(src, x, y + 1)
+			var e0 := e
+			var e1 := e
+			var e2 := e
+			var e3 := e
+			if b != hh and d != f:
+				e0 = d if d == b else e
+				e1 = f if b == f else e
+				e2 = d if d == hh else e
+				e3 = f if hh == f else e
+			img.set_pixel(x * 2, y * 2, e0)
+			img.set_pixel(x * 2 + 1, y * 2, e1)
+			img.set_pixel(x * 2, y * 2 + 1, e2)
+			img.set_pixel(x * 2 + 1, y * 2 + 1, e3)
+	return img
+
+func _scale3x(src: Image) -> Image:
+	var w := src.get_width()
+	var h := src.get_height()
+	var img := Image.create(w * 3, h * 3, false, Image.FORMAT_RGBA8)
+	for y in h:
+		for x in w:
+			var a := _at(src, x - 1, y - 1)
+			var b := _at(src, x, y - 1)
+			var c := _at(src, x + 1, y - 1)
+			var d := _at(src, x - 1, y)
+			var e := _at(src, x, y)
+			var f := _at(src, x + 1, y)
+			var g := _at(src, x - 1, y + 1)
+			var hh := _at(src, x, y + 1)
+			var i := _at(src, x + 1, y + 1)
+			var o := [e, e, e, e, e, e, e, e, e]
+			if b != hh and d != f:
+				o[0] = d if d == b else e
+				o[1] = b if (d == b and e != c) or (b == f and e != a) else e
+				o[2] = f if b == f else e
+				o[3] = d if (d == b and e != g) or (d == hh and e != a) else e
+				o[5] = f if (b == f and e != i) or (hh == f and e != c) else e
+				o[6] = d if d == hh else e
+				o[7] = hh if (d == hh and e != i) or (hh == f and e != g) else e
+				o[8] = f if hh == f else e
+			for k in 9:
+				img.set_pixel(x * 3 + k % 3, y * 3 + k / 3, o[k])
+	return img
+
+# ---------------------------------------------------------------- smooth shapes
+## Soft, anti-aliased shapes drawn at a higher resolution and shown scaled down,
+## for the clean cartoon parts: shadows, glows, the touch buttons and clouds.
+func _cover(dist: float) -> float:
+	return clampf(0.5 - dist, 0.0, 1.0)
+
+func _mix(img: Image, x: int, y: int, c: Color, k: float) -> void:
+	if k <= 0.0 or x < 0 or y < 0 or x >= img.get_width() or y >= img.get_height():
+		return
+	img.set_pixel(x, y, img.get_pixel(x, y).blend(Color(c.r, c.g, c.b, c.a * k)))
+
+func soft_ellipse(img: Image, cx: float, cy: float, rx: float, ry: float, c: Color, feather := 1.0) -> void:
+	for y in range(int(cy - ry - feather) - 1, int(cy + ry + feather) + 2):
+		for x in range(int(cx - rx - feather) - 1, int(cx + rx + feather) + 2):
+			var dx := (x + 0.5 - cx) / rx
+			var dy := (y + 0.5 - cy) / ry
+			var dist := (sqrt(dx * dx + dy * dy) - 1.0) * minf(rx, ry)
+			_mix(img, x, y, c, clampf(0.5 - dist / feather, 0.0, 1.0))
+
+func soft_rrect(img: Image, x0: float, y0: float, w: float, h: float, r: float, c: Color) -> void:
+	for y in range(int(y0) - 1, int(y0 + h) + 2):
+		for x in range(int(x0) - 1, int(x0 + w) + 2):
+			var qx := absf(x + 0.5 - (x0 + w / 2)) - (w / 2 - r)
+			var qy := absf(y + 0.5 - (y0 + h / 2)) - (h / 2 - r)
+			var dist := Vector2(maxf(qx, 0), maxf(qy, 0)).length() + minf(maxf(qx, qy), 0.0) - r
+			_mix(img, x, y, c, _cover(dist))
+
+func soft_triangle(img: Image, pts: Array, c: Color) -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for p: Vector2 in pts:
+		lo = lo.min(p)
+		hi = hi.max(p)
+	# the edge normals must point outwards whichever way the corners go round
+	var wind := signf((pts[1] - pts[0]).cross(pts[2] - pts[0]))
+	for y in range(int(lo.y) - 1, int(hi.y) + 2):
+		for x in range(int(lo.x) - 1, int(hi.x) + 2):
+			var q := Vector2(x + 0.5, y + 0.5)
+			var dist := -INF
+			for i in 3:
+				var a: Vector2 = pts[i]
+				var b: Vector2 = pts[(i + 1) % 3]
+				var n := Vector2(b.y - a.y, a.x - b.x).normalized() * wind
+				dist = maxf(dist, (q - a).dot(n))
+			_mix(img, x, y, c, _cover(dist))
+
+## The soft oval shadow under people and monsters (shown at a quarter scale).
+func shadow_tex(w: int) -> Texture2D:
+	return cached("shadow_%d" % w, func():
+		var img := blank(w * 4 + 8, 18)
+		soft_ellipse(img, img.get_width() / 2.0, 9, w * 2.0, 5, Color(0.08, 0.05, 0.12, 0.32), 3.0)
+		return to_tex(img))
+
+## A round glow to add over bright things (portals, drops, ores).
+func glow_tex() -> Texture2D:
+	return cached("glow", func():
+		var g := Gradient.new()
+		g.offsets = PackedFloat32Array([0.0, 0.35, 1.0])
+		g.colors = PackedColorArray([Color(1, 1, 1, 0.9), Color(1, 1, 1, 0.35), Color(1, 1, 1, 0)])
+		var t := GradientTexture2D.new()
+		t.gradient = g
+		t.fill = GradientTexture2D.FILL_RADIAL
+		t.fill_from = Vector2(0.5, 0.5)
+		t.fill_to = Vector2(1.0, 0.5)
+		t.width = 64
+		t.height = 64
+		return t)
+
+## A Sprite2D that adds a soft coloured glow behind whatever it's added to.
+func glow_sprite(c: Color, size: float) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = glow_tex()
+	s.modulate = c
+	s.scale = Vector2.ONE * size / 64.0
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	s.material = m
+	s.show_behind_parent = true
+	return s
+
+## Puts a soft shadow under a person or monster standing at the node's origin.
+func add_shadow(n: Node2D, w: float) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.name = "Shadow"
+	s.texture = shadow_tex(int(w))
+	s.scale = Vector2(0.25, 0.25)
+	s.position = Vector2(0, 0.5)
+	n.add_child(s)
+	n.move_child(s, 0)
+	return s
+
+const TOUCH_K := 3 # the touch buttons are drawn 3x bigger and shown at 1/3 so they stay sharp on phones
+
+## The on-screen buttons: round red A and green B, and soft grey arrow pads,
+## with a drop shadow and a shiny top; pressed ones sink down.
+func touch_tex(kind: String, pressed: bool) -> Texture2D:
+	return cached("touch_%s_%s" % [kind, pressed], func():
+		var k := TOUCH_K
+		var is_round := kind == "A" or kind == "B"
+		var w := 44 if is_round else 76
+		var h := 44 if is_round else 36
+		var img := blank((w + 2) * k, (h + 4) * k)
+		var body: Color = {"A": Color("e0302a"), "B": Color("34b02a"), "left": Color("55555c"), "right": Color("55555c")}[kind]
+		var sink := 2.0 * k if pressed else 0.0
+		var lip := 0.0 if pressed else 3.0 * k
+		var rim := Color("1b1a24")
+		if is_round:
+			var cx := (w / 2.0 + 1) * k
+			var r := (w / 2.0 - 1) * k
+			soft_ellipse(img, cx, h / 2.0 * k + 3 * k, r, r, Color(0, 0, 0, 0.28), 2.0 * k)
+			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k, r, r - 1.5 * k, rim)
+			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k, r - 1.5 * k, r - 3 * k, body.darkened(0.35))
+			soft_ellipse(img, cx, h / 2.0 * k + sink + 1 * k - lip / 2, r - 1.5 * k, r - 3 * k - lip / 2, body)
+			soft_ellipse(img, cx - r * 0.18, h / 2.0 * k + sink - r * 0.42, r * 0.55, r * 0.3, Color(1, 1, 1, 0.35))
+		else:
+			var x0 := 1.0 * k
+			var r := 9.0 * k
+			soft_rrect(img, x0, 3.0 * k, w * k, h * k, r, Color(0, 0, 0, 0.22))
+			soft_rrect(img, x0, sink, w * k, (h - 1) * k, r, rim)
+			soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k, r - 1.5 * k, body.darkened(0.3))
+			soft_rrect(img, x0 + 1.5 * k, sink + 1.5 * k, (w - 3) * k, (h - 4) * k - lip, r - 1.5 * k, body)
+			soft_rrect(img, x0 + 5 * k, sink + 3.5 * k, (w - 10) * k, 6 * k, 3 * k, Color(1, 1, 1, 0.16))
+			var cx := (w / 2.0 + 1) * k
+			var cy := sink + ((h - 4) / 2.0 + 1) * k - lip / 2
+			var s := 8.0 * k
+			var dirx := -1.0 if kind == "left" else 1.0
+			soft_triangle(img, [Vector2(cx + dirx * s, cy), Vector2(cx - dirx * s * 0.7, cy - s), Vector2(cx - dirx * s * 0.7, cy + s)], Color("e8e8ee"))
+		return to_tex(img))
+
+## Puffy cartoon clouds for the far sky.
+func clouds_tex(th: Dictionary) -> Texture2D:
+	return cached("clouds_" + th.name, func():
+		var w := 512
+		var h := 80
+		var img := blank(w * 2, h * 2)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 11
+		var tint: Color = Color(1, 1, 1).lerp(th.sky[1], 0.25)
+		tint.a = 0.85
+		var shade: Color = tint.lerp(th.sky[0], 0.35)
+		for i in 7:
+			var cx := rng.randf_range(0, w) * 2
+			var cy := rng.randf_range(16, h - 20) * 2
+			var s := rng.randf_range(0.7, 1.3)
+			for o in [-w * 2, 0, w * 2]:
+				for part in [[-22, 4, 16, 9], [0, -2, 20, 14], [22, 4, 15, 9], [8, 6, 22, 8]]:
+					soft_ellipse(img, cx + o + part[0] * s * 2, cy + part[1] * s * 2 + 3, part[2] * s * 2, part[3] * s * 2, shade, 1.5)
+				for part in [[-22, 4, 16, 9], [0, -2, 20, 14], [22, 4, 15, 9], [8, 6, 22, 8]]:
+					soft_ellipse(img, cx + o + part[0] * s * 2, cy + part[1] * s * 2, part[2] * s * 2, part[3] * s * 2, tint, 1.5)
+		return to_tex(img))
+
 func eyes(img: Image, x1: int, x2: int, y: int, size: int = 1, c: Color = OUTLINE) -> void:
 	rect(img, x1, y, size, size + 1, c)
 	rect(img, x2, y, size, size + 1, c)
@@ -344,7 +570,7 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 	if helmet != "":
 		_draw_helmet(img, helmet)
 	if scale > 1:
-		img.resize(img.get_width() * scale, img.get_height() * scale, Image.INTERPOLATE_NEAREST)
+		img = upscale(img, scale)
 	return img
 
 func _draw_helmet(img: Image, helmet: String) -> void:
@@ -796,9 +1022,10 @@ func snowman_img(alt: bool) -> Image:
 	px(img, 7, 14, OUTLINE)
 	return img
 
+## Outlined first and then smoothly enlarged, so a big monster keeps a bold
+## outline and round edges instead of a hairline around giant square pixels.
 func big(img: Image, k: int) -> Image:
-	img.resize(img.get_width() * k, img.get_height() * k, Image.INTERPOLATE_NEAREST)
-	return img
+	return upscale(outline(img), k)
 
 ## The boss version of a character: three times as big, with extras.
 func boss_char(look: String, alt: bool) -> Image:
@@ -1198,9 +1425,7 @@ func icon(id: String) -> Texture2D:
 ## The same icon at double size, for the big bag and hotbar slots.
 func icon_big(id: String) -> Texture2D:
 	return cached("iconbig_" + id, func():
-		var img: Image = icon(id).get_image()
-		img.resize(img.get_width() * 2, img.get_height() * 2, Image.INTERPOLATE_NEAREST)
-		return to_tex(img))
+		return to_tex(upscale(icon(id).get_image(), 2)))
 
 # ---------------------------------------------------------------- emotes
 ## An emote for the emote panel and over people's heads.
@@ -1696,23 +1921,36 @@ func portal_tex(frame: int, tint: Color) -> Texture2D:
 			px(img, int(9 + cos(a) * 5), int(17 + sin(a) * 11), Color.WHITE)
 		return to_tex(outline(img)))
 
-func mountains_tex(th: Dictionary) -> Texture2D:
-	return cached("mount_" + th.name, func():
+## Mountains with a sunny left face and a shaded right face. The far range is
+## paler, as if seen through haze, which gives the sky some depth.
+func mountains_tex(th: Dictionary, far := false) -> Texture2D:
+	return cached("mount_%s_%s" % [th.name, far], func():
 		var w := 512
 		var h := 150
 		var img := blank(w, h)
 		var peaks := [[40, 70], [120, 40], [200, 80], [270, 30], [350, 64], [430, 46], [500, 74]]
+		if far:
+			peaks = [[0, 50], [90, 22], [170, 56], [240, 34], [320, 18], [400, 48], [470, 28]]
+		var base: Color = th.mount.lerp(th.sky[1], 0.45) if far else th.mount
+		var snow: Color = th.snow.lerp(th.sky[1], 0.35) if far else th.snow
+		var slope := 0.75 if far else 0.9
 		for x in w:
 			var top := h
+			var side := 0.0
 			for p in peaks:
 				for o in [-w, 0, w]:
-					top = mini(top, int(p[1] + absf(x - (p[0] + o)) * 0.9))
-			rect(img, x, top, 1, h - top, th.mount)
+					var t := int(p[1] + absf(x - (p[0] + o)) * slope)
+					if t < top:
+						top = t
+						side = signf(x - (p[0] + o))
+			var c: Color = base.darkened(0.12) if side > 0 else base.lightened(0.04)
+			rect(img, x, top, 1, h - top, c)
 			for p in peaks:
 				for o in [-w, 0, w]:
 					var d2 := absf(x - (p[0] + o))
-					if int(p[1] + d2 * 0.9) == top and d2 < 16:
-						rect(img, x, top, 1, maxi(10 - int(d2 / 3) + (x * 7) % 3, 2), th.snow)
+					if int(p[1] + d2 * slope) == top and d2 < 16:
+						var sc: Color = snow.darkened(0.1) if side > 0 else snow
+						rect(img, x, top, 1, maxi(10 - int(d2 / 3) + (x * 7) % 3, 2), sc)
 		return to_tex(img))
 
 func hills_tex(th: Dictionary) -> Texture2D:
@@ -1762,6 +2000,7 @@ const UI_GRIDS := {
 	"bomb": ["......yo", ".....n..", "...DDn..", ".DDDDDD.", "DDwwDDDD", "DwDwDDDD", "DDwwDDDD", "DDDDDDDD", ".DDDDDD.", "..DDDD.."],
 	"hammer": [".aaaa.....", "aAAAAa....", "aAAAAan...", ".aaaa.nl..", "......nl..", ".......nl.", "........nl"],
 	"trash": ["...kk...", "kkkkkkkk", ".kkkkkk.", ".kOkOkk.", ".kOkOkk.", ".kOkOkk.", ".kkkkkk."],
+	"lock": ["..kkkk..", ".k....k.", ".k....k.", "YYYYYYYY", "YggggggY", "YgggkggY", "YgggkggY", "YggggggY", "YYYYYYYY"],
 	"close": ["kk....kk", ".kk..kk.", "..kkkk..", "...kk...", "..kkkk..", ".kk..kk.", "kk....kk"],
 	"plus": ["..g..", "..g..", "ggggg", "..g..", "..g.."],
 	"friend": ["..kk....", ".kkkk...", ".kkkk.k.", "..kk.kkk", ".kkkk.k.", "kkkkkk..", "kkkkkk.."],

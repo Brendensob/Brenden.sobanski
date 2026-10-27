@@ -15,6 +15,8 @@ var sprite: Sprite2D
 var body: StaticBody2D
 var nid := 0
 
+const SHINY := ["silver", "gold", "erbium_rock", "volcanic_rock", "ice_rock", "sandnite_rock"]
+
 func setup(k: String, lvl: Node) -> void:
 	kind = k
 	def = Data.NODES[k]
@@ -28,6 +30,14 @@ func _ready() -> void:
 	sprite.position = Vector2(-s.x / 2, -s.y + 1)
 	sprite.visible = alive
 	add_child(sprite)
+	# precious ore twinkles with its own colour
+	if kind in SHINY:
+		var g := Art.glow_sprite(Color(Color(def.color), 0.45), maxf(s.x, s.y) * 1.6)
+		g.position = s / 2
+		sprite.add_child(g)
+		var tw := g.create_tween().set_loops()
+		tw.tween_property(g, "modulate:a", 0.15, 1.1).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(g, "modulate:a", 0.45, 1.1).set_trans(Tween.TRANS_SINE)
 
 ## The village rock wall blocks the way until it's broken.
 func make_solid() -> void:

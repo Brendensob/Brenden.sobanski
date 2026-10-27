@@ -103,13 +103,16 @@ The living list of every system and how finished it is. It's updated after each 
 ## Multiplayer
 | System | Status | Notes |
 |---|---|---|
-| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test |
+| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
+| Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
+| Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
 ## UI and feel
 | System | Status | Notes |
 |---|---|---|
-| HUD, menus and panels like PSG2 | ✅ | |
+| HUD, menus and panels like PSG2 | ✅ | 2026-10-27: rounded cartoon boxes, pop-in, dimmed backdrop, tap outside to close, message bubbles that count up |
+| Depth and cartoon finish | ✅ | 2026-10-27: shadows, portal/drop/ore glows, smooth big sprites, clouds and hazy far mountains. Checked in the autotest screenshots |
 | Damage numbers and death puffs | ✅ | |
 | Low-health warning | ✅ | The health bar's border pulses red under 25% |
 | HUD at different window shapes | ✅ | 16:9, 21:9, 4:3 and portrait 3:4: nothing off screen, no overlapping buttons |
@@ -124,7 +127,7 @@ The living list of every system and how finished it is. It's updated after each 
 
 | System | | Notes |
 |---|---|---|
-| Main menu and character selection | A | Slots, create, delete with confirm, Single/Multiplayer |
+| Main menu and character selection | A | Slots, create with all 18 characters (locked ones show how to unlock; tasks, owning one, gems tested), delete with confirm, Single/Multiplayer |
 | World selection and transitions | A | Gatekeeper cards, portals, all 23 worlds load, return to town |
 | Movement and combat feedback | A | Jumps, knockback, hit stun, numbers, low-health pulse |
 | Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented |
@@ -208,7 +211,7 @@ The living list of every system and how finished it is. It's updated after each 
 - the 3 items waiting for approval;
 - public rooms;
 - the Steam build;
-- hosting the online server.
+- a real phone-to-phone room test on the hosted server.
 
 **7. Not verifiable from PSG2 sources:**
 - drop rates;
@@ -220,7 +223,7 @@ The living list of every system and how finished it is. It's updated after each 
 - which night gives the Wall Hammer;
 - sources for the Blood Long Sword, Stone Wall and Torch Stand.
 
-**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is still `127.0.0.1` and must be set before release.
+**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
 
 **9. Performance and save risks:**
 - Music building takes about 2 s of a background thread at start. On the web it's sliced at about 3 ms per frame, which is untested in a real browser.
