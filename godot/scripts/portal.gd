@@ -7,6 +7,7 @@ var level: Node
 var sprite: Sprite2D
 var t := 0.0
 var tint := Color("4fb6d0")
+var glow: Sprite2D
 
 func setup(tgt: String, lbl: String, lvl: Node, color: Color) -> void:
 	target = tgt
@@ -18,6 +19,11 @@ func _ready() -> void:
 	sprite = Sprite2D.new()
 	sprite.position = Vector2(0, -18)
 	add_child(sprite)
+	# a soft glow that breathes behind the portal
+	glow = Art.glow_sprite(Color(tint, 0.55), 64)
+	glow.position = Vector2(0, -18)
+	add_child(glow)
+	move_child(glow, 0)
 	var l := Label.new()
 	l.text = label_text
 	l.add_theme_font_override("font", Art.font_body)
@@ -39,6 +45,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	t += delta
 	sprite.texture = Art.portal_tex(int(t * 6) % 4, tint)
+	glow.scale = Vector2(1.0, 1.3) * (1.0 + 0.08 * sin(t * 3.0))
 
 func interact(_player: Node) -> void:
 	level.main.use_portal(target)
