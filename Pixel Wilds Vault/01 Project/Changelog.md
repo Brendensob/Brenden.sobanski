@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #34 | 2026-10-28 | README redone: play buttons and build badge at the top, contents, the Godot version first, classic version details folded away, repo layout table; stray `brenden.sobanski` intro file removed (it moves to a profile README) |
 | #33 | 2026-10-27 | ◀ ▶, A and B back to their old sizes and places (90 × 34 and 68 × 34), keeping the cartoon finish; AUTO switch moved above A |
 | #32 | 2026-10-27 | Auto-hit button (swings by itself, even with the bag open; stays on through switching items; Q on a keyboard); the ground gets the sprites' cartoon colour pop and outlines. Ground and walls remodel: tiles with grass caps, outlined sides, rounded corners and rooty ceilings; mossy stone walls at the map edges, bedrock, Pixel Town's stone frame and brick basement; brick, sandstone and ice back walls; plank ledges; spiked deadly walls; smooth depth shading; new mountains and tree line |
 | #31 | 2026-10-27 | Faint screen fixed (button under the text); Multiplayer screen with the name you own, Friends, Find and Host Public Game; red/green friend lights with Join; public rooms on the server; tomb test tries both sides of a deadly wall |

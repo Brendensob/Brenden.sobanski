@@ -5,6 +5,10 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-28 (GitHub clean-up)
+- **The README leads with how to play:** big Play buttons, the Web build badge, then the Godot version (the main game) before the classic browser version, whose details are folded into dropdowns. *Brenden: "can you make my github way cleaner and better looking and organized"*
+- **The one-line `brenden.sobanski` intro file is removed from the game repo.** Its text ("Im intrested in learning new things") goes in a profile README, which needs its own repo named `Brendensob`.
+
 ## 2026-10-27 (buttons back to their old size)
 - **The ◀ ▶, A and B buttons are back at the sizes and places they had before the cartoon pass:** ◀ ▶ 90 × 34 at the bottom left, A 68 × 34 above B 68 × 34 at the bottom right. They keep the cartoon finish (rounded corners, shine, sink when pressed), so A and B are rounded rectangles again, not circles. *Brenden: "Revert buttons to the same size as before"*
 - This is also what his earlier "Keep the buttons how they were just for the movement and jump" meant. That was first read as "don't change them", which was wrong. The entry below is corrected.
