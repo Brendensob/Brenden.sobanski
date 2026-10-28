@@ -17,7 +17,6 @@ The vault (`Pixel Wilds Vault/`) is opened in Obsidian with **Open folder as vau
 
 ## Web (phones too)
 - https://brendensob.github.io/Brenden.sobanski/ is rebuilt by the **Web build** GitHub Action on every push to `main`.
-- The old top-down game is at `/classic/`.
 
 ## Exports
 `godot/export_presets.cfg` has Windows, Linux and Web presets. Built copies are in `build/`.

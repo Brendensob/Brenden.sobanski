@@ -8,7 +8,8 @@ tags: [session]
 **Done:**
 - **README redone:** Play in your browser and Classic buttons, the Web build status badge, a contents list, a "Play it" table (phone, Windows PC, classic), the Godot version first, the classic version's features, controls and code layout folded into dropdowns, and a repo layout table.
 - **Removed the stray `brenden.sobanski` file** (a two-line intro). That text belongs in a profile README.
-- No game code changed, so no game tests were needed.
+- **Deleted the old top-down browser version:** `index.html`, `js/`, `css/`, the Web build step that copied it to `/classic/`, and its README section. *"theres 2 pixel wilds in i dont want the old one delete that"*
+- No Godot game code changed, so no game tests were needed.
 
 **Decisions:** in [[Decision Log]].
 
