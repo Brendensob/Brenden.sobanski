@@ -19,4 +19,4 @@ tags: [project]
 - Don't copy the original's sprites, sounds or code. Draw and synthesize our own.
 
 ## The other version
-The repo also holds an older top-down browser game (root `index.html`, `js/`). It lives at `/classic/` on GitHub Pages and isn't being worked on.
+The old top-down browser game was removed on 2026-10-28 at Brenden's request; it's still in the git history.

@@ -1,6 +1,5 @@
 # Builds the Godot game for the web and puts it on GitHub Pages, so it can be
 # played on a phone from https://brendensob.github.io/Brenden.sobanski/
-# The older top-down browser version goes to /classic/.
 name: Web build
 
 on:
@@ -56,11 +55,6 @@ jobs:
           $godot --headless --import . || true
           $godot --headless --export-release "Web" ../site/index.html
           test -f ../site/index.wasm
-
-      - name: Add the classic browser version
-        run: |
-          mkdir -p site/classic
-          cp -r index.html css js site/classic/
 
       - uses: actions/upload-pages-artifact@v3
         with:
