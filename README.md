@@ -2,8 +2,7 @@
 
 # 🌲 Pixel Wilds
 
-**A free side-scrolling pixel survival-crafting game, inspired by Pixel Survival Game 2, without the pay-to-win.**
-No shop, no premium currency, no keys and no ads. Everything is earned by playing.
+**A free side-scrolling pixel survival-crafting game, inspired by Pixel Survival Game 2.**
 
 [![Play in your browser](https://img.shields.io/badge/▶_Play-in_your_browser-2ea44f?style=for-the-badge)](https://brendensob.github.io/Brenden.sobanski/)
 
