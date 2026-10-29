@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #36 | 2026-10-29 | Portal right under the middle of the town's opening; the Crafter left of it and the Gatekeeper right of it; world card maps drawn like little screenshots (sky, clouds, mountains, grass, caves, trees, ores, arrival portal) |
 | #35 | 2026-10-28 | README tagline no longer says "no shop, no ads" |
 | #34 | 2026-10-28 | README redone: play buttons and build badge at the top, contents, the Godot version first, classic version details folded away, repo layout table; stray `brenden.sobanski` intro file removed (it moves to a profile README); the old top-down browser version removed from the repo and from `/classic/` on the website |
 | #33 | 2026-10-27 | ◀ ▶, A and B back to their old sizes and places (90 × 34 and 68 × 34), keeping the cartoon finish; AUTO switch moved above A |
