@@ -16,10 +16,12 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 2. Miner, then Brutus
 3. Miffie (yellow dress)
 4. The sign
-5. **Portal**, with the **Gatekeeper** standing just right of it
-6. Plumber → **Banka** (storage) → **Merchant** (spiky blond hair) → Crafter
+5. The open space under the opening: the **Crafter** on its left edge, the **portal** in the exact middle (right under the opening's middle, so the two line up), and the **Gatekeeper** on its right edge, mirroring the Crafter
+6. Plumber → **Banka** (storage) → **Merchant** (spiky blond hair)
 
-That order matches Brenden's screenshot (Plumber, Banka, then the spiky-haired seller). See [[NPCs]].
+![[portal_area.png]]
+
+That order matches Brenden's screenshot (Plumber, Banka, then the spiky-haired seller). The Crafter moved from the east end to beside the portal on 2026-10-29, when Brenden asked for it. The four houses mirror around the middle. See [[NPCs]].
 
 ## The basement
 - A massive stone wall at the east end of the street blocks the way down. Smash it with the Wall Hammer, earned by surviving 10 nights in Survival Grasslands (the night number is a guess).
@@ -30,5 +32,6 @@ That order matches Brenden's screenshot (Plumber, Banka, then the spiky-haired s
 2. Closed in, with the middle opening; faster falling.
 3. Symmetrical sides.
 4. Smaller ("it's too big").
+5. Portal lined up under the opening, with the Crafter and Gatekeeper on either side (2026-10-29).
 
 See [[Decision Log]].

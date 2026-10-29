@@ -612,7 +612,17 @@ func jump_and_underground() -> void:
 	# picking a world opens a portal on the street, and hitting it takes you there
 	main.open_world("grass_1")
 	var portal := find_prop(func(n): return n.get_meta("gate", false))
-	check(portal != null and portal.position == lvl.cell_pos(lvl.TOWN_PORTAL), "the Gatekeeper opens the portal on the street")
+	var mid: float = (lvl.TOWN_OPENING[0] + lvl.TOWN_OPENING[1]) * 8.0
+	check(portal != null and portal.position == lvl.town_portal_pos() and portal.position.x == mid,
+		"the Gatekeeper opens the portal on the street, right under the middle of the opening")
+	var crafter := find_prop(func(n): return n.get("npc_id") == "smith")
+	var gk := find_prop(func(n): return n.get("npc_id") == "keeper")
+	check(crafter != null and gk != null and is_equal_approx(mid - crafter.position.x, gk.position.x - mid) and crafter.position.x < mid,
+		"the Crafter stands left of the portal and the Gatekeeper right of it, the same distance away")
+	main.hud.close_panels()
+	p.position = lvl.town_portal_pos() + Vector2(-18, 0)
+	await wait(0.8)
+	await shot("03h_portal_area")
 	main.hud.close_panels()
 	# Banka: six backpacks of 30 slots next to your bag
 	var sgirl := find_prop(func(n): return n.get("npc_id") == "banka")

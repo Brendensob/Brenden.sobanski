@@ -5,6 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-10-29 (portal area and world card maps)
+- **The Gatekeeper's portal opens in the exact middle of Pixel Town, right under the middle of the opening you jump up through,** so the opening and the portal line up. Before, the portal stood half a tile left of the opening's middle.
+- **The Crafter stands just left of the portal and the Gatekeeper just right of it,** each at the edge of the opening, the same distance away. The Crafter used to be at the east end of the street. The Plumber, Banka and the Merchant each moved one tile east, the sign one tile west, and the four houses now mirror around the middle.
+- **The map pictures on the world cards are drawn like little screenshots:** sky with clouds, mountains and hills, grass tops, dark cartoon edges, darker caves, trees, ores, and the portal you arrive at. Big worlds show their start; arenas and Survival show the middle. They used to be one flat pixel per tile.
+- Read "the created" as the Crafter and "portal character" as the Gatekeeper.
+- *Brenden: "Make the maps look better on the portal screen put the created in the left side of the portal character on the other side of Ty e open area where the portal opens make the top opening where you jump up symmetrical to the bottom where you enter a portal"*
+
 ## 2026-10-28 (GitHub clean-up)
 - **The README and GitHub description don't say "no shop, no ads".** *Brenden: "dont say no ads or no shop"*
 - **The README leads with how to play:** big Play buttons, the Web build badge, then the Godot version (the main game) before the classic browser version, whose details are folded into dropdowns. *Brenden: "can you make my github way cleaner and better looking and organized"*

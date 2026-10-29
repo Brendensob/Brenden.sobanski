@@ -7,6 +7,8 @@ tags: [game, worlds]
 
 The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's screenshots. Each card has a green title, a one-line description, a small map picture with a **danger badge** (Easy, Fair, Hard or Deadly for your gear, see [[Goals and Guidance]]) and **Activate** (or **Locked**).
 
+The map picture is drawn like a little screenshot of the world (since 2026-10-29): its sky, clouds, mountains and hills, grassy ground with dark edges, darker caves, trees and ores, and a small purple portal where you arrive. Big worlds show their start, arenas and Survival their middle. In code: `level.gd` → `preview_image()`.
+
 | # | World | Card text |
 |---|---|---|
 | 1 | Grasslands | The land of the slimes. |

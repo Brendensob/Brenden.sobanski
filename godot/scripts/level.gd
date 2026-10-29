@@ -368,7 +368,8 @@ const TOWN_BASE := 24
 const TOWN_W := 64
 const TOWN_ROOM := 16 # the side rooms' walls stand this far from each edge
 const TOWN_OPENING := [30, 34] # the gap in the upper floor, from x to x (exclusive), in the middle
-const TOWN_PORTAL := Vector2i(31, TOWN_MID - 1)
+const TOWN_PORTAL := Vector2i(31, TOWN_MID - 1) # the portal stands half a tile right of this cell,
+# right under the middle of the opening (see town_portal_pos)
 const TOWN_HOLE := 57 # the hole down to the basement (2 wide)
 
 func _gen_town() -> void:
@@ -400,8 +401,13 @@ func _gen_town() -> void:
 	fill(W - 1, 0, 1, H)
 	spawn_cell = Vector2i(20, TOWN_MID - 1)
 
-## A little picture of a world's layout for the Gatekeeper's cards: builds the
-## map with a fixed seed (no monsters or props) and paints one pixel per tile.
+## A little picture of a world for the Gatekeeper's cards: builds the map with a
+## fixed seed (no monsters or props) and paints it like a tiny screenshot: the
+## sky with its clouds, mountains and hills, grassy ground with dark edges, caves,
+## a few trees and ores, and the portal you arrive by. Big maps show their start,
+## small ones show the middle with sky above. 268 x 160, twice the card's frame.
+const PREVIEW_SIZE := Vector2i(268, 160)
+
 func preview_image(world_id: String) -> Image:
 	id = world_id
 	def = Data.WORLDS[id]
@@ -413,21 +419,127 @@ func preview_image(world_id: String) -> Image:
 		"explore": _gen_maze() if def.get("maze", false) else _gen_explore()
 		"arena": _gen_arena()
 		"survival": _gen_survival()
-	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)
-	for y in H:
-		for x in W:
-			var v: int = grid[idx(x, y)]
-			var c: Color
+	var ow := PREVIEW_SIZE.x
+	var oh := PREVIEW_SIZE.y
+	var s := 3 if H > 30 else 6 # pixels per tile
+	var vw := ceili(float(ow) / s)
+	var vh := ceili(float(oh) / s)
+	var ox := clampi(spawn_cell.x - vw / 2, 0, maxi(0, W - vw)) if kind != "explore" else 0
+	if W < vw:
+		ox = (W - vw) / 2
+	var oy := H - vh # below zero means extra sky on top
+	var r := RandomNumberGenerator.new()
+	r.seed = hash(world_id)
+	var img := Image.create(ow, oh, false, Image.FORMAT_RGBA8)
+	# the sky
+	for y in oh:
+		img.fill_rect(Rect2i(0, y, ow, 1), th.sky[0].lerp(th.sky[1], float(y) / oh))
+	var cloud: Color = th.sky[1].lerp(Color.WHITE, 0.6)
+	for i in 3:
+		var cx := r.randf_range(20, ow - 20)
+		var cy := r.randf_range(8, 30)
+		for k in 3:
+			Art.ellipse(img, cx + (k - 1) * 9, cy - (4 if k == 1 else 0), 9, 5, cloud)
+	# the mountains and hills behind, standing on the ground line
+	var ground := (surface[clampi(spawn_cell.x, 0, W - 1)] - oy) * s
+	var peaks := []
+	for i in 5:
+		peaks.append([r.randf_range(0, ow), r.randf_range(26, 46)])
+	var bumps := []
+	for i in 8:
+		bumps.append([r.randf_range(0, ow), r.randf_range(14, 26), r.randf_range(7, 13)])
+	for x in ow:
+		var mh := 0.0
+		for pk in peaks:
+			mh = maxf(mh, pk[1] - absf(x - pk[0]) * 0.9)
+		if mh > 0:
+			img.fill_rect(Rect2i(x, int(ground - mh), 1, int(mh)), th.mount)
+			if mh > 30:
+				img.fill_rect(Rect2i(x, int(ground - mh), 1, int(mh - 30) + 2), th.snow)
+		var hh := 0.0
+		for b in bumps:
+			var d: float = (x - b[0]) / b[1]
+			if absf(d) < 1.0:
+				hh = maxf(hh, b[2] * sqrt(1.0 - d * d))
+		if hh > 0:
+			img.fill_rect(Rect2i(x, int(ground - hh), 1, int(hh) + 1), th.hills)
+	# the ground, tile by tile
+	var grass := maxi(1, s * 2 / 5)
+	var edge: Color = th.dirt2.darkened(0.45)
+	for ty in range(oy, oy + vh):
+		for tx in range(ox, ox + vw):
+			var v := _preview_cell(tx, ty)
+			var x0 := (tx - ox) * s
+			var y0 := (ty - oy) * s
 			if v == 0:
-				c = th.cave if y > surface[x] and kind == "explore" else th.sky[0].lerp(th.sky[1], float(y) / H)
-			elif v == 3:
-				c = Color("d8433a")
-			elif y > 0 and not solid(x, y - 1) or v == 2:
-				c = th.top
-			else:
-				c = th.dirt2 if (x + y) % 3 == 0 else th.dirt
-			img.set_pixel(x, y, c)
+				if kind == "explore" and tx >= 0 and tx < W and ty > surface[tx]:
+					var deep := clampf(float(ty - surface[tx]) / H, 0.0, 1.0)
+					img.fill_rect(Rect2i(x0, y0, s, s), th.cave.darkened(0.3 * deep))
+				continue
+			if v == 2:
+				img.fill_rect(Rect2i(x0, y0, s, grass), th.top)
+				img.fill_rect(Rect2i(x0, y0 + grass, s, 1), edge)
+				continue
+			if v == 3:
+				img.fill_rect(Rect2i(x0, y0, s, s), Color("d8433a"))
+				img.fill_rect(Rect2i(x0, y0, s, 1), Color("f2a33a"))
+				continue
+			var depth := clampf(float(ty - (surface[tx] if tx >= 0 and tx < W else 0)) / 40.0, 0.0, 1.0)
+			var dirt: Color = th.dirt.darkened(0.3 * depth)
+			img.fill_rect(Rect2i(x0, y0, s, s), dirt)
+			if (tx * 7 + ty * 3) % 5 == 0:
+				img.fill_rect(Rect2i(x0 + s / 3, y0 + s / 2, maxi(1, s / 3), maxi(1, s / 3)), th.dirt2.darkened(0.3 * depth))
+			if _preview_cell(tx, ty - 1) in [0, 2]:
+				img.fill_rect(Rect2i(x0, y0, s, grass), th.top)
+				img.fill_rect(Rect2i(x0, y0, s, 1), th.top.lightened(0.3))
+				for k in range(0, s, 2):
+					Art.px(img, x0 + k, y0 + grass, th.top2)
+			# dark edges where the ground meets air, for a drawn, cartoon look
+			if _preview_cell(tx - 1, ty) in [0, 2]:
+				img.fill_rect(Rect2i(x0, y0, 1, s), edge)
+			if _preview_cell(tx + 1, ty) in [0, 2]:
+				img.fill_rect(Rect2i(x0 + s - 1, y0, 1, s), edge)
+			if _preview_cell(tx, ty + 1) in [0, 2]:
+				img.fill_rect(Rect2i(x0, y0 + s - 1, s, 1), edge)
+			# ores in the walls of the caves
+			if kind == "explore" and ty > surface[tx] + 2 and r.randf() < 0.05:
+				var ore: Color = [Color("e8864a"), Color("8ab0d8"), Color("e3ebf5"), Color("f2cf5b")][r.randi() % 4]
+				img.fill_rect(Rect2i(x0 + 1, y0 + 1, maxi(1, s - 2), maxi(1, s - 2)), ore)
+	# trees along the surface
+	if kind in ["explore", "survival"]:
+		var trunk := Color("6e4426")
+		var leaf := Color("3e9a3a")
+		match th.name:
+			"dark", "ghost", "nightmare": trunk = Color("4a3e4a"); leaf = Color("5a4a7a")
+			"ice", "snow": trunk = Color("6a8aa8"); leaf = Color("e3f2f8")
+			"hell", "forbidden": trunk = Color("4a2a2a"); leaf = Color("a83a4a")
+			"tomb": trunk = Color("8a6a3a"); leaf = Color("6a8a3a")
+		for tx in range(maxi(ox, 1), mini(ox + vw, W - 1)):
+			if absi(tx - spawn_cell.x) < 3 or r.randf() > 0.13:
+				continue
+			var ty := surface[tx]
+			if _preview_cell(tx, ty - 1) != 0:
+				continue
+			var bx := (tx - ox) * s + s / 2
+			var by := (ty - oy) * s
+			img.fill_rect(Rect2i(bx - 1, by - s * 2, maxi(1, s / 2), s * 2), trunk)
+			Art.ellipse(img, bx, by - s * 2 - s * 0.4, s * 1.3, s * 1.1, leaf)
+			Art.ellipse(img, bx - s * 0.4, by - s * 2 - s * 0.8, s * 0.5, s * 0.4, leaf.lightened(0.3))
+	# the portal you arrive by
+	var px0 := (spawn_cell.x - ox) * s + s / 2
+	var py0 := (spawn_cell.y + 1 - oy) * s
+	Art.ellipse(img, px0, py0 - s * 1.3, s * 0.95, s * 1.4, Color("2e1a48"))
+	Art.ellipse(img, px0, py0 - s * 1.3, s * 0.75, s * 1.2, Color("a77ee0"))
+	Art.ellipse(img, px0, py0 - s * 1.3, s * 0.35, s * 0.7, Color("e8d8ff"))
 	return img
+
+## A tile for the preview, with stone walls outside the map and sky above it.
+func _preview_cell(x: int, y: int) -> int:
+	if y < 0:
+		return 0
+	if x < 0 or x >= W or y >= H:
+		return 1
+	return grid[idx(x, y)]
 
 # ---------------------------------------------------------------- collision and drawing
 func _build_collision() -> void:
@@ -651,7 +763,7 @@ func _survival_resource() -> void:
 func _populate_town() -> void:
 	var y := TOWN_MID - 1
 	var top := TOWN_TOP - 1
-	var houses := [[15, "e8dccb", "d8433a", 52], [23, "c8d6e8", "3b5dc9", 52], [40, "e8d8b0", "4f9a44", 52], [47, "d8c8e8", "7b4fb8", 52]]
+	var houses := [[16, "e8dccb", "d8433a", 52], [24, "c8d6e8", "3b5dc9", 52], [40, "e8d8b0", "4f9a44", 52], [48, "d8c8e8", "7b4fb8", 52]]
 	for h in houses:
 		var s := Sprite2D.new()
 		s.texture = Art.house_tex(Color(h[1]), Color(h[2]), h[3])
@@ -660,7 +772,9 @@ func _populate_town() -> void:
 		props.add_child(s)
 	# the street, west to east: the magic soils in the cave behind the rock wall
 	# (break it with a gold pickaxe), the Miner and Brutus, Miffie, the sign,
-	# the Gatekeeper by her portal, the Plumber, Banka (storage), the Merchant and the Crafter
+	# then the open space under the opening, where the portal opens: the Crafter on
+	# its left and the Gatekeeper on its right, mirroring each other; then the
+	# Plumber, Banka (storage) and the Merchant
 	for i in 5:
 		add_station("soil", i, Vector2i(2 + i * 2, y))
 	if not Net.room_opened("rock_wall"):
@@ -669,12 +783,12 @@ func _populate_town() -> void:
 	add_npc("miner", Vector2i(13, y))
 	add_npc("gruff", Vector2i(15, y))
 	add_npc("mira", Vector2i(19, y))
-	add_station("sign", 0, Vector2i(27, y))
-	add_npc("keeper", TOWN_PORTAL + Vector2i(3, 0))
-	add_npc("tools", Vector2i(37, y))
-	add_npc("banka", Vector2i(40, y))
-	add_npc("merchant", Vector2i(43, y))
-	add_npc("smith", Vector2i(47, y))
+	add_station("sign", 0, Vector2i(26, y))
+	add_npc("smith", Vector2i(TOWN_OPENING[0] - 1, y))
+	add_npc("keeper", Vector2i(TOWN_OPENING[1], y))
+	add_npc("tools", Vector2i(38, y))
+	add_npc("banka", Vector2i(41, y))
+	add_npc("merchant", Vector2i(44, y))
 	# upstairs, west: the Trading Center behind its wooden wall (burn it with a Torch)
 	add_npc("trader", Vector2i(3, top))
 	add_board("coin", Vector2i(5, top))
@@ -714,8 +828,14 @@ func open_town_portal(target: String) -> void:
 		if n is PortalScript and n.get_meta("gate", false):
 			n.queue_free()
 	var p := add_portal(TOWN_PORTAL, target, Data.WORLDS[target].name, Color("a77ee0"))
+	p.position = town_portal_pos()
 	p.set_meta("gate", true)
-	burst(cell_pos(TOWN_PORTAL) + Vector2(0, -16), Color("a77ee0"), 14)
+	burst(town_portal_pos() + Vector2(0, -16), Color("a77ee0"), 14)
+
+## Where the Gatekeeper's portal stands: in the exact middle of the town, under
+## the middle of the opening up top, so the two line up.
+func town_portal_pos() -> Vector2:
+	return Vector2((TOWN_OPENING[0] + TOWN_OPENING[1]) * T / 2.0, cell_pos(TOWN_PORTAL).y)
 
 func add_board(item: String, c: Vector2i) -> void:
 	var s := Sprite2D.new()
