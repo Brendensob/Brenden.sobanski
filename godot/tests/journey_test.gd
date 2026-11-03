@@ -322,11 +322,16 @@ func _harvest(lvl: Node, p: CharacterBody2D, n: Node) -> bool:
 		return false
 	GS.sel = tool
 	var t := 0.0
+	var ignore := {}
 	while n.alive and t < 25.0 and not p.dead:
-		# a monster that comes over gets dealt with first
+		# a monster that comes over gets dealt with first (once: one it can't
+		# get at is left alone)
 		for e in lvl.entities.get_children():
-			if e is MobScript and not e.dead and not e.def.get("invulnerable", false) and e.position.distance_to(p.position) < 40:
+			if e is MobScript and not e.dead and not ignore.has(e) and not e.def.get("invulnerable", false) and e.position.distance_to(p.position) < 40:
+				ignore[e] = true
+				var c0 := clock
 				await _fight(lvl, p, e, 20.0)
+				t += clock - c0
 				_stand_by(lvl, p, n)
 				GS.sel = tool
 				break

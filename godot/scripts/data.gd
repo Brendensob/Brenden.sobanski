@@ -1256,11 +1256,11 @@ func _build_mobs() -> void:
 # mobs: [mob, weight, hp multiplier, damage multiplier]
 var WORLDS := {
 	"town": {"name": "Pixel Town", "kind": "town", "theme": "grass"},
-	"grass_1": {"name": "Grasslands 1", "kind": "explore", "theme": "grass", "next": "grass_2", "count": 34,
-		"mobs": [["slime", 6], ["wisp", 3], ["mummy", 2], ["shell", 2]],
+	"grass_1": {"name": "Grasslands 1", "kind": "explore", "theme": "grass", "next": "grass_2", "count": 40,
+		"mobs": [["slime", 10], ["wisp", 3], ["mummy", 2], ["shell", 2]],
 		"nodes": [["tree", 7], ["stone", 4], ["copper", 3], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
 	"grass_2": {"name": "Grasslands 2", "kind": "explore", "theme": "grass", "next": "grass_3", "count": 40,
-		"mobs": [["slime", 5], ["wisp", 3], ["mummy", 2], ["shell", 2], ["octopus", 3], ["crusher", 1]],
+		"mobs": [["slime", 8], ["wisp", 3], ["mummy", 2], ["shell", 2], ["octopus", 3], ["crusher", 1]],
 		"nodes": [["tree", 6], ["stone", 4], ["copper", 3], ["iron", 2], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
 	"grass_3": {"name": "Grasslands 3", "kind": "explore", "theme": "grass", "count": 44, "chest": true,
 		"mobs": [["slime", 3], ["octopus", 2], ["trex", 2], ["dark_trex", 1], ["dark_slime", 2], ["mantis", 2], ["zombie", 2]],
