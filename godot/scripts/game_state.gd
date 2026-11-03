@@ -648,15 +648,12 @@ func best_tier(kind: String) -> int:
 			best = maxi(best, int(Data.ITEMS[s.id].get("tier", 0)))
 	return best
 
-## The goal to show on the HUD: the first one after the last one you've done
-## (so older saves skip the early ones), then Miffie's next quest. Returns
-## {"text", "help", "progress", "index"}, or {} when nothing is left.
+## The goal to show on the HUD: the first one not done yet, then Miffie's next
+## quest. Doing a later goal early doesn't hide an earlier one: Miffie's quests
+## come in order, so "10 Iron Bars" can't be done before her "50 Jellies".
+## Returns {"text", "help", "progress", "index"}, or {} when nothing is left.
 func current_goal() -> Dictionary:
-	var last := -1
 	for i in Data.GOALS.size():
-		if goal_done(Data.GOALS[i]):
-			last = i
-	for i in range(last + 1, Data.GOALS.size()):
 		var g: Dictionary = Data.GOALS[i]
 		if goal_done(g):
 			continue

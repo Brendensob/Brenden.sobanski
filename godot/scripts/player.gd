@@ -195,8 +195,9 @@ func _tick(delta: float, dir: float) -> void:
 	if not GS.has_status("fatigue"):
 		_regen("st", delta * st_rate, 1.0)
 	_regen("mp", delta, 5.0)
-	if since_hurt > 8.0:
-		_regen("hp", delta, 12.0)
+	# out of a fight for a few seconds, health comes back (1 every 4 seconds)
+	if since_hurt > 6.0:
+		_regen("hp", delta, 4.0)
 	_ring_regen(delta)
 	# campfires heal
 	if level.structures_near(position, 40, "campfire"):
