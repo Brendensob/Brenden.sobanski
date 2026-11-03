@@ -48,6 +48,10 @@ func _ready() -> void:
 		var nt: Node = load("res://tests/net_test.gd").new()
 		nt.main = self
 		add_child(nt)
+	if "--journeytest" in OS.get_cmdline_user_args():
+		var jt: Node = load("res://tests/journey_test.gd").new()
+		jt.main = self
+		add_child(jt)
 	if "--fighttest" in OS.get_cmdline_user_args():
 		var ft: Node = load("res://tests/fight_test.gd").new()
 		ft.main = self

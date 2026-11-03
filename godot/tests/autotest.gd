@@ -1224,6 +1224,58 @@ func auto_hit_check() -> void:
 	check(cfg.get_value("controls", "auto_hit", false) == true, "the switch is saved")
 	GS.set_auto_hit(false)
 
+## Sheets of every monster and pet, every villager and character, and the
+## town's houses, drawn bigger on a plain background, to look the art over.
+## Every one must draw something.
+func art_sheets() -> void:
+	var mobs := []
+	for id in Data.MOBS:
+		if not Data.MOBS[id].look in mobs:
+			mobs.append(Data.MOBS[id].look)
+	for id in Data.PETS:
+		if not Data.PETS[id].look in mobs:
+			mobs.append(Data.PETS[id].look)
+	var blank := []
+	var imgs := []
+	for l in mobs:
+		var img: Image = Art.mob_tex(l, false).get_image()
+		if img.is_invisible():
+			blank.append(l)
+		imgs.append(img)
+	_sheet("75_monsters", imgs, 3, 12)
+	var common := []
+	for l in ["slime_pink", "wisp", "mummy", "shell", "octopus", "trex", "slime_dark", "mantis", "zombie", "ufo", "worm", "hand"]:
+		common.append(Art.mob_tex(l, false).get_image())
+	_sheet("78_common_monsters", common, 8, 6)
+	var people := []
+	for l in Art.LOOKS:
+		people.append(Art.character(l, "stand", 1).get_image())
+	_sheet("76_villagers", people, 5, 12)
+	var houses := []
+	for h in [["e8dccb", "d8433a"], ["c8d6e8", "3b5dc9"], ["e8d8b0", "4f9a44"], ["d8c8e8", "7b4fb8"]]:
+		houses.append(Art.house_tex(Color(h[0]), Color(h[1]), 52).get_image())
+	_sheet("77_houses", houses, 4, 4)
+	check(blank.is_empty(), "every monster and pet draws something %s" % [blank])
+
+func _sheet(name: String, imgs: Array, k: int, cols: int) -> void:
+	var cw := 0
+	var ch := 0
+	for i: Image in imgs:
+		cw = maxi(cw, i.get_width())
+		ch = maxi(ch, i.get_height())
+	cw += 4
+	ch += 4
+	var rows := ceili(imgs.size() / float(cols))
+	var sheet := Image.create(cw * cols, ch * rows, false, Image.FORMAT_RGBA8)
+	sheet.fill(Color("8fb7c9"))
+	for n in imgs.size():
+		var i: Image = imgs[n]
+		var at := Vector2i((n % cols) * cw + (cw - i.get_width()) / 2, (n / cols) * ch + ch - 2 - i.get_height())
+		sheet.blend_rect(i, Rect2i(Vector2i.ZERO, i.get_size()), at)
+	sheet.resize(sheet.get_width() * k, sheet.get_height() * k, Image.INTERPOLATE_NEAREST)
+	sheet.save_png("%s/%s.png" % [out, name])
+	print("shot ", name)
+
 ## The ground's art: every world bakes its ground quickly, the map's edges are
 ## rock and the back walls are drawn; screenshots of the surface and the caves.
 func look_check() -> void:
@@ -1257,6 +1309,7 @@ func look_check() -> void:
 				await wait(0.5)
 				await shot("71_%s_cave" % w)
 	check(slow.is_empty(), "every world builds in under 3 s %s" % [slow])
+	art_sheets()
 	check(empty.is_empty(), "every world has baked ground with rock at its edges %s" % [empty])
 	# Pixel Town upstairs and in the basement
 	await goto("town")
