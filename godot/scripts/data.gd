@@ -1402,8 +1402,8 @@ var NPCS := {
 	"mira": {"name": "Miffie", "look": "mira", "talk": "I always need things collected. Help me and I'll make it worth your while!"},
 	"warden": {"name": "GateKeeper", "look": "warden", "talk": "Nobody gets to the furnaces without bringing me a Pretzel."},
 	"smith": {"name": "Crafter", "look": "smith", "talk": "Bring me materials and I'll make anything on my list. No luck needed."},
-	"merchant": {"name": "Merchant", "look": "merchant", "talk": "Buying and selling, best prices in town!"},
-	"tools": {"name": "Plumber", "look": "tools", "talk": "Lost your tools? I've got spares."},
+	"merchant": {"name": "Merchant", "look": "merchant", "talk": "I'll buy whatever you found out there!"},
+	"tools": {"name": "Plumber", "look": "tools", "talk": "Potions, tools, ammo... I've got it all!"},
 	"miner": {"name": "Miner", "look": "miner", "greet": "aghh..", "talk": "Survival Tokens! I'll trade seeds and keys for them."},
 	"jumpie": {"name": "Jumpie", "look": "jumpie", "talk": "Hi! I'm collecting jelly too."},
 	"warden_hell": {"name": "GateKeeper", "look": "warden", "talk": "Em Stones, for those who helped me."},
@@ -1457,7 +1457,7 @@ const GOALS := [
 	{"text": "Clear the Darklands Arena", "done": {"flag": "cleared_dark_arena"},
 		"help": "Two bosses arrive after 3 minutes. Bring plenty of potions."},
 	{"text": "Enter Hell", "done": {"flag": "been_hell_1"},
-		"help": "Pick Hell at the Gatekeeper. Most monsters there poison you, so bring Antidotes from the Merchant."},
+		"help": "Pick Hell at the Gatekeeper. Most monsters there poison you, so bring Antidotes from the Plumber."},
 ]
 
 # Quests are done in order per villager.
@@ -1589,8 +1589,9 @@ const GEM_PRICE := 2500
 
 # Shops: what each villager sells, and for how many coins (or tokens).
 var SHOPS := {
-	"merchant": {"title": "Merchant", "sells": [["combo_book_2", 1500], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["green_egg", 10000]], "buys": true},
-	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250]], "buys": true},
+	# the spiky-haired Merchant only buys your items; the Plumber sells everything (Brenden, 2026-11-04)
+	"merchant": {"title": "Merchant", "sells": [], "buys": true},
+	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["combo_book_2", 1500], ["green_egg", 10000]], "buys": false},
 	"gruff": {"title": "Brutus' Shop", "sells": [["wood", 5], ["rock", 5], ["branch", 5]], "buys": false},
 	"warden_hell": {"title": "GateKeeper", "needs": "em_shop", "sells": [["em_stone", 92500]], "buys": false},
 	"miner": {"title": "Miner (Survival Tokens)", "currency": "survival_token", "sells": [["green_seeds", 15], ["red_seeds", 45], ["silver_key", 10], ["golden_key", 35], ["master_key", 100]], "buys": false},

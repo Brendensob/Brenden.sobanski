@@ -11,9 +11,9 @@ You talk to an NPC by **hitting** them (face them and press A), like the origina
 | Miffie | Street | Black hair, **yellow dress** | 27 quests in the original's order, then a daily bounty |
 | Brutus | Street | Red hair | Wood Wall quest → Survival Book and Survival Grasslands; sells wood, rock and branches |
 | Miner | Street | Blond | Seeds and keys for Survival Tokens |
-| Plumber | Street | Red cap, blue overalls | Sells tools; calls "New stocked items!" |
+| Plumber | Street | Red cap, blue overalls | **The town's seller:** tools, potions, Antidotes, ammo, walls, campfire, Combo Book II for 1,500 and the Green Egg. Doesn't buy. Calls "New stocked items!" |
 | **Banka** | Street | Blonde pigtails, pink dress | **Storage**: 6 backpacks × 30 slots (see [[Bag and Storage]]) |
-| **Merchant** | Street | **Spiky blond hair**, grey shirt | Combo Book II for 1,500, potions, ammo, walls, campfire, Green Egg |
+| **Merchant** | Street | **Spiky blond hair** (a girl), grey shirt | **Only buys** your items, at each item's sell price. Sells nothing |
 | Crafter | Left of the portal (left edge of the opening) | Brown | Makes weapons, tools, helmets, armor, shields and rings (see [[Crafting and Combining]]) |
 | Trader | Trading Center | Green cap | Trading between players |
 | GateKeeper (gate) | Furnace room | Green face | The Pretzel quest opens the furnace room |
@@ -21,6 +21,8 @@ You talk to an NPC by **hitting** them (face them and press A), like the origina
 | Jumpie | Grasslands 1 | Looks like Miffie | 10 Jellies → a Pixel Coin |
 | Nini, Nana, Nina | Basement | Ninjas | Tsurugi upgrades up to IV |
 | FC 9912, TT 1001, 2219 OOP | Basement | Robots | Iron Fist upgrades up to IV |
+
+So you **buy from the Plumber and sell to the Merchant**, as Brenden described the real game (2026-11-04). Shop prices are in [[Shops]].
 
 Every shopkeeper now and then shows **"New stocked items!"** over their head.
 

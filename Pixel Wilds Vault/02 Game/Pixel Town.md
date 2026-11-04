@@ -17,7 +17,7 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 3. Miffie (yellow dress)
 4. The sign
 5. The open space under the opening: the **Crafter** on its left edge, the **portal** in the exact middle (right under the opening's middle, so the two line up), and the **Gatekeeper** on its right edge, mirroring the Crafter
-6. Plumber → **Banka** (storage) → **Merchant** (spiky blond hair)
+6. Plumber (sells) → **Banka** (storage) → **Merchant** (spiky blond hair, buys)
 
 ![[portal_area.png]]
 
