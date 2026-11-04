@@ -5,6 +5,9 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-04
+- **The online server redeploys itself when its code changes.** Find Public Game showed "Unknown request." because the server on Render was still the 2026-10-27 morning version, from before public games were added: Render never redeployed it. A GitHub Action now calls Render's Deploy Hook on every server change, once the hook is saved as the `RENDER_DEPLOY_HOOK` secret. The game also says "The online server needs an update" instead of "Unknown request." *Brenden: "when i host a game and my friend clicks find game it only shows unkown request".*
+
 ## 2026-10-29 (portal area and world card maps)
 - **The Gatekeeper's portal opens in the exact middle of Pixel Town, right under the middle of the opening you jump up through,** so the opening and the portal line up. Before, the portal stood half a tile left of the opening's middle.
 - **The Crafter stands just left of the portal and the Gatekeeper just right of it,** each at the edge of the opening, the same distance away. The Crafter used to be at the east end of the street. The Plumber, Banka and the Merchant each moved one tile east, the sign one tile west, and the four houses now mirror around the middle.
