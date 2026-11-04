@@ -5,6 +5,14 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-04 (who buys and who sells)
+- **The spiky-haired Merchant only buys your items.** Her shop's left side says "Nothing for sale here", and the right side lists everything in your bag with a sell price.
+- **The Plumber sells everything the Merchant used to,** on top of his tools: potions, Antidotes, Fatigue Potions, arrows, cannon balls, missiles, Wood Walls, the campfire, Combo Book II (1,500) and the Green Egg. Same prices. He doesn't buy.
+- The Merchant is a girl. Read "mario" as the Plumber (red cap, blue overalls); he keeps the name Plumber.
+- Hints now say Antidotes and Small Potions come from the Plumber.
+- This replaces the 2026-10-17 reading that the spiky-haired NPC sells stuff.
+- *Brenden: "spikey ahir girl buys things off you doesnt sell anything mario does"*
+
 ## 2026-10-29 (portal area and world card maps)
 - **The Gatekeeper's portal opens in the exact middle of Pixel Town, right under the middle of the opening you jump up through,** so the opening and the portal line up. Before, the portal stood half a tile left of the opening's middle.
 - **The Crafter stands just left of the portal and the Gatekeeper just right of it,** each at the edge of the opening, the same distance away. The Crafter used to be at the east end of the street. The Plumber, Banka and the Merchant each moved one tile east, the sign one tile west, and the four houses now mirror around the middle.
@@ -126,7 +134,7 @@ Newest first. Each entry gives the decision, why, and where it came from.
   - big damage numbers.
   
   *Brenden: "Redo the art style with a twist of cartoon ish and what's on the screen right now".* → PR #17
-- **The storage girl is named Banka**, and **the spiky-haired blond NPC is the Merchant** (he sells stuff). *Brenden's answers.* → PR #16
+- **The storage girl is named Banka**, and **the spiky-haired blond NPC is the Merchant** (he sells stuff). *Brenden's answers.* → PR #16 (changed 2026-11-04: she only buys, the Plumber sells)
 - **Keep the Gem Shop**: "I wanna make money from this too". See [[Monetization]].
 - **The day counter shows only in Survival Grasslands**, and the Daily Free Gift was removed. *"The day counter and rewards for days is only in survival grasslands but no one really cares for it".* → PR #15
 - **The HUD follows his screenshots:**

@@ -138,7 +138,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Mining, chopping, resources | A | Tool tiers and hits |
 | Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
 | Crafting, combining, smelting | A | Every recipe tested |
-| Shops, currencies, merchants | A | Every shop item tested |
+| Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04) |
 | Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished) |
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |
