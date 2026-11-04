@@ -2302,6 +2302,8 @@ func _refresh_shop(npc_id: String) -> void:
 	_clear(sell)
 	var currency: String = shop.get("currency", "coins")
 	(p.get_node("SellHead") as Label).text = "Buy Gems" if shop.has("buy_gems") else "Sell"
+	if shop.sells.is_empty():
+		buy.add_child(_wrap("Nothing for sale here. Sell your items on the right.", 190, C_MUTED))
 	for e in shop.sells:
 		var id: String = e[0]
 		var price: int = e[1]

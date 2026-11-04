@@ -1,0 +1,26 @@
+# Redeploys the online server on Render whenever its code changes on main, so
+# the server never falls behind the game (that caused "Unknown request." on
+# Find Public Game, 2026-11-04). Needs the service's Deploy Hook URL saved as
+# the repository secret RENDER_DEPLOY_HOOK (Render: service > Settings > Deploy Hook).
+name: Online server deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["godot/server/**", "render.yaml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask Render to deploy the latest commit
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK isn't set, so Render wasn't asked to redeploy the server."
+            exit 0
+          fi
+          curl -fsS -X POST "$HOOK" > /dev/null
+          echo "Render is deploying the latest server."

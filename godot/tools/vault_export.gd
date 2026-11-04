@@ -178,7 +178,11 @@ func _shops() -> void:
 	for id in D.SHOPS:
 		var s: Dictionary = D.SHOPS[id]
 		var cur: String = _n(s.get("currency", "coin"))
-		body += "## %s\n\n| Item | Price (%s) |\n|---|---|\n" % [s.title, cur]
+		body += "## %s\n\n" % s.title
+		if s.sells.is_empty():
+			body += "Sells nothing.\n"
+		else:
+			body += "| Item | Price (%s) |\n|---|---|\n" % cur
 		for e in s.sells:
 			body += "| %s | %d |\n" % [_n(e[0]), e[1]]
 		body += "\nBuys your items: %s\n\n" % ("yes" if s.get("buys", false) else "no")

@@ -247,7 +247,7 @@ func faint_tip() -> String:
 		if s and Data.ITEMS[s.id].get("heal", 0) > 0:
 			heals += s.n
 	if heals == 0:
-		return "Carry potions. The Merchant sells Small Potions. Pick one on the hotbar and press A to drink it."
+		return "Carry potions. The Plumber sells Small Potions. Pick one on the hotbar and press A to drink it."
 	if level and Data.WORLDS.has(level.id) and GS.world_danger(level.id) >= 2:
 		return "This place is %s for your gear. Upgrade your sword and armor at the Crafter first." % ["Easy", "Fair", "Hard", "Deadly"][GS.world_danger(level.id)]
 	return "Hit monsters as they come: each hit pushes them back and stuns them for a moment."

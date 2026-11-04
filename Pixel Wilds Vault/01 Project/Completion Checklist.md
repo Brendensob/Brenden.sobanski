@@ -105,7 +105,7 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
-| Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
+| Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
@@ -138,7 +138,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Mining, chopping, resources | A | Tool tiers and hits |
 | Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
 | Crafting, combining, smelting | A | Every recipe tested |
-| Shops, currencies, merchants | A | Every shop item tested |
+| Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04) |
 | Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished) |
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |
