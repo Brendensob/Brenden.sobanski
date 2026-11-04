@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #39 | 2026-11-04 | Banka's first backpack is free; backpacks 2 to 6 unlock in order for 50 gems each (placeholder); old saves keep any backpack with items in it |
 | #38 | 2026-11-04 | Shop roles: the spiky-haired Merchant only buys your items; the Plumber sells everything (tools plus the Merchant's old stock); hints point to the Plumber |
 | #37 | 2026-11-04 | Find Public Game: the online server redeploys when its code changes, and a clear message when it's out of date |
 | #36 | 2026-10-29 | Portal right under the middle of the town's opening; the Crafter left of it and the Gatekeeper right of it; world card maps drawn like little screenshots (sky, clouds, mountains, grass, caves, trees, ores, arrival portal) |

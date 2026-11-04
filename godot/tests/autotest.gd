@@ -634,8 +634,30 @@ func jump_and_underground() -> void:
 		if GS.inv[i] and GS.inv[i].id == "rock":
 			rock_i = i
 	var rocks0 := GS.count("rock")
+	# the first backpack is free; every one after costs gems, in order
+	GS.backpacks_owned = 1
+	GS.gems = 0
+	check(GS.owns_backpack(0) and not GS.owns_backpack(1), "the first backpack is free and the second is locked")
 	main.hud.open_storage()
+	main.hud.storage_page = 1
+	main.hud._refresh_bag()
+	var unlock: Button = main.hud.page.find_child("UnlockPack", true, false)
+	check(unlock != null and unlock.disabled, "a locked backpack shows an Unlock button, greyed out without gems")
+	await shot("03g_locked_backpack")
+	main.hud._bag_click(rock_i)
+	check(GS.count("rock") == rocks0 and GS.storage[1].all(func(x): return x == null), "nothing goes into a locked backpack")
+	check(GS.buy_backpack() != "" and GS.backpacks_owned == 1, "a backpack can't be bought without %d gems" % GS.BACKPACK_GEMS)
+	GS.gems = GS.BACKPACK_GEMS * 2 + 3
+	main.hud._refresh_bag()
+	unlock = main.hud.page.find_child("UnlockPack", true, false)
+	unlock.pressed.emit()
+	check(GS.backpacks_owned == 2 and GS.gems == GS.BACKPACK_GEMS + 3, "Unlock spends %d gems and opens backpack 2" % GS.BACKPACK_GEMS)
+	main.hud.storage_page = 3
+	main.hud._refresh_bag()
+	check(main.hud.page.find_child("UnlockPack", true, false) == null, "backpacks unlock in order (4 waits for 3)")
+	check(GS.buy_backpack() == "" and GS.backpacks_owned == 3, "the next one costs gems too")
 	main.hud.storage_page = 2
+	main.hud._refresh_bag()
 	main.hud._bag_click(rock_i)
 	var in_pack := 0
 	for s0 in GS.storage[2]:
@@ -1008,6 +1030,17 @@ func gameplay_check() -> void:
 	f.store_string(JSON.stringify({"v": 3, "inv": [{"id": "rock", "n": 9}], "coins": 77, "name": "Tester", "look": "nurse"}))
 	f.close()
 	check(GS.load_game() and GS.count("rock") == 9 and GS.coins == 77 and GS.storage.size() == GS.BACKPACKS, "an old save without storage, gems or clock fields still loads")
+	check(GS.backpacks_owned == 1, "an old save starts with just the free backpack")
+	# a backpack that already holds things stays open in an old save
+	f = FileAccess.open(GS.slot_path(GS.slot), FileAccess.WRITE)
+	var packs := [[], [], [], [{"id": "rock", "n": 2}], [], []]
+	f.store_string(JSON.stringify({"v": 3, "inv": [], "storage": packs, "coins": 1, "look": "nurse"}))
+	f.close()
+	check(GS.load_game() and GS.backpacks_owned == 4 and GS.in_storage("rock") == 2, "an old save keeps every backpack that has items in it")
+	GS.storage[3][0] = null
+	GS.backpacks_owned = 2
+	GS.save_game()
+	check(GS.load_game() and GS.backpacks_owned == 2, "unlocked backpacks are saved")
 	GS.save_game()
 	# the HUD fits every window shape: nothing off screen, A and B and the arrows don't overlap
 	for size in [Vector2i(960, 540), Vector2i(1280, 540), Vector2i(720, 540), Vector2i(540, 720)]:

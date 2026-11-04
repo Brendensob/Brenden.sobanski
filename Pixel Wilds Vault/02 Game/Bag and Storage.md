@@ -19,6 +19,8 @@ Rewards that don't fit drop at your feet as your own pickup. In multiplayer only
 ## Storage (Banka)
 - Hit **Banka** on the street (see [[NPCs]]) and the bag opens in storage mode.
 - **6 backpack tabs**, each a **5 × 6 grid** (30 slots), like Brenden's screenshot.
+- **The first backpack is free. Each one after it costs gems** (50 each for now, a placeholder for Brenden to set), unlocked in order. A locked tab shows a padlock; tap it for an **Unlock** button, or **Get gems** if you're short. Nothing can be put in a locked backpack.
+- Old saves keep every backpack that already has items in it.
 - Tap an item in your bag to put it in the open backpack. Tap it in the backpack to take it back. Stacks merge where they can.
 - Saved with the character (`GS.storage`).
 
@@ -26,3 +28,4 @@ History:
 1. The first storage (PR #13) came from the 2.o wiki and was removed (PR #14).
 2. It was rebuilt from Brenden's screenshot (PR #15).
 3. It was named Banka on his word (PR #16).
+4. Backpacks 2 to 6 cost gems, as Brenden asked (2026-11-04).
