@@ -55,6 +55,7 @@ var s_day := 1
 var s_night := false
 var s_boss_day := 0
 var regrow_timer := 20.0
+const RESPAWN_EVERY := 15.0
 
 ## seed and net_state come from the room host when you're a guest in a room.
 func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}) -> void:
@@ -727,6 +728,11 @@ func _populate_explore() -> void:
 		if touches_deadly(Rect2(c.x * T - 4, c.y * T - 8, T + 8, T + 8)):
 			continue
 		var m: Array = _weighted(def.mobs)
+		# near the way in to the first Grasslands, only Slimes and Firas: a new
+		# player meets the easy ones first, and Mummies and Shellys further on
+		if id == "grass_1" and c.x < 45 and c.y <= surface[c.x] + 2:
+			while not m[0] in ["slime", "wisp"]:
+				m = _weighted(def.mobs)
 		var hpm: float = (float(m[2]) if m.size() > 2 else 1.0) * mult
 		var dmm: float = (float(m[3]) if m.size() > 3 else 1.0) * mult
 		spawn_mob_at(m[0], cell_pos(c), hpm, dmm)
@@ -937,6 +943,33 @@ func _process(delta: float) -> void:
 	match kind:
 		"arena": _arena_tick(delta)
 		"survival": _survival_tick(delta)
+		"explore": _explore_tick(delta)
+
+## Monsters come back in explore worlds: every 15 seconds, while there are
+## fewer than the world started with, one of its monsters turns up on open
+## ground well away from you (never in sight), so you can keep farming.
+var respawn_t := 15.0
+func _explore_tick(delta: float) -> void:
+	respawn_t -= delta
+	if respawn_t > 0 or player == null:
+		return
+	respawn_t = RESPAWN_EVERY
+	var alive := 0
+	for e in entities.get_children():
+		if e is MobScript and not e.dead and not e.def.get("invulnerable", false):
+			alive += 1
+	if alive >= int(def.count) * 0.9:
+		return
+	for k in 8:
+		var c := Vector2i(rng.randi_range(4, W - 5), rng.randi_range(2, H - 3))
+		if not is_floor(c.x, c.y) or absi(c.x - int(player.position.x / T)) < 22 or touches_deadly(Rect2(c.x * T - 4, c.y * T - 8, T + 8, T + 8)):
+			continue
+		var m: Array = _weighted(def.mobs)
+		if Data.MOBS[m[0]].get("invulnerable", false):
+			continue
+		var mult: float = def.get("mult", 1.0)
+		spawn_mob_at(m[0], cell_pos(c), (float(m[2]) if m.size() > 2 else 1.0) * mult, (float(m[3]) if m.size() > 3 else 1.0) * mult)
+		return
 
 func _arena_tick(delta: float) -> void:
 	if arena_done:

@@ -118,15 +118,17 @@ func _clear(w: String) -> void:
 	var fainted := false
 	var skip := {}
 	var had := _totals()
-	var mobs0 := _alive_mobs(lvl)
-	while clock < limit:
+	var killed := 0
+	while clock < limit and clock - start < 600.0:
 		var t: Node = _next_target(lvl, p, skip)
 		if t == null:
 			break
 		_walk(p.position, t.position)
 		_stand_by(lvl, p, t)
 		if t is MobScript:
+			var before := _alive_mobs(lvl)
 			var won: bool = await _fight(lvl, p, t, 45.0)
+			killed += maxi(0, before - _alive_mobs(lvl))
 			if not won and not p.dead:
 				skip[t] = true
 		else:
@@ -146,8 +148,9 @@ func _clear(w: String) -> void:
 		await _pick_up(lvl, p)
 		if _bag_is_full():
 			bag_full += 1
-			break
-	kills = mobs0 - _alive_mobs(lvl)
+			if not _trash_junk():
+				break
+	kills = killed
 	var skipped := skip.keys().filter(func(k): return is_instance_valid(k) and k is MobScript).size()
 	if skipped > 0:
 		print("  skipped %d monsters it couldn't get at" % skipped)
@@ -199,7 +202,7 @@ func _walk(a: Vector2, b: Vector2) -> void:
 func _pass(s: float, what: String) -> void:
 	clock += s
 	spent[what] += s
-	GS.hp = minf(GS.max_hp(), GS.hp + s / 12.0)
+	GS.hp = minf(GS.max_hp(), GS.hp + maxf(0.0, s - 6.0) / 4.0)
 	GS.st = GS.max_st()
 	GS.stats_changed.emit()
 
@@ -358,6 +361,20 @@ func _pick_up(lvl: Node, p: CharacterBody2D) -> void:
 				await get_tree().physics_frame
 			clock += 0.2
 
+## With a full bag, throws away a stack the plan has no use for, like a
+## player tapping the trash can. False when there's nothing to throw.
+const USEFUL := ["jelly", "wood", "branch", "rock", "coal", "copper_ore", "iron_ore", "gold_ore", "herb", "plant_roots",
+	"honey_bug", "scarab", "armor_bug", "wood_board", "copper_bar", "iron_bar", "wood_wall", "pretzel"]
+
+func _trash_junk() -> bool:
+	for i in range(GS.inv.size() - 1, -1, -1):
+		var s = GS.inv[i]
+		if s and not s.id in USEFUL and not s.id.contains("potion") and not s.id.contains("book") and not Data.ITEMS[s.id].get("type", "") in ["weapon", "axe", "pick"]:
+			GS.inv[i] = null
+			GS.inventory_changed.emit()
+			return true
+	return false
+
 func _bag_is_full() -> bool:
 	for s in GS.inv:
 		if s == null:
@@ -433,14 +450,22 @@ func _to_bag(need: Dictionary) -> void:
 			stash[id] -= n
 			GS.add_item(id, n, true)
 
+## Stays in the bag: the best weapon, axe and pick, potions and books.
 func _keep(id: String) -> bool:
 	var it: Dictionary = Data.ITEMS[id]
-	return it.get("type", "") in ["weapon", "axe", "pick", "book"] or it.get("heal", 0) > 0 or id.contains("book")
+	var type: String = it.get("type", "")
+	if type in ["weapon", "axe", "pick"]:
+		var b := _best(type)
+		return b >= 0 and GS.inv[b].id == id
+	return type == "book" or id.contains("book") or id.contains("potion")
 
 func _store() -> void:
+	var best := {}
+	for type in ["weapon", "axe", "pick"]:
+		best[_best(type)] = true
 	for i in GS.inv.size():
 		var s = GS.inv[i]
-		if s and not _keep(s.id):
+		if s and not best.has(i) and not (Data.ITEMS[s.id].get("type", "") == "book" or s.id.contains("book") or s.id.contains("potion")):
 			stash[s.id] = int(stash.get(s.id, 0)) + int(s.n)
 			GS.inv[i] = null
 	GS.inventory_changed.emit()
