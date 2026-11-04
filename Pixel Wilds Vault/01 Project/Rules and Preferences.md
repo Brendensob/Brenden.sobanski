@@ -55,7 +55,7 @@ Claude follows these every session. They come from Brenden's own instructions; t
 | "make the sides symetrical" | Pixel Town's left and right halves should mirror | PR #10 |
 | "Where the inventory npc and make the lap layout way closer to the actual one it's too big" | Add the storage NPC, and shrink the town map | PR #13 |
 | "Call her banka the spiky hair sells stuff" | The storage girl is Banka, and the spiky blond NPC is the seller (the Merchant) | PR #16 |
-| "spikey ahir girl buys things off you doesnt sell anything mario does" | The Merchant only buys; the Plumber ("mario", red cap) sells | PR #37 |
+| "spikey ahir girl buys things off you doesnt sell anything mario does" | The Merchant only buys; the Plumber ("mario", red cap) sells | PR #38 |
 | "keep the gem shop I wanna make money from this too" | Keep gems; plan real-money sales | [[Monetization]] |
 | "Redo the art style with a twist of cartoon ish and what's on the screen right now" (plus a screenshot) | A cartoon finish, and add every HUD part visible in the screenshot | PR #17 |
 | "How to play" | Where to open the game, plus the controls | Answer only, no code |

@@ -95,6 +95,9 @@ func _request(path: String, body: Dictionary, wait: float) -> Dictionary:
 	var d = JSON.parse_string((res[3] as PackedByteArray).get_string_from_utf8())
 	if typeof(d) != TYPE_DICTIONARY:
 		return {"ok": false, "offline": true, "error": "The online server sent something odd."}
+	if d.get("error", "") == "Unknown request.":
+		# the hosted server is running older code than the game (it wasn't redeployed)
+		d["error"] = "The online server needs an update. Try again in a few minutes."
 	return d
 
 ## Claims a name. On success the answer has the key ("token") that proves it's yours.

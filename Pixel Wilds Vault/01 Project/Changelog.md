@@ -7,7 +7,8 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
-| #37 | 2026-11-04 | Shop roles: the spiky-haired Merchant only buys your items; the Plumber sells everything (tools plus the Merchant's old stock); hints point to the Plumber |
+| #38 | 2026-11-04 | Shop roles: the spiky-haired Merchant only buys your items; the Plumber sells everything (tools plus the Merchant's old stock); hints point to the Plumber |
+| #37 | 2026-11-04 | Find Public Game: the online server redeploys when its code changes, and a clear message when it's out of date |
 | #36 | 2026-10-29 | Portal right under the middle of the town's opening; the Crafter left of it and the Gatekeeper right of it; world card maps drawn like little screenshots (sky, clouds, mountains, grass, caves, trees, ores, arrival portal) |
 | #35 | 2026-10-28 | README tagline no longer says "no shop, no ads" |
 | #34 | 2026-10-28 | README redone: play buttons and build badge at the top, contents, the Godot version first, classic version details folded away, repo layout table; stray `brenden.sobanski` intro file removed (it moves to a profile README); the old top-down browser version removed from the repo and from `/classic/` on the website |

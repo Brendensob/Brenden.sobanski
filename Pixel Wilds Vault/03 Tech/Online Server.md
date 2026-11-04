@@ -22,7 +22,8 @@ The game uses the WebSocket relay everywhere, so the **phone/browser build can h
 - **Live** since 2026-10-27 (Brenden deployed it).
 - **One-time setup (done):** open https://render.com/deploy?repo=https://github.com/Brendensob/Brenden.sobanski, sign in with GitHub, press Deploy.
 - The game looks for it at `https://pixel-wilds-brendensob.onrender.com` (`ONLINE_SERVER` in `scripts/online.gd`). If Render gives a different address, put it in `godot/server.txt`.
-- Every merge to `main` redeploys it.
+- **Redeploying:** Render did not redeploy it on its own (found 2026-11-04). `.github/workflows/server-deploy.yml` calls Render's Deploy Hook whenever `godot/server/` or `render.yaml` changes on `main`. It needs the hook URL (Render: service > Settings > Deploy Hook) saved as the GitHub secret `RENDER_DEPLOY_HOOK`. Without it, redeploy by hand: Manual Deploy > Deploy latest commit.
+- If the server is older than the game, the game says "The online server needs an update."
 - **Sleeps** after 15 minutes with nobody on; the first request wakes it in about a minute. The game's first call (server time) waits up to 75 s for this.
 - **No saved disk on the free plan**: a restart can wipe names. Each game keeps its name key and friends list and puts them back with `/restore` when the server says it doesn't know them. A friendship only counts once **both** players have put each other back, so nobody can fake one.
 
