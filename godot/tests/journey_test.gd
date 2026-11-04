@@ -169,14 +169,21 @@ func _alive_mobs(lvl: Node) -> int:
 			n += 1
 	return n
 
+## The nearest thing worth going for, like a player following the goal card:
+## after Jellies, Slimes come first; after bars, ore comes first.
 func _next_target(lvl: Node, p: Node2D, skip: Dictionary) -> Node:
 	var best: Node = null
 	var best_cost := INF
+	var goal: String = GS.current_goal().get("text", "")
+	var want_mob := "slime" if goal.contains("Jell") else ""
+	var want_node := "copper" if goal.contains("Copper Bar") else ("iron" if goal.contains("Iron Bar") else "")
 	for e in lvl.entities.get_children():
 		if e is MobScript and not e.dead and not skip.has(e) and not e.def.get("invulnerable", false):
 			if float(e.max_hp) > 2000:
 				continue # a mini-boss like the Hand: walk away
 			var c := _cost(p.position, e.position)
+			if want_mob != "":
+				c = c * 0.25 if e.id == want_mob else c * 2.0
 			if c < best_cost:
 				best_cost = c
 				best = e
@@ -185,6 +192,10 @@ func _next_target(lvl: Node, p: Node2D, skip: Dictionary) -> Node:
 			if Data.hits_needed(n.kind, GS.best_tier(n.def.tool)) < 0:
 				continue
 			var c := _cost(p.position, n.position)
+			if want_mob != "":
+				c *= 4.0
+			if want_node != "":
+				c = c * 0.25 if n.kind == want_node else c * 2.0
 			if c < best_cost:
 				best_cost = c
 				best = n
