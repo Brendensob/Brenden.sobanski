@@ -13,6 +13,7 @@ tags: [game, economy]
 | 3 Silver / Golden / Master Keys | 5 / 15 / 40 |
 | Characters | 100, 300, 800 or 2,000 (the original's tiers) |
 | Combination Scrolls, Magic Seeds | estimates |
+| Each of Banka's backpacks after the first | 50 (placeholder) |
 | 1 gem | 2,500 Pixel Coins (in place of real-money packs) |
 
 **Where gems come from:**

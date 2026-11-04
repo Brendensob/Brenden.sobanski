@@ -1116,7 +1116,9 @@ func _bag_click(i: int) -> void:
 		return
 	# at Banka, tapping an item puts it in the open backpack
 	if bag_mode == "storage":
-		if GS.inv[i] != null and GS.store(i, storage_page) > 0:
+		if not GS.owns_backpack(storage_page):
+			toast("Unlock this backpack first.", "warn")
+		elif GS.inv[i] != null and GS.store(i, storage_page) > 0:
 			toast("This backpack is full.", "warn")
 		bag_sel = -1
 		_refresh_bag()
@@ -1157,7 +1159,7 @@ func _refresh_bag() -> void:
 		b.custom_minimum_size = Vector2(42 if bag_mode == "craft" else (35 if bag_mode == "storage" else 72), 30)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if bag_mode == "storage":
-			b.icon = Art.ui_icon("backpack", 2)
+			b.icon = Art.ui_icon("backpack" if GS.owns_backpack(int(key.substr(4))) else "lock", 2)
 		elif bag_mode == "craft":
 			b.icon = Art.icon_big(t[1])
 		else:
@@ -1189,6 +1191,9 @@ func _refresh_bag() -> void:
 
 ## One backpack of the storage: 5 x 6 slots. Tap a stack to take it back.
 func _page_storage() -> void:
+	if not GS.owns_backpack(storage_page):
+		_page_locked_backpack()
+		return
 	var grid := GridContainer.new()
 	grid.columns = 5
 	grid.position = Vector2(26, 8)
@@ -1205,6 +1210,35 @@ func _page_storage() -> void:
 				toast("Your bag is full.", "warn")
 			_refresh_bag())
 		grid.add_child(b)
+
+## A locked backpack: the first is free, every one after costs gems, in order.
+func _page_locked_backpack() -> void:
+	var box := VBoxContainer.new()
+	box.name = "LockedPack"
+	box.position = Vector2(12, 40)
+	box.custom_minimum_size = Vector2(190, 0)
+	box.add_theme_constant_override("separation", 8)
+	page.add_child(box)
+	var head := _label("Backpack %d is locked" % (storage_page + 1), 11)
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(head)
+	if storage_page > GS.backpacks_owned:
+		box.add_child(_wrap("Unlock backpack %d first." % (GS.backpacks_owned + 1), 190, C_MUTED))
+		return
+	box.add_child(_wrap("Unlock it for %d gems. You have %d gems." % [GS.BACKPACK_GEMS, GS.gems], 190, C_MUTED))
+	var buy := _button("Unlock  %d gems" % GS.BACKPACK_GEMS, func():
+		var why := GS.buy_backpack()
+		if why != "":
+			toast(why, "warn")
+			return
+		Sfx.play("coin")
+		toast("Backpack %d unlocked!" % (storage_page + 1), "big")
+		_refresh_bag(), true)
+	buy.name = "UnlockPack"
+	buy.disabled = GS.gems < GS.BACKPACK_GEMS
+	box.add_child(buy)
+	if GS.gems < GS.BACKPACK_GEMS:
+		box.add_child(_button("Get gems", func(): open_gem_shop()))
 
 ## Banka opens your bag with the six backpacks next to it.
 func open_storage() -> void:

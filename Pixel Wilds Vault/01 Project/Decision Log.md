@@ -12,6 +12,12 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Every item has its own icon** (567 items, 279 used to share one). Read "models for every item" as "a picture of its own". Weapons, staffs, bows, armour, helmets, shields and rings are drawn by `scripts/item_icons.gd`: each gets its own blade, tip, guard and pommel (or helmet shape, shield shape and emblem, ring stone...), chosen from its name so it never changes. Upgrades keep their family's shape and gain marks: 2 a gem in the guard, 3 a gem in the pommel, 4 a rune, 5 a sparkle, U gold trim. Potions get bigger bottles as they get bigger. Jr pets are drawn smaller than grown-up ones.
 - *Brenden: "i need you to make the game look better wehile still having the pixel look i need models for every item ... dont make everything feel clutterd like it does now and have agents test that if possible"*
 
+## 2026-11-04 (extra storage costs gems)
+- **Banka's first backpack is free; each one after it costs gems,** unlocked in order (2, then 3, up to 6). Brenden: *"every storage after the first cost gems and gems cost reealy money"*.
+- **50 gems per backpack is a placeholder.** The PSG2 wiki gives no price, so Brenden sets it (`BACKPACK_GEMS` in `game_state.gd`).
+- **Old saves lose nothing:** a backpack that already holds items stays unlocked. Empty extra backpacks lock again.
+- **Real-money gems are not in yet.** They need a payment account only Brenden can open (see [[Monetization]]). Gems for 2,500 coins stay until he decides.
+
 ## 2026-11-04 (who buys and who sells)
 - **The spiky-haired Merchant only buys your items.** Her shop's left side says "Nothing for sale here", and the right side lists everything in your bag with a sell price.
 - **The Plumber sells everything the Merchant used to,** on top of his tools: potions, Antidotes, Fatigue Potions, arrows, cannon balls, missiles, Wood Walls, the campfire, Combo Book II (1,500) and the Green Egg. Same prices. He doesn't buy.

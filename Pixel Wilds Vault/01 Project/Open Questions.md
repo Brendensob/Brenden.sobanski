@@ -5,6 +5,8 @@ tags: [project, questions]
 
 Things only Brenden can answer. Claude asks these when they matter and moves the answers to [[Decision Log]].
 
+- [ ] **Backpack price:** 50 gems each is a placeholder. What should backpacks 2 to 6 cost?
+- [ ] **Real-money gems:** open a payment account (Stripe or PayPal) so gems can be sold? Keep gems for coins until then?
 - [ ] **Money:** sell the game itself, sell gems for real money through Steam, or both? What price?
 - [ ] Are the **friend, chat and emote buttons** visible in single player in the real game, or only online? (Ours always show.)
 - [ ] Does the Plumber sell exactly our list (tools, potions, ammo, walls, campfire, Combo Book II, Green Egg) in the real game? Brenden answered who sells and who buys on 2026-11-04.

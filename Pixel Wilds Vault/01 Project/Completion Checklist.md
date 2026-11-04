@@ -34,7 +34,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Rewards never lost when the bag is full | ✅ | Chests, the Crafter, quests, combining, harvests, survival tokens, trades and multiplayer pickups drop the overflow at your feet |
 | Using each item type | ✅ | All 22 usable types are tested (coin and gem are currencies, not bag items) |
 | Equipment: 6 slots and stat sums | ✅ | Helmet test, and the earlier ring tests |
-| Banka's storage (6 × 30) | ✅ | |
+| Banka's storage (6 × 30) | ✅ | First backpack free, the rest cost gems (tested) |
 | Drag-and-drop, stack splitting, sorting | ⛔ | Tap to move works. PSG2 is tap-based too, so this is optional |
 | Item tooltips and descriptions | 🟡 | Every item has a description and stats line |
 | Item rarity colours | ⛔ | PSG2 has none that we know of |
