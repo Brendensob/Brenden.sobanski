@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-04 (extra storage costs gems)
+- **Banka's first backpack is free; each one after it costs gems,** unlocked in order (2, then 3, up to 6). Brenden: *"every storage after the first cost gems and gems cost reealy money"*.
+- **50 gems per backpack is a placeholder.** The PSG2 wiki gives no price, so Brenden sets it (`BACKPACK_GEMS` in `game_state.gd`).
+- **Old saves lose nothing:** a backpack that already holds items stays unlocked. Empty extra backpacks lock again.
+- **Real-money gems are not in yet.** They need a payment account only Brenden can open (see [[Monetization]]). Gems for 2,500 coins stay until he decides.
+
 ## 2026-11-04 (who buys and who sells)
 - **The spiky-haired Merchant only buys your items.** Her shop's left side says "Nothing for sale here", and the right side lists everything in your bag with a sell price.
 - **The Plumber sells everything the Merchant used to,** on top of his tools: potions, Antidotes, Fatigue Potions, arrows, cannon balls, missiles, Wood Walls, the campfire, Combo Book II (1,500) and the Green Egg. Same prices. He doesn't buy.

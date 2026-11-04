@@ -15,7 +15,16 @@ Brenden (2026-10-17): *"keep the gem shop I wanna make money from this too"*.
   - bosses, chests, magic seeds and quests;
   - buying them for **2,500 Pixel Coins each**, in place of real-money packs.
 
+- Gems also unlock Banka's backpacks 2 to 6 (2026-11-04).
+
 See [[Currencies and Gem Shop]] for the details.
+
+## What real-money gems would need (2026-11-04)
+Brenden said gems should cost real money, like PSG2. The game is played on the web (GitHub Pages), so that needs:
+1. **A payment account in Brenden's name,** such as Stripe or PayPal (a phone app would use Google Play or Apple instead). Only he can open it: it needs his identity and a bank account, and an adult if he is under 18.
+2. **A small server that checks each payment** and then gives the gems. Saves live in the browser, so without it anyone could edit their gem count.
+3. Prices for gem packs.
+Until then, gems for 2,500 coins stay in the Gem Shop.
 
 ## Ways to earn later (to decide, see [[Open Questions]])
 1. **Paid game on Steam.** The simplest: one price, no store inside the game.
