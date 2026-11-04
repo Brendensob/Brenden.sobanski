@@ -66,6 +66,18 @@ Brenden asked to *"remodel everything especially the walls around the map like a
 - **Mountains:** a sunny left face and a shaded right face, a ragged ridge with a lit rim, creases, small snow caps with a zig-zag edge, and haze toward the bottom. The far range is paler.
 - **Tree line** instead of round blobs: two rows of treetops (the back row darker), each lit along its top and speckled with leaves. It takes each world's colours, so dark worlds get dark forests.
 
+## Item icons (2026-11-04)
+
+![[item_icons_sheet.png]]
+
+Every one of the 567 items has its own icon, still on the 10 × 10 grid with the outline and cartoon finish. Brenden: *"i need models for every item"*.
+- Materials, food, books, keys, seeds, eggs and placeables use the templates in `Art.ICON_GRIDS`, now with no two alike (gems in their own colours, a small shard for the Small Evil Crystal, spotted eggs for the event eggs, a torch stand for the placeable Torch).
+- Potions grow with their size: vial, bottle, flask, jug.
+- Weapons, staffs, bows, cannons, ammo, armour, helmets, shields and rings are drawn by `scripts/item_icons.gd` from their name: blade length, tip (point, clip, fork, hook, round), width, curve, teeth, guard (bar, cross, crescent, disc, wings), pommel; helmet shape (dome, visor, crest, horns, wings, hats, hood, masks, animal heads); shield shape (heater, round, kite, tower, buckler) and emblem; ring stone (heart, drop, flame, skull, shield...). Themed ones have their own shapes: candy canes, lollipops, Christmas trees, carrots, ice pops, the ninja star, the twin blades.
+- **Upgrades keep the family's shape** and gain marks: 2 a gem in the guard, 3 a gem in the pommel, 4 a rune, 5 a sparkle, U gold trim and two sparkles.
+- Pets use their own sprite; Jr pets are drawn smaller.
+- `tools/icon_audit.gd` lists any items that share a picture (and `AUDIT_SHEET=file.png` saves a sheet of every icon). The autotest checks it too.
+
 ## Palette
 The theme colors for each world are in `Art.THEMES` (grass, dark, hell, ice, dream, modina, nightmare, forbidden, snow, mushroom, fruit, egg, tomb, ghost).
 

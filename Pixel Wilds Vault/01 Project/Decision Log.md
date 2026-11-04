@@ -5,6 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-04 (roomier maps and an icon for every item)
+- **The HUD and menus stay as they are.** Brenden first asked for a better layout, then said he meant the maps: *"i dont mean hud and menus keep them the same i mean the layout of the map and how close everything is it just has that clutter feel"*.
+- **Pixel Town is a little wider (64 → 80 tiles) so nobody stands on top of anyone.** On the street every villager is about four tiles from the next, and the four houses stand in the gaps between them instead of behind them. The order is the same, the sides still mirror, and the portal is still in the exact middle under the opening. Upstairs, the chests and the incubator have more room, the trading tables are further apart, and the five furnaces are four tiles apart instead of three. The basement's ninjas and robots are six tiles apart. This keeps the town closed in; it's wider, not taller, because the 2026-10 "it's too big" was about the old big map.
+- **Worlds have fewer, better-spaced resources.** About a quarter fewer trees, rocks and plants, with at least two empty tiles between any two (three beside a tree), none right where you arrive, and monsters start at least five tiles apart. In Survival, resources keep 40 px apart instead of 20.
+- **Every item has its own icon** (567 items, 279 used to share one). Read "models for every item" as "a picture of its own". Weapons, staffs, bows, armour, helmets, shields and rings are drawn by `scripts/item_icons.gd`: each gets its own blade, tip, guard and pommel (or helmet shape, shield shape and emblem, ring stone...), chosen from its name so it never changes. Upgrades keep their family's shape and gain marks: 2 a gem in the guard, 3 a gem in the pommel, 4 a rune, 5 a sparkle, U gold trim. Potions get bigger bottles as they get bigger. Jr pets are drawn smaller than grown-up ones.
+- *Brenden: "i need you to make the game look better wehile still having the pixel look i need models for every item ... dont make everything feel clutterd like it does now and have agents test that if possible"*
+
 ## 2026-11-04 (who buys and who sells)
 - **The spiky-haired Merchant only buys your items.** Her shop's left side says "Nothing for sale here", and the right side lists everything in your bag with a sell price.
 - **The Plumber sells everything the Merchant used to,** on top of his tools: potions, Antidotes, Fatigue Potions, arrows, cannon balls, missiles, Wood Walls, the campfire, Combo Book II (1,500) and the Green Egg. Same prices. He doesn't buy.

@@ -1227,6 +1227,16 @@ func auto_hit_check() -> void:
 ## The ground's art: every world bakes its ground quickly, the map's edges are
 ## rock and the back walls are drawn; screenshots of the surface and the caves.
 func look_check() -> void:
+	# every item has its own icon: no two items share a picture
+	var seen := {}
+	var same := []
+	for id in Data.ITEMS:
+		var img: Image = Art.icon(id).get_image()
+		var key := "%s:%s" % [img.get_size(), img.get_data().hex_encode().sha256_text()]
+		if seen.has(key):
+			same.append("%s=%s" % [seen[key], id])
+		seen[key] = id
+	check(same.is_empty(), "all %d items have their own icon %s" % [Data.ITEMS.size(), same])
 	var slow := []
 	var empty := []
 	for w in Data.WORLDS:
@@ -1256,6 +1266,15 @@ func look_check() -> void:
 				main.camera.reset_smoothing()
 				await wait(0.5)
 				await shot("71_%s_cave" % w)
+			# a few spots along the surface, to judge how crowded the map feels
+			if w in ["grass_1", "grass_3", "dark_1", "ice_cavern", "hell_1"]:
+				for k in [1, 2, 3]:
+					var sx: int = lvl.W * k / 4
+					lvl.player.position = lvl.cell_pos(Vector2i(sx, lvl.surface[sx] - 1))
+					main.camera.position = lvl.player.position
+					main.camera.reset_smoothing()
+					await wait(0.4)
+					await shot("76_%s_surface_%d" % [w, k])
 	check(slow.is_empty(), "every world builds in under 3 s %s" % [slow])
 	check(empty.is_empty(), "every world has baked ground with rock at its edges %s" % [empty])
 	# Pixel Town upstairs and in the basement
@@ -1267,6 +1286,25 @@ func look_check() -> void:
 		main.camera.reset_smoothing()
 		await wait(0.5)
 		await shot(spot[0])
+	# the whole street, west to east, a screen at a time
+	for i in 4:
+		var sx: int = 8 + i * (town.W - 16) / 3
+		town.player.position = town.cell_pos(Vector2i(sx, town.TOWN_MID - 1))
+		main.camera.position = town.player.position
+		main.camera.reset_smoothing()
+		await wait(0.4)
+		await shot("75_town_street_%d" % i)
+	# nothing on the street stands on top of anything else
+	var xs := []
+	for n in town.props.get_children():
+		if (n.get_script() == town.NpcScript or n.get_script() == town.StationScript) and absf(n.position.y - town.cell_pos(Vector2i(0, town.TOWN_MID - 1)).y) < 4:
+			xs.append(n.position.x)
+	xs.sort()
+	var tight := 0
+	for i in range(1, xs.size()):
+		if xs[i] - xs[i - 1] < 32 and xs[i] > 12 * 16:
+			tight += 1
+	check(tight == 0, "the villagers on the street stand at least two tiles apart (%d too close)" % tight)
 
 func menus_check() -> void:
 	await goto("grass_1")

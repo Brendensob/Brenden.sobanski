@@ -115,6 +115,8 @@ The living list of every system and how finished it is. It's updated after each 
 | HUD, menus and panels like PSG2 | ✅ | 2026-10-27: rounded cartoon boxes, pop-in, dimmed backdrop, tap outside to close, message bubbles that count up |
 | Depth and cartoon finish | ✅ | 2026-10-27: shadows, portal/drop/ore glows, smooth big sprites, clouds and hazy far mountains. Checked in the autotest screenshots |
 | Ground, map walls and backdrops | ✅ | 2026-10-27 remodel: tiles that look at their neighbours, stone map walls, themed back walls, plank ledges, spiked deadly walls, depth shading, new mountains and tree line. Every world checked by `look_check()` (builds under 3 s, stone at the edges) and its screenshots |
+| Item icons | ✅ | 2026-11-04: every one of the 567 items has its own icon; upgrades share a shape and gain marks. Checked by the autotest and `tools/icon_audit.gd` |
+| Map spacing | ✅ | 2026-11-04: Pixel Town 80 wide with villagers about four tiles apart; worlds with fewer, spaced-out resources and monsters. Autotest checks the street and saves screenshots along it and five worlds |
 | Damage numbers and death puffs | ✅ | |
 | Low-health warning | ✅ | The health bar's border pulses red under 25% |
 | HUD at different window shapes | ✅ | 16:9, 21:9, 4:3 and portrait 3:4: nothing off screen, no overlapping buttons |

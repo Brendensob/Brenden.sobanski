@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #39 | 2026-11-04 | Roomier maps: Pixel Town 80 tiles wide with villagers about four tiles apart and houses in the gaps, more room upstairs and in the basement; worlds with fewer, spaced-out resources and monsters. Every one of the 567 items has its own icon (`item_icons.gd`, checked by the autotest and `tools/icon_audit.gd`) |
 | #38 | 2026-11-04 | Shop roles: the spiky-haired Merchant only buys your items; the Plumber sells everything (tools plus the Merchant's old stock); hints point to the Plumber |
 | #37 | 2026-11-04 | Find Public Game: the online server redeploys when its code changes, and a clear message when it's out of date |
 | #36 | 2026-10-29 | Portal right under the middle of the town's opening; the Crafter left of it and the Gatekeeper right of it; world card maps drawn like little screenshots (sky, clouds, mountains, grass, caves, trees, ores, arrival portal) |
