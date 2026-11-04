@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #40 | 2026-11-04 | Roomier maps: Pixel Town 80 tiles wide with villagers about four tiles apart and houses in the gaps, more room upstairs and in the basement; worlds with fewer, spaced-out resources and monsters. Every one of the 567 items has its own icon (`item_icons.gd`, checked by the autotest and `tools/icon_audit.gd`) |
 | #39 | 2026-11-04 | Banka's first backpack is free; backpacks 2 to 6 unlock in order for 50 gems each (placeholder); old saves keep any backpack with items in it |
 | #38 | 2026-11-04 | Shop roles: the spiky-haired Merchant only buys your items; the Plumber sells everything (tools plus the Merchant's old stock); hints point to the Plumber |
 | #37 | 2026-11-04 | Find Public Game: the online server redeploys when its code changes, and a clear message when it's out of date |

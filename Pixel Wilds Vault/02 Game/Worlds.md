@@ -9,6 +9,9 @@ The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's scr
 
 The map picture is drawn like a little screenshot of the world (since 2026-10-29): its sky, clouds, mountains and hills, grassy ground with dark edges, darker caves, trees and ores, and a small purple portal where you arrive. Big worlds show their start, arenas and Survival their middle. In code: `level.gd` → `preview_image()`.
 
+## Spacing (2026-11-04)
+Explore worlds place about 0.42 resources per column (0.55 before), with at least two empty tiles between any two and three beside a tree, and none within a few tiles of where you arrive. Monsters start at least five tiles apart. In Survival, resources keep 40 px apart. *Brenden: "how close everything is it just has that clutter feel"*
+
 | # | World | Card text |
 |---|---|---|
 | 1 | Grasslands | The land of the slimes. |

@@ -4,6 +4,7 @@ extends Node
 ## Every sprite gets a dark outline added automatically.
 
 const OUTLINE := Color("1b1a24")
+const ItemIcons := preload("res://scripts/item_icons.gd")
 var _cache := {}
 var font_body: FontFile
 var font_title: FontFile
@@ -1164,7 +1165,7 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 			"mini_ball": img = blob(Color("5a5a6a"), 10, 9, alt)
 			"chick_aiai", "chick_cici", "chick_bibi", "chick_dede", "chick_fofo":
 				img = chick_img(alt)
-				var tint: Color = {"chick_aiai": Color("f06a5a"), "chick_cici": Color("5cbf3f"), "chick_bibi": Color("6b8ff0"), "chick_dede": Color("f2cf5b"), "chick_fofo": Color("a77ee0")}[look]
+				var tint: Color = {"chick_aiai": Color("f06a5a"), "chick_cici": Color("5cbf3f"), "chick_bibi": Color("6b8ff0"), "chick_dede": Color("ea8a33"), "chick_fofo": Color("a77ee0")}[look]
 				for y in img.get_height():
 					for x in img.get_width():
 						var c := img.get_pixel(x, y)
@@ -1240,6 +1241,12 @@ const ICON_GRIDS := {
 	"mask": ["..........", "..XXXXXX..", ".XXXXXXXX.", ".XkkXXkkX.", ".XkkXXkkX.", ".XXXXXXXX.", "..XXxxXX..", "...XXXX...", "..........", ".........."],
 	"bighammer": ["XXXXX.....", "XwXXXx....", "XXXXXx....", "XXXXXx....", ".xxnlx....", "....nl....", ".....nl...", "......nl..", ".......nl.", "........nl"],
 	"fist": ["..........", "..XXXX....", ".XwXXXX...", ".XXXXXXk..", ".XxXxXXo..", ".XXXXXXk..", "..XXXXx...", "...xxx....", "..........", ".........."],
+	"vial": ["..........", "..........", "....nn....", "....AA....", "...AXXA...", "...AwXA...", "...AxxA...", "....AA....", "..........", ".........."],
+	"flask": ["....nn....", "....AA....", "....AA....", "...AXXA...", "..AXwXXA..", ".AXXXXXXA.", ".AXXXXXXA.", ".AxxxxxxA.", "..AAAAAA..", ".........."],
+	"jug": ["...nnnn...", "...AAAA...", "..AXXXXA..", ".AXwXXXXAA", ".AXXXXXXAA", ".AXXXXXXAA", ".AXXXXXXA.", ".AxxxxxxA.", "..AAAAAA..", ".........."],
+	"shard": ["..........", "..........", ".....X....", "....XwX...", "....XXx...", "....Xxx...", ".....x....", "..........", "..........", ".........."],
+	"egg_spots": ["..........", "...ww.....", "..wXww....", ".wwaawX...", ".wXwwww...", ".waawaw...", "..wwww....", "..........", "..........", ".........."],
+	"torch_stand": ["....y.....", "...yoy....", "...oRo....", "..aaoaa...", "...aaa....", "....a.....", "....a.....", "...aaa....", "..aaaaa...", ".........."],
 	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
 }
 
@@ -1318,7 +1325,8 @@ func icon_spec(id: String) -> Array:
 		"water_crystal": return ["crystal", {"X": "6b8ff0", "x": "2c4596"}]
 		"earth_crystal": return ["crystal", {"X": "a8703f", "x": "5cbf3f"}]
 		"dark_crystal": return ["crystal", {"X": "7b4fb8", "x": "3a2a5a"}]
-		"evil_crystal", "small_evil_crystal": return ["crystal", {"X": "5a2a6a", "x": "d8433a"}]
+		"evil_crystal": return ["crystal", {"X": "5a2a6a", "x": "d8433a"}]
+		"small_evil_crystal": return ["shard", {"X": "5a2a6a", "x": "d8433a"}]
 		"catalyst": return ["gem", {"X": "f2cf5b", "x": "4fb6d0"}]
 		"dongle": return ["gadget", {"X": "5cbf3f"}]
 		"monster_hide": return ["hide", {"X": "a07a55", "x": "6e4a2a"}]
@@ -1333,7 +1341,10 @@ func icon_spec(id: String) -> Array:
 		"apple": return ["apple", {"X": "d8433a", "x": "8a1e1a"}]
 		"evil_apple": return ["apple", {"X": "5a2a6a", "x": "2a1030"}]
 		"living_flame": return ["blob", {"X": "f2a33a", "x": "d8433a"}]
-		"em_stone", "ruby_stone", "sapphire_stone", "dark_stone", "sky_stone": return ["gem", mc]
+		"em_stone": return ["gem", {"X": "5cbf3f", "x": "2e7a2a"}]
+		"ruby_stone": return ["gem", {"X": "d8433a", "x": "8a1e1a"}]
+		"sapphire_stone": return ["gem", {"X": "3b5dc9", "x": "1e2a6a"}]
+		"dark_stone", "sky_stone": return ["gem", mc]
 		"dragon_spine": return ["bone", {"w": "a8e86a"}]
 		"volcan_axe": return ["axe", mc]
 		"sky_pole_axe": return ["pole", mc]
@@ -1359,7 +1370,10 @@ func icon_spec(id: String) -> Array:
 		"forbidden_stone": return ["gem", mc]
 		"fortune_nugget": return ["lump", {"X": "f2cf5b", "x": "c99a2e"}]
 		"honey": return ["blob", {"X": "f2b83a", "x": "c8802a"}]
-		"eggency": return ["egg", {"X": "f2a33a"}]
+		"eggency": return ["egg_spots", {"X": "f2a33a", "a": "d8433a"}]
+		"christmas_egg": return ["egg_spots", {"X": "d8433a", "a": "3e9a3a"}]
+		"easter_egg": return ["egg_spots", {"X": "f08ac8", "a": "6bc8f0"}]
+		"halloween_egg": return ["egg_spots", {"X": "ea8a33", "a": "1b1a24"}]
 		"nightmare_ingot": return ["bar", mc]
 		"plunger": return ["plunger", mc]
 		"arrow": return ["arrow", {}]
@@ -1369,7 +1383,7 @@ func icon_spec(id: String) -> Array:
 		"wooden_spikes": return ["spikes", {}]
 		"work_station": return ["station", {}]
 		"campfire": return ["fire", {}]
-		"torch": return ["torch_i", {}]
+		"torch": return ["torch_stand", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
 		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
 		"gem": return ["gem", {"X": "dcecf8", "x": "7a9ab8"}] # the original's white-blue diamond
@@ -1397,12 +1411,17 @@ func icon_spec(id: String) -> Array:
 			elif id.contains("rejuvenate"): c = "a77ee0"
 			elif id == "antidote": c = "5cbf3f"
 			elif id == "fatigue_potion": c = "f2cf5b"
-			return ["potion", {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
+			# bottles get bigger with the potion: small, normal, medium, big
+			var shape := "potion"
+			if id.begins_with("small_"): shape = "vial"
+			elif id.begins_with("medium_"): shape = "flask"
+			elif id.begins_with("big_"): shape = "jug"
+			return [shape, {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
 		"weapon":
 			return ["long" if id.contains("long") or id == "excalibur" else "sword", mc]
 		"staff":
 			if id.begins_with("iron_fist"):
-				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else "e3ebf5")), "x": "6a1e14"}]
+				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else ("e3ebf5" if id == "iron_fist_4" else "a77ee0"))), "x": "6a1e14"}]
 			return ["staff", mc]
 		"bow": return ["cannon", mc] if it.get("cannon", false) else ["bow", {}]
 		"ammo": return ["balls", mc] if id.begins_with("cc_") or id == "devil_cannon_ball" else ["missile", mc]
@@ -1442,11 +1461,15 @@ func icon(id: String) -> Texture2D:
 			var full: Image = _char_img(it.look, "stand", 1)
 			return to_tex(outline(full.get_region(Rect2i(0, 1, full.get_width(), 16))))
 		if it.get("type", "") == "pet":
-			var img: Image = mob_tex(pet_look(id), false).get_image()
-			var s := 12.0 / maxf(img.get_width(), img.get_height())
-			if s < 1.0:
+			var img: Image = mob_tex(pet_look(id), false).get_image().duplicate()
+			# a Jr pet is drawn a little smaller than the grown-up one
+			var s := (9.0 if id.ends_with("_jr") else 12.0) / maxf(img.get_width(), img.get_height())
+			if s < 1.0 or id.ends_with("_jr"):
 				img.resize(maxi(1, int(img.get_width() * s)), maxi(1, int(img.get_height() * s)), Image.INTERPOLATE_NEAREST)
 			return to_tex(img)
+		var drawn: Array = ItemIcons.make(id, it, material_colors(id))
+		if not drawn.is_empty():
+			return to_tex(outline(grid_image(drawn[0], drawn[1])))
 		var spec := icon_spec(id)
 		return to_tex(outline(grid_image(ICON_GRIDS[spec[0]], spec[1]))))
 
