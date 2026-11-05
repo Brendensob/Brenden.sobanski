@@ -33,6 +33,7 @@ var dir := 1
 var aggro := false
 var aggro_forced := false
 var arena_boss := false
+var stagger_cd := 0.0
 var think := 0.0
 var hop := 0.0
 var accel := 0.0
@@ -136,6 +137,7 @@ func _physics_process(delta: float) -> void:
 	contact_cd -= delta
 	show_bar -= delta
 	spike_cd -= delta
+	stagger_cd -= delta
 	if freeze_t > 0:
 		# hit-stop: hold still for a blink, then fly back
 		freeze_t -= delta
@@ -249,6 +251,10 @@ func _accel(delta: float, to: Vector2, dist: float) -> void:
 		_wander(delta)
 		return
 	var want := 1 if to.x > 0 else -1
+	# on a ledge right above you: keep going and step off it, instead of
+	# turning back and forth over your head where nobody can reach
+	if to.y > 24 and absf(to.x) < 48 and is_on_floor():
+		want = dir
 	if want != dir:
 		accel = 0
 		dir = want
@@ -355,7 +361,17 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 	level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
 	if not _from_net:
 		_hit_fx(from_x)
-	if can_knock():
+	if arena_boss and level.def.get("boss_stagger", 0.0) > 0 and stagger_cd <= 0:
+		# the Grasslands Arena's bosses stagger now and then when hit, so a
+		# low-level player gets a moment to breathe (Brenden, 2026-11-05)
+		velocity.x = 0.0
+		knock_t = maxf(knock_t, STUN_TIME)
+		freeze_t = HITSTOP
+		stagger_cd = float(level.def.boss_stagger)
+		if def.ai == "charge":
+			state = "rest"
+			state_t = 1.0
+	elif can_knock():
 		var away := signf(position.x - from_x)
 		if away == 0:
 			away = -dir

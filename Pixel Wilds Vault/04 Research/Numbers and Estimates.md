@@ -14,7 +14,8 @@ All game numbers live in `godot/scripts/data.gd`.
 - Defense works like the wiki's defense calculator.
 
 ## Estimates (change them freely)
-- Most **drop chances**. Only the Slime's (~20%) is known.
+- Most **drop chances**. Only the Slime's (~20%) is known. Brenden raised the slime's **Jelly** to 30% on 2026-11-05 ("slightly more common"); its other drops stay at the wiki's 20%.
+- **Grasslands Arena bosses** (2026-11-05, Brenden's ask): Rexy ×0.6 health and ×0.3 hit, Hand ×0.12 health and ×0.3 hit, with a short stagger when hit. They were ×2.22 and ×0.565 health at full hit, our reading of the wiki's arena numbers.
 - Potion strength (Small 5, Potion 12, Medium 25, Big 60 since 2026-10-27) and the solo boss fights.
 - **Starting health 10** and **1 s of safety after a hit** (2026-10-27, tuned with the fight test so the Grasslands are winnable from the start).
 - Health the wiki leaves as "?", and Doom's health.

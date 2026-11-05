@@ -1359,6 +1359,8 @@ func _crafter_tab(id: String) -> String:
 func _page_craft() -> void:
 	var list := []
 	for i in Data.SMITH.size():
+		if Data.set_aside(Data.SMITH[i].out):
+			continue # set aside with the worlds past Hell
 		if _crafter_tab(Data.SMITH[i].out) == bag_tab:
 			list.append(i)
 	# top: everything the Crafter makes on this tab
@@ -1731,6 +1733,11 @@ func _build_panels() -> void:
 	wake.name = "Wake"
 	wake.position = Vector2(10, 78)
 	dead.add_child(wake)
+	# single player: come back as a ghost and get up again at your gravestone
+	var rev := _button("Respawn", func(): main.ghost_respawn(), true)
+	rev.name = "Revive"
+	rev.visible = false
+	dead.add_child(rev)
 
 	# the main menu: title, three character slots, creating a character, play mode
 	var t := Control.new()
@@ -2205,10 +2212,11 @@ func _start_from_menu() -> void:
 	else:
 		main.start_game(true)
 
-func show_dead(text: String) -> void:
+func show_dead(text: String, grave := false) -> void:
 	if Net.active:
 		text = "Your friends can keep going. Get back up at the start of this map."
 	var dp: Panel = panels.dead
+	dp.get_node("Revive").visible = grave
 	var wake: Button = dp.get_node("Wake")
 	var tl: Label = dp.get_node("Text")
 	wake.text = "Get back up" if Net.active else "Wake up in Pixel Town"
@@ -2225,7 +2233,17 @@ func _layout_dead() -> void:
 	var tl: Label = dp.get_node("Text")
 	var h := maxf(tl.size.y, tl.get_line_count() * tl.get_line_height())
 	wake.size = wake.get_combined_minimum_size()
-	wake.position = Vector2(roundf((dp.size.x - wake.size.x) / 2), roundf(tl.position.y + h + 8))
+	var y := roundf(tl.position.y + h + 8)
+	var rev: Button = dp.get_node("Revive")
+	if rev.visible:
+		# Respawn on top, Wake up in Pixel Town under it, the same width
+		rev.size = rev.get_combined_minimum_size()
+		var bw := maxf(rev.size.x, wake.size.x)
+		rev.size.x = bw
+		wake.size.x = bw
+		rev.position = Vector2(roundf((dp.size.x - bw) / 2), y)
+		y += rev.size.y + 6
+	wake.position = Vector2(roundf((dp.size.x - wake.size.x) / 2), y)
 	dp.size.y = wake.position.y + wake.size.y + 10
 	_place("dead")
 
@@ -2306,6 +2324,8 @@ func _refresh_shop(npc_id: String) -> void:
 		buy.add_child(_wrap("Nothing for sale here. Sell your items on the right.", 190, C_MUTED))
 	for e in shop.sells:
 		var id: String = e[0]
+		if Data.set_aside(id):
+			continue
 		var price: int = e[1]
 		var qty: int = e[2] if e.size() > 2 else 1
 		var have: int = GS.coins if currency == "coins" else GS.count(currency)
@@ -2434,7 +2454,7 @@ func open_book(book: String) -> void:
 	_clear(list)
 	list.add_child(_wrap("These combinations get +50% while this book is in your bag. A Combination Scroll adds +35%.", 400, C_MUTED))
 	for r in Data.RECIPES:
-		if r.book != book:
+		if r.book != book or Data.uses_set_aside(r["in"] + [r.out]):
 			continue
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 3)
@@ -2455,6 +2475,8 @@ func _refresh_map() -> void:
 	var cards: HBoxContainer = panels.map.find_child("Cards", true, false)
 	_clear(cards)
 	for c in Data.WORLD_CARDS:
+		if not Data.world_open(c[0]):
+			continue # past Hell: set aside for now
 		cards.add_child(_world_card(c[0], c[1], c[2]))
 	(panels.map.get_node("Scroll") as ScrollContainer).scroll_horizontal = 0
 
@@ -2548,6 +2570,8 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 
 func _enter_world(wid: String) -> void:
 	var w: Dictionary = Data.WORLDS[wid]
+	if not Data.world_open(wid):
+		return
 	# the Tomb of Makara needs at least 8 stamina
 	if GS.max_st() < float(w.get("min_st", 0)):
 		toast("You need at least %d stamina to enter the %s." % [w.min_st, w.name], "warn")
@@ -2582,6 +2606,8 @@ func _station_body(k: String, i: int, title: Label, text: Label, list: VBoxConta
 			elif job == null:
 				text.text = "Five ores and a coal make a bar. It keeps smelting even while you're away."
 				for r in Data.SMELT:
+					if Data.uses_set_aside(r.cost.keys() + [r.out]):
+						continue
 					var rr: Dictionary = r
 					var row := HBoxContainer.new()
 					row.add_child(_icon(r.out))

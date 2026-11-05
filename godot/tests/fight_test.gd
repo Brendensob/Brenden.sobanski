@@ -40,7 +40,7 @@ const STAGES := [
 	{"name": "copper", "world": "grass_3", "weapon": "gilded_blade", "gear": {"helmet": "copper_helmet", "armor": "copper_armor", "shield": "copper_shield"}, "potions": ["small_potion", 8],
 		"must": ["slime", "octopus", "dark_slime", "mantis", "zombie"], "tough": ["trex"], "report": ["dark_trex"]},
 	{"name": "iron", "world": "grass_arena", "weapon": "azure_blade", "gear": {"helmet": "brass_helmet", "armor": "iron_armor", "shield": "iron_shield"}, "potions": ["potion", 6],
-		"must": ["slime", "wisp", "mummy", "shell"], "report": ["trex", "hand"], "boss_mul": {"trex": [2.22, 1.0], "hand": [0.565, 1.0]}},
+		"must": ["slime", "wisp", "mummy", "shell"], "report": ["trex", "hand"], "boss_mul": {"trex": [0.6, 0.3], "hand": [0.12, 0.3]}},
 	{"name": "iron", "world": "dark_1", "weapon": "azure_blade", "gear": {"helmet": "brass_helmet", "armor": "iron_armor", "shield": "iron_shield"}, "potions": ["potion", 6],
 		"must": ["dark_slime", "mantis", "zombie", "trex"], "tough": ["ufo", "worm"], "report": ["hand"]},
 	{"name": "gold", "world": "dark_2", "weapon": "kings_mace", "gear": {"helmet": "brass_helmet", "armor": "golden_knight_armor", "shield": "gold_shield", "ring_l": "gold_ring", "ring_r": "silver_ring"}, "potions": ["potion", 8],

@@ -41,4 +41,31 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 
 Hands, Dark Rexy and arena bosses are listed but don't count: they're mini-bosses.
 
+## Grasslands Arena boss test
+`tests/arena_test.gd` (`-- --arenatest`) plays the real Grasslands Arena in single player: the last 15 seconds of monsters, then Rexy and the Hand together, with the real free revive and potions when low. Brenden asked for the boss to be beatable by lower-level players (2026-11-05). Before the change no kit won, not even copper gear. After it (8 tries each):
+
+| Gear | Wins | Average time | Free revive used |
+|---|---|---|---|
+| Starter Sword Cast, no armor | 0/8 | | 8/8 |
+| Gradius + wooden helmet, armor, shield | 7/8 | 96 s | 4/8 |
+| Golden Night + Stone Armor | 8/8 | 83 s | 0/8 |
+| Golden Night + copper gear | 8/8 | 85 s | 0/8 |
+
+The bare starter kit is too weak for two bosses at once; the goal card sends you to the arena after Grasslands 3, by when you have wooden or stone gear. The test also found Hands walking back and forth on a ledge right above you where nobody could reach; monsters that speed up now step off the ledge instead.
+
+## Fainting (single player, 2026-11-05)
+- **A slow fall:** you stagger, keel over, lie still a moment and fade. Your **gravestone** rises where you fell.
+- The faint screen offers **Respawn** and **Wake up in Pixel Town**.
+- **Respawn** brings you back as a see-through **ghost** at the start of the map. A ghost can walk and jump but can't hit, pick things up or be hurt.
+- The gravestone shows how long it has left (**50 seconds**). Stand by it for **3.5 seconds** and a little timer and bar count down over it; then you get back up right there with full health and 3 seconds of safety.
+- After 50 seconds it crumbles and you wake up in Pixel Town (nothing is lost, as before).
+- **Grasslands Arena:** one free revive instead: the first faint gets you straight back up on the spot. The second sends you home.
+- No gravestone in **Survival** (fainting ends the run and gives its keys), or after the bomb button (you meant to go home).
+- **Multiplayer** is unchanged: you get back up at the start of the map.
+- *Brenden: "When a player dies in single player they get a option to respawn only make it have a slow animation into a death and then a gravestone and players have 50 seconds to revive by standing close it for 3.5 sec and it shows a little timer"*
+
+![[gravestone_timer.png]]
+
+Code: `scripts/grave.gd`, `_slow_fall`, `become_ghost` and `revive_here` in player.gd, `player_died` and `ghost_respawn` in main.gd.
+
 Code: `GS.roll_attack` and the damage formula in game_state.gd, `take_damage`, `can_knock` and `_hit_fx` in mob.gd, `_do_hit` and the tap buffer in player.gd, numbers in fx.gd.
