@@ -2,6 +2,7 @@ extends Node
 ## Plays through the main features and saves screenshots.
 ## Run: godot --path . -- --autotest [--touch]   (screenshots go to user://shots)
 
+const MobS := preload("res://scripts/mob.gd")
 var main: Node
 var out := "user://shots"
 var fails := []
@@ -619,6 +620,11 @@ func jump_and_underground() -> void:
 	var gk := find_prop(func(n): return n.get("npc_id") == "keeper")
 	check(crafter != null and gk != null and is_equal_approx(mid - crafter.position.x, gk.position.x - mid) and crafter.position.x < mid,
 		"the Crafter stands left of the portal and the Gatekeeper right of it, the same distance away")
+	check(crafter != null and gk != null and is_equal_approx(gk.position.x - crafter.position.x, 13 * 16.0),
+		"the Crafter and the Gatekeeper stand 13 tiles apart (2.5 times the old 5)")
+	check(lvl.TOWN_OPENING[1] - lvl.TOWN_OPENING[0] == 10, "the opening above them is 10 tiles wide (2.5 times the old 4)")
+	var start: Vector2 = lvl.cell_pos(lvl.spawn_cell)
+	check(crafter != null and gk != null and start.x > crafter.position.x + 16 and start.x < gk.position.x - 16, "you start in the gap between the Crafter and the Gatekeeper")
 	main.hud.close_panels()
 	p.position = lvl.town_portal_pos() + Vector2(-18, 0)
 	await wait(0.8)
@@ -1342,16 +1348,67 @@ func look_check() -> void:
 func menus_check() -> void:
 	await goto("grass_1")
 	main.level.player.invuln = 0.0
-	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
+	var pl: Node2D = main.level.player
+	pl.position = main.level.cell_pos(main.level.spawn_cell) + Vector2(40 * 16, 0)
+	for k in 30:
+		await get_tree().physics_frame
+	await until_floor(pl)
+	var fell_at: Vector2 = pl.position
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(0.5)
+	check(pl.dead and not main.hud.panels.dead.visible and absf(pl.body_sprite.rotation) > 0.3, "fainting in single player is a slow fall, not instant")
+	await shot("60a_falling")
 	await wait(1.6)
 	var dp: Panel = main.hud.panels.dead
 	check(dp.visible, "fainting shows the faint screen")
+	var grave: Node = main.grave
+	check(is_instance_valid(grave) and grave.position.distance_to(fell_at) < 4, "a gravestone rises where you fainted")
 	await shot("60_fainted")
 	var wake: Button = dp.get_node("Wake")
+	var rev: Button = dp.get_node("Revive")
 	var wr := wake.get_global_rect()
 	var pr := dp.get_global_rect()
 	var tl: Label = dp.get_node("Text")
-	check(pr.encloses(wr) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr), "the faint screen's text and button fit inside it without overlapping")
+	check(rev.visible and pr.encloses(wr) and pr.encloses(rev.get_global_rect()) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr) and not rev.get_global_rect().intersects(wr),
+		"the faint screen's text and its Respawn and Wake up buttons fit inside it without overlapping")
+	# Respawn: a ghost at the start of the map, who walks back to the gravestone
+	rev.pressed.emit()
+	await wait(0.3)
+	check(not dp.visible and pl.ghost and pl.dead and pl.position.distance_to(main.level.cell_pos(main.level.spawn_cell)) < 20, "Respawn brings you back as a ghost at the start of the map")
+	var hp0 := GS.hp
+	pl.invuln = 0.0
+	pl.hurt(5, 0.0, pl.position.x - 5)
+	check(GS.hp == hp0, "a ghost can't be hurt")
+	await shot("60b_ghost")
+	pl.position = grave.position + Vector2(-10, -1)
+	await wait(1.5)
+	check(pl.ghost and grave.held > 1.0 and grave.label.text.is_valid_float(), "standing by the gravestone shows a little timer (%s)" % grave.label.text)
+	await shot("60c_grave_timer")
+	await wait(2.3)
+	check(not pl.dead and not pl.ghost and GS.hp == GS.max_hp() and pl.position.distance_to(fell_at) < 20 and not is_instance_valid(grave),
+		"3.5 seconds by the gravestone gets you back up there")
+	# faint again and let the gravestone crumble: Pixel Town
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.2)
+	check(main.hud.panels.dead.visible and is_instance_valid(main.grave), "fainting again gives a new gravestone")
+	rev.pressed.emit()
+	await wait(0.2)
+	main.grave.left = 0.2
+	await wait(0.8)
+	check(main.level.id == "town" and not main.level.player.dead, "after 50 seconds the gravestone crumbles and you wake up in Pixel Town")
+	# the Grasslands Arena: one free revive, right where you fall
+	await goto("grass_arena")
+	pl = main.level.player
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.2)
+	check(not pl.dead and GS.hp == GS.max_hp() and not main.hud.panels.dead.visible, "the Grasslands Arena gives one free revive")
+	await shot("61_free_revive")
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.4)
+	check(pl.dead and dp.visible and not rev.visible and not is_instance_valid(main.grave), "only one: the second faint in the arena sends you home")
 	wake.pressed.emit()
 	await wait(0.8)
 	check(not dp.visible and main.level.id == "town" and not main.level.player.dead, "Wake up takes you back to Pixel Town on your feet")
@@ -1753,6 +1810,25 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	# everything past Hell is set aside for now
+	var shown := []
+	for c in main.hud.panels.map.find_child("Cards", true, false).get_children():
+		shown.append(c)
+	check(shown.size() == Data.WORLD_CARDS.size() - Data.LATER_WORLDS.size(), "the Gatekeeper only offers Grasslands to Hell (%d cards)" % shown.size())
+	main.hud._enter_world("tomb_of_makara")
+	await wait(0.3)
+	check(main.level.id == "town" and find_prop(func(n): return n.get_meta("gate", false)) == null, "a set-aside world can't be opened")
+	var aside_smith := Data.SMITH.filter(func(r): return Data.set_aside(r.out)).size()
+	check(Data.set_aside("forbidden_bar") and Data.set_aside("modina_ring") and not Data.set_aside("hell_armor") and not Data.set_aside("jelly") and aside_smith > 0,
+		"items only the later worlds give are set aside (%d items, %d Crafter recipes)" % [Data.SET_ASIDE.size(), aside_smith])
+	var q_aside := false
+	for npc in Data.NPCS:
+		var q: Dictionary = GS.next_quest(npc)
+		if not q.is_empty() and Data.uses_set_aside(q.need.keys() + q.reward.keys()):
+			q_aside = true
+	check(not q_aside, "no villager asks for or gives a set-aside item")
+	# the rest of the test still plays the set-aside worlds, so they keep working
+	Data.set_later_open(true)
 	if OS.has_environment("AT_LOOK"): # set AT_LOOK=1 to run only the ground art checks
 		await look_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
@@ -1786,6 +1862,20 @@ func run() -> void:
 	var p: Node2D = lvl.player
 	var jumpie := find_prop(func(n): return n.get("npc_id") == "jumpie")
 	check(jumpie != null, "Jumpie is in Grasslands 1")
+	# more slimes in the Grasslands, and they come back over time
+	var slimes := func(): return lvl.entities.get_children().filter(func(e): return e is MobS and not e.dead and e.id == "slime").size()
+	var s0: int = slimes.call()
+	check(s0 >= 12 and lvl.respawn_cap == s0, "Grasslands 1 starts with plenty of slimes (%d)" % s0)
+	var gone := 0
+	for e in lvl.entities.get_children():
+		if e is MobS and e.id == "slime" and gone < 3:
+			e.queue_free()
+			gone += 1
+	await get_tree().process_frame
+	lvl.respawn_t = 99.0
+	await wait(0.1)
+	check(slimes.call() == s0 - 2, "a new slime appears after a while when some are gone (%d of %d)" % [slimes.call(), s0])
+	check(Data.MOBS.slime.drops.any(func(d): return d[0] == "jelly" and d[1] == 0.3), "slimes drop Jelly 30% of the time")
 	var coins_before := GS.coins
 	GS.add_item("jelly", 10)
 	GS.complete_quest(GS.next_quest("jumpie"))
@@ -2073,7 +2163,8 @@ func run() -> void:
 	await shot("40_survival_night")
 	main.level.player.invuln = 0.0
 	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
-	await wait(1.5)
+	await wait(2.4)
+	check(not main.hud.panels.dead.get_node("Revive").visible, "no gravestone in Survival: fainting ends the run")
 	check(GS.count("silver_key") >= 1, "dying on day 7 of Survival gives a Silver Key")
 	await shot("41_fainted")
 	main.respawn()

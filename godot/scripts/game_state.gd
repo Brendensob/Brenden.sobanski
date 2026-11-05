@@ -678,7 +678,7 @@ func current_goal() -> Dictionary:
 
 func next_quest(npc: String) -> Dictionary:
 	for q in Data.QUESTS:
-		if q.npc == npc and not q.id in quests_done:
+		if q.npc == npc and not q.id in quests_done and not Data.uses_set_aside(q.need.keys() + q.reward.keys()):
 			return q
 	if npc == "mira":
 		var b := Data.bounty_quest(today())

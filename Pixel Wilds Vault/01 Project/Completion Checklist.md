@@ -51,8 +51,9 @@ The living list of every system and how finished it is. It's updated after each 
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
-| Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
-| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27) |
+| Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
+| Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player (2026-11-05): slow fall, gravestone, Respawn as a ghost and stand by the stone 3.5 s within 50 s; one free revive in the Grasslands Arena. Autotest covers all of it |
 | Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
@@ -148,7 +149,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Town building and storage | A / E | Banka's storage, walls, Wood Wall and campfire. Stone Wall and Torch Stand are blocked (E) |
 | Multiplayer sync | A | Two-player test: world, pickups, monsters, walls, trading, chat, emotes, server time |
 | Saving, loading, recovery | A | Backups, damaged and old saves, interrupted timers |
-| Death, respawn, item recovery | A | Nothing is lost on fainting |
+| Death, respawn, item recovery | A | Nothing is lost on fainting; gravestone revive in single player (2026-11-05) |
 | Settings, audio, interface scaling | A | Sound and Music volume; HUD tested at 4 window shapes |
 | Music | A | 7 original loops; made a piece at a time on the web build |
 

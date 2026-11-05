@@ -47,6 +47,12 @@ var puppets := {} # peer id -> remote player
 
 # arena
 var arena_time := 0.0
+## Single player, Grasslands Arena: the one free revive has been used.
+var free_revive_used := false
+## Grasslands: slimes come back over time, up to as many as the map started with.
+var respawn_t := 0.0
+var respawn_cap := 0
+var respawn_cells := []
 var bosses_spawned := false
 var arena_done := false
 var spawn_timer := 1.0
@@ -367,7 +373,8 @@ const TOWN_MID := 18
 const TOWN_BASE := 24
 const TOWN_W := 80
 const TOWN_ROOM := 20 # the side rooms' walls stand this far from each edge
-const TOWN_OPENING := [38, 42] # the gap in the upper floor, from x to x (exclusive), in the middle
+# 2.5 times wider than before (Brenden, 2026-11-05), like the gap under it
+const TOWN_OPENING := [35, 45] # the gap in the upper floor, from x to x (exclusive), in the middle
 const TOWN_PORTAL := Vector2i(39, TOWN_MID - 1) # the portal stands half a tile right of this cell,
 # right under the middle of the opening (see town_portal_pos)
 const TOWN_HOLE := 73 # the hole down to the basement (2 wide)
@@ -399,7 +406,9 @@ func _gen_town() -> void:
 		ledge(TOWN_HOLE + 1, r, 1)
 	fill(0, 0, 1, H)
 	fill(W - 1, 0, 1, H)
-	spawn_cell = Vector2i(23, TOWN_MID - 1)
+	# you start in the open space between the Crafter and the Gatekeeper, just
+	# left of where the portal opens
+	spawn_cell = Vector2i(37, TOWN_MID - 1)
 
 ## A little picture of a world for the Gatekeeper's cards: builds the map with a
 ## fixed seed (no monsters or props) and paints it like a tiny screenshot: the
@@ -740,6 +749,42 @@ func _populate_explore() -> void:
 		var dmm: float = (float(m[3]) if m.size() > 3 else 1.0) * mult
 		spawn_mob_at(m[0], cell_pos(c), hpm, dmm)
 		placed += 1
+	var rs: Array = def.get("respawn", [])
+	if rs.size() == 2:
+		respawn_cap = 0
+		for e in entities.get_children():
+			if e is MobScript and e.id == rs[0]:
+				respawn_cap += 1
+		for c in cells:
+			if not touches_deadly(Rect2(c.x * T - 4, c.y * T - 8, T + 8, T + 8)):
+				respawn_cells.append(c)
+
+## Slimes keep coming in the Grasslands: every so often a new one appears out
+## of sight, while there are fewer than the map started with (Brenden,
+## 2026-11-05: "more spawns").
+func _respawn_tick(delta: float) -> void:
+	var rs: Array = def.get("respawn", [])
+	if rs.size() != 2 or respawn_cells.is_empty() or not is_instance_valid(player):
+		return
+	respawn_t += delta
+	if respawn_t < float(rs[1]):
+		return
+	respawn_t = 0.0
+	var alive := 0
+	for e in entities.get_children():
+		if e is MobScript and not e.dead and e.id == rs[0]:
+			alive += 1
+	if alive >= respawn_cap:
+		return
+	var pc := Vector2i(player.position / T)
+	for tries in 20:
+		var c: Vector2i = respawn_cells[rng.randi() % respawn_cells.size()]
+		# far enough to be off screen, so it never pops up in front of you
+		if absi(c.x - pc.x) < 22 and absi(c.y - pc.y) < 14:
+			continue
+		var mult: float = def.get("mult", 1.0)
+		spawn_mob_at(rs[0], cell_pos(c), mult, mult)
+		return
 
 ## True when something in `taken` (cell -> its own gap) stands closer than `gap`
 ## tiles to `c` on the same floor.
@@ -783,7 +828,7 @@ func _populate_town() -> void:
 	var y := TOWN_MID - 1
 	var top := TOWN_TOP - 1
 	# the houses stand in the gaps between the villagers, never behind them
-	var houses := [[18, "e8dccb", "d8433a", 52], [29, "c8d6e8", "3b5dc9", 52], [51, "e8d8b0", "4f9a44", 52], [62, "d8c8e8", "7b4fb8", 52]]
+	var houses := [[18, "e8dccb", "d8433a", 52], [28, "c8d6e8", "3b5dc9", 52], [51, "e8d8b0", "4f9a44", 52], [62, "d8c8e8", "7b4fb8", 52]]
 	for h in houses:
 		var s := Sprite2D.new()
 		s.texture = Art.house_tex(Color(h[1]), Color(h[2]), h[3])
@@ -804,9 +849,11 @@ func _populate_town() -> void:
 	add_npc("miner", Vector2i(14, y))
 	add_npc("gruff", Vector2i(21, y))
 	add_npc("mira", Vector2i(25, y))
-	add_station("sign", 0, Vector2i(33, y))
-	add_npc("smith", Vector2i(TOWN_OPENING[0] - 1, y))
-	add_npc("keeper", Vector2i(TOWN_OPENING[1], y))
+	add_station("sign", 0, Vector2i(31, y))
+	# the Crafter and the Gatekeeper stand 13 tiles apart (5 before: 2.5 times
+	# the gap, Brenden 2026-11-05), mirrored about the portal
+	add_npc("smith", Vector2i(TOWN_OPENING[0] - 2, y))
+	add_npc("keeper", Vector2i(W - 1 - (TOWN_OPENING[0] - 2), y))
 	add_npc("tools", Vector2i(W - 1 - 25, y))
 	add_npc("banka", Vector2i(W - 1 - 21, y))
 	add_npc("merchant", Vector2i(W - 1 - 14, y))
@@ -826,8 +873,9 @@ func _populate_town() -> void:
 	add_station("chest_silver", 0, Vector2i(28, top))
 	add_board("golden_key", Vector2i(30, top))
 	add_station("chest_golden", 0, Vector2i(32, top))
-	add_board("master_key", Vector2i(34, top))
-	add_station("chest_master", 0, Vector2i(36, top))
+	# the master chest stands across the (wider) opening, on the east side
+	add_board("master_key", Vector2i(TOWN_OPENING[1] + 2, top))
+	add_station("chest_master", 0, Vector2i(TOWN_OPENING[1] + 4, top))
 	# upstairs, east: the green GateKeeper by the furnace room's gate
 	add_npc("warden", Vector2i(W - 4 - TOWN_ROOM, top))
 	if not GS.flags.get("furnaces", false):
@@ -959,6 +1007,7 @@ func _process(delta: float) -> void:
 	match kind:
 		"arena": _arena_tick(delta)
 		"survival": _survival_tick(delta)
+		"explore": _respawn_tick(delta)
 
 func _arena_tick(delta: float) -> void:
 	if arena_done:

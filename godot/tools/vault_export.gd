@@ -12,6 +12,7 @@ var D
 func _initialize() -> void:
 	D = load("res://scripts/data.gd").new()
 	D._build_mobs()
+	D._find_set_aside()
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://").path_join(OUT))
 	_items()
 	_monsters()
@@ -132,8 +133,17 @@ func _worlds() -> void:
 	body += "\n## Gatekeeper cards (in order)\n\n| # | World | Text |\n|---|---|---|\n"
 	var i := 1
 	for c in D.WORLD_CARDS:
-		body += "| %d | %s | %s |\n" % [i, c[1], c[2]]
+		body += "| %d | %s | %s |\n" % [i, c[1], c[2] + (" *(set aside for now)*" if c[0] in D.LATER_WORLDS else "")]
 		i += 1
+	# everything past Hell is set aside (hidden, not deleted)
+	var names := []
+	for w in D.LATER_WORLDS:
+		names.append(D.WORLDS[w].name)
+	var items := []
+	for id in D.SET_ASIDE:
+		items.append(D.ITEMS[id].name)
+	items.sort()
+	body += "\n## Set aside for now\n\nThe Gatekeeper doesn't offer these worlds (`Data.LATER_WORLDS`, turned back on with `Data.set_later_open(true)`): %s.\n\nThe %d items only they give are hidden from the Crafter, the combination books, the furnaces, the shops and the quests: %s.\n" % [", ".join(names), items.size(), ", ".join(items)]
 	_write("World Data", "World Data", body)
 
 func _recipes() -> void:

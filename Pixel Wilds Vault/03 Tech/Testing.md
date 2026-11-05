@@ -33,6 +33,14 @@ cd godot
 - It also checks that no world on the normal path says **Deadly** on its card with that gear.
 - Ends with `FIGHTTEST DONE, 0 failures` and a table. It takes about 20 minutes; `FIGHT_ONLY=grass_1,dark_1` picks worlds, `FIGHT_MOB=ufo` one monster, `FIGHT_TRIALS=n` the tries, `PACK=1` or `PACK=3` the pack size. Run a few at once with different `FIGHT_ONLY` to go faster.
 
+## Grasslands Arena test
+```
+cd godot
+<godot> --headless --path . --fixed-fps 60 -- --arenatest
+```
+- A bot plays the real Grasslands Arena in single player: the last 15 seconds of monsters, then Rexy and the Hand together, with the real free revive. It drinks a potion under 40% health and backs off when a boss is above it, so the boss comes down.
+- Wooden, stone and copper gear must win 3 times in 4; the bare starter kit is only printed. `ARENA_TRIALS=n` sets the tries (8), `ARENA_KITS=wood,stone` picks kits. About 4 minutes. Ends with `ARENATEST DONE, 0 failures`. Results are in [[Combat#Grasslands Arena boss test]].
+
 ## Server checks
 `python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 

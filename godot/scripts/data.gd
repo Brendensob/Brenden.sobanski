@@ -1159,10 +1159,12 @@ func _mob(id: String, name: String, look: String, hp: Array, dmg: int, ai: Strin
 
 func _ready() -> void:
 	_build_mobs()
+	_find_set_aside()
 
 func _build_mobs() -> void:
 	# Grasslands. Slime drops are from the wiki (about 20% each, 5.5% blade).
-	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.2, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
+	# Jelly is a little more common than the wiki's 20% (Brenden, 2026-11-05).
+	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.3, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
 	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
 	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 30, "charge_wait": 3.0})
 	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
@@ -1256,14 +1258,14 @@ func _build_mobs() -> void:
 # mobs: [mob, weight, hp multiplier, damage multiplier]
 var WORLDS := {
 	"town": {"name": "Pixel Town", "kind": "town", "theme": "grass"},
-	"grass_1": {"name": "Grasslands 1", "kind": "explore", "theme": "grass", "next": "grass_2", "count": 34,
-		"mobs": [["slime", 6], ["wisp", 3], ["mummy", 2], ["shell", 2]],
+	"grass_1": {"name": "Grasslands 1", "kind": "explore", "theme": "grass", "next": "grass_2", "count": 40, "respawn": ["slime", 20.0],
+		"mobs": [["slime", 9], ["wisp", 3], ["mummy", 2], ["shell", 2]],
 		"nodes": [["tree", 7], ["stone", 4], ["copper", 3], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
-	"grass_2": {"name": "Grasslands 2", "kind": "explore", "theme": "grass", "next": "grass_3", "count": 40,
-		"mobs": [["slime", 5], ["wisp", 3], ["mummy", 2], ["shell", 2], ["octopus", 3], ["crusher", 1]],
+	"grass_2": {"name": "Grasslands 2", "kind": "explore", "theme": "grass", "next": "grass_3", "count": 44, "respawn": ["slime", 20.0],
+		"mobs": [["slime", 8], ["wisp", 3], ["mummy", 2], ["shell", 2], ["octopus", 3], ["crusher", 1]],
 		"nodes": [["tree", 6], ["stone", 4], ["copper", 3], ["iron", 2], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
-	"grass_3": {"name": "Grasslands 3", "kind": "explore", "theme": "grass", "count": 44, "chest": true,
-		"mobs": [["slime", 3], ["octopus", 2], ["trex", 2], ["dark_trex", 1], ["dark_slime", 2], ["mantis", 2], ["zombie", 2]],
+	"grass_3": {"name": "Grasslands 3", "kind": "explore", "theme": "grass", "count": 46, "chest": true, "respawn": ["slime", 25.0],
+		"mobs": [["slime", 5], ["octopus", 2], ["trex", 2], ["dark_trex", 1], ["dark_slime", 2], ["mantis", 2], ["zombie", 2]],
 		"nodes": [["tree", 6], ["stone", 3], ["copper", 3], ["iron", 2], ["gold", 1], ["plant_yellow", 2], ["plant_pink", 2], ["pot", 2]]},
 	"dark_1": {"name": "Darklands 1", "kind": "explore", "theme": "dark", "next": "dark_2", "count": 40,
 		"hp": {"dark_slime": [125, 130], "trex": [462, 462], "worm": [358, 362]},
@@ -1284,9 +1286,11 @@ var WORLDS := {
 	"ice_cavern": {"name": "Ice Cavern", "kind": "explore", "theme": "ice", "count": 40,
 		"mobs": [["tornado", 2], ["tidal", 3], ["ice_bat", 3], ["cloud", 3], ["butterfly", 2], ["queen", 0.3, 1.5, 1.55], ["empress", 0.15]],
 		"nodes": [["ice_rock", 4], ["silver", 2], ["gold", 2], ["erbium_rock", 2]]},
-	"grass_arena": {"name": "Grasslands Arena", "kind": "arena", "theme": "grass", "cap": 8,
-		"mobs": [["slime", 4, 1.23], ["wisp", 2, 1.67], ["mummy", 2], ["shell", 2]],
-		"bosses": [["trex", 2.22, 1.0], ["hand", 0.565, 1.0]],
+	"grass_arena": {"name": "Grasslands Arena", "kind": "arena", "theme": "grass", "cap": 8, "free_revive": true,
+		"mobs": [["slime", 6, 1.23], ["wisp", 2, 1.67], ["mummy", 2], ["shell", 2]],
+		# both bosses together, made beatable for low-level players (Brenden,
+		# 2026-11-05): was 2.22 / 0.565 health (Rexy 999, Hand 1,251) at full damage
+		"bosses": [["trex", 0.6, 0.3], ["hand", 0.12, 0.3]], "boss_stagger": 1.0,
 		"boss_drops": [["cavemun", 0.05, 1, 1], ["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1]]},
 	"dark_arena": {"name": "Darklands Arena", "kind": "arena", "theme": "dark", "cap": 9,
 		"mobs": [["dark_slime", 3], ["mantis", 3], ["zombie", 2], ["ufo", 2], ["worm", 2], ["octopus", 2, 2.0, 1.5]],
@@ -1370,6 +1374,114 @@ const WORLD_CARDS := [
 const WORLD_MENU := [["Exploration", ["grass_1", "dark_1", "hell_1", "ice_cavern", "modina_ruins", "nightmare_valley", "forbidden_city", "snow_valley", "tomb_of_makara"]],
 	["Arena", ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]],
 	["Survival", ["survival"]]]
+
+# ---------------------------------------------------------------- set aside
+## Everything past Hell is set aside for now, so Grasslands to Hell can be
+## perfected first (Brenden, 2026-11-05: "hold everything past hell aside for
+## now"). Nothing is deleted: these worlds leave the Gatekeeper's list, and the
+## items you can only get in them leave the Crafter, the combination books, the
+## furnaces, the shops and the quests. set_later_open(true) brings it all back.
+const LATER_WORLDS := ["dream_arena", "ice_cavern", "ghost_arena", "modina_ruins", "nightmare_valley",
+	"mushroom_valley", "forbidden_city", "fruit_loop", "snow_valley", "tomb_of_makara", "eggcellence"]
+var later_open := false
+## item id -> true, for every item only the later worlds give.
+var SET_ASIDE := {}
+
+func set_later_open(on: bool) -> void:
+	later_open = on
+	_find_set_aside()
+	_bounty.clear()
+
+## Whether the Gatekeeper offers this world right now.
+func world_open(w: String) -> bool:
+	return later_open or not w in LATER_WORLDS
+
+func set_aside(id: String) -> bool:
+	return SET_ASIDE.has(id)
+
+## True when a recipe, quest or shop line uses or gives a set-aside item.
+func uses_set_aside(ids: Array) -> bool:
+	for id in ids:
+		if SET_ASIDE.has(id):
+			return true
+	return false
+
+func _find_set_aside() -> void:
+	SET_ASIDE = {}
+	if later_open:
+		return
+	var all := _reachable(WORLDS.keys())
+	var kept := _reachable(WORLDS.keys().filter(func(w): return not w in LATER_WORLDS))
+	for id in all:
+		if not kept.has(id):
+			SET_ASIDE[id] = true
+
+## Every item you can get from these worlds and everything around them (town,
+## shops, quests, chests, eggs, the Crafter, combining, furnaces), ignoring tool
+## tiers and other gates: only where things come from matters here.
+func _reachable(worlds: Array) -> Dictionary:
+	var have := {}
+	for id in ["sword_cast", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin", "fist", "man_in_suit", "nurse",
+			"survival_token", "silver_key", "golden_key", "master_key", "wall_hammer"]:
+		have[id] = true
+	var mobs := {}
+	var loot := []
+	for w in worlds:
+		var wd: Dictionary = WORLDS[w]
+		for e in wd.get("nodes", []):
+			loot.append_array(NODES[e[0]].get("drops", []))
+		for e in wd.get("mobs", []) + wd.get("bosses", []):
+			mobs[e[0]] = true
+		loot.append_array(wd.get("boss_drops", []) + wd.get("mob_drops", []))
+		if wd.get("chest", false):
+			loot.append_array(CHESTS.silver.loot)
+	for n in ["tree", "stone", "copper", "plant_yellow", "plant_pink", "pot"]:
+		loot.append_array(NODES[n].get("drops", []))
+	if "survival" in worlds:
+		for wave in SURVIVAL_WAVES:
+			for m in wave[1]:
+				mobs[m] = true
+		for m in SURVIVAL_BOSSES:
+			mobs[m] = true
+	for m in mobs:
+		loot.append_array(MOBS[m].drops)
+	for s in SHOPS:
+		loot.append_array(SHOPS[s].sells)
+	loot.append_array(gem_shop().sells)
+	for e in loot:
+		have[e[0]] = true
+	var changed := true
+	while changed:
+		changed = false
+		var got := []
+		for q in QUESTS:
+			if q.need.keys().all(func(k): return have.has(k)):
+				got.append_array(q.reward.keys())
+		for k in CHESTS:
+			if have.has(CHESTS[k].key):
+				for e in CHESTS[k].loot:
+					got.append(e[0])
+		for sd in SEED_LOOT:
+			if have.has(sd):
+				for e in SEED_LOOT[sd]:
+					got.append(e[0])
+		for egg in EGG_PETS:
+			if have.has(egg):
+				got.append_array(EGG_PETS[egg])
+		for r in SMITH + SMELT:
+			if r.cost.keys().all(func(k): return have.has(k)):
+				got.append(r.out)
+		for r in RECIPES:
+			if r["in"].all(func(k): return have.has(k)):
+				got.append(r.out)
+		for ch in CHARACTERS:
+			if have.has(ch) and CHARACTERS[ch].has("gives"):
+				got.append(CHARACTERS[ch].gives)
+		for id in got:
+			if not have.has(id):
+				have[id] = true
+				changed = true
+	return have
 
 # Survival Grasslands: which monsters can show up from which day.
 var SURVIVAL_WAVES := [
@@ -1555,7 +1667,7 @@ func bounty_quest(day: int) -> Dictionary:
 		return _bounty[day]
 	var pool := []
 	for r in SMITH:
-		if ITEMS[r.out].type in ["weapon", "helmet", "armor", "shield", "ring"]:
+		if ITEMS[r.out].type in ["weapon", "helmet", "armor", "shield", "ring"] and not set_aside(r.out):
 			pool.append(r.out)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = day * 7919 + 17
