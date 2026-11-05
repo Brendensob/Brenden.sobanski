@@ -1165,6 +1165,11 @@ func _build_mobs() -> void:
 	# Grasslands. Slime drops are from the wiki (about 20% each, 5.5% blade).
 	# Jelly is a little more common than the wiki's 20% (Brenden, 2026-11-05).
 	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.3, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
+	# The Jelly King, our own Grasslands Arena boss (Brenden, 2026-11-05): a big
+	# slime whose crown has slipped half off. He hops after you, and every few
+	# seconds leaps high and slams down, sending jelly along the ground that you
+	# jump over. Health, hits and drops are our estimates.
+	_mob("jelly_king", "Jelly King", "jelly_king", [300, 300], 2, "king_slime", [["jelly", 1.0, 5, 10], ["sticky_balls", 0.25, 1, 2]], {"boss": true, "heavy": true, "speed": 34, "slam_dmg": 3, "coins": [20, 40]})
 	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
 	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 30, "charge_wait": 3.0})
 	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
@@ -1288,9 +1293,10 @@ var WORLDS := {
 		"nodes": [["ice_rock", 4], ["silver", 2], ["gold", 2], ["erbium_rock", 2]]},
 	"grass_arena": {"name": "Grasslands Arena", "kind": "arena", "theme": "grass", "cap": 8, "free_revive": true,
 		"mobs": [["slime", 6, 1.23], ["wisp", 2, 1.67], ["mummy", 2], ["shell", 2]],
-		# both bosses together, made beatable for low-level players (Brenden,
-		# 2026-11-05): was 2.22 / 0.565 health (Rexy 999, Hand 1,251) at full damage
-		"bosses": [["trex", 0.6, 0.3], ["hand", 0.12, 0.3]], "boss_stagger": 1.0,
+		# one boss, a third of the time each: Rexy, the Hand or the Jelly King
+		# (Brenden, 2026-11-05), made beatable for low-level players. Rexy and the
+		# Hand were 2.22 / 0.565 health (999 and 1,251) at full damage, together
+		"bosses": [["trex", 0.6, 0.3], ["hand", 0.12, 0.3], ["jelly_king", 1.0, 1.0]], "bosses_pick": 1, "boss_stagger": 1.0,
 		"boss_drops": [["cavemun", 0.05, 1, 1], ["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1]]},
 	"dark_arena": {"name": "Darklands Arena", "kind": "arena", "theme": "dark", "cap": 9,
 		"mobs": [["dark_slime", 3], ["mantis", 3], ["zombie", 2], ["ufo", 2], ["worm", 2], ["octopus", 2, 2.0, 1.5]],

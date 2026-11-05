@@ -19,7 +19,7 @@ Monsters: each one's share of the spawns (a world places its *count* monsters, o
 | Hell 1 | `hell_1` | explore | hell | hell_2 | Mantis 22.9%, Worm 17.1%, Wizard 17.1%, Shadow 17.1%, Eyeball 11.4%, Hand 11.4% ×4.75 hit, King 1.7%, Queen 1.1% |  | vase 25%, iron 16.7%, silver 16.7%, gold 16.7%, erbium_rock 25% |
 | Hell 2 | `hell_2` | explore | hell |  | Eyeball 23.6%, Shadow 23.6% ×1.7 hit, Ghast 23.6%, Hand 23.6% ×6.5 hit, Queen 1.6%, Queen 0.79% ×1.25 hp ×1.47 hit, Queen 0.79% ×1.5 hp ×1.55 hit, Dark Rexy 2.4% ×6.3 hit |  | vase 21.4%, iron 14.3%, silver 14.3%, gold 21.4%, erbium_rock 28.6% |
 | Ice Cavern | `ice_cavern` | explore | ice |  | Tornado 14.9%, Tsunami 22.3%, Ice Bat 22.3%, Cloud 22.3%, Butterfly 14.9%, Queen 2.2% ×1.5 hp ×1.55 hit, Butterfly Boss 1.1% |  | ice_rock 40%, silver 20%, gold 20%, erbium_rock 20% |
-| Grasslands Arena | `grass_arena` | arena | grass |  | Slime 50% ×1.23 hp, Fira 16.7% ×1.67 hp, Mummy 16.7%, Shelly 16.7% | Rexy, Hand |  |
+| Grasslands Arena | `grass_arena` | arena | grass |  | Slime 50% ×1.23 hp, Fira 16.7% ×1.67 hp, Mummy 16.7%, Shelly 16.7% | Rexy, Hand, Jelly King |  |
 | Darklands Arena | `dark_arena` | arena | dark |  | Dark Slime 21.4%, Mantis 21.4%, Zombie 14.3%, UFO 14.3%, Worm 14.3%, Octopus 14.3% ×2 hp ×1.5 hit | Dark Rexy, Hand, King |  |
 | Hell Arena | `hell_arena` | arena | hell |  | Mantis 25% ×2 hp ×1.5 hit, Worm 16.7% ×1.2 hp ×1.3 hit, Wizard 16.7% ×1.2 hp ×1.3 hit, Shadow 16.7% ×1.2 hp ×1.3 hit, Eyeball 8.3% ×1.1 hp ×1.3 hit, Hand 16.7% ×0.5 hp ×5.5 hit | King, Queen |  |
 | Dream Arena | `dream_arena` | arena | dream |  | Mantis 18.2%, Shadow 18.2% ×1.7 hit, Worm 18.2% ×1.6 hit, Eyeball 9.1% ×1.5 hit, Wizard 18.2% ×1.5 hit, Hand 18.2% ×0.45 hp ×8 hit | King, Queen, Butterfly Boss |  |

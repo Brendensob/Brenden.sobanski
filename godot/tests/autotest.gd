@@ -1345,6 +1345,75 @@ func look_check() -> void:
 			tight += 1
 	check(tight == 0, "the villagers on the street stand at least two tiles apart (%d too close)" % tight)
 
+## The Grasslands Arena brings one boss: Rexy, the Hand or the Jelly King.
+## The Jelly King leaps high and slams, sending jelly along the ground that
+## hurts unless you jump it.
+func jelly_king_check() -> void:
+	await goto("grass_arena")
+	var lvl: Node = main.level
+	check(int(lvl.def.get("bosses_pick", 0)) == 1 and lvl.def.bosses.map(func(b): return b[0]) == ["trex", "hand", "jelly_king"], "the Grasslands Arena picks one boss of three")
+	lvl.arena_time = 179.5
+	await wait(0.8)
+	var n := 0
+	for e in lvl.entities.get_children():
+		if e is MobS and e.arena_boss:
+			n += 1
+	check(n == 1, "only one boss comes to the Grasslands Arena (%d)" % n)
+	for e in lvl.entities.get_children():
+		if e is MobS:
+			e.queue_free()
+	await get_tree().process_frame
+	var p: Node2D = lvl.player
+	var king: Node = lvl.spawn_mob_at("jelly_king", p.position + Vector2(90, 0))
+	king.aggro_forced = true
+	king.arena_boss = true
+	main.hud.set_boss(king)
+	await wait(0.6)
+	await shot("31_jelly_king")
+	king.state = "crouch"
+	king.state_t = 0.4
+	await wait(0.2)
+	await shot("31b_jelly_king_crouch")
+	var top: float = king.position.y
+	var waves := 0
+	for f in 240:
+		await get_tree().physics_frame
+		top = minf(top, king.position.y)
+		if king.state == "rest":
+			break
+	for e in lvl.entities.get_children():
+		if e.get_script() == preload("res://scripts/slam_wave.gd"):
+			waves += 1
+	check(lvl.cell_pos(Vector2i(0, 17)).y - top > 80 and waves == 2, "the Jelly King leaps high (%d px) and slams, sending jelly both ways (%d)" % [lvl.cell_pos(Vector2i(0, 17)).y - top, waves])
+	await shot("31c_jelly_king_slam")
+	king.queue_free()
+	for e in lvl.entities.get_children():
+		if e.get_script() == preload("res://scripts/slam_wave.gd"):
+			e.queue_free()
+	await until_floor(p)
+	# a wave that reaches you on the ground hurts; jump it and it doesn't
+	GS.hp = GS.max_hp()
+	p.invuln = 0.0
+	var W := preload("res://scripts/slam_wave.gd")
+	var w1: Node2D = W.new()
+	w1.setup(lvl, 1, 3)
+	w1.position = Vector2(p.position.x - 40, p.position.y)
+	lvl.entities.add_child(w1)
+	await wait(0.6)
+	check(GS.hp < GS.max_hp(), "the slam's jelly hurts you on the ground")
+	await wait(1.2)
+	await until_floor(p)
+	GS.hp = GS.max_hp()
+	p.invuln = 0.0
+	var w2: Node2D = W.new()
+	w2.setup(lvl, 1, 3)
+	w2.position = Vector2(p.position.x - 30, p.position.y)
+	lvl.entities.add_child(w2)
+	p._jump()
+	await wait(0.6)
+	check(GS.hp == GS.max_hp(), "jumping over it is safe")
+	p.invuln = 9999.0
+
 func menus_check() -> void:
 	await goto("grass_1")
 	main.level.player.invuln = 0.0
@@ -2143,6 +2212,7 @@ func run() -> void:
 		await wait(1.6)
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
+	await jelly_king_check()
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()

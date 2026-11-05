@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #42 | 2026-11-05 | Grasslands Arena brings one boss (Rexy, Hand or the new Jelly King, a third each); the Jelly King hops, leaps high and slams, sending jelly along the ground you jump over; arena test fights each boss |
 | #41 | 2026-11-05 | More slimes in the Grasslands (and they come back), Jelly 30%; Grasslands Arena bosses beatable at a low level (checked by the new `arena_test.gd`) with one free revive in single player; gravestone revive in single player (slow fall, ghost, 3.5 s by the stone within 50 s); Crafter and Gatekeeper 13 tiles apart, opening 10 wide, you start in the gap; everything past Hell set aside (11 worlds, 73 items hidden, nothing deleted) |
 | #40 | 2026-11-04 | Roomier maps: Pixel Town 80 tiles wide with villagers about four tiles apart and houses in the gaps, more room upstairs and in the basement; worlds with fewer, spaced-out resources and monsters. Every one of the 567 items has its own icon (`item_icons.gd`, checked by the autotest and `tools/icon_audit.gd`) |
 | #39 | 2026-11-04 | Banka's first backpack is free; backpacks 2 to 6 unlock in order for 50 gems each (placeholder); old saves keep any backpack with items in it |

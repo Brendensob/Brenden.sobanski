@@ -170,6 +170,7 @@ func _physics_process(delta: float) -> void:
 			"fly": _fly(delta, to, dist)
 			"wizard": _wizard(delta, to, dist)
 			"stone": _stone(delta)
+			"king_slime": _king_slime(delta, to)
 	if not flying and def.ai != "stone":
 		velocity.y = minf(velocity.y + GRAVITY * delta, 420)
 	move_and_slide()
@@ -209,10 +210,72 @@ func _physics_process(delta: float) -> void:
 	if def.get("hop", false):
 		alt = is_on_floor() and hop < 0.15
 	sprite.texture = frames[2] if flash > 0 else frames[1 if alt else 0]
+	sprite.offset.y = 0.0
+	if def.ai == "king_slime" and state == "crouch" and flash <= 0:
+		# squashed down before a big jump: the warning to get ready
+		sprite.texture = Art.mob_tex("jelly_king_crouch", false)
+		sprite.offset.y = (frames[0].get_height() - sprite.texture.get_height()) / 2.0
 	if absf(velocity.x) > 1:
 		dir = 1 if velocity.x > 0 else -1
 	sprite.flip_h = dir < 0
 	queue_redraw()
+
+## The Jelly King: hops after you like a slime, and every few seconds squashes
+## down, leaps high and slams into the ground, sending a ripple of jelly along
+## the floor both ways that you have to jump over (see slam_wave.gd).
+const SlamWave := preload("res://scripts/slam_wave.gd")
+const KING_LEAP := -400.0
+func _king_slime(delta: float, to: Vector2) -> void:
+	state_t -= delta
+	match state:
+		"crouch":
+			velocity.x = 0.0
+			if state_t <= 0:
+				state = "air"
+				state_t = 3.0
+				velocity.y = KING_LEAP
+				# aim to come down where you stand
+				velocity.x = clampf(to.x / 1.1, -110.0, 110.0)
+				Sfx.play("jump", 0.0)
+		"air":
+			if is_on_floor() and state_t < 2.8:
+				_slam()
+				state = "rest"
+				state_t = 1.0
+		"rest":
+			velocity.x = move_toward(velocity.x, 0, 600 * delta)
+			if state_t <= 0:
+				state = "idle"
+				state_t = randf_range(3.5, 5.5)
+		_:
+			if not aggro:
+				_wander(delta)
+				return
+			if is_on_floor():
+				velocity.x = move_toward(velocity.x, 0, 600 * delta)
+				if state_t <= 0:
+					state = "crouch"
+					state_t = 0.6
+					return
+				hop -= delta
+				if hop <= 0:
+					dir = 1 if to.x > 0 else -1
+					velocity.y = -170
+					velocity.x = dir * float(def.speed) * 1.6
+					hop = randf_range(0.6, 1.1)
+
+func _slam() -> void:
+	velocity.x = 0.0
+	level.main.shake(5.0)
+	Sfx.play("boom", 0.0)
+	level.burst(position + Vector2(0, -4), Color("f06aa0"), 18)
+	if puppet:
+		return
+	for d in [-1, 1]:
+		var w := SlamWave.new()
+		w.setup(level, d, int(def.get("slam_dmg", dmg)))
+		w.position = position + Vector2(d * size.x * 0.4, 0)
+		level.entities.add_child(w)
 
 func _wander(delta: float) -> void:
 	think -= delta

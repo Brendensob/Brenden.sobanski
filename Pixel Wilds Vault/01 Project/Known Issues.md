@@ -16,6 +16,7 @@ tags: [project, issues]
 - **A Combination Scroll is used up even on an unknown combination.** It's unknown whether PSG2 does this.
 - **UFOs stay tough in the Darklands.** They hit 15 (wiki) and fly. With Blue Night and iron gear the fight test beats one UFO 7 times in 8, but a UFO plus another monster only about a third of the time. Better defense or armor helps most.
 - **Arena bosses and mini-bosses are slow fights** past the Grasslands. The Grasslands Arena was made beatable for low-level players on 2026-11-05 (see [[Combat#Grasslands Arena boss test]]), but a player with no armor at all still loses to both bosses at once. Hands in the Darklands are too strong to fight early; they're optional.
+- **The Jelly King's slam waves only show on the host's screen** in multiplayer, and only hurt the host. Single player is fine.
 - **Everything past Hell is set aside** (2026-11-05), not finished or deleted: the later worlds and their 73 items are hidden until Grasslands to Hell are perfected (see [[Worlds#Set aside for now (2026-11-05)]]). The data and progression audits still check the whole game, set-aside parts included.
 - **Most drop rates are estimates.** Nobody has published them. See [[Numbers and Estimates]].
 - **The player blinks right after entering a map.** That's on purpose: a short safe time. In screenshots it can look like the player is missing.
