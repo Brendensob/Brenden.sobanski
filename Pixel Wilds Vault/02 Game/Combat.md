@@ -42,6 +42,18 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 Hands, Dark Rexy and arena bosses are listed but don't count: they're mini-bosses.
 
 ## Grasslands Arena boss test
+Since the second change on 2026-11-05 the arena brings one boss, so the test fights each one. 4 tries each, after the change:
+
+| Gear | Rexy | Hand | Jelly King |
+|---|---|---|---|
+| Starter Sword Cast, no armor | 3/4 | 0/4 | 0/4 |
+| Gradius + wooden set | 4/4 | 4/4 | 4/4 |
+| Golden Night + Stone Armor | 4/4 | 4/4 | 4/4 |
+| Golden Night + copper gear | 4/4 | 4/4 | 4/4 |
+
+A fight takes about a minute (Rexy and the Jelly King) or a minute and a half (the Hand). The bot jumps the Jelly King's slam waves when one rolls toward it.
+
+The first change on 2026-11-05, when both bosses still came together:
 `tests/arena_test.gd` (`-- --arenatest`) plays the real Grasslands Arena in single player: the last 15 seconds of monsters, then Rexy and the Hand together, with the real free revive and potions when low. Brenden asked for the boss to be beatable by lower-level players (2026-11-05). Before the change no kit won, not even copper gear. After it (8 tries each):
 
 | Gear | Wins | Average time | Free revive used |

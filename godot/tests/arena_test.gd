@@ -1,10 +1,12 @@
 extends "res://tests/fight_test.gd"
 ## Plays the real Grasslands Arena boss fight in single player with low-level
-## gear: the real arena (its last monsters before the boss, then both bosses
-## together), the real free revive, potions when low. A win is both bosses
-## down. Run headless and fast:
+## gear: the real arena (its last monsters before the boss, then the boss),
+## the real free revive, potions when low, jumping the Jelly King's slam waves.
+## Each kit fights each of the three bosses (Rexy, Hand, Jelly King). A win is
+## the boss down. Run headless and fast:
 ##   godot --headless --path . --fixed-fps 60 -- --arenatest
-## ARENA_TRIALS=n sets the tries per kit, ARENA_KITS=fresh,wood picks kits.
+## ARENA_TRIALS=n sets the tries per kit and boss, ARENA_KITS=fresh,wood picks
+## kits, ARENA_BOSSES=jelly_king picks bosses.
 ## Ends with "ARENATEST DONE, N failures". Wood, stone and copper gear must win
 ## 3 times in 4; the bare starter kit (no armor) is only printed.
 
@@ -16,34 +18,21 @@ const KITS := [
 	{"name": "copper", "world": "grass_arena", "weapon": "gilded_blade", "gear": {"helmet": "copper_helmet", "armor": "copper_armor", "shield": "copper_shield"}, "potions": ["small_potion", 8], "must": [], "report": [], "need": 0.75},
 ]
 const ARENA_TIMEOUT := 300.0
+const SlamWaveScript := preload("res://scripts/slam_wave.gd")
 
 func run() -> void:
 	await get_tree().create_timer(0.5).timeout
 	var trials := int(OS.get_environment("ARENA_TRIALS")) if OS.get_environment("ARENA_TRIALS") != "" else 8
 	var only := OS.get_environment("ARENA_KITS")
+	var pick := OS.get_environment("ARENA_BOSSES")
 	GS.slot = GS.SLOTS - 1
 	main.start_game(false, "man_in_suit", "Bot")
 	for kit in KITS:
 		if only != "" and not kit.name in only.split(","):
 			continue
-		var wins := 0
-		var revives := 0
-		var secs := 0.0
-		var pots := 0
-		var boss_hp := 0.0
-		for t in trials:
-			var r: Dictionary = await arena_run(kit)
-			if r.win:
-				wins += 1
-				secs += r.time
-			revives += r.revived
-			pots += r.potions
-			boss_hp += r.boss_left
-		var line := "%-7s won %d/%d  avg win time %5.1fs  used the free revive %d/%d  potions %.1f  boss health left when lost %d%%" % [kit.name, wins, trials,
-			secs / maxf(1, wins), revives, trials, float(pots) / trials, int(100 * boss_hp / maxf(1, trials - wins))]
-		rows.append(line)
-		print("ARENA ", line)
-		check(wins >= ceili(trials * kit.need), "%s gear beats the Grasslands Arena bosses (%d/%d, needs %d%%)" % [kit.name, wins, trials, int(kit.need * 100)])
+		for boss in Data.WORLDS.grass_arena.bosses:
+			if pick == "" or boss[0] in pick.split(","):
+				await _kit_vs(kit, boss, trials)
 	print("\n== ARENA TABLE")
 	for r in rows:
 		print("  ", r)
@@ -53,8 +42,28 @@ func run() -> void:
 	GS.delete_slot(GS.slot)
 	get_tree().quit(1 if fails.size() > 0 else 0)
 
-## One arena: the last 15 seconds before the boss, then the bosses, single player.
-func arena_run(kit: Dictionary) -> Dictionary:
+func _kit_vs(kit: Dictionary, boss: Array, trials: int) -> void:
+	var wins := 0
+	var revives := 0
+	var secs := 0.0
+	var pots := 0
+	var boss_hp := 0.0
+	for t in trials:
+		var r: Dictionary = await arena_run(kit, boss)
+		if r.win:
+			wins += 1
+			secs += r.time
+		revives += r.revived
+		pots += r.potions
+		boss_hp += r.boss_left
+	var line := "%-7s vs %-10s won %d/%d  avg win time %5.1fs  used the free revive %d/%d  potions %.1f  boss health left when lost %d%%" % [kit.name, boss[0], wins, trials,
+		secs / maxf(1, wins), revives, trials, float(pots) / trials, int(100 * boss_hp / maxf(1, trials - wins))]
+	rows.append(line)
+	print("ARENA ", line)
+	check(wins >= ceili(trials * kit.need), "%s gear beats the Grasslands Arena's %s (%d/%d, needs %d%%)" % [kit.name, Data.MOBS[boss[0]].name, wins, trials, int(kit.need * 100)])
+
+## One arena: the last 15 seconds before the boss, then the boss, single player.
+func arena_run(kit: Dictionary, boss: Array) -> Dictionary:
 	main.hud.close_panels()
 	_kit(kit)
 	main._load_level("grass_arena", false)
@@ -62,6 +71,8 @@ func arena_run(kit: Dictionary) -> Dictionary:
 	for n in lvl.props.get_children():
 		n.queue_free() # the Leave portal would take the bot to town
 	lvl.arena_time = Data.ARENA_BOSS_TIME - 15.0
+	lvl.def = lvl.def.duplicate()
+	lvl.def.bosses = [boss] # this boss this time
 	_kit(kit)
 	var p: CharacterBody2D = lvl.player
 	var t := 0.0
@@ -111,7 +122,12 @@ func arena_run(kit: Dictionary) -> Dictionary:
 		_press("move_left", want < 0)
 		_press("attack", true)
 		var above: bool = d.y < -18 and absf(d.x) < 40
-		if above and p.is_on_floor():
+		# a slam wave rolling at you: jump it
+		var wave := false
+		for e in lvl.entities.get_children():
+			if e.get_script() == SlamWaveScript and absf(e.position.x - p.position.x) < 34 and signf(p.position.x - e.position.x) == e.dir and absf(e.position.y - p.position.y) < 12:
+				wave = true
+		if (above or wave) and p.is_on_floor():
 			Input.action_press("jump")
 		else:
 			Input.action_release("jump")

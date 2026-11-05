@@ -641,6 +641,47 @@ func blob(body: Color, w: int, h: int, squash: bool, face := true) -> Image:
 		eyes(img, int(ww * 0.55), int(ww * 0.78), int(hh * 0.5), s)
 	return img
 
+## The Jelly King: a big pink slime with a gold crown slipped half off its
+## head, hanging crooked over one side (Brenden, 2026-11-05). `alt` is the
+## squashed frame, `crouch` the deep squash before a big jump.
+func jelly_king_img(alt: bool, crouch := false) -> Image:
+	var body := Color("f06aa0")
+	var w := 24
+	var h := 15
+	if alt:
+		w += 2
+		h -= 1
+	if crouch:
+		w += 4
+		h -= 4
+	var top := 7 # room for the crown
+	var img := blank(w + 2, h + top + 1)
+	var cx := (w + 2) / 2.0
+	ellipse(img, cx, top + h * 0.6, w / 2.0, h * 0.6, body)
+	rect(img, 2, top + h - 2, w - 2, 2, body.darkened(0.3))
+	ellipse(img, cx - w * 0.2, top + h * 0.35, w * 0.12, h * 0.12, body.lightened(0.4))
+	px(img, int(cx - w * 0.3), top + int(h * 0.5), body.lightened(0.25))
+	# a grumpy royal face
+	eyes(img, int(cx + w * 0.05), int(cx + w * 0.3), top + int(h * 0.48), 2)
+	rect(img, int(cx + w * 0.05) - 1, top + int(h * 0.48) - 2, 3, 1, OUTLINE)
+	rect(img, int(cx + w * 0.3) - 1, top + int(h * 0.48) - 2, 3, 1, OUTLINE)
+	rect(img, int(cx + w * 0.12), top + int(h * 0.75), 4, 1, OUTLINE)
+	# the crown, tipped over to the right and slipping down the side of the head
+	var gold := Color("f2cf5b")
+	var shade := Color("c89a2a")
+	var x0 := int(cx + 1)
+	for i in 10:
+		var drop := i / 3 # each column a little lower: crooked
+		var y0 := top - 3 + drop + (1 if crouch else 0)
+		px(img, x0 + i, y0 + 1, gold)
+		px(img, x0 + i, y0 + 2, shade)
+		if i % 4 == 0:
+			px(img, x0 + i, y0, gold)
+			px(img, x0 + i, y0 - 1, gold)
+	px(img, x0 + 4, top - 1 + 1, Color("d8433a"))
+	px(img, x0 + 8, top + 1 + 1, Color("4f8fe0"))
+	return img
+
 func eye_img(r: int, iris: Color, lashes: bool, crown: bool, feet: bool, alt: bool) -> Image:
 	var top := 7 if crown or lashes else 0
 	var foot := 4 if feet else 0
@@ -1080,6 +1121,8 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 		var img: Image
 		match look:
 			"slime_pink": img = blob(Color("f06aa0"), 14, 11, alt)
+			"jelly_king": img = big(jelly_king_img(alt), 3)
+			"jelly_king_crouch": img = big(jelly_king_img(true, true), 3)
 			"slime_dark": img = blob(Color("7b4fb8"), 16, 12, alt)
 			"small_stone": img = blob(Color("8a9099"), 16, 13, alt)
 			"farmland": img = blob(Color("ea8a33"), 15, 13, alt)

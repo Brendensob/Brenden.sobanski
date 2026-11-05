@@ -23,4 +23,11 @@ tags: [session]
 
 **Decisions:** see [[Decision Log]] (2026-11-05).
 
+**Later the same day:** "Don't make rexy and hand come out together make it 33% chance for each and make a big slime boss called jelly king with a half slipped off crown and he jumps high sometimes slams and you have to jump"
+- The arena now brings one boss: Rexy, the Hand or the Jelly King. See [[Worlds]].
+- The Jelly King hops, squashes down, leaps high and slams; jelly rolls both ways along the ground and you jump it. Bot test: wooden gear beats each boss 4/4.
+- Autotest checks one boss comes, the King leaps and slams with two waves, a wave hurts on the ground and jumping it is safe.
+
+![[jelly_king_slam.png]]
+
 **Next:** waiting on Brenden: is the arena too easy or still too hard on his phone? Should the gravestone revive cost anything?

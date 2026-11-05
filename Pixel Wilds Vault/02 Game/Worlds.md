@@ -44,7 +44,10 @@ Every world is walled in by mossy stone at its left and right edges; cave worlds
 
 - **Exploration:** Grasslands 1–3, Darklands 1–2, Hell 1–2, Ice Cavern, Modina Ruins, Nightmare Valley, Forbidden City, Snow Valley. Deeper levels are reached through a purple portal hidden underground.
 - **Arenas:** monsters keep coming, and the boss arrives after 3 minutes.
-- **Grasslands Arena** (since 2026-11-05) is made for low-level players: Rexy and the Hand come together but with much less health (Rexy 270, Hand 266; were 999 and 1,251) and 30% of their hit, they stagger for a moment when hit (at most once a second), and in single player you get **one free revive** there: the first time you faint you get back up on the spot. See [[Combat#Grasslands Arena boss test]].
+- **Grasslands Arena** (since 2026-11-05) is made for low-level players. **One boss** comes, a third of the time each: **Rexy** (270 health), the **Hand** (266) or the **Jelly King** (300). Rexy and the Hand hit at 30% of their wiki hit (they used to come together with 999 and 1,251 health). Bosses stagger for a moment when hit (at most once a second). In single player you get **one free revive** there: the first time you faint you get back up on the spot. See [[Combat#Grasslands Arena boss test]].
+- **The Jelly King** is our own boss: a big pink slime whose gold crown has slipped half off his head. He hops after you like a slime. Every 3.5 to 5.5 seconds he squashes down (your warning), leaps high and slams into the ground, and a ripple of jelly rolls along the floor both ways. It hurts (3) if it reaches you on the ground, so **jump over it**. He touches for 2 and drops 5 to 10 Jelly (and sometimes Sticky Balls). *"make a big slime boss called jelly king with a half slipped off crown and he jumps high sometimes slams and you have to jump"*
+
+![[jelly_king_slam.png]]
 - **Survival Grasslands:**
   - the only place the **day counter** shows;
   - Survival Tokens for nights survived, and bosses every 6 days;
