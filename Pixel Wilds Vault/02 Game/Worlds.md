@@ -30,7 +30,7 @@ Grasslands 1 to 3 have more slimes: they're a bigger share of the monsters (Gras
 | 8 | Dream Arena | |
 | 9 | Ice Cavern | |
 | 10 | Ghost Arena | |
-| 11 | Modina Ruins | Poisonous ancient ruins |
+| 11 | Modina Ruins | Poisonous ancient ruins, coloured **yellow** (was green, 2026-11-06) |
 | 12 | Nightmare Valley | Nightmare starts here.. |
 | 13 | Mushroom Valley | Prepare for some challenge! |
 | 14 | Forbidden City | The lost ruins of Forbidden City |

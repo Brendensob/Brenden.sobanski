@@ -1393,6 +1393,45 @@ func psg2_match_check() -> void:
 		m.queue_free()
 	GS.inv[GS.sel] = keep
 	GS.inventory_changed.emit()
+	await chest_hit_check()
+
+## Chests have no window: hit one holding its key and the loot flies out.
+func chest_hit_check() -> void:
+	await goto("town")
+	var chest: Node = find_prop(func(n): return n.get("kind") == "chest_silver")
+	check(chest != null, "Pixel Town has a Silver Chest")
+	if chest == null:
+		return
+	var saved_bag: Array = GS.inv.duplicate(true)
+	var saved_sel := GS.sel
+	var saved_coins := GS.coins
+	var saved_gems := GS.gems
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.add_item("silver_key", 2)
+	var keys := GS.count("silver_key")
+	var pickups := func() -> int:
+		return main.level.entities.get_children().filter(func(e): return e is PickupScript and not e.is_queued_for_deletion()).size()
+	await stand_by(chest)
+	var before: int = pickups.call()
+	chest.interact(main.level.player)
+	check(GS.count("silver_key") == keys and pickups.call() == before, "hitting a chest without holding its key doesn't open it")
+	for i in GS.BAG:
+		if GS.inv[i] != null and GS.inv[i].id == "silver_key":
+			GS.sel = i
+	chest.interact(main.level.player)
+	check(GS.count("silver_key") == keys - 1 and pickups.call() == before + 2 and not main.hud.any_open(), "hitting it with the key pops it open and two items fly out, no window")
+	await wait(0.2)
+	await shot("34_chest_burst")
+	# put the bag back as it was, so the loot doesn't crowd later checks
+	for e in main.level.entities.get_children():
+		if e is PickupScript:
+			e.queue_free()
+	GS.inv = saved_bag
+	GS.sel = saved_sel
+	GS.coins = saved_coins
+	GS.gems = saved_gems
+	GS.inventory_changed.emit()
 
 func jelly_king_check() -> void:
 	await goto("grass_arena")
@@ -2209,6 +2248,16 @@ func run() -> void:
 	for r1 in Data.SMITH:
 		tabs[main.hud._crafter_tab(r1.out)] = true
 	check(tabs.keys().size() == 5 and tabs.has("ring"), "the Crafter has weapons, helmets, armor, shields and rings %s" % [tabs.keys()])
+	# make room: the leftover smelting ore and coal, then spare materials, so a
+	# lucky run of drops earlier can't leave the bag too full for these checks
+	GS.remove_item("copper_ore", GS.count("copper_ore"))
+	GS.remove_item("coal", GS.count("coal"))
+	for i in range(GS.BAG - 1, -1, -1):
+		if GS.inv.count(null) >= 6:
+			break
+		if GS.inv[i] != null and Data.ITEMS[GS.inv[i].id].type == "material":
+			GS.inv[i] = null
+	GS.inventory_changed.emit()
 	var made := []
 	for id in ["hell_armor", "hell_armor_2", "hell_armor_3", "hell_armor_4"]:
 		for r1 in Data.SMITH:

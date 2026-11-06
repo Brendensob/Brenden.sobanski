@@ -9,7 +9,7 @@ var color := Color.WHITE
 func setup_text(text: String, c: Color) -> void:
 	label = Label.new()
 	label.text = text
-	label.add_theme_font_override("font", Art.font_title)
+	Art.world_text(label, true)
 	label.add_theme_font_size_override("font_size", 10)
 	label.add_theme_color_override("font_color", c)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))

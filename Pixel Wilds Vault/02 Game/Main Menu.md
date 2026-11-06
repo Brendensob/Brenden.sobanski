@@ -16,7 +16,7 @@ Laid out like Brenden's 2026-10-20 recording of the real game (see [[PSG2 Screen
 ## Select a character
 ![[menu_select_character.png]]
 
-- Three rows, one per save slot: the character's face, name, and kind plus day.
+- Three rows, one per save slot: the character's face, name and kind. No day count (2026-11-06): days only count in Survival Grasslands, where the HUD shows them.
 - A **red X** left of a full slot deletes it, after a "Delete ...? This can't be undone." Yes / No.
 - An empty slot says **New character**. Tap it to make one (see [[Characters]]).
 - **Menu** at the bottom left goes back to the title.

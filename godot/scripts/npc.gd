@@ -22,12 +22,12 @@ func _ready() -> void:
 	sprite.texture = Art.character(data.look)
 	sprite.position = Vector2(0, -sprite.texture.get_height() / 2.0)
 	add_child(sprite)
-	name_label = _label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_body)
+	name_label = _label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_world)
 	add_child(name_label)
-	badge = _label("", Vector2(-10, -46), Color("f2cf5b"), Art.font_title)
+	badge = _label("", Vector2(-10, -46), Color("f2cf5b"), Art.font_world_title)
 	add_child(badge)
 	# shopkeepers call out now and then, like the original
-	say = _label("New stocked items!", Vector2(-50, -46), Color.WHITE, Art.font_body)
+	say = _label("New stocked items!", Vector2(-50, -46), Color.WHITE, Art.font_world)
 	say.visible = false
 	add_child(say)
 	say_t = randf_range(2.0, 8.0)
@@ -36,6 +36,7 @@ func _label(text: String, pos: Vector2, c: Color, f: Font) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_override("font", f)
+	l.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	l.add_theme_font_size_override("font_size", 6)
 	l.add_theme_color_override("font_color", c)
 	l.add_theme_color_override("font_outline_color", Color("1b1a24"))

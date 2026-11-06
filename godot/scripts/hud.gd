@@ -153,7 +153,10 @@ func _make_theme() -> void:
 	ui_theme = Theme.new()
 	ui_theme.default_font = Art.font_body
 	ui_theme.default_font_size = 9
-	ui_theme.set_color("font_color", "Label", C_INK)
+	# every word on screen: smooth white letters with a black outline (Brenden, 2026-11-06)
+	ui_theme.set_color("font_color", "Label", C_WHITE)
+	ui_theme.set_color("font_outline_color", "Label", C_DARK)
+	ui_theme.set_constant("outline_size", "Label", 3)
 	var frame := _style("frame", 6)
 	ui_theme.set_stylebox("panel", "Panel", frame)
 	ui_theme.set_stylebox("panel", "PanelContainer", frame)
@@ -162,10 +165,12 @@ func _make_theme() -> void:
 	ui_theme.set_stylebox("hover", "Button", _style("button_hover", 3))
 	ui_theme.set_stylebox("disabled", "Button", _style("button_off", 3))
 	ui_theme.set_stylebox("focus", "Button", StyleBoxEmpty.new())
-	ui_theme.set_color("font_color", "Button", Color("3a1606"))
-	ui_theme.set_color("font_hover_color", "Button", Color("3a1606"))
-	ui_theme.set_color("font_pressed_color", "Button", Color("3a1606"))
-	ui_theme.set_color("font_disabled_color", "Button", Color("7a5a40"))
+	ui_theme.set_color("font_color", "Button", C_WHITE)
+	ui_theme.set_color("font_hover_color", "Button", C_WHITE)
+	ui_theme.set_color("font_pressed_color", "Button", C_WHITE)
+	ui_theme.set_color("font_disabled_color", "Button", Color("c8c0b8"))
+	ui_theme.set_color("font_outline_color", "Button", C_DARK)
+	ui_theme.set_constant("outline_size", "Button", 3)
 	ui_theme.set_font_size("font_size", "Button", 9)
 	ui_theme.set_type_variation("Accent", "Button")
 	ui_theme.set_stylebox("normal", "Accent", _style("green", 3))
@@ -185,13 +190,22 @@ func _make_theme() -> void:
 	# LineEdit for the character name
 	ui_theme.set_stylebox("normal", "LineEdit", _style("slot", 4))
 	ui_theme.set_stylebox("focus", "LineEdit", _style("slot_sel", 4))
-	ui_theme.set_color("font_color", "LineEdit", C_INK)
+	ui_theme.set_color("font_color", "LineEdit", C_WHITE)
+	ui_theme.set_color("font_outline_color", "LineEdit", C_DARK)
+	ui_theme.set_constant("outline_size", "LineEdit", 3)
 
 func _label(text: String, size: int = 9, color: Color = C_INK, title: bool = false) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
+	# the old dark-brown text becomes white, outlined in black like everything else
+	if color == C_INK:
+		color = C_WHITE
+	elif color == C_MUTED:
+		color = Color("ece4da")
 	l.add_theme_color_override("font_color", color)
+	l.add_theme_color_override("font_outline_color", C_DARK)
+	l.add_theme_constant_override("outline_size", 3)
 	if title:
 		l.add_theme_font_override("font", Art.font_title)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -2189,7 +2203,8 @@ func _slot_row(parent: Control, i: int, pos: Vector2) -> void:
 	nm.size = Vector2(150, 12)
 	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(_at(nm, Vector2(36, 5)))
-	var kind := "Empty" if info.is_empty() else "%s · Day %d" % [Data.CHARACTERS.get(info.look, {}).get("name", ""), info.day]
+	# no day count here: days only count in Survival Grasslands (Brenden, 2026-11-06)
+	var kind: String = "Empty" if info.is_empty() else Data.CHARACTERS.get(info.look, {}).get("name", "")
 	var kl := _label(kind, 8, C_MUTED)
 	kl.size = Vector2(150, 12)
 	kl.mouse_filter = Control.MOUSE_FILTER_IGNORE
