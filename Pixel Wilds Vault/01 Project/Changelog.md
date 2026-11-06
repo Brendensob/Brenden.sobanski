@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #45 | 2026-11-06 | Hovering an item pops it up with a tick and shows an info card; drag items anywhere (hotbar, bag, gear, Banka's backpacks), same items stack |
 | #44 | 2026-11-06 | Smooth Fredoka text, white with a black outline; chests open by hitting them with the key held, loot shoots out (no window); Modina Ruins yellow; no day count on the save slots |
 | #43 | 2026-11-06 | Start with the Plunger; monsters drop Small Potions (placeholder chances) and the Grasslands Arena boss a Holy Banana; PSG2 money from the wiki (chest coins 1/10/11/100/111, Pink Egg 10k, Green Egg 20k, Copper Ore 250 at Brutus, wiki sell prices, 99,999 coin cap); bosses drawn twice as big; long weapons drawn twice as big in hand |
 | #42 | 2026-11-05 | Grasslands Arena brings one boss (Rexy, Hand or the new Jelly King, a third each); the Jelly King hops, leaps high and slams, sending jelly along the ground you jump over; arena test fights each boss |

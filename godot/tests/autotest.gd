@@ -157,6 +157,94 @@ func click(at: Vector2) -> void:
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 
+## Drags with the mouse from one screen point to another, like a player would.
+func drag(a: Vector2, b: Vector2) -> void:
+	var k := Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	ev.position = a * k
+	ev.global_position = a * k
+	Input.parse_input_event(ev)
+	await get_tree().physics_frame
+	for i in range(1, 9):
+		var m := InputEventMouseMotion.new()
+		m.button_mask = MOUSE_BUTTON_MASK_LEFT
+		m.position = a.lerp(b, i / 8.0) * k
+		m.global_position = m.position
+		m.relative = (b - a) * k / 8.0
+		Input.parse_input_event(m)
+		await get_tree().physics_frame
+	await shot_if("35_dragging")
+	var up := InputEventMouseButton.new()
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.pressed = false
+	up.position = b * k
+	up.global_position = b * k
+	Input.parse_input_event(up)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+var want_shot := ""
+func shot_if(name: String) -> void:
+	if want_shot == name:
+		want_shot = ""
+		await shot(name)
+
+func hover(at: Vector2) -> void:
+	var k := Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+	var m := InputEventMouseMotion.new()
+	m.position = at * k
+	m.global_position = m.position
+	Input.parse_input_event(m)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+## Hovering a slot shows the item's card; dragging moves items anywhere.
+func drag_check() -> void:
+	var hud: Node = main.hud
+	hud.close_panels()
+	var saved: Array = GS.inv.duplicate(true)
+	var saved_eq: Dictionary = GS.equip.duplicate()
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.inv[0] = {"id": "plunger", "n": 1}
+	GS.inv[1] = {"id": "small_potion", "n": 3}
+	GS.inv[7] = {"id": "wooden_helmet", "n": 1}
+	GS.inv[8] = {"id": "jelly", "n": 4}
+	GS.inv[9] = {"id": "jelly", "n": 5}
+	GS.equip.helmet = ""
+	GS.inventory_changed.emit()
+	await wait(0.2)
+	# the hotbar, with the bag closed
+	var h0: Button = hud.hotbar_slots[0]
+	var h3: Button = hud.hotbar_slots[3]
+	await hover(h0.get_global_rect().get_center())
+	await wait(0.2)
+	check(hud.hover_card != null and hud.hover_card.visible and hud.hover_card.get_node("Box").get_child(0).text == "Plunger", "hovering an item shows its card")
+	await shot("35_hover_card")
+	await drag(h0.get_global_rect().get_center(), h3.get_global_rect().get_center())
+	check(GS.inv[3] != null and GS.inv[3].id == "plunger" and GS.inv[0] == null, "dragging moves an item along the hotbar, bag closed")
+	hud.toggle_bag()
+	await wait(0.3)
+	var bs: Array = hud.bag_slots
+	await drag(bs[3].get_global_rect().get_center(), bs[12].get_global_rect().get_center())
+	check(GS.inv[12] != null and GS.inv[12].id == "plunger", "dragging moves an item around the bag")
+	await drag(bs[8].get_global_rect().get_center(), bs[9].get_global_rect().get_center())
+	check(GS.inv[9] != null and GS.inv[9].n == 9 and GS.inv[8] == null, "dropping jelly on jelly stacks them")
+	await drag(bs[7].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
+	check(GS.equip.helmet == "wooden_helmet" and GS.inv[7] == null, "dragging a helmet onto the helmet slot wears it")
+	await drag(hud.equip_buttons.helmet.get_global_rect().get_center(), bs[20].get_global_rect().get_center())
+	check(GS.equip.helmet == "" and GS.inv[20] != null and GS.inv[20].id == "wooden_helmet", "dragging it back puts it in that bag slot")
+	await drag(bs[1].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
+	check(GS.inv[1] != null and GS.inv[1].id == "small_potion" and GS.equip.helmet == "", "a potion can't be dropped on the helmet slot")
+	want_shot = "35_dragging"
+	await drag(bs[1].get_global_rect().get_center(), bs[17].get_global_rect().get_center())
+	hud.close_panels()
+	GS.inv = saved
+	GS.equip = saved_eq
+	GS.inventory_changed.emit()
+
 ## Lines up every monster from the later worlds for a picture.
 func new_monsters() -> void:
 	await goto("eggcellence")
@@ -2316,6 +2404,7 @@ func run() -> void:
 		await shot("30_" + w)
 	await jelly_king_check()
 	await psg2_match_check()
+	await drag_check()
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()
