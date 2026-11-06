@@ -57,7 +57,7 @@ func apply(state: Dictionary) -> void:
 			flip_t = 0.0
 		jumps = j
 	var h: String = state.get("held", "")
-	held.texture = Art.icon(h) if h != "" and Data.ITEMS.has(h) else null
+	held.texture = Art.held_tex(h) if h != "" and Data.ITEMS.has(h) else null
 
 func _process(delta: float) -> void:
 	position = position.lerp(target, minf(1.0, delta * 14.0))
@@ -74,7 +74,7 @@ func _process(delta: float) -> void:
 		spin = facing * TAU * ease(flip_t / Player.FLIP_TIME, 0.6)
 	body.rotation = PI / 2 * facing if dead else spin
 	held.position = Vector2(facing * 5, -7)
-	held.offset = Vector2(4 * facing, -5)
+	held.offset = Art.held_offset(held.texture, facing)
 	held.flip_h = facing < 0
 	var ang: float = Player.SWING_KEYS[0][1]
 	if swing > 0:

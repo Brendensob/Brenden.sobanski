@@ -113,6 +113,11 @@ Opens with: Silver Key · picks 2 times from:
 | Snow Ball | 5–10 | 100% |
 | Pistol | 1 | 30% |
 | Backstreet Boy | 1 | 20% |
+| Pixel Coins | 1 | 100% |
+| Pixel Coins | 10 | 100% |
+| Pixel Coins | 11 | 100% |
+| Pixel Coins | 100 | 50% |
+| Pixel Coins | 111 | 30% |
 
 ## Golden Chest
 

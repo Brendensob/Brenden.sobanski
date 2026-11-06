@@ -31,7 +31,8 @@ Buys your items: yes
 | Wood Wall | 10 |
 | Campfire | 60 |
 | Combo Book II | 1500 |
-| Monster Egg (Green) | 10000 |
+| Monster Egg (Pink) | 10000 |
+| Monster Egg (Green) | 20000 |
 
 Buys your items: no
 
@@ -42,6 +43,7 @@ Buys your items: no
 | Wood | 5 |
 | Rock | 5 |
 | Branch | 5 |
+| Copper Ore | 250 |
 
 Buys your items: no
 

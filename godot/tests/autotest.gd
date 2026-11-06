@@ -1348,6 +1348,52 @@ func look_check() -> void:
 ## The Grasslands Arena brings one boss: Rexy, the Hand or the Jelly King.
 ## The Jelly King leaps high and slams, sending jelly along the ground that
 ## hurts unless you jump it.
+## Brenden's 2026-11-06 asks: potions from monsters, PSG2's money, and big bosses
+## and long weapons.
+func psg2_match_check() -> void:
+	for m in ["slime", "wisp", "mummy", "shell", "octopus", "dark_slime", "mantis", "zombie"]:
+		check(Data.MOBS[m].drops.any(func(e): return e[0] == "small_potion"), "the %s can drop a Small Potion" % Data.MOBS[m].name)
+	check(Data.WORLDS.grass_arena.boss_drops.any(func(e): return e[0] == "holy_banana"), "the Grasslands Arena boss can drop a Holy Banana")
+	var old := GS.coins
+	GS.coins = 250000
+	check(GS.coins == 99999, "Pixel Coins stop at 99,999")
+	GS.coins = -5
+	check(GS.coins == 0, "and never go below 0")
+	GS.coins = old
+	var price := func(shop: String, id: String) -> int:
+		for e in Data.SHOPS[shop].sells:
+			if e[0] == id:
+				return e[1]
+		return -1
+	check(price.call("tools", "pink_egg") == 10000 and price.call("tools", "green_egg") == 20000 and price.call("gruff", "copper_ore") == 250, "egg and ore prices are the wiki's")
+	check(Data.ITEMS.living_flame.sell == 1 and Data.ITEMS.gold_pick.sell == 50 and Data.ITEMS.short_blade.sell == 0, "sell prices are the wiki's")
+	check(Data.CHESTS.silver.loot.filter(func(e): return e[0] == "coin").map(func(e): return e[1]) == [1, 10, 11, 100, 111], "Silver Chests hold 1, 10, 11, 100 or 111 coins")
+	check(Art.held_k("long_sword") == 2 and Art.held_k("excalibur") == 2 and Art.held_k("plunger") == 1, "long weapons are drawn twice as big in hand")
+	await goto("grass_1")
+	var lvl: Node = main.level
+	for e in lvl.entities.get_children():
+		if e is MobS:
+			e.queue_free()
+	await get_tree().process_frame
+	var p: Node2D = lvl.player
+	var keep = GS.inv[GS.sel]
+	GS.inv[GS.sel] = {"id": "long_sword", "n": 1}
+	GS.inventory_changed.emit()
+	p.facing = 1
+	var king: Node = lvl.spawn_mob_at("king", p.position + Vector2(70, 0))
+	var rexy: Node = lvl.spawn_mob_at("trex", p.position + Vector2(-60, 0), 1.0, 1.0, true)
+	var small: Node = lvl.spawn_mob_at("trex", p.position + Vector2(-130, 0))
+	for m in [king, rexy, small]:
+		m.set_physics_process(false)
+	check(rexy.size.y >= small.size.y * 2 - 1, "an arena's Rexy is twice as big as a normal one (%d vs %d)" % [rexy.size.y, small.size.y])
+	check(king.size.y >= 90, "the King is drawn big (%d px tall)" % king.size.y)
+	await wait(0.3)
+	await shot("33_big_bosses")
+	for m in [king, rexy, small]:
+		m.queue_free()
+	GS.inv[GS.sel] = keep
+	GS.inventory_changed.emit()
+
 func jelly_king_check() -> void:
 	await goto("grass_arena")
 	var lvl: Node = main.level
@@ -1391,7 +1437,11 @@ func jelly_king_check() -> void:
 		if e.get_script() == preload("res://scripts/slam_wave.gd"):
 			e.queue_free()
 	await until_floor(p)
-	# a wave that reaches you on the ground hurts; jump it and it doesn't
+	# a wave that reaches you on the ground hurts; jump it and it doesn't. Gear
+	# is taken off for this, or armor from earlier checks can soak the whole hit.
+	var worn: Dictionary = GS.equip.duplicate()
+	for slot in GS.equip:
+		GS.equip[slot] = ""
 	GS.hp = GS.max_hp()
 	p.invuln = 0.0
 	var W := preload("res://scripts/slam_wave.gd")
@@ -1413,6 +1463,8 @@ func jelly_king_check() -> void:
 	await wait(0.6)
 	check(GS.hp == GS.max_hp(), "jumping over it is safe")
 	p.invuln = 9999.0
+	GS.equip = worn
+	GS.stats_changed.emit()
 
 func menus_check() -> void:
 	await goto("grass_1")
@@ -1815,6 +1867,7 @@ func check_character_unlocks() -> void:
 	check(GS.is_unlocked("chuchu") and GS.is_unlocked("cavemun"), "unlocks are kept on the device")
 	GS.new_game("pirate", "Arr")
 	check(GS.count("gilded_blade") == 1, "starting as the Pirate comes with its Golden Night")
+	check(GS.count("plunger") == 1 and GS.count("sword_cast") == 0, "everyone starts with the Plunger, like PSG2")
 	GS.delete_slot(1)
 	GS.reset_unlocks()
 	GS.slot = 0
@@ -2213,6 +2266,7 @@ func run() -> void:
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
 	await jelly_king_check()
+	await psg2_match_check()
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()

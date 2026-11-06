@@ -12,7 +12,7 @@ extends "res://tests/fight_test.gd"
 
 ## Kits a low-level player has by the time they try the arena (see fight_test.gd).
 const KITS := [
-	{"name": "fresh", "world": "grass_arena", "weapon": "sword_cast", "gear": {}, "potions": ["small_potion", 3], "must": [], "report": [], "need": 0.0},
+	{"name": "fresh", "world": "grass_arena", "weapon": "plunger", "gear": {}, "potions": ["small_potion", 3], "must": [], "report": [], "need": 0.0},
 	{"name": "wood", "world": "grass_arena", "weapon": "short_blade", "gear": {"helmet": "wooden_helmet", "armor": "wooden_armor", "shield": "wooden_shield"}, "potions": ["small_potion", 5], "must": [], "report": [], "need": 0.75},
 	{"name": "stone", "world": "grass_arena", "weapon": "gilded_blade", "gear": {"helmet": "wooden_helmet", "armor": "stone_armor", "shield": "wooden_shield"}, "potions": ["small_potion", 6], "must": [], "report": [], "need": 0.75},
 	{"name": "copper", "world": "grass_arena", "weapon": "gilded_blade", "gear": {"helmet": "copper_helmet", "armor": "copper_armor", "shield": "copper_shield"}, "potions": ["small_potion", 8], "must": [], "report": [], "need": 0.75},

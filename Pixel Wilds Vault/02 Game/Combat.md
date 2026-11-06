@@ -8,7 +8,9 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Your hits:** a random number from **atk + 1 to atk + weapon damage**. Critical hits are yellow.
 - **Monster hits:** `max(0, hit − random(0 … your defense))`. Defense can soak a whole hit to **0**, as in the trailer.
 - **Knockback:** a knockback weapon throws a monster back about a tile (≈16 px: KNOCK_SPEED 160, slowing by 800/s). Heavy monsters and bosses don't move. Monsters barely push you (KNOCKBACK 60). Changed 2026-10-24: the old 7 px nudge made the Grasslands too hard for a starter (see [[Decision Log]]).
-- **Starter sword:** the Sword Cast hits for 2–5 (attack 4, was 3 before 2026-10-27).
+- **Starter weapon:** the **Plunger** (attack 4, 0.4 s a swing), like PSG2, since 2026-11-06. Before that it was the Sword Cast (attack 4, 0.5 s).
+- **Potions from monsters:** every Grasslands and Darklands monster can drop a Small Potion (4%, placeholder), Grasslands Arena monsters 6%, and the Grasslands Arena boss can drop a Holy Banana.
+- **Bosses are big:** drawn twice the size of before (2026-11-06), with hit boxes to match. Long weapons (reach 24+) are drawn twice as big in your hand.
 - **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
 - **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.
 - **Potions:** Small Potion heals 5, Potion 12, Medium 25, Big 60 (raised 2026-10-27; these were always our estimates).
@@ -31,7 +33,7 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 
 | Place | Gear by then | Result |
 |---|---|---|
-| Grasslands 1 | starter Sword Cast, 3 Small Potions | every monster beaten |
+| Grasslands 1 | starter Plunger (Sword Cast before 2026-11-06), 3 Small Potions | every monster beaten |
 | Grasslands 1 | Gradius, wooden helmet, armor, shield | every monster beaten |
 | Grasslands 2 | Golden Night, Stone Armor | every monster beaten, Octopuses too |
 | Grasslands 3 | Golden Night, copper gear | every common monster beaten; Rexy one at a time |

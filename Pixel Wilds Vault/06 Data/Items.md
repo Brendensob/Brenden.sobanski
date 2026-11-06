@@ -300,7 +300,7 @@ tags: [data, generated]
 | Blue Wood | `blue_wood` | 15 |  | Wood from blue trees. Needs a gold axe. |
 | Apple | `apple` | 15 |  | Looks delicious, but it's for crafting. |
 | Evil Apple | `evil_apple` | 300 |  | Don't eat it. |
-| Fira | `living_flame` | 60 |  | A living flame. Smelted from fire crystals. |
+| Fira | `living_flame` | 1 |  | A living flame. Smelted from fire crystals. |
 | Copper Ore | `copper_ore` | 3 |  | Smelt 5 with 1 coal for a copper bar. |
 | Iron Ore | `iron_ore` | 5 |  | Smelt 5 with 1 coal for an iron bar. |
 | Silver Ore | `silver_ore` | 8 |  | Smelt 5 with 1 coal for a silver bar. |
@@ -392,8 +392,8 @@ tags: [data, generated]
 | Wooden Pick | `wooden_pick` | 0 | dmg 1, spd 0.5, reach 16, kb false, tier 1 | Used to mine rocks and ores. Tier 1. |
 | Copper Pickaxe | `copper_pick` | 25 | dmg 2, spd 0.5, reach 16, kb false, tier 2 | Used to mine rocks and ores. Tier 2. |
 | Iron Pickaxe | `iron_pick` | 25 | dmg 3, spd 0.5, reach 16, kb false, tier 3 | Used to mine rocks and ores. Tier 3. |
-| Gold Pickaxe | `gold_pick` | 25 | dmg 4, spd 0.5, reach 16, kb false, tier 4 | Used to mine rocks and ores. Tier 4. |
-| Erbium Pickaxe | `erbium_pick` | 25 | dmg 4, spd 0.5, reach 16, kb false, tier 5 | Used to mine rocks and ores. Tier 5. |
+| Gold Pickaxe | `gold_pick` | 50 | dmg 4, spd 0.5, reach 16, kb false, tier 4 | Used to mine rocks and ores. Tier 4. |
+| Erbium Pickaxe | `erbium_pick` | 50 | dmg 4, spd 0.5, reach 16, kb false, tier 5 | Used to mine rocks and ores. Tier 5. |
 
 ## Place (6)
 
@@ -559,7 +559,7 @@ tags: [data, generated]
 | Gold Sword Cast | `gold_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
 | Torch | `torch_weapon` | 1 | dmg 5, spd 1, reach 22, kb true | Long reach, slow swing. |
 | Wood King | `timber_club` | 15 | dmg 5, spd 0.75, reach 18, kb true | A heavy wooden club. |
-| Gradius | `short_blade` | 20 | dmg 5, spd 0.45, reach 16, kb true | Small but quick. Slimes sometimes drop it. Used to craft Golden Night. |
+| Gradius | `short_blade` | 0 | dmg 5, spd 0.45, reach 16, kb true | Small but quick. Slimes sometimes drop it. Used to craft Golden Night. |
 | Golden Night | `gilded_blade` | 30 | dmg 6, spd 0.5, reach 18, kb true | A short blade with a gold finish. |
 | Blue Night | `azure_blade` | 45 | dmg 9, spd 0.55, reach 20, kb true | A blue steel blade. |
 | Fire Brand | `fire_brand` | 45 | dmg 13, spd 0.55, reach 20, kb true | Warm to hold. |

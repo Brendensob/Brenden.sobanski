@@ -121,7 +121,7 @@ func _have(id: String) -> bool:
 
 func _obtainable() -> void:
 	# what a new character starts with, and what the game hands out in code
-	for id in ["sword_cast", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin"]:
+	for id in ["plunger", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin"]:
 		_add(id, "start")
 	# everything any monster that appears somewhere drops, and every resource in a world
 	var spawned := {}

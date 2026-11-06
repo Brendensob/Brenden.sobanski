@@ -1099,24 +1099,30 @@ func big(img: Image, k: int) -> Image:
 
 ## The boss version of a character: three times as big, with extras.
 func boss_char(look: String, alt: bool) -> Image:
-	var img := _char_img(look, "walk" if alt else "stand", 3)
+	var img := _char_img(look, "walk" if alt else "stand", 4)
+	# the extras are laid out for a 3x character; q() moves them onto the 4x one
+	var q := func(v: int) -> int: return int(round(v * 4.0 / 3.0))
 	match look:
 		"modina", "modina_2":
 			# four swords, two on each side
 			for side in [0, 1]:
 				for k in 2:
 					var x: int = 2 + side * 28 + k * 3
-					rect(img, x, 22 + k * 6, 2, 22, Color("e3ebf5"))
-					rect(img, x - 1, 40 + k * 6, 4, 2, Color("f2cf5b"))
+					rect(img, q.call(x), q.call(22 + k * 6), 3, q.call(22), Color("e3ebf5"))
+					rect(img, q.call(x - 1), q.call(40 + k * 6), 5, 3, Color("f2cf5b"))
 		"evil_santa":
-			rect(img, 6, 6, 26, 6, Color("c8202a"))
-			rect(img, 30, 2, 6, 6, Color("c8202a"))
-			rect(img, 34, 0, 4, 4, Color("f2efe6"))
-			rect(img, 6, 12, 26, 3, Color("f2efe6"))
-			rect(img, 9, 36, 20, 12, Color("f2efe6"))
+			rect(img, q.call(6), q.call(6), q.call(26), q.call(6), Color("c8202a"))
+			rect(img, q.call(30), q.call(2), q.call(6), q.call(6), Color("c8202a"))
+			rect(img, q.call(34), 0, q.call(4), q.call(4), Color("f2efe6"))
+			rect(img, q.call(6), q.call(12), q.call(26), q.call(3), Color("f2efe6"))
+			rect(img, q.call(9), q.call(36), q.call(20), q.call(12), Color("f2efe6"))
 	return img
 
-func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
+func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
+	if k > 1:
+		# a boss drawn k times bigger, smoothly enlarged so it doesn't look blown up
+		return cached("mob_%s_%s_%s_x%d" % [look, alt, flash, k], func():
+			return to_tex(upscale(mob_tex(look, alt, flash).get_image(), k)))
 	return cached("mob_%s_%s_%s" % [look, alt, flash], func():
 		var img: Image
 		match look:
@@ -1190,14 +1196,14 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 				px(li, 19, 7, OUTLINE)
 				px(li, 21, 7, OUTLINE)
 				rect(li, 19, 9, 3, 1, Color("d8433a"))
-				img = big(li, 3)
+				img = big(li, 4)
 			"pineapple_killer":
 				var pk := fruit_img("pineapple", alt)
 				rect(pk, 1, 10, 3, 2, Color("3a3a48"))
 				rect(pk, 14, 10 - (1 if alt else 0), 3, 2, Color("3a3a48"))
 				eyes(pk, 8, 11, 10, 1, Color("d8433a"))
-				img = big(pk, 3)
-			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 3)
+				img = big(pk, 4)
+			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 4)
 			# Tomb of Makara
 			"sand_mantis": img = bug_img(18, 12, Color("e8a0a8"), Color("b06a7a"), alt)
 			"tombstone": img = tombstone_img(alt)
@@ -1496,6 +1502,25 @@ func icon_spec(id: String) -> Array:
 func pet_look(id: String) -> String:
 	var look: String = Data.PETS[id].look
 	return look
+
+## Long weapons (reach 24 or more: long swords, Excalibur, pole axes, lances,
+## Modina swords and the like) are drawn twice as big in your hand, like the
+## original (Brenden, 2026-11-06). Short ones stay icon-sized.
+func held_k(id: String) -> int:
+	return 2 if int(Data.ITEMS.get(id, {}).get("reach", 0)) >= 24 else 1
+
+## The texture for an item held in the hand.
+func held_tex(id: String) -> Texture2D:
+	var k := held_k(id)
+	if k == 1:
+		return icon(id)
+	return cached("held_%s_x%d" % [id, k], func(): return to_tex(upscale(icon(id).get_image(), k)))
+
+## Puts the held item's handle (its lower corner) in the hand, whatever its size.
+func held_offset(tex: Texture2D, facing: int) -> Vector2:
+	if tex == null:
+		return Vector2(4 * facing, -5)
+	return Vector2((tex.get_width() / 2.0 - 2.0) * facing, -(tex.get_height() / 2.0 - 1.0))
 
 func icon(id: String) -> Texture2D:
 	return cached("icon_" + id, func():

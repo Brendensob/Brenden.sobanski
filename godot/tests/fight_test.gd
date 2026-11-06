@@ -31,7 +31,7 @@ var rows := []
 ##        (gold ore is mined in Darklands 1).
 ##  hell: Kings Mace, Chainmail, Fear Helmet, Gold Shield, Armor Ring I and a Gold Ring.
 const STAGES := [
-	{"name": "fresh", "world": "grass_1", "weapon": "sword_cast", "gear": {}, "potions": ["small_potion", 3],
+	{"name": "fresh", "world": "grass_1", "weapon": "plunger", "gear": {}, "potions": ["small_potion", 3],
 		"must": ["slime", "wisp", "mummy", "shell"], "report": []},
 	{"name": "wood", "world": "grass_1", "weapon": "short_blade", "gear": {"helmet": "wooden_helmet", "armor": "wooden_armor", "shield": "wooden_shield"}, "potions": ["small_potion", 5],
 		"must": ["slime", "wisp", "mummy", "shell"], "report": []},

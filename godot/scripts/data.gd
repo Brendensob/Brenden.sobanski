@@ -58,7 +58,7 @@ func _items_materials() -> void:
 		["linen", "Linen", 10, "Woven from roots."], ["wood_board", "Wood Board", 3, "A flat plank."],
 		["nail", "Nail", 2, "Holds things together."], ["blue_wood", "Blue Wood", 15, "Wood from blue trees. Needs a gold axe."],
 		["apple", "Apple", 15, "Looks delicious, but it's for crafting."], ["evil_apple", "Evil Apple", 300, "Don't eat it."],
-		["living_flame", "Fira", 60, "A living flame. Smelted from fire crystals."],
+		["living_flame", "Fira", 1, "A living flame. Smelted from fire crystals."],
 		["copper_ore", "Copper Ore", 3, "Smelt 5 with 1 coal for a copper bar."], ["iron_ore", "Iron Ore", 5, "Smelt 5 with 1 coal for an iron bar."],
 		["silver_ore", "Silver Ore", 8, "Smelt 5 with 1 coal for a silver bar."], ["gold_ore", "Gold Ore", 12, "Smelt 5 with 1 coal for a gold bar."],
 		["erbium", "Erbium", 40, "A rare ore. Smelt 5 with 1 coal for an erbium bar."], ["volcanic_ore", "Volcanic Ore", 400, "Extremely rare ore."],
@@ -130,7 +130,7 @@ func _items_weapons() -> void:
 		["gold_sword_cast", "Gold Sword Cast", 4, 0.5, 16, true, 20, "Part of the Combo Sword."],
 		["torch_weapon", "Torch", 5, 1.0, 22, true, 1, "Long reach, slow swing."],
 		["timber_club", "Wood King", 5, 0.75, 18, true, 15, "A heavy wooden club."],
-		["short_blade", "Gradius", 5, 0.45, 16, true, 20, "Small but quick. Slimes sometimes drop it. Used to craft Golden Night."],
+		["short_blade", "Gradius", 5, 0.45, 16, true, 0, "Small but quick. Slimes sometimes drop it. Used to craft Golden Night."],
 		["gilded_blade", "Golden Night", 6, 0.5, 18, true, 30, "A short blade with a gold finish."],
 		["azure_blade", "Blue Night", 9, 0.55, 20, true, 45, "A blue steel blade."],
 		["fire_brand", "Fire Brand", 13, 0.55, 20, true, 45, "Warm to hold."],
@@ -335,7 +335,9 @@ func _items_weapons() -> void:
 	]
 	for r in t:
 		var what: String = "chop trees" if r[2] == "axe" else "mine rocks and ores"
-		_item(r[0], r[1], r[2], 25 if r[4] > 1 else 0, "Used to %s. Tier %d." % [what, r[4]], {"dmg": r[3], "spd": 0.5, "reach": 16, "kb": false, "tier": r[4]})
+		# sell prices are the wiki's: wooden tools can't be sold, Gold and Erbium Pickaxes 50, the rest 25
+		var price: int = 0 if r[4] == 1 else (50 if r[0] in ["gold_pick", "erbium_pick"] else 25)
+		_item(r[0], r[1], r[2], price, "Used to %s. Tier %d." % [what, r[4]], {"dmg": r[3], "spd": 0.5, "reach": 16, "kb": false, "tier": r[4]})
 
 ## extra: "regen" [stat, amount, every seconds] for rings that slowly restore
 ## health or mana, "immune" for a status it stops (the Jade Ring and poison).
@@ -1151,6 +1153,9 @@ var MOBS := {}
 
 func _mob(id: String, name: String, look: String, hp: Array, dmg: int, ai: String, drops: Array, extra: Dictionary = {}) -> void:
 	var d := {"name": name, "look": look, "hp": hp, "dmg": dmg, "ai": ai, "drops": drops, "speed": 34.0}
+	# bosses are drawn twice as big (mob.gd big_k); these are drawn big already
+	if look in ["jelly_king", "modina", "modina_2", "evil_santa", "harakattu", "pineapple_killer", "fortune_boss"]:
+		d["big"] = 1
 	d.merge(extra, true)
 	# the wiki lists "Gem (1 or 2)" in most bosses' drops (the chance is a placeholder)
 	if d.get("boss", false) and not drops.any(func(e): return e[0] == "gem"):
@@ -1164,23 +1169,23 @@ func _ready() -> void:
 func _build_mobs() -> void:
 	# Grasslands. Slime drops are from the wiki (about 20% each, 5.5% blade).
 	# Jelly is a little more common than the wiki's 20% (Brenden, 2026-11-05).
-	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.3, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
+	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.3, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1], ["small_potion", 0.04, 1, 1]], {"speed": 30, "hop": true})
 	# The Jelly King, our own Grasslands Arena boss (Brenden, 2026-11-05): a big
 	# slime whose crown has slipped half off. He hops after you, and every few
 	# seconds leaps high and slams down, sending jelly along the ground that you
 	# jump over. Health, hits and drops are our estimates.
 	_mob("jelly_king", "Jelly King", "jelly_king", [300, 300], 2, "king_slime", [["jelly", 1.0, 5, 10], ["sticky_balls", 0.25, 1, 2]], {"boss": true, "heavy": true, "speed": 34, "slam_dmg": 3, "coins": [20, 40]})
-	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
-	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 30, "charge_wait": 3.0})
-	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
-	_mob("octopus", "Octopus", "octopus", [65, 65], 5, "accel", [["monster_horn", 0.2, 1, 1], ["herb", 0.2, 1, 1], ["monster_scale", 0.2, 1, 1], ["green_egg", 0.01, 1, 1]], {"jump": true})
+	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1], ["small_potion", 0.04, 1, 1]], {"speed": 40})
+	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1], ["small_potion", 0.04, 1, 1]], {"speed": 30, "charge_wait": 3.0})
+	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1], ["small_potion", 0.04, 1, 1]], {"speed": 32})
+	_mob("octopus", "Octopus", "octopus", [65, 65], 5, "accel", [["monster_horn", 0.2, 1, 1], ["herb", 0.2, 1, 1], ["monster_scale", 0.2, 1, 1], ["green_egg", 0.01, 1, 1], ["small_potion", 0.04, 1, 1]], {"jump": true})
 	_mob("crusher", "Stone", "crusher", [999999, 999999], 1, "stone", [], {"invulnerable": true})
 	_mob("trex", "Rexy", "trex", [450, 450], 7, "charge", [["antidote", 0.15, 1, 1], ["silver_key", 0.03, 1, 1], ["old_roots", 0.1, 1, 1], ["red_egg", 0.01, 1, 1], ["cavemun", 0.03, 1, 1], ["backstreet_boy", 0.03, 1, 1], ["halloween_mask", 0.01, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36})
 	_mob("dark_trex", "Dark Rexy", "dark_trex", [1050, 1050], 9, "charge", [["herb", 0.3, 1, 2], ["mana_potion", 0.15, 1, 1], ["potion", 0.15, 1, 1], ["cavemun", 0.04, 1, 1], ["backstreet_boy", 0.04, 1, 1], ["laser_gun", 0.01, 1, 1], ["halloween_mask", 0.01, 1, 1], ["sailor_moons", 0.01, 1, 1]], {"jump": true, "crit": 0.1, "speed": 36, "coins": [20, 60]})
 	# Darklands
-	_mob("dark_slime", "Dark Slime", "slime_dark", [125, 150], 7, "walk", [["herb", 0.3, 1, 1], ["jelly", 0.15, 1, 1]], {"jump": true, "status": ["poison", 0.1]})
-	_mob("mantis", "Mantis", "mantis", [118, 183], 4, "accel", [["antidote_herb", 0.25, 1, 1], ["stink_bug", 0.25, 1, 1]], {"jump": true, "fast_hits": true})
-	_mob("zombie", "Zombie", "zombie", [75, 75], 5, "charge", [["plant_roots", 0.3, 1, 1]], {"jump": true, "status": ["fatigue", 0.1]})
+	_mob("dark_slime", "Dark Slime", "slime_dark", [125, 150], 7, "walk", [["herb", 0.3, 1, 1], ["jelly", 0.15, 1, 1], ["small_potion", 0.04, 1, 1]], {"jump": true, "status": ["poison", 0.1]})
+	_mob("mantis", "Mantis", "mantis", [118, 183], 4, "accel", [["antidote_herb", 0.25, 1, 1], ["stink_bug", 0.25, 1, 1], ["small_potion", 0.04, 1, 1]], {"jump": true, "fast_hits": true})
+	_mob("zombie", "Zombie", "zombie", [75, 75], 5, "charge", [["plant_roots", 0.3, 1, 1], ["small_potion", 0.04, 1, 1]], {"jump": true, "status": ["fatigue", 0.1]})
 	_mob("ufo", "UFO", "ufo", [65, 65], 15, "fly", [["potion", 0.15, 1, 1], ["antidote_herb", 0.2, 1, 1], ["purple_egg", 0.008, 1, 1]], {"crit": 0.1, "speed": 44})
 	_mob("worm", "Worm", "worm", [300, 500], 17, "walk", [["mana_potion", 0.2, 1, 1], ["antidote_herb", 0.2, 1, 1]], {"crit": 0.1, "speed": 22, "status": ["poison", 0.15]})
 	_mob("hand", "Hand", "hand", [2214, 2214], 8, "accel", [["apple", 0.08, 1, 1], ["combo_book_3", 0.01, 1, 1], ["combo_book_4", 0.005, 1, 1], ["green_egg", 0.03, 1, 1], ["red_egg", 0.03, 1, 1], ["purple_egg", 0.02, 1, 1], ["knights_blade", 0.02, 1, 1], ["glow_blade_green", 0.01, 1, 1], ["combination_scroll", 0.05, 1, 1], ["silver_key", 0.08, 1, 1], ["golden_key", 0.03, 1, 1], ["legendary_roots", 0.03, 1, 1], ["bone", 0.4, 1, 3], ["sticky_bones", 0.15, 1, 1], ["dongle", 0.08, 1, 1], ["crystal", 0.3, 1, 2], ["school_girl", 0.02, 1, 1], ["pistol", 0.02, 1, 1], ["rolva", 0.02, 1, 1], ["firecracker_blade", 0.01, 1, 1], ["yellow_fluorescent_shield", 0.01, 1, 1], ["backstreet_boy", 0.02, 1, 1]], {"jump": true, "big_jump": true, "crit": 0.1, "speed": 38, "coins": [40, 120]})
@@ -1297,7 +1302,8 @@ var WORLDS := {
 		# (Brenden, 2026-11-05), made beatable for low-level players. Rexy and the
 		# Hand were 2.22 / 0.565 health (999 and 1,251) at full damage, together
 		"bosses": [["trex", 0.6, 0.3], ["hand", 0.12, 0.3], ["jelly_king", 1.0, 1.0]], "bosses_pick": 1, "boss_stagger": 1.0,
-		"boss_drops": [["cavemun", 0.05, 1, 1], ["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1]]},
+		"mob_drops": [["small_potion", 0.06, 1, 1], ["herb", 0.1, 1, 1]],
+		"boss_drops": [["cavemun", 0.05, 1, 1], ["combo_book_2", 0.06, 1, 1], ["combo_book_3", 0.02, 1, 1], ["iron_sword_cast", 0.1, 1, 1], ["silver_key", 0.25, 1, 1], ["small_mana_potion", 0.3, 1, 2], ["small_potion", 0.3, 1, 2], ["wooden_helmet", 0.1, 1, 1], ["moon_blade", 0.02, 1, 1], ["weak_bow", 0.06, 1, 1], ["bow", 0.04, 1, 1], ["faceguard", 0.05, 1, 1], ["crystal", 0.3, 1, 2], ["jade_ring", 0.02, 1, 1], ["big_rejuvenate_potion", 0.05, 1, 1], ["holy_banana", 0.05, 1, 1]]},
 	"dark_arena": {"name": "Darklands Arena", "kind": "arena", "theme": "dark", "cap": 9,
 		"mobs": [["dark_slime", 3], ["mantis", 3], ["zombie", 2], ["ufo", 2], ["worm", 2], ["octopus", 2, 2.0, 1.5]],
 		"bosses": [["dark_trex", 4.76, 1.78], ["hand", 2.26, 1.75], ["king", 0.5, 0.52]], "bosses_pick": 2,
@@ -1427,7 +1433,7 @@ func _find_set_aside() -> void:
 ## tiers and other gates: only where things come from matters here.
 func _reachable(worlds: Array) -> Dictionary:
 	var have := {}
-	for id in ["sword_cast", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin", "fist", "man_in_suit", "nurse",
+	for id in ["plunger", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin", "fist", "man_in_suit", "nurse",
 			"survival_token", "silver_key", "golden_key", "master_key", "wall_hammer"]:
 		have[id] = true
 	var mobs := {}
@@ -1709,8 +1715,8 @@ const GEM_PRICE := 2500
 var SHOPS := {
 	# the spiky-haired Merchant only buys your items; the Plumber sells everything (Brenden, 2026-11-04)
 	"merchant": {"title": "Merchant", "sells": [], "buys": true},
-	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["combo_book_2", 1500], ["green_egg", 10000]], "buys": false},
-	"gruff": {"title": "Brutus' Shop", "sells": [["wood", 5], ["rock", 5], ["branch", 5]], "buys": false},
+	"tools": {"title": "Plumber", "sells": [["wooden_axe", 250], ["wooden_pick", 250], ["copper_ore", 250], ["small_potion", 15], ["small_mana_potion", 15], ["antidote", 40], ["fatigue_potion", 40], ["arrow", 2], ["cc_ball_1", 8], ["wk_missile_1", 12], ["wood_wall", 10], ["campfire", 60], ["combo_book_2", 1500], ["pink_egg", 10000], ["green_egg", 20000]], "buys": false},
+	"gruff": {"title": "Brutus' Shop", "sells": [["wood", 5], ["rock", 5], ["branch", 5], ["copper_ore", 250]], "buys": false},
 	"warden_hell": {"title": "GateKeeper", "needs": "em_shop", "sells": [["em_stone", 92500]], "buys": false},
 	"miner": {"title": "Miner (Survival Tokens)", "currency": "survival_token", "sells": [["green_seeds", 15], ["red_seeds", 45], ["silver_key", 10], ["golden_key", 35], ["master_key", 100]], "buys": false},
 }
@@ -1734,7 +1740,9 @@ var CHESTS := {
 		["hard_shield", 1, 1], ["faceguard", 1, 1], ["silver_ring", 1, 1, 0.3], ["gold_ring", 1, 1, 0.3], ["armor_ring", 1, 1, 0.2],
 		["combination_scroll", 1, 1, 0.3], ["silver_key", 1, 1, 0.3], ["golden_key", 1, 1, 0.1], ["survival_token", 1, 3], ["green_egg", 1, 1, 0.1],
 		["cavemun", 1, 1, 0.3], ["school_girl", 1, 1, 0.2], ["bad_man", 1, 1, 0.2], ["soldier", 1, 1, 0.2], ["pirate", 1, 1, 0.2],
-		["cc_ball_1", 3, 8], ["wk_missile_1", 3, 8], ["snow_ball", 5, 10], ["pistol", 1, 1, 0.3], ["backstreet_boy", 1, 1, 0.2]]},
+		["cc_ball_1", 3, 8], ["wk_missile_1", 3, 8], ["snow_ball", 5, 10], ["pistol", 1, 1, 0.3], ["backstreet_boy", 1, 1, 0.2],
+		# Pixel Coins in the wiki's amounts (1, 10, 11, 100 or 111)
+		["coin", 1, 1], ["coin", 10, 10], ["coin", 11, 11], ["coin", 100, 100, 0.5], ["coin", 111, 111, 0.3]]},
 	"golden": {"name": "Golden Chest", "key": "golden_key", "rolls": 2, "loot": [
 		["gem", 1, 3, 2],
 		["timber_club", 1, 1], ["gilded_blade", 1, 1], ["azure_blade", 1, 1], ["fire_brand", 1, 1], ["violet_edge", 1, 1], ["excalibur", 1, 1],
