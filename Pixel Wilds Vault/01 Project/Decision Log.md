@@ -5,6 +5,11 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-06 (hover cards and dragging items)
+*"When hovering over items make it satisfying and show info and you can drag to move them anytime"*
+- **Hover:** the icon pops up (1.2×, springy) and brightens with a quiet tick, and an info card shows the name, stats, description and sell price. Read "satisfying" as that pop, sound and a bounce when an item lands.
+- **Drag anytime:** hotbar (even with the bag closed), bag, gear slots and Banka's backpacks. Same items stack; gear only drops on its own slot. Tapping and the Move button still work.
+
 ## 2026-11-06 (smooth text, chests you hit, yellow Modina Ruins, no days outside Survival)
 *"There's ui bugs make the works on the screen non pixelated and js smooth white letters with black outline and when opening a chest there's not open you just it with your key and items shoot out also modi's ruins is yellow and don't show days for players that's a survival grasslands only"*
 - **Smooth text:** all words use the round Fredoka font instead of pixel fonts, white with a black outline (coloured text keeps its colour). Read "words on the screen" as all text, menus and HUD included.

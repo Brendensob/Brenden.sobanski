@@ -36,6 +36,9 @@ var bag_slots: Array = []
 var equip_buttons := {}
 var bag_sel := -1
 var move_from := -1
+var hover_slot: Button = null # the slot under the mouse
+var hover_card: PanelContainer # the item's name and info, shown while hovering
+var drag_src: Button = null # the slot an item is being dragged from
 var combo := [-1, -1, -1]
 var combo_target := 0
 var use_scroll := false
@@ -261,7 +264,11 @@ func _slot(size: int = 28) -> Button:
 	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# grow from the middle when it pops
+	icon.resized.connect(func(): icon.pivot_offset = icon.size / 2.0)
 	b.add_child(icon)
+	b.mouse_entered.connect(func(): _slot_hover(b, true))
+	b.mouse_exited.connect(func(): _slot_hover(b, false))
 	var n := _outlined(_label("", 8, C_WHITE, true))
 	n.name = "Count"
 	n.position = Vector2(size - 16, size - 12)
@@ -277,11 +284,14 @@ func _fill_slot(b: Button, s, ghost: Texture2D = null) -> void:
 		icon.texture = Art.icon_big(s.id) if b.size.x >= 26 else Art.icon(s.id)
 		icon.modulate = Color.WHITE
 		n.text = str(s.n) if s.n > 1 else ""
-		b.tooltip_text = Data.ITEMS[s.id].name
+		b.set_meta("item", s.id)
 	else:
 		icon.texture = ghost
 		n.text = ""
-		b.tooltip_text = ""
+		b.set_meta("item", "")
+	b.tooltip_text = "" # the hover card shows the info instead
+	if hover_slot == b:
+		_show_hover_card(b)
 
 func _select_style(b: Button, on: bool, color: Color = C_GOOD) -> void:
 	if on and b.theme_type_variation == "Slot":
@@ -341,6 +351,7 @@ func _build_hud() -> void:
 		var b := _slot(28)
 		var idx := i
 		b.pressed.connect(func(): GS.sel = idx; GS.inventory_changed.emit())
+		_draggable(b, "bag", idx)
 		hb.add_child(b)
 		hotbar_slots.append(b)
 	# health, mana and stamina
@@ -1064,6 +1075,7 @@ func _build_bag() -> void:
 			GS.unequip(sname)
 			if sname == "pet":
 				main.level.spawn_pet())
+		_draggable(b, "equip", slot)
 		p.add_child(b)
 		equip_buttons[slot] = b
 	var trash := _button("", func(): _trash_selected())
@@ -1090,6 +1102,7 @@ func _build_bag() -> void:
 		var b := _slot(31)
 		var idx := i
 		b.pressed.connect(func(): _bag_click(idx))
+		_draggable(b, "bag", idx)
 		grid.add_child(b)
 		bag_slots.append(b)
 	# item info under the bag
@@ -1223,6 +1236,7 @@ func _page_storage() -> void:
 			if GS.retrieve(storage_page, idx) > 0:
 				toast("Your bag is full.", "warn")
 			_refresh_bag())
+		_draggable(b, "store", idx)
 		grid.add_child(b)
 
 ## A locked backpack: the first is free, every one after costs gems, in order.
@@ -3062,3 +3076,215 @@ func _refresh_trade() -> void:
 	(t.get_node("State") as Label).text = "You: %s     %s: %s" % ["Ready!" if Net.trade_ready_me else "not ready", partner, "Ready!" if Net.trade_ready_them else "not ready"]
 	var rb: Button = t.get_node("Ready")
 	rb.text = "Not ready" if Net.trade_ready_me else "Ready"
+
+# ---------------------------------------------------------------- hovering and dragging items
+## Hovering a slot pops its item up with a soft tick and shows a card with the
+## item's name and what it does; any item can be dragged to another slot at any
+## time: around the bag and hotbar, onto the gear column, and in and out of
+## Banka's backpacks (Brenden, 2026-11-06: "When hovering over items make it
+## satisfying and show info and you can drag to move them anytime").
+func _slot_hover(b: Button, on: bool) -> void:
+	var icon: TextureRect = b.get_node("Icon")
+	if on:
+		hover_slot = b
+		if b.get_meta("item", "") != "":
+			var tw := b.create_tween()
+			tw.tween_property(icon, "scale", Vector2(1.22, 1.22), 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			icon.modulate = Color(1.18, 1.18, 1.18)
+			Sfx.play("hover", 0.0)
+		_show_hover_card(b)
+	else:
+		if hover_slot == b:
+			hover_slot = null
+			_hide_hover_card()
+		var tw := b.create_tween()
+		tw.tween_property(icon, "scale", Vector2.ONE, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		icon.modulate = Color.WHITE
+
+func _show_hover_card(b: Button) -> void:
+	var id: String = b.get_meta("item", "")
+	if id == "" or not Data.ITEMS.has(id) or drag_src != null or not b.is_visible_in_tree():
+		_hide_hover_card()
+		return
+	if hover_card == null:
+		hover_card = PanelContainer.new()
+		hover_card.name = "HoverCard"
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.1, 0.09, 0.14, 0.92)
+		sb.border_color = Color("f2cf5b")
+		sb.set_border_width_all(1)
+		sb.set_corner_radius_all(4)
+		sb.content_margin_left = 5
+		sb.content_margin_right = 5
+		sb.content_margin_top = 3
+		sb.content_margin_bottom = 4
+		hover_card.add_theme_stylebox_override("panel", sb)
+		hover_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hover_card.z_index = 100
+		var box := VBoxContainer.new()
+		box.name = "Box"
+		box.add_theme_constant_override("separation", 1)
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hover_card.add_child(box)
+		root.add_child(hover_card)
+	var box: VBoxContainer = hover_card.get_node("Box")
+	_clear(box)
+	var it: Dictionary = Data.ITEMS[id]
+	box.add_child(_label(it.name, 10, C_YELLOW, true))
+	var line := ""
+	if it.has("stats"):
+		line = _stat_text(id)
+	elif it.has("heal") and it.type == "food":
+		line = "Heals %d" % it.heal
+	if it.has("dmg") and it.type in ["weapon", "axe", "pick", "bow", "throw"]:
+		line = "Attack %d, %.2fs per %s" % [it.dmg, it.spd, "shot" if it.type in ["bow", "throw"] else "swing"]
+	if line != "" and line != it.desc:
+		box.add_child(_label(line, 8, Color("a8f0a0")))
+	if it.desc != "":
+		var d := _wrap(it.desc, 130, C_WHITE, 8)
+		d.max_lines_visible = 4
+		box.add_child(d)
+	if it.get("sell", 0) > 0:
+		box.add_child(_label("Sells for %dc" % it.sell, 8, Color("ece4da")))
+	hover_card.reset_size()
+	hover_card.visible = true
+	# beside the slot, kept on the screen
+	var r := b.get_global_rect()
+	var vs := root.get_viewport_rect().size
+	var cs := hover_card.get_combined_minimum_size()
+	var pos := Vector2(r.end.x + 3, r.position.y)
+	if pos.x + cs.x > vs.x - 2:
+		pos.x = r.position.x - cs.x - 3
+	pos.y = clampf(pos.y, 2, vs.y - cs.y - 2)
+	hover_card.position = pos
+	hover_card.scale = Vector2(0.9, 0.9)
+	hover_card.pivot_offset = Vector2(0, cs.y / 2)
+	hover_card.modulate.a = 0.0
+	var tw := hover_card.create_tween().set_parallel()
+	tw.tween_property(hover_card, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(hover_card, "modulate:a", 1.0, 0.08)
+
+func _hide_hover_card() -> void:
+	if hover_card:
+		hover_card.visible = false
+
+## Lets an item be dragged out of slot b and other items be dropped onto it.
+## where: "bag" (the bag and hotbar, by index), "equip" (by gear slot) or
+## "store" (the open backpack at Banka, by index).
+func _draggable(b: Button, where: String, at) -> void:
+	b.set_meta("drag", {"where": where, "at": at})
+	b.set_drag_forwarding(func(_p: Vector2): return _drag_from(b), func(_p: Vector2, data): return _can_drop(b, data), func(_p: Vector2, data): _drop_on(b, data))
+
+func _slot_item(where: String, at):
+	match where:
+		"bag": return GS.inv[at]
+		"equip": return {"id": GS.equip[at], "n": 1} if GS.equip[at] != "" else null
+		"store": return GS.storage[storage_page][at] if GS.owns_backpack(storage_page) else null
+	return null
+
+func _drag_from(b: Button):
+	var src: Dictionary = b.get_meta("drag")
+	var s = _slot_item(src.where, src.at)
+	if s == null:
+		return null
+	var prev := TextureRect.new()
+	prev.texture = Art.icon_big(s.id)
+	prev.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+	prev.size = Vector2(36, 36)
+	prev.position = Vector2(-18, -18)
+	prev.scale = Vector2(1.25, 1.25)
+	prev.modulate = Color(1, 1, 1, 0.9)
+	var holder := Control.new()
+	holder.add_child(prev)
+	b.set_drag_preview(holder)
+	drag_src = b
+	(b.get_node("Icon") as TextureRect).modulate = Color(1, 1, 1, 0.3)
+	_hide_hover_card()
+	Sfx.play("grab", 0.0)
+	return {"slot_drag": true, "where": src.where, "at": src.at, "id": s.id}
+
+func _can_drop(b: Button, data) -> bool:
+	if not (data is Dictionary and data.get("slot_drag", false)):
+		return false
+	var dst: Dictionary = b.get_meta("drag")
+	if dst.where == "store" and not GS.owns_backpack(storage_page):
+		return false
+	if dst.where == "equip":
+		return data.where != "equip" and GS.equip_slot_for(data.id) == dst.at
+	if data.where == "equip":
+		# gear can go back to an empty bag slot, or swap with gear that fits its slot
+		var there = _slot_item(dst.where, dst.at)
+		return dst.where == "bag" and (there == null or GS.equip_slot_for(there.id) == data.at)
+	return true
+
+func _drop_on(b: Button, data) -> void:
+	var dst: Dictionary = b.get_meta("drag")
+	_end_drag()
+	if dst.where == data.where and dst.at == data.at:
+		return
+	if dst.where == "equip":
+		var is_pet: bool = Data.ITEMS[data.id].type == "pet"
+		if data.where == "bag":
+			GS.equip_from(data.at)
+		else:
+			# straight from a backpack: through a free bag slot
+			var k: int = GS.inv.find(null)
+			if k < 0:
+				toast("Your bag is full.", "warn")
+				return
+			GS.inv[k] = GS.storage[storage_page][data.at]
+			GS.storage[storage_page][data.at] = null
+			GS.equip_from(k)
+		if is_pet and main.level:
+			main.level.spawn_pet()
+	elif data.where == "equip":
+		var there = GS.inv[dst.at]
+		var old: String = GS.equip[data.at]
+		if there == null:
+			GS.equip[data.at] = ""
+			GS.inv[dst.at] = {"id": old, "n": 1}
+			GS.clamp_stats()
+			GS.inventory_changed.emit()
+		else:
+			GS.equip_from(dst.at)
+		if data.at == "pet" and main.level:
+			main.level.spawn_pet()
+		Sfx.play("equip", 0.0)
+	else:
+		var a: Array = GS.inv if data.where == "bag" else GS.storage[storage_page]
+		var c: Array = GS.inv if dst.where == "bag" else GS.storage[storage_page]
+		var s = a[data.at]
+		var t = c[dst.at]
+		if t != null and t.id == s.id and t.n < GS.stack_size(s.id):
+			# same item: stack them
+			var put := mini(int(s.n), GS.stack_size(s.id) - int(t.n))
+			t.n += put
+			s.n -= put
+			a[data.at] = null if s.n <= 0 else s
+		else:
+			a[data.at] = t
+			c[dst.at] = s
+		GS.inventory_changed.emit()
+	bag_sel = dst.at if dst.where == "bag" and GS.inv[dst.at] != null else -1
+	move_from = -1
+	Sfx.play("drop", 0.0)
+	_pop(b)
+	if panels.has("bag") and panels.bag.visible:
+		_refresh_bag()
+
+## A little bounce on the slot an item lands in.
+func _pop(b: Button) -> void:
+	var icon: TextureRect = b.get_node("Icon")
+	icon.scale = Vector2(1.35, 1.35)
+	var tw := b.create_tween()
+	tw.tween_property(icon, "scale", Vector2.ONE, 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _end_drag() -> void:
+	if drag_src and is_instance_valid(drag_src):
+		(drag_src.get_node("Icon") as TextureRect).modulate = Color.WHITE
+	drag_src = null
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_END:
+		# dropped somewhere that doesn't take it: the item stays where it was
+		_end_drag()
