@@ -159,7 +159,7 @@ func _make_theme() -> void:
 	# every word on screen: smooth white letters with a black outline (Brenden, 2026-11-06)
 	ui_theme.set_color("font_color", "Label", C_WHITE)
 	ui_theme.set_color("font_outline_color", "Label", C_DARK)
-	ui_theme.set_constant("outline_size", "Label", 3)
+	ui_theme.set_constant("outline_size", "Label", Art.outline_for(9))
 	var frame := _style("frame", 6)
 	ui_theme.set_stylebox("panel", "Panel", frame)
 	ui_theme.set_stylebox("panel", "PanelContainer", frame)
@@ -173,7 +173,7 @@ func _make_theme() -> void:
 	ui_theme.set_color("font_pressed_color", "Button", C_WHITE)
 	ui_theme.set_color("font_disabled_color", "Button", Color("c8c0b8"))
 	ui_theme.set_color("font_outline_color", "Button", C_DARK)
-	ui_theme.set_constant("outline_size", "Button", 3)
+	ui_theme.set_constant("outline_size", "Button", Art.outline_for(9))
 	ui_theme.set_font_size("font_size", "Button", 9)
 	ui_theme.set_type_variation("Accent", "Button")
 	ui_theme.set_stylebox("normal", "Accent", _style("green", 3))
@@ -184,7 +184,7 @@ func _make_theme() -> void:
 	ui_theme.set_color("font_hover_color", "Accent", C_WHITE)
 	ui_theme.set_color("font_pressed_color", "Accent", C_WHITE)
 	ui_theme.set_color("font_outline_color", "Accent", Color("0e3a0e"))
-	ui_theme.set_constant("outline_size", "Accent", 3)
+	ui_theme.set_constant("outline_size", "Accent", Art.outline_for(9))
 	ui_theme.set_stylebox("panel", "ScrollContainer", StyleBoxEmpty.new())
 	# item slots: peach squares with a brown edge; the selected one turns green
 	ui_theme.set_type_variation("Slot", "Button")
@@ -195,7 +195,7 @@ func _make_theme() -> void:
 	ui_theme.set_stylebox("focus", "LineEdit", _style("slot_sel", 4))
 	ui_theme.set_color("font_color", "LineEdit", C_WHITE)
 	ui_theme.set_color("font_outline_color", "LineEdit", C_DARK)
-	ui_theme.set_constant("outline_size", "LineEdit", 3)
+	ui_theme.set_constant("outline_size", "LineEdit", Art.outline_for(9))
 
 func _label(text: String, size: int = 9, color: Color = C_INK, title: bool = false) -> Label:
 	var l := Label.new()
@@ -206,17 +206,28 @@ func _label(text: String, size: int = 9, color: Color = C_INK, title: bool = fal
 		color = C_WHITE
 	elif color == C_MUTED:
 		color = Color("ece4da")
+	else:
+		color = _bright(color)
 	l.add_theme_color_override("font_color", color)
 	l.add_theme_color_override("font_outline_color", C_DARK)
-	l.add_theme_constant_override("outline_size", 3)
+	l.add_theme_constant_override("outline_size", Art.outline_for(size))
 	if title:
 		l.add_theme_font_override("font", Art.font_title)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
+## Dark coloured words (the old brown, orange, green and red text) disappear
+## into a black outline, so they're lifted until they read clearly.
+func _bright(c: Color) -> Color:
+	for i in 6:
+		if c.get_luminance() >= 0.55:
+			break
+		c = c.lightened(0.18)
+	return c
+
 func _outlined(l: Label) -> Label:
 	l.add_theme_color_override("font_outline_color", C_DARK)
-	l.add_theme_constant_override("outline_size", 3)
+	l.add_theme_constant_override("outline_size", Art.outline_for(l.get_theme_font_size("font_size")))
 	return l
 
 ## White text with a dark outline, used for headings like the original's.
@@ -763,7 +774,7 @@ func toast(text: String, kind: String = "") -> void:
 	var l := _label(text, 8, color)
 	l.name = "Text"
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.5))
-	l.add_theme_constant_override("outline_size", 2)
+	l.add_theme_constant_override("outline_size", Art.outline_for(8))
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(minf(Art.font_body.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 8).x + 2, 240), 0)
@@ -824,7 +835,7 @@ func _build_touch() -> void:
 	ab.modulate = Color(1, 1, 1, 0.92)
 	var al := _label("AUTO", 7, Color(1, 1, 1, 0.95), true)
 	al.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
-	al.add_theme_constant_override("outline_size", 3)
+	al.add_theme_constant_override("outline_size", Art.outline_for(7))
 	al.scale = Vector2(k, k)
 	al.size = Vector2(28, 9)
 	al.position = Vector2(0, 26 * k)
@@ -1285,8 +1296,8 @@ func _page_character() -> void:
 	var lines := [["Attack", "%d-%d" % [ar.x, ar.y]], ["Defense", str(GS.stat("def"))], ["Magic", str(GS.stat("mag"))],
 		["Health", str(int(GS.max_hp()))], ["Mana", str(int(GS.max_mp()))], ["Stamina", str(int(GS.max_st()))], ["Coins", str(GS.coins)]]
 	for i in lines.size():
-		page.add_child(_at(_label(lines[i][0], 9), Vector2(64, 40 + i * 13)))
-		page.add_child(_at(_label(lines[i][1], 9, C_EMBER, true), Vector2(130, 40 + i * 13)))
+		page.add_child(_at(_label(lines[i][0], 9), Vector2(64, 38 + i * 11)))
+		page.add_child(_at(_label(lines[i][1], 9, C_EMBER, true), Vector2(130, 38 + i * 11)))
 	page.add_child(_at(_wrap("Equip gear by tapping it in your bag, then Equip. Tap a slot on the left to take it off.", 200, C_MUTED, 8), Vector2(6, 124)))
 
 func _page_combine() -> void:
@@ -1476,6 +1487,16 @@ func _page_craft() -> void:
 	page.add_child(go)
 
 ## One line on what an item does: attack and speed for weapons, stats for gear.
+## "Reach 22, strong knockback": how far a weapon hits and how hard it pushes.
+func _reach_text(it: Dictionary) -> String:
+	var kb := float(it.get("kb", 0.0))
+	var word := "no"
+	if kb > 0.0: word = "light"
+	if kb >= 1.15: word = "medium"
+	if kb >= 1.5: word = "strong"
+	if kb >= 2.0: word = "huge"
+	return "Reach %d, %s knockback" % [int(it.get("reach", 14)), word]
+
 func _stat_text(id: String) -> String:
 	var it: Dictionary = Data.ITEMS[id]
 	if it.has("stats"):
@@ -1494,6 +1515,8 @@ func _stat_text(id: String) -> String:
 			s += ", chops trees"
 		if it.has("pick"):
 			s += ", mines"
+		if it.get("type", "") == "weapon":
+			s += "\n" + _reach_text(it)
 		return s
 	return it.desc
 
@@ -1523,8 +1546,10 @@ func _refresh_info() -> void:
 	var extra := ""
 	if it.has("dmg") and it.type in ["weapon", "axe", "pick", "bow", "throw"]:
 		extra = " Attack %d, %.2fs per %s." % [it.dmg, it.spd, "shot" if it.type in ["bow", "throw"] else "swing"]
+	if it.type == "weapon":
+		extra += " %s." % _reach_text(it)
 	var d := _wrap(it.desc + extra, 156, C_INK, 8)
-	d.max_lines_visible = 3
+	d.max_lines_visible = 4
 	info_box.add_child(d)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 2)
@@ -1782,8 +1807,9 @@ func _build_panels() -> void:
 func _logo(parent: Control, y: float) -> void:
 	for i in 2:
 		var l := _label(["PIXEL", "WILDS"][i], 34, Color("ffd21e"), true)
+		l.set_meta("logo", true) # the two logo lines are meant to touch
 		l.add_theme_color_override("font_outline_color", Color("2a1206"))
-		l.add_theme_constant_override("outline_size", 10)
+		l.add_theme_constant_override("outline_size", 8)
 		l.add_theme_color_override("font_shadow_color", Color("8a4a12"))
 		l.add_theme_constant_override("shadow_offset_x", 0)
 		l.add_theme_constant_override("shadow_offset_y", 4)
@@ -2182,7 +2208,7 @@ func _menu_button(text: String, cb: Callable, accent := false) -> Button:
 		b.add_theme_color_override("font_hover_color", C_WHITE)
 		b.add_theme_color_override("font_pressed_color", C_WHITE)
 		b.add_theme_color_override("font_outline_color", Color("5a2408"))
-		b.add_theme_constant_override("outline_size", 3)
+		b.add_theme_constant_override("outline_size", Art.outline_for(10))
 	return b
 
 ## One row of "Select a character": a red X to delete it on the left, then a
@@ -2586,7 +2612,7 @@ func _world_card(wid: String, title: String, line: String) -> Control:
 	for k in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		act.add_theme_color_override(k, C_WHITE)
 	act.add_theme_color_override("font_outline_color", Color("6a3a10"))
-	act.add_theme_constant_override("outline_size", 3)
+	act.add_theme_constant_override("outline_size", Art.outline_for(11))
 	act.position = Vector2(6, 138)
 	act.custom_minimum_size = Vector2(138, 32)
 	act.size = Vector2(138, 32)
@@ -3140,6 +3166,8 @@ func _show_hover_card(b: Button) -> void:
 		line = "Attack %d, %.2fs per %s" % [it.dmg, it.spd, "shot" if it.type in ["bow", "throw"] else "swing"]
 	if line != "" and line != it.desc:
 		box.add_child(_label(line, 8, Color("a8f0a0")))
+	if it.type == "weapon":
+		box.add_child(_label(_reach_text(it), 8, Color("f8d28a")))
 	if it.desc != "":
 		var d := _wrap(it.desc, 130, C_WHITE, 8)
 		d.max_lines_visible = 4

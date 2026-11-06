@@ -120,6 +120,50 @@ func _items_consumables() -> void:
 		if r[0] == "pretzel": desc += "The GateKeeper would love one."
 		_item(r[0], r[1], "food", r[2], desc.strip_edges(), e)
 
+## How hard a weapon throws monsters back: 0 is none, 1 (the least) is about
+## a tile, as every knockback weapon pushed before. Slow, long, heavy weapons hit harder; quick little blades
+## barely push (Brenden, 2026-11-06: weapons "should be all diff in knockback
+## and size and everything"). PSG2's own numbers aren't published, so these
+## are our estimates.
+const HEAVY_WEAPONS := ["axe", "hammer", "club", "mace", "spike", "timber", "heavy", "giant", "evil_shadow", "torch"]
+const LIGHT_WEAPONS := ["fluorescent", "glow_blade", "pops", "knife", "knifes", "ninja", "rolva", "short_blade", "gradius", "candy_stick", "edge"]
+
+static func weapon_knockback(id: String, spd: float, reach: int, knocks: bool) -> float:
+	if not knocks:
+		return 0.0
+	var kb := 0.95 + (spd - 0.4) * 1.6 + (reach - 16) * 0.03
+	for h in HEAVY_WEAPONS:
+		if id.contains(h):
+			kb += 0.45
+			break
+	for l in LIGHT_WEAPONS:
+		if id.contains(l):
+			kb -= 0.3
+			break
+	# each step up a family pushes a touch harder
+	var tail := id.get_slice("_", id.get_slice_count("_") - 1)
+	if tail.is_valid_int():
+		kb += 0.05 * (int(tail) - 1)
+	elif tail == "u":
+		kb += 0.15
+	# never weaker than the old knockback (1): the Grasslands Arena is balanced
+	# around it, so quick blades sit at 1 and everything else pushes harder
+	return snappedf(clampf(kb, 1.0, 2.5), 0.05)
+
+## How big a weapon looks in your hand, from 1 (icon size) up: longer reach
+## means a longer weapon, and heavy weapons are drawn chunkier.
+static func weapon_size(id: String, reach: int) -> float:
+	var s := 1.0 + maxf(reach - 16, 0) * 0.075
+	for h in HEAVY_WEAPONS:
+		if id.contains(h):
+			s += 0.15
+			break
+	for l in LIGHT_WEAPONS:
+		if id.contains(l):
+			s -= 0.1
+			break
+	return snappedf(clampf(s, 0.9, 2.6), 0.05)
+
 func _items_weapons() -> void:
 	# [id, name, attack, seconds per swing, reach, knockback, sell, desc]
 	var w := [
@@ -269,7 +313,8 @@ func _items_weapons() -> void:
 		["ultimate_candy", "Ultimate Candy", 186, 0.65, 26, true, 10000, "A Giant Candy, made ultimate."],
 	]
 	for r in w:
-		var extra := {"dmg": r[2], "spd": r[3], "reach": r[4], "kb": r[5]}
+		var extra := {"dmg": r[2], "spd": r[3], "reach": r[4], "kb": weapon_knockback(r[0], r[3], r[4], r[5]),
+			"size": weapon_size(r[0], r[4])}
 		if r.size() > 8:
 			extra.merge(r[8])
 		_item(r[0], r[1], "weapon", r[6], r[7], extra)
@@ -337,7 +382,7 @@ func _items_weapons() -> void:
 		var what: String = "chop trees" if r[2] == "axe" else "mine rocks and ores"
 		# sell prices are the wiki's: wooden tools can't be sold, Gold and Erbium Pickaxes 50, the rest 25
 		var price: int = 0 if r[4] == 1 else (50 if r[0] in ["gold_pick", "erbium_pick"] else 25)
-		_item(r[0], r[1], r[2], price, "Used to %s. Tier %d." % [what, r[4]], {"dmg": r[3], "spd": 0.5, "reach": 16, "kb": false, "tier": r[4]})
+		_item(r[0], r[1], r[2], price, "Used to %s. Tier %d." % [what, r[4]], {"dmg": r[3], "spd": 0.5, "reach": 16, "kb": 0.0, "tier": r[4]})
 
 ## extra: "regen" [stat, amount, every seconds] for rings that slowly restore
 ## health or mana, "immune" for a status it stops (the Jade Ring and poison).

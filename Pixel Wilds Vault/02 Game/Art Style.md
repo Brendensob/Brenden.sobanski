@@ -22,7 +22,14 @@ tags: [game, art]
 
 ![[smooth_text_2026-11-06.png]]
 
-- **Damage numbers:** size 10 with a 4 px outline. They pop in at 1.7× and squash back.
+- **Clean text (2026-11-06):** letters are placed at quarter pixels without hinting and are no longer snapped to the 480×270 grid (`snap_2d_vertices_to_pixel` off), so gaps between letters stay even and outlines sit on their letters. Outlines are a fifth of the letter size (`Art.outline_for`: 2 for most text). Dark coloured words are brightened to read on the black outline. The autotest checks every open window for overlapping writing.
+- **Crystals and ores (2026-11-06):** crystals are thin shards on a small rock, ores a shaded rock with shiny faceted nuggets. Ore rocks in the world have shaded faces, cracks and lit nuggets; ice and erbium rocks grow thin crystal shards (`Art.nugget`, `Art.shard`).
+- **Worn gear (2026-11-06):** armour and helmets on your character take the shapes of their icons (`ItemIcons.armor_parts` and `ItemIcons.helmet_kind` are shared), so no two look like the same piece in another colour.
+- **Held weapons (2026-11-06):** drawn from a smooth 4× copy of the icon at the weapon's own size.
+
+![[clean_text_gear_2026-11-06.png]]
+
+- **Damage numbers:** size 10 with a 2 px outline. They pop in at 1.7× and squash back.
 - **Death bursts:** round puffs with a dark rim and a highlight, shrinking away.
 - **Characters:** chibi (big head, two-dot eyes, stubby legs), drawn from text grids in `Art.LOOKS`.
 
@@ -31,7 +38,7 @@ tags: [game, art]
 ![[clean_bosses.png]]
 
 Brenden asked for "way cleaner", more cartoon-ish graphics with depth and colour (see [[2026-10-27 Cleaner cartoon look]]).
-- **Bosses are big, like PSG2** (2026-11-06): drawn twice as big as ordinary monsters' scale (the King and Queen are about four times your height). Rexy, Dark Rexy and the Hand are twice as big when they come as an arena's boss. **Long weapons** (reach 24+) are drawn twice as big in your hand.
+- **Bosses are big, like PSG2** (2026-11-06): drawn twice as big as ordinary monsters' scale (the King and Queen are about four times your height). Rexy, Dark Rexy and the Hand are twice as big when they come as an arena's boss. Weapons have their own size in your hand (see Held weapons above).
 - **Big sprites are smoothed, not blown up.** Bosses, the big chicks and the big bag icons are enlarged with Scale2x/Scale3x (`Art.upscale()`), which rounds off the staircase edges. Big monsters are outlined *before* they're enlarged, so they keep a bold cartoon outline.
 - **Soft shadows** sit under the player, friends, villagers, walking monsters and drops.
 - **Glows:** portals breathe a soft glow in their colour; drops glow faintly; silver, gold, erbium, volcanic, ice and sandnite rocks twinkle in their own colour.

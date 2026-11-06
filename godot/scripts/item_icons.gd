@@ -569,34 +569,18 @@ static func _ammo(cv: Cv, id: String, base: String, map: Dictionary, tier: int) 
 	cv.anchors = {}
 
 # ---------------------------------------------------------------- armour
-static func _armor(cv: Cv, id: String, base: String, map: Dictionary) -> void:
+## The look of a piece of armour, picked from its name. The icon and the armour
+## worn on your character use the same choices, so they match.
+static func armor_parts(base: String) -> Dictionary:
 	var dress := base.contains("dress") or base.contains("robe")
 	var robe := dress or base in ["seer_armor", "lavish_armor", "linen_armor", "sage_armor"]
-	# the body
-	if robe:
-		cv.stamp(["..........", ".XX....XX.", ".XXXXXXXX.", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", ".XXXXXXXX.", ".XXXXXXXX.", "XXXXXXXXXX", "xxxxxxxxxx"])
-	else:
-		cv.stamp(["..........", ".XX....XX.", ".XXXXXXXX.", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", "..xxxxxx..", "..........", ".........."])
-	# shoulders
 	var sh: String = pick(base, 11, ["none", "pads", "spikes", "round"])
 	if base.contains("hell") or base.contains("skull") or base.contains("dark") or base.contains("nightmare"):
 		sh = "spikes"
 	elif base.contains("knight") or base.contains("golden") or base.contains("iron") or base.contains("silver"):
 		sh = "pads"
-	match sh:
-		"pads": cv.stamp(["GGG..GGG", "GGG..GGG"], 1, 1)
-		"spikes": cv.pts([[0, 0], [9, 0], [1, 1], [8, 1], [0, 1], [9, 1]], "G")
-		"round": cv.pts([[0, 1], [0, 2], [9, 1], [9, 2]], "X")
-	# the collar
-	match pick(base, 12, ["v", "high", "none"]):
-		"v": cv.pts([[4, 2], [5, 2]], "x")
-		"high": cv.pts([[3, 1], [6, 1]], "G")
-	# a belt or a sash
-	if not robe or pick(base, 13, [true, false]):
-		var by := 5 if not robe else 5
-		cv.r(2, by, 6, 1, "G")
-		cv.p(4, by, "a")
-	# the front: plates, rivets, scales, rings or a picture
+	var collar: String = pick(base, 12, ["v", "high", "none"])
+	var belt: bool = not robe or pick(base, 13, [true, false])
 	var front: String = pick(base, 14, ["plates", "rivets", "emblem", "plain", "stripe"])
 	if base.contains("chain"):
 		front = "rings"
@@ -616,6 +600,33 @@ static func _armor(cv: Cv, id: String, base: String, map: Dictionary) -> void:
 		front = "stripe"
 	elif base.contains("rooster"):
 		front = "feather"
+	return {"robe": robe, "sh": sh, "collar": collar, "belt": belt, "front": front}
+
+static func _armor(cv: Cv, id: String, base: String, map: Dictionary) -> void:
+	var ap := armor_parts(base)
+	var robe: bool = ap.robe
+	# the body
+	if robe:
+		cv.stamp(["..........", ".XX....XX.", ".XXXXXXXX.", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", ".XXXXXXXX.", ".XXXXXXXX.", "XXXXXXXXXX", "xxxxxxxxxx"])
+	else:
+		cv.stamp(["..........", ".XX....XX.", ".XXXXXXXX.", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", "..XXXXXX..", "..xxxxxx..", "..........", ".........."])
+	# shoulders
+	var sh: String = ap.sh
+	match sh:
+		"pads": cv.stamp(["GGG..GGG", "GGG..GGG"], 1, 1)
+		"spikes": cv.pts([[0, 0], [9, 0], [1, 1], [8, 1], [0, 1], [9, 1]], "G")
+		"round": cv.pts([[0, 1], [0, 2], [9, 1], [9, 2]], "X")
+	# the collar
+	match ap.collar:
+		"v": cv.pts([[4, 2], [5, 2]], "x")
+		"high": cv.pts([[3, 1], [6, 1]], "G")
+	# a belt or a sash
+	if ap.belt:
+		var by := 5
+		cv.r(2, by, 6, 1, "G")
+		cv.p(4, by, "a")
+	# the front: plates, rivets, scales, rings or a picture
+	var front: String = ap.front
 	match front:
 		"plates": cv.pts([[3, 3], [6, 3]], "x")
 		"rivets": cv.pts([[3, 3], [6, 3], [3, 4], [6, 4]], "G")
@@ -647,8 +658,9 @@ static func _armor(cv: Cv, id: String, base: String, map: Dictionary) -> void:
 	cv.anchors = {"gem": [4, 3], "pom": [5, 6], "rune": [3, 4], "spark": [0, 4], "spark2": [9, 4]}
 
 # ---------------------------------------------------------------- helmets, hats and masks
-static func _helmet(cv: Cv, id: String, base: String, map: Dictionary) -> void:
-	var kind := ""
+## The shape of a helmet, hat or mask, from its name (shared by the icon and
+## the one you wear).
+static func helmet_kind(base: String) -> String:
 	var named := {"alien_hat": "alien", "pumpkin_hat": "pumpkin", "bear_head": "bear", "green_face": "face", "the_fly": "fly",
 		"skull_mask": "skull", "snowman_hat": "snowman", "rooster_hat": "rooster", "w_cap": "cap", "x_wings": "winged", "thors": "winged",
 		"crown": "crown", "witch_helmet": "witch", "spectre_hood": "hood", "robo_mask": "robo", "halloween_mask": "pumpkin",
@@ -656,7 +668,10 @@ static func _helmet(cv: Cv, id: String, base: String, map: Dictionary) -> void:
 		"fear_helmet": "horned", "hell_helmet": "horned", "nightmare_helmet": "horned", "soldier_helmet": "dome", "trooper_pro": "visor",
 		"dark_night": "visor", "wooden_helmet": "dome", "copper_helmet": "dome", "brass_helmet": "crest", "modina_face": "face",
 		"fortune_mask": "mask", "royal_mask": "mask", "spy_mask": "mask", "bad_mask": "mask", "wood_mask": "mask"}
-	kind = named.get(base, pick(base, 15, ["dome", "visor", "crest", "horned", "mask", "hat"]))
+	return named.get(base, pick(base, 15, ["dome", "visor", "crest", "horned", "mask", "hat"]))
+
+static func _helmet(cv: Cv, id: String, base: String, map: Dictionary) -> void:
+	var kind := helmet_kind(base)
 	var dome := ["..........", "...XXXX...", "..XwXXXX..", ".XXXXXXXX.", ".XXXXXXXX.", ".XX....XX.", ".Xx....xX.", "..........", "..........", ".........."]
 	match kind:
 		"dome":

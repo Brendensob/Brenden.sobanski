@@ -7,10 +7,11 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 
 - **Your hits:** a random number from **atk + 1 to atk + weapon damage**. Critical hits are yellow.
 - **Monster hits:** `max(0, hit − random(0 … your defense))`. Defense can soak a whole hit to **0**, as in the trailer.
+- **Knockback strength (2026-11-06):** each weapon has its own strength (`kb` in data.gd, from `Data.weapon_knockback`): 0 for none, 1 at the least (about a tile, what every knockback weapon did before, so early fights stay balanced), up to 2.5. Slow, long and heavy weapons (axes, hammers, clubs, maces, spikes) push hardest; quick little blades (Fluorescents, Gradius, Pops, knives) the least; each upgrade a little more. The distance grows with the strength (1 ≈ a tile, 2 ≈ two) and stronger hits daze a little longer. The info card says light, medium, strong or huge. Our estimates.
 - **Knockback:** a knockback weapon throws a monster back about a tile (≈16 px: KNOCK_SPEED 160, slowing by 800/s). Heavy monsters and bosses don't move. Monsters barely push you (KNOCKBACK 60). Changed 2026-10-24: the old 7 px nudge made the Grasslands too hard for a starter (see [[Decision Log]]).
 - **Starter weapon:** the **Plunger** (attack 4, 0.4 s a swing), like PSG2, since 2026-11-06. Before that it was the Sword Cast (attack 4, 0.5 s).
 - **Potions from monsters:** every Grasslands and Darklands monster can drop a Small Potion (4%, placeholder), Grasslands Arena monsters 6%, and the Grasslands Arena boss can drop a Holy Banana.
-- **Bosses are big:** drawn twice the size of before (2026-11-06), with hit boxes to match. Long weapons (reach 24+) are drawn twice as big in your hand.
+- **Bosses are big:** drawn twice the size of before (2026-11-06), with hit boxes to match. Every weapon has its own size in your hand (`size`, from reach and weight: 0.9× to 2.4×, 2026-11-06).
 - **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
 - **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.
 - **Potions:** Small Potion heals 5, Potion 12, Medium 25, Big 60 (raised 2026-10-27; these were always our estimates).

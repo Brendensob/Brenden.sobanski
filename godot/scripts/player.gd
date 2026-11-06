@@ -98,7 +98,7 @@ func _ready() -> void:
 	name_label.add_theme_font_size_override("font_size", 6)
 	name_label.add_theme_color_override("font_color", Color("ff3a3a"))
 	name_label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	name_label.add_theme_constant_override("outline_size", 2)
+	name_label.add_theme_constant_override("outline_size", Art.outline_for(6))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size = Vector2(80, 10)
 	name_label.position = Vector2(-40, -36)
@@ -110,6 +110,8 @@ func _ready() -> void:
 func _update_held() -> void:
 	var id := GS.held()
 	held_sprite.texture = Art.held_tex(id) if id != "" else null
+	held_sprite.scale = Art.held_scale(id)
+	held_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func held_type() -> String:
 	var id := GS.held()
@@ -485,7 +487,7 @@ func _do_hit() -> void:
 	var mobs: Array = level.mobs_in_rect(r).filter(func(m): return not level.wall_between(chest, m.hit_rect().get_center()))
 	if mobs.size() > 0:
 		for m in mobs:
-			m.take_damage(GS.roll_attack(id), position.x, it.get("kb", false))
+			m.take_damage(GS.roll_attack(id), position.x, float(it.get("kb", 0.0)))
 		level.main.shake(1.5)
 		return
 	var n: Node = level.node_in_rect(r)
