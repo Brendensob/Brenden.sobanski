@@ -24,7 +24,7 @@ func _ready() -> void:
 	Art.world_text(label)
 	label.add_theme_font_size_override("font_size", 6)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_constant_override("outline_size", Art.outline_for(6))
 	label.size = Vector2(70, 10)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(label)

@@ -30,7 +30,7 @@ func _ready() -> void:
 	Art.world_text(label)
 	label.add_theme_font_size_override("font_size", 7)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	label.add_theme_constant_override("outline_size", 2)
+	label.add_theme_constant_override("outline_size", Art.outline_for(7))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.size = Vector2(40, 10)
 	label.position = Vector2(-20, -47) # above the name of a ghost standing by it

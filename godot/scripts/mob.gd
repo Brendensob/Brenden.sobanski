@@ -413,7 +413,10 @@ func _puppet_tick(delta: float) -> void:
 	sprite.flip_h = dir < 0
 	queue_redraw()
 
-func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = false) -> void:
+## `knock` is the weapon's knockback strength (0 = none, 1 = about a tile);
+## true and false still work for 1 and 0.
+func take_damage(amount: int, from_x: float, knock, _from_net: bool = false) -> void:
+	var kb := float(knock)
 	if dead:
 		return
 	if puppet:
@@ -426,7 +429,7 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 		Sfx.play("hit")
 		_hit_fx(from_x)
 		level.number(position + Vector2(0, -size.y - 4), str(amount), Color.WHITE)
-		Net.hit_mob.rpc_id(1, level.id, nid, amount, from_x, knock)
+		Net.hit_mob.rpc_id(1, level.id, nid, amount, from_x, kb)
 		return
 	if def.get("invulnerable", false):
 		level.number(position + Vector2(0, -size.y - 4), "0", Color("9aa2ad"))
@@ -454,13 +457,15 @@ func take_damage(amount: int, from_x: float, knock: bool, _from_net: bool = fals
 		var away := signf(position.x - from_x)
 		if away == 0:
 			away = -dir
-		if knock:
-			velocity.x = away * KNOCK_SPEED
-			knock_t = KNOCK_TIME
+		if kb > 0.0:
+			# a stronger weapon throws it further (the distance grows with the
+			# strength: 1 is about a tile, 2 about two) and dazes it longer
+			velocity.x = away * KNOCK_SPEED * sqrt(kb)
+			knock_t = KNOCK_TIME * clampf(0.7 + 0.3 * kb, 0.8, 1.4)
 			if flying:
 				# nothing to stand on: a flying monster tumbles for longer
-				velocity.y = -KNOCK_SPEED * 0.3
-				knock_t = KNOCK_TIME * FLY_TUMBLE
+				velocity.y = -KNOCK_SPEED * 0.3 * sqrt(kb)
+				knock_t *= FLY_TUMBLE
 			elif is_on_floor():
 				velocity.y = -90.0
 		else:

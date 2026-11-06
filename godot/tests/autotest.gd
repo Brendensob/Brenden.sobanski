@@ -16,6 +16,75 @@ func shot(name: String) -> void:
 	await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out, name])
 	print("shot ", name)
+	text_check(name)
+
+## Brenden, 2026-11-06: "fix all these little bugs where the writing looks weird
+## and double check to make sure there's nothing like that". Every screenshot
+## of an open window checks that no two pieces of writing in it overlap.
+var text_bad := {}
+func text_check(name: String) -> void:
+	if main == null or main.hud == null:
+		return
+	for k in main.hud.panels:
+		var pn: Control = main.hud.panels[k]
+		if not pn.is_visible_in_tree() or pn.modulate.a < 0.99 or pn.scale != Vector2.ONE:
+			continue
+		var boxes := []
+		_text_boxes(pn, boxes)
+		for i in boxes.size():
+			for j in range(i + 1, boxes.size()):
+				var a: Array = boxes[i]
+				var b: Array = boxes[j]
+				if a[0].grow(-1.0).intersects(b[0].grow(-1.0)):
+					var what := "%s/%s: '%s' and '%s'" % [name, k, a[1], b[1]]
+					if not text_bad.has(what):
+						text_bad[what] = true
+						check(false, "writing doesn't overlap (%s)" % what)
+
+## The rectangles the visible words of `n` and its children take on screen.
+func _text_boxes(n: Node, boxes: Array, clip := Rect2(-9999, -9999, 99999, 99999)) -> void:
+	if n is CanvasItem and not n.visible:
+		return
+	if n is ScrollContainer:
+		clip = clip.intersection(n.get_global_rect())
+	if n is Label and n.text.strip_edges() != "" and n.visible_ratio > 0.0 and not n.has_meta("logo"):
+		var r := _label_text_rect(n).intersection(clip)
+		if r.has_area():
+			boxes.append([r, n.text.left(24)])
+	elif n is Button and n.text != "":
+		var f: Font = n.get_theme_font("font")
+		var fs: int = n.get_theme_font_size("font_size")
+		var gr: Rect2 = n.get_global_rect()
+		var w := f.get_string_size(n.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var h := f.get_height(fs)
+		var r := Rect2(gr.get_center() - Vector2(w, h) / 2.0, Vector2(w, h)).intersection(clip)
+		if r.has_area():
+			boxes.append([r, n.text.left(24)])
+	for c in n.get_children():
+		_text_boxes(c, boxes, clip)
+
+func _label_text_rect(l: Label) -> Rect2:
+	var f: Font = l.get_theme_font("font")
+	var fs: int = l.get_theme_font_size("font_size")
+	var gr := l.get_global_rect()
+	var lines := l.get_visible_line_count()
+	var h := f.get_height(fs) * lines + l.get_theme_constant("line_spacing") * maxi(lines - 1, 0)
+	var w := gr.size.x
+	if l.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		w = 0.0
+		for line in l.text.split("\n"):
+			w = maxf(w, f.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	var x := gr.position.x
+	if l.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER:
+		x += (gr.size.x - w) / 2.0
+	elif l.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+		x += gr.size.x - w
+	var y := gr.position.y
+	if l.vertical_alignment == VERTICAL_ALIGNMENT_CENTER:
+		y += (gr.size.y - h) / 2.0
+	elif l.vertical_alignment == VERTICAL_ALIGNMENT_BOTTOM:
+		y += gr.size.y - h
+	return Rect2(Vector2(x, y), Vector2(w, h))
 
 func wait(t: float) -> void:
 	await get_tree().create_timer(t).timeout
@@ -1456,7 +1525,16 @@ func psg2_match_check() -> void:
 	check(price.call("tools", "pink_egg") == 10000 and price.call("tools", "green_egg") == 20000 and price.call("gruff", "copper_ore") == 250, "egg and ore prices are the wiki's")
 	check(Data.ITEMS.living_flame.sell == 1 and Data.ITEMS.gold_pick.sell == 50 and Data.ITEMS.short_blade.sell == 0, "sell prices are the wiki's")
 	check(Data.CHESTS.silver.loot.filter(func(e): return e[0] == "coin").map(func(e): return e[1]) == [1, 10, 11, 100, 111], "Silver Chests hold 1, 10, 11, 100 or 111 coins")
-	check(Art.held_k("long_sword") == 2 and Art.held_k("excalibur") == 2 and Art.held_k("plunger") == 1, "long weapons are drawn twice as big in hand")
+	check(Art.held_size("long_lance") > Art.held_size("long_sword") and Art.held_size("long_sword") > Art.held_size("plunger") and Art.held_size("plunger") > Art.held_size("short_blade"), "a lance is drawn longer than a long sword, a long sword than the Plunger, the Plunger than the Gradius")
+	check(Data.ITEMS.volcan_axe.kb > Data.ITEMS.knights_blade.kb and Data.ITEMS.knights_blade.kb > Data.ITEMS.glow_blade_blue.kb and Data.ITEMS.long_lance.kb == 0.0, "an axe knocks harder than a sword, a sword harder than a Fluorescent, a lance not at all")
+	var feel := {}
+	var nw := 0
+	for wid in Data.ITEMS:
+		var wi: Dictionary = Data.ITEMS[wid]
+		if wi.type == "weapon" and wid != "fist":
+			nw += 1
+			feel["%s|%s|%s|%s" % [wi.kb, wi.size, wi.reach, wi.spd]] = true
+	check(feel.size() * 3 >= nw, "weapons differ in knockback, size, reach and speed (%d kinds among %d)" % [feel.size(), nw])
 	await goto("grass_1")
 	var lvl: Node = main.level
 	for e in lvl.entities.get_children():
@@ -1602,6 +1680,8 @@ func menus_check() -> void:
 		await get_tree().physics_frame
 	await until_floor(pl)
 	var fell_at: Vector2 = pl.position
+	# a slime may have bumped you on the way down, leaving you safe for a second
+	pl.invuln = 0.0
 	pl.hurt(9999, 0.0, pl.position.x - 5)
 	await wait(0.5)
 	check(pl.dead and not main.hud.panels.dead.visible and absf(pl.body_sprite.rotation) > 0.3, "fainting in single player is a slow fall, not instant")

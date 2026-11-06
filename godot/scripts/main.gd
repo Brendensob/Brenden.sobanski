@@ -56,6 +56,8 @@ func _ready() -> void:
 		var at: Node = load("res://tests/arena_test.gd").new()
 		at.main = self
 		add_child(at)
+	if "--gallery" in OS.get_cmdline_user_args():
+		add_child(load("res://tests/gallery.gd").new())
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t: Node = load("res://tests/autotest.gd").new()
 		t.main = self

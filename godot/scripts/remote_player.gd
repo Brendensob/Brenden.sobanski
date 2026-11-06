@@ -30,7 +30,7 @@ func setup(peer_id: int, pname: String) -> void:
 	name_label.add_theme_font_size_override("font_size", 6)
 	name_label.add_theme_color_override("font_color", Color("ff3a3a"))
 	name_label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	name_label.add_theme_constant_override("outline_size", 2)
+	name_label.add_theme_constant_override("outline_size", Art.outline_for(6))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size = Vector2(80, 10)
 	name_label.position = Vector2(-40, -36)
@@ -58,6 +58,8 @@ func apply(state: Dictionary) -> void:
 		jumps = j
 	var h: String = state.get("held", "")
 	held.texture = Art.held_tex(h) if h != "" and Data.ITEMS.has(h) else null
+	held.scale = Art.held_scale(h)
+	held.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func _process(delta: float) -> void:
 	position = position.lerp(target, minf(1.0, delta * 14.0))

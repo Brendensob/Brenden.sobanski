@@ -13,7 +13,7 @@ func setup_text(text: String, c: Color) -> void:
 	label.add_theme_font_size_override("font_size", 10)
 	label.add_theme_color_override("font_color", c)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	label.add_theme_constant_override("outline_size", 4)
+	label.add_theme_constant_override("outline_size", Art.outline_for(10))
 	label.size = Vector2(120, 14)
 	label.position = Vector2(-60, -8)
 	label.pivot_offset = Vector2(60, 7)
