@@ -18,6 +18,10 @@ tags: [game, art]
   - a dark line on top with a bright rim under it;
   - **round scallops** hanging into the dirt, with a dark edge;
   - see [[#The ground and the map's walls (2026-10-27)]] for edges, corners and walls.
+- **Text (2026-11-06):** every word on screen is smooth, not pixelated: the round **Fredoka** font (OFL), in **white with a black outline**. Coloured text (names, damage numbers, warnings) keeps its colour with the same outline. Names and numbers in the world use a copy drawn 8× finer so the camera's zoom doesn't make them blocky. The old pixel fonts (Pixelify Sans, Silkscreen) are no longer used. *"make the words on the screen non pixelated and js smooth white letters with black outline"*
+
+![[smooth_text_2026-11-06.png]]
+
 - **Damage numbers:** size 10 with a 4 px outline. They pop in at 1.7× and squash back.
 - **Death bursts:** round puffs with a dark rim and a highlight, shrinking away.
 - **Characters:** chibi (big head, two-dot eyes, stubby legs), drawn from text grids in `Art.LOOKS`.

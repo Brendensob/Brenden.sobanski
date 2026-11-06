@@ -142,7 +142,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
 | Crafting, combining, smelting | A | Every recipe tested |
 | Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04). Prices, chest coins and the 99,999 cap from the wiki (2026-11-06) |
-| Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished) |
+| Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished). Since 2026-11-06 you hit a chest with its key and the loot shoots out (no window), tested by the autotest |
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |
 | Survival mechanics and stamina | A | Nights, tokens, keys, stamina gates for the Tomb and Snow Valley |
@@ -229,7 +229,7 @@ The living list of every system and how finished it is. It's updated after each 
 - which night gives the Wall Hammer;
 - sources for the Blood Long Sword, Stone Wall and Torch Stand.
 
-**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
+**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL (Fredoka since 2026-11-06). The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
 
 **9. Performance and save risks:**
 - Music building takes about 2 s of a background thread at start. On the web it's sliced at about 3 ms per frame, which is untested in a real browser.

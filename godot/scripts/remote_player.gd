@@ -26,7 +26,7 @@ func setup(peer_id: int, pname: String) -> void:
 	held = Sprite2D.new()
 	add_child(held)
 	name_label = Label.new()
-	name_label.add_theme_font_override("font", Art.font_body)
+	Art.world_text(name_label)
 	name_label.add_theme_font_size_override("font_size", 6)
 	name_label.add_theme_color_override("font_color", Color("ff3a3a"))
 	name_label.add_theme_color_override("font_outline_color", Color("1b1a24"))

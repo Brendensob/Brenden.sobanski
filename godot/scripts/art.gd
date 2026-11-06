@@ -6,8 +6,10 @@ extends Node
 const OUTLINE := Color("1b1a24")
 const ItemIcons := preload("res://scripts/item_icons.gd")
 var _cache := {}
-var font_body: FontFile
-var font_title: FontFile
+var font_body: Font # menus and the HUD
+var font_title: Font
+var font_world: Font # names and numbers in the world (seen through the 2x camera)
+var font_world_title: Font
 
 const PAL := {
 	"k": "1b1a24", "w": "f2efe6", "s": "f2c29a", "S": "d49a72", "b": "3a2a22",
@@ -146,13 +148,30 @@ const HAT_LOOKS := {"pirate_hat": "pirate", "soldier_helmet": "soldier", "spy_ma
 	"trooper_pro": "drone", "dark_night": "dark_knight", "bad_mask": "bad_man"}
 
 func _ready() -> void:
-	font_body = load("res://fonts/PixelifySans.ttf")
-	font_title = load("res://fonts/Silkscreen-Regular.ttf")
-	font_title.antialiasing = TextServer.FONT_ANTIALIASING_NONE
-	font_title.hinting = TextServer.HINTING_NONE
-	font_title.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-	font_body.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-	font_body.hinting = TextServer.HINTING_LIGHT
+	# Smooth, round letters instead of pixel ones (Brenden, 2026-11-06: "make the
+	# words on the screen non pixelated and just smooth white letters with black
+	# outline"). Fredoka, OFL. The world copy is drawn 8x finer, because the
+	# camera's 2x zoom would otherwise blow its letters up into blocks.
+	var ui: FontFile = load("res://fonts/Fredoka.ttf")
+	ui.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+	ui.hinting = TextServer.HINTING_LIGHT
+	var world: FontFile = ui.duplicate()
+	world.oversampling = 8.0
+	font_body = _weight(ui, 600)
+	font_title = _weight(ui, 700)
+	font_world = _weight(world, 600)
+	font_world_title = _weight(world, 700)
+
+func _weight(f: FontFile, w: int) -> FontVariation:
+	var v := FontVariation.new()
+	v.base_font = f
+	v.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): w}
+	return v
+
+## Gives a label in the world the smooth world font, sampled smoothly.
+func world_text(l: Label, title: bool = false) -> void:
+	l.add_theme_font_override("font", font_world_title if title else font_world)
+	l.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 # ---------------------------------------------------------------- helpers
 func col(v) -> Color:
@@ -1745,7 +1764,8 @@ const THEMES := {
 	"hell": {"sky": ["3a1020", "7a2a3a"], "mount": "5a1e3a", "snow": "c83a6a", "hills": "3a1028", "top": "8a3a6a", "top2": "5a2048", "dirt": "3a1a30", "dirt2": "2a1020", "cave": "1a0a14"},
 	"ice": {"sky": ["9ad0f0", "e3f2f8"], "mount": "8ab0d0", "snow": "ffffff", "hills": "a6c8e0", "top": "e3f2f8", "top2": "a6d0e8", "dirt": "5a8ab0", "dirt2": "4a7098", "cave": "2a4a6a"},
 	"dream": {"sky": ["f0a8d8", "fde2f2"], "mount": "c88ac8", "snow": "fff0fa", "hills": "a870c0", "top": "f08ac8", "top2": "c86aa8", "dirt": "7a4a8a", "dirt2": "5a3a6a", "cave": "3a2a4a"},
-	"modina": {"sky": ["2a3a2a", "6a8a4a"], "mount": "3a4a36", "snow": "8ac85a", "hills": "2a3a28", "top": "7ab83a", "top2": "4a7a2a", "dirt": "4a3a3a", "dirt2": "3a2a2a", "cave": "1a1414"},
+	# Modina Ruins is yellow (Brenden, 2026-11-06); it was a poison green
+	"modina": {"sky": ["c8901e", "f6dc6a"], "mount": "b8862a", "snow": "fff2a0", "hills": "8a6418", "top": "f2cf3a", "top2": "c89a1e", "dirt": "8a6a2a", "dirt2": "6a4e1e", "cave": "2a1e0a"},
 	"nightmare": {"sky": ["120a14", "4a1424"], "mount": "2a0e1a", "snow": "8a1e2a", "hills": "1e0a12", "top": "6a1e30", "top2": "3a1420", "dirt": "2a1218", "dirt2": "1e0c10", "cave": "0e060a"},
 	"forbidden": {"sky": ["c8503a", "f2c27a"], "mount": "8a2a2a", "snow": "f2cf5b", "hills": "6a1e1e", "top": "c83a2a", "top2": "8a2a1e", "dirt": "5a2a1e", "dirt2": "3e1e14", "cave": "2a120c"},
 	"snow": {"sky": ["1e2a4a", "5a7aa8"], "mount": "3a4a6a", "snow": "ffffff", "hills": "2a3a5a", "top": "f2f6fa", "top2": "c8d8e8", "dirt": "4a5a7a", "dirt2": "3a4a68", "cave": "1e2638"},

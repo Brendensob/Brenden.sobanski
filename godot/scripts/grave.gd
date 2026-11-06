@@ -27,7 +27,7 @@ func _ready() -> void:
 	s.position = Vector2(-7, -18)
 	add_child(s)
 	label = Label.new()
-	label.add_theme_font_override("font", Art.font_body)
+	Art.world_text(label)
 	label.add_theme_font_size_override("font_size", 7)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
 	label.add_theme_constant_override("outline_size", 2)

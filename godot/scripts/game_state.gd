@@ -550,7 +550,9 @@ func harvest(soil: int) -> Array:
 	return loot
 
 # ---------------------------------------------------------------- chests
-func open_chest(kind: String) -> Array:
+## Uses one key and rolls the chest's loot. With to_bag the loot goes straight
+## into the bag; without, the caller sends it flying out of the chest.
+func open_chest(kind: String, to_bag: bool = true) -> Array:
 	var c: Dictionary = Data.CHESTS[kind]
 	if count(c.key) <= 0:
 		return []
@@ -560,7 +562,8 @@ func open_chest(kind: String) -> Array:
 	for i in c.rolls:
 		var l := Data.pick_loot(c.loot)
 		loot.append(l)
-		give(l[0], l[1])
+		if to_bag:
+			give(l[0], l[1])
 	return loot
 
 func today() -> int:

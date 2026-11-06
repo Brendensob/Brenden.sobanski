@@ -21,7 +21,7 @@ func _ready() -> void:
 	sprite.centered = false
 	add_child(sprite)
 	label = Label.new()
-	label.add_theme_font_override("font", Art.font_body)
+	Art.world_text(label)
 	label.add_theme_font_size_override("font_size", 6)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
 	label.add_theme_constant_override("outline_size", 2)
@@ -119,7 +119,49 @@ func interact(_player: Node) -> void:
 			level.main.hud.open_trade_pick()
 		"gate":
 			level.main.hud.toast("The gate is locked. Talk to the GateKeeper.", "warn")
+		"chest_silver", "chest_golden", "chest_master":
+			hit_chest(kind.replace("chest_", ""))
+		"reward_chest":
+			hit_reward_chest()
 		"sign":
 			level.main.hud.open_info("Pixel Town", "West: Brutus and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
 		_:
 			level.main.hud.open_station(self)
+
+## Like PSG2, a chest has no window: hit it while holding its key and it pops
+## open, the items shooting out for you to pick up (Brenden, 2026-11-06: "you
+## just hit it with your key and items shoot out").
+func hit_chest(ck: String) -> void:
+	var c: Dictionary = Data.CHESTS[ck]
+	var key_name: String = Data.ITEMS[c.key].name
+	if GS.held() != c.key:
+		if GS.count(c.key) > 0:
+			level.main.hud.toast("Hold your %s and hit the %s." % [key_name, c.name])
+		else:
+			level.main.hud.toast("The %s needs a %s." % [c.name, key_name], "warn")
+		return
+	_burst(GS.open_chest(ck, false))
+
+## The chest deep in a world needs no key, once a day.
+func hit_reward_chest() -> void:
+	if GS.reward_chests.get(level.id, -1) == GS.today():
+		level.main.hud.toast("Already opened today. Come back tomorrow.")
+		return
+	GS.reward_chests[level.id] = GS.today()
+	Sfx.play("chest", 0.0)
+	var loot := []
+	for n in 3:
+		loot.append(Data.pick_loot(Data.CHESTS.silver.loot))
+	_burst(loot)
+	_refresh()
+
+## Sends the loot flying out of the chest. The items are only yours, even online.
+func _burst(loot: Array) -> void:
+	var top := position + Vector2(0, -14)
+	level.burst(top, Color("f2cf5b"), 14)
+	for l in loot:
+		level.drop(l[0], int(l[1]), top, true)
+	# a little hop of the lid
+	var tw := create_tween()
+	scale = Vector2(1.15, 0.85)
+	tw.tween_property(self, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)

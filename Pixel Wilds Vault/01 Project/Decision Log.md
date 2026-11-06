@@ -5,6 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-06 (smooth text, chests you hit, yellow Modina Ruins, no days outside Survival)
+*"There's ui bugs make the works on the screen non pixelated and js smooth white letters with black outline and when opening a chest there's not open you just it with your key and items shoot out also modi's ruins is yellow and don't show days for players that's a survival grasslands only"*
+- **Smooth text:** all words use the round Fredoka font instead of pixel fonts, white with a black outline (coloured text keeps its colour). Read "words on the screen" as all text, menus and HUD included.
+- **Chests have no Open window.** Hold the key and hit the chest: one key is used and the items shoot out of it as pickups. Not holding it gives a hint. The world reward chests pop open on a hit too.
+- **Modina Ruins is yellow.** Read "modi's ruins is yellow" as "should be yellow": its sky, hills and ground went from poison green to gold.
+- **No day count outside Survival Grasslands.** The HUD already showed days only there; the save-slot list also said "Day N", and that's gone.
+
 ## 2026-11-06 (plunger start, potion drops, PSG2 money, bigger bosses)
 *"Make the starting weopon the plunger make sure potions can be dropped and other heals are obtainable make sure the money system is simaller certain Weapons are bigger and bosses are like way bigger in thre real game"*
 - **Everyone starts with the Plunger** instead of the Sword Cast (the wiki calls it "probably the first weapon you'll ever use"). The Sword Cast still comes from Silver Chests.

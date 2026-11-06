@@ -7,7 +7,9 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 
 ## Up top (west → east)
 - **Trading Center**: a closed room behind a wooden wall. Burn the wall with a Torch. Inside are the Trader and two trading tables (see [[Multiplayer]]).
-- **Incubator**, and the **Silver, Golden and Master** chests, each with a signboard.
+- **Incubator**, and the **Silver, Golden and Master** chests, each with a signboard. **Chests have no window** (2026-11-06): hold the right key and hit the chest, and it pops open with the items shooting out for you to pick up. The reward chests deep in worlds pop open the same way (no key, once a day).
+
+![[chest_burst_2026-11-06.png]]
 - **Furnace room**: mirrors the Trading Center. The green GateKeeper's gate is its door (the Pretzel quest).
 - The way up from the street is an **opening in the exact middle**, 10 tiles wide (4 before 2026-11-05). Jump up through it: a jump plus two jumps in the air.
 - The Master Chest and its sign stand just east of the opening, since the wider opening took the floor they stood on.
