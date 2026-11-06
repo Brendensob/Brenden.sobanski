@@ -19,7 +19,11 @@ const STATUS_TIME := 10.0
 var inv: Array = []
 var equip := {}
 var sel := 0
-var coins := 0
+## Pixel Coins top out at 99,999, like the original (wiki: Items, max stack).
+const MAX_COINS := 99999
+var coins := 0:
+	set(v):
+		coins = clampi(v, 0, MAX_COINS)
 var gems := 0 # the rare currency, spent in the Gem Shop
 var hp := 5.0
 var mp := 2.0
@@ -163,7 +167,9 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	day = 1
 	best_survival_day = 0
 	world = "town"
-	add_item("sword_cast", 1, true)
+	# everyone starts with the Plunger, like PSG2 (wiki: "probably the first weapon
+	# you'll ever use"; Brenden, 2026-11-06)
+	add_item("plunger", 1, true)
 	add_item("wooden_axe", 1, true)
 	add_item("wooden_pick", 1, true)
 	add_item("small_potion", 3, true)

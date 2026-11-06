@@ -23,7 +23,7 @@ const GS_BASE_ST := 4
 func _initialize() -> void:
 	D = load("res://scripts/data.gd").new()
 	D._build_mobs()
-	for id in ["sword_cast", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin", "fist", "man_in_suit", "nurse"]:
+	for id in ["plunger", "wooden_axe", "wooden_pick", "small_potion", "dust", "coin", "fist", "man_in_suit", "nurse"]:
 		_add(id, "start")
 	var changed := true
 	while changed:

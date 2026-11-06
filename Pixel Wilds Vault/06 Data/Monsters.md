@@ -10,18 +10,18 @@ tags: [data, generated]
 
 | Monster | id | HP | Hit | Moves | Boss | Found in | Drops |
 |---|---|---|---|---|---|---|---|
-| Slime | `slime` | 13 | 1 | walk |  | Grasslands 1, Grasslands 2, Grasslands 3, Grasslands Arena | Bone 20% (1), Jelly 30% (1), Scarab 20% (1), Snowball 20% (1), Gradius 5.5% (1), Herb 10% (1) |
+| Slime | `slime` | 13 | 1 | walk |  | Grasslands 1, Grasslands 2, Grasslands 3, Grasslands Arena | Bone 20% (1), Jelly 30% (1), Scarab 20% (1), Snowball 20% (1), Gradius 5.5% (1), Herb 10% (1), Small Potion 4% (1) |
 | Jelly King | `jelly_king` | 300 | 2 | king_slime | yes | Grasslands Arena (boss) | Jelly 100% (5–10), Sticky Balls 25% (1–2), Gem 10% (1–2) |
-| Fira | `wisp` | 15 | 1 | fly |  | Grasslands 1, Grasslands 2, Grasslands Arena | Blue Moon 12% (1), Crystal 10% (1), Fire Crystal 5% (1), Monster Hide 15% (1), Wooden Armor 2% (1), Wooden Helmet 2% (1) |
-| Mummy | `mummy` | 45 | 3 | charge |  | Grasslands 1, Grasslands 2, Grasslands Arena | Bone 25% (1), Blue Moon 10% (1), Dark Crystal 4% (1), Monster Hide 15% (1), Wooden Helmet 2% (1) |
-| Shelly | `shell` | 50 | 2 | accel |  | Grasslands 1, Grasslands 2, Grasslands Arena | Bone 20% (1), Monster Shell 25% (1), Monster Scale 25% (1), Monster Horn 10% (1) |
-| Octopus | `octopus` | 65 | 5 | accel |  | Grasslands 2, Grasslands 3, Darklands Arena | Monster Horn 20% (1), Herb 20% (1), Monster Scale 20% (1), Monster Egg (Green) 1% (1) |
+| Fira | `wisp` | 15 | 1 | fly |  | Grasslands 1, Grasslands 2, Grasslands Arena | Blue Moon 12% (1), Crystal 10% (1), Fire Crystal 5% (1), Monster Hide 15% (1), Wooden Armor 2% (1), Wooden Helmet 2% (1), Small Potion 4% (1) |
+| Mummy | `mummy` | 45 | 3 | charge |  | Grasslands 1, Grasslands 2, Grasslands Arena | Bone 25% (1), Blue Moon 10% (1), Dark Crystal 4% (1), Monster Hide 15% (1), Wooden Helmet 2% (1), Small Potion 4% (1) |
+| Shelly | `shell` | 50 | 2 | accel |  | Grasslands 1, Grasslands 2, Grasslands Arena | Bone 20% (1), Monster Shell 25% (1), Monster Scale 25% (1), Monster Horn 10% (1), Small Potion 4% (1) |
+| Octopus | `octopus` | 65 | 5 | accel |  | Grasslands 2, Grasslands 3, Darklands Arena | Monster Horn 20% (1), Herb 20% (1), Monster Scale 20% (1), Monster Egg (Green) 1% (1), Small Potion 4% (1) |
 | Stone | `crusher` | 999999 | 1 | stone |  | Grasslands 2 |  |
 | Rexy | `trex` | 450 | 7 | charge |  | Grasslands 3, Darklands 1, Darklands 2, Grasslands Arena (boss) | Antidote 15% (1), Silver Key 3% (1), Old Roots 10% (1), Monster Egg (Red) 1% (1), Cavemun 3% (1), Backstreet Boy 3% (1), Halloween Mask 1% (1) |
 | Dark Rexy | `dark_trex` | 1050 | 9 | charge |  | Grasslands 3, Hell 2, Darklands Arena (boss), Modina Ruins, Tomb of Makara | Herb 30% (1–2), Mana Potion 15% (1), Potion 15% (1), Cavemun 4% (1), Backstreet Boy 4% (1), Laser Gun 1% (1), Halloween Mask 1% (1), Sailor Moons 1% (1) |
-| Dark Slime | `dark_slime` | 125–150 | 7 | walk |  | Grasslands 3, Darklands 1, Darklands 2, Darklands Arena | Herb 30% (1), Jelly 15% (1) |
-| Mantis | `mantis` | 118–183 | 4 | accel |  | Grasslands 3, Darklands 1, Darklands 2, Hell 1, Darklands Arena, Hell Arena, Dream Arena | Antidote Herb 25% (1), Stink Bug 25% (1) |
-| Zombie | `zombie` | 75 | 5 | charge |  | Grasslands 3, Darklands 1, Darklands 2, Darklands Arena | Plant Roots 30% (1) |
+| Dark Slime | `dark_slime` | 125–150 | 7 | walk |  | Grasslands 3, Darklands 1, Darklands 2, Darklands Arena | Herb 30% (1), Jelly 15% (1), Small Potion 4% (1) |
+| Mantis | `mantis` | 118–183 | 4 | accel |  | Grasslands 3, Darklands 1, Darklands 2, Hell 1, Darklands Arena, Hell Arena, Dream Arena | Antidote Herb 25% (1), Stink Bug 25% (1), Small Potion 4% (1) |
+| Zombie | `zombie` | 75 | 5 | charge |  | Grasslands 3, Darklands 1, Darklands 2, Darklands Arena | Plant Roots 30% (1), Small Potion 4% (1) |
 | UFO | `ufo` | 65 | 15 | fly |  | Darklands 1, Darklands 2, Darklands Arena | Potion 15% (1), Antidote Herb 20% (1), Monster Egg (Purple) 0.80% (1) |
 | Worm | `worm` | 300–500 | 17 | walk |  | Darklands 1, Darklands 2, Hell 1, Darklands Arena, Hell Arena, Dream Arena | Mana Potion 20% (1), Antidote Herb 20% (1) |
 | Hand | `hand` | 2214 | 8 | accel |  | Darklands 1, Darklands 2, Hell 1, Hell 2, Grasslands Arena (boss), Darklands Arena (boss), Hell Arena, Dream Arena | Apple 8% (1), Combo Book III 1% (1), Combo Book IV 0.50% (1), Monster Egg (Green) 3% (1), Monster Egg (Red) 3% (1), Monster Egg (Purple) 2% (1), Knights Mantle 2% (1), Green Fluorescent 1% (1), Combination Scroll 5% (1), Silver Key 8% (1), Golden Key 3% (1), Legendary Roots 3% (1), Bone 40% (1–3), Sticky Bones 15% (1), Dongle 8% (1), Crystal 30% (1–2), School Girl 2% (1), Pistol 2% (1), Rolva 2% (1), Firecracker Blade 1% (1), Yellow Fluorescent Shield 1% (1), Backstreet Boy 2% (1) |

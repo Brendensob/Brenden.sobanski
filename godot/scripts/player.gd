@@ -109,7 +109,7 @@ func _ready() -> void:
 
 func _update_held() -> void:
 	var id := GS.held()
-	held_sprite.texture = Art.icon(id) if id != "" else null
+	held_sprite.texture = Art.held_tex(id) if id != "" else null
 
 func held_type() -> String:
 	var id := GS.held()
@@ -233,7 +233,7 @@ func _tick(delta: float, dir: float) -> void:
 	body_sprite.visible = not (invuln > 0 and flash <= 0 and int(anim * 20) % 2 == 0)
 	held_sprite.position = Vector2(facing * 5, -7)
 	held_sprite.flip_h = facing < 0
-	held_sprite.offset = Vector2(4 * facing, -5)
+	held_sprite.offset = Art.held_offset(held_sprite.texture, facing)
 	var ang: float = SWING_KEYS[0][1]
 	if swing > 0:
 		ang = swing_angle(1.0 - swing / swing_len)

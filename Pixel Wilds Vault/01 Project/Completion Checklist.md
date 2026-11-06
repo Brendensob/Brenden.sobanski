@@ -137,11 +137,11 @@ The living list of every system and how finished it is. It's updated after each 
 | Main menu and character selection | A | Slots, create with all 18 characters (locked ones show how to unlock; tasks, owning one, gems tested), delete with confirm, Single/Multiplayer |
 | World selection and transitions | A | Gatekeeper cards with screenshot-style map pictures (2026-10-29), portals, all 23 worlds load, return to town. Town portal under the middle of the opening, Crafter and Gatekeeper either side (tested 2026-10-29) |
 | Movement and combat feedback | A | Jumps, knockback, hit stun, numbers, low-health pulse |
-| Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented |
+| Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented. Bosses drawn twice as big (2026-11-06) |
 | Mining, chopping, resources | A | Tool tiers and hits |
 | Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
 | Crafting, combining, smelting | A | Every recipe tested |
-| Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04) |
+| Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04). Prices, chest coins and the 99,999 cap from the wiki (2026-11-06) |
 | Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished) |
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |

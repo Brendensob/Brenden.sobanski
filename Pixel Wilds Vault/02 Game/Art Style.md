@@ -27,6 +27,7 @@ tags: [game, art]
 ![[clean_bosses.png]]
 
 Brenden asked for "way cleaner", more cartoon-ish graphics with depth and colour (see [[2026-10-27 Cleaner cartoon look]]).
+- **Bosses are big, like PSG2** (2026-11-06): drawn twice as big as ordinary monsters' scale (the King and Queen are about four times your height). Rexy, Dark Rexy and the Hand are twice as big when they come as an arena's boss. **Long weapons** (reach 24+) are drawn twice as big in your hand.
 - **Big sprites are smoothed, not blown up.** Bosses, the big chicks and the big bag icons are enlarged with Scale2x/Scale3x (`Art.upscale()`), which rounds off the staircase edges. Big monsters are outlined *before* they're enlarged, so they keep a bold cartoon outline.
 - **Soft shadows** sit under the player, friends, villagers, walking monsters and drops.
 - **Glows:** portals breathe a soft glow in their colour; drops glow faintly; silver, gold, erbium, volcanic, ice and sandnite rocks twinkle in their own colour.

@@ -70,11 +70,27 @@ func setup(mob_id: String, lvl: Node, hp_mul: float = 1.0, dmg_mul: float = 1.0)
 	dmg = maxi(1, int(round(def.dmg * dmg_mul)))
 	flying = def.ai == "fly"
 	through = def.get("through", false)
+	_make_look()
+
+## Bosses are drawn much bigger than ordinary monsters, like the original
+## (Brenden, 2026-11-06): the King, Queen and the other eye and ghost bosses,
+## and Rexy, Dark Rexy and the Hand when they come as an arena's boss, are drawn
+## at twice the size. Bosses already drawn big (the Jelly King, Modina and the
+## event bosses) keep their size. Called again if arena_boss is set later.
+func _make_look() -> void:
 	var look: String = def.look
-	frames = [Art.mob_tex(look, false), Art.mob_tex(look, true), Art.mob_tex(look, false, true)]
+	var k := big_k()
+	frames = [Art.mob_tex(look, false, false, k), Art.mob_tex(look, true, false, k), Art.mob_tex(look, false, true, k)]
 	size = frames[0].get_size() * def.get("scale", 1.0)
 
+## How many times bigger this monster is drawn.
+func big_k() -> int:
+	if def.has("big"):
+		return int(def.big)
+	return 2 if is_boss() else 1
+
 func _ready() -> void:
+	_make_look()
 	collision_layer = 4
 	collision_mask = 0 if through else 1
 	disable_mode = CollisionObject2D.DISABLE_MODE_KEEP_ACTIVE

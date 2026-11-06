@@ -922,8 +922,9 @@ func count_mobs(include_boss: bool = true) -> int:
 			n += 1
 	return n
 
-func spawn_mob_at(mob_id: String, pos: Vector2, hp_mul: float = 1.0, dmg_mul: float = 1.0) -> Node:
+func spawn_mob_at(mob_id: String, pos: Vector2, hp_mul: float = 1.0, dmg_mul: float = 1.0, arena_boss: bool = false) -> Node:
 	var m := MobScript.new()
+	m.arena_boss = arena_boss # set first: an arena's boss is drawn bigger
 	m.setup(mob_id, self, hp_mul, dmg_mul)
 	m.position = pos + (Vector2(0, -30) if Data.MOBS[mob_id].ai == "fly" else Vector2(0, -1))
 	entities.add_child(m)
@@ -1029,9 +1030,8 @@ func _arena_tick(delta: float) -> void:
 		var first: Node = null
 		for i in mini(n, list.size()):
 			var b: Array = list[i]
-			var m: Node = spawn_mob_at(b[0], cell_pos(Vector2i(W / 2 + (i - n / 2) * 8, 17)), b[1], b[2])
+			var m: Node = spawn_mob_at(b[0], cell_pos(Vector2i(W / 2 + (i - n / 2) * 8, 17)), b[1], b[2], true)
 			m.aggro_forced = true
-			m.arena_boss = true
 			if first == null:
 				first = m
 		announce("The boss has arrived!", "danger")
@@ -1250,6 +1250,7 @@ func add_mob_from(d: Array) -> void:
 	if net_objs.has(int(d[0])):
 		return
 	var m := MobScript.new()
+	m.arena_boss = bool(d[7])
 	m.setup(d[1], self)
 	m.nid = int(d[0])
 	m.puppet = true
