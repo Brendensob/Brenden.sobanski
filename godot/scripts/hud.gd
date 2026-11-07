@@ -676,6 +676,7 @@ func _process(_d: float) -> void:
 		return
 	var down: bool = is_instance_valid(lvl.player) and lvl.player.dead and not main.on_title()
 	main.dead_tint.visible = down
+	main.dead_tint.size = get_viewport().get_visible_rect().size
 	if dead_bar.visible:
 		if not down:
 			hide_dead()
@@ -1804,19 +1805,23 @@ func _build_panels() -> void:
 	# fainting: a small bar at the top, not a menu in your face (Brenden,
 	# 2026-11-07): what's happening, the time left before you go back to Pixel
 	# Town, and the buttons. The world keeps going behind it.
-	dead_bar = _panel("dead", Vector2(300, 52), "You fainted", false)
+	dead_bar = _panel("dead", Vector2(232, 40), "", false)
 	panels.erase("dead")
-	dead_bar.modulate.a = 0.95
-	var dtext := _wrap("", 284, C_INK, 8)
+	dead_bar.get_node("Title").visible = false
+	dead_bar.modulate.a = 0.92
+	var dtext := _wrap("", 220, C_INK, 7)
 	dtext.name = "Text"
-	dtext.position = Vector2(8, 20)
+	dtext.position = Vector2(6, 4)
+	dtext.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dead_bar.add_child(dtext)
 	var wake := _button("Go to Pixel Town", func(): _wake_pressed(), true)
 	wake.name = "Wake"
+	wake.add_theme_font_size_override("font_size", 7)
 	dead_bar.add_child(wake)
 	# single player: come back as a ghost and get up again at your gravestone
 	var rev := _button("Respawn as a ghost", func(): main.ghost_respawn(), true)
 	rev.name = "Revive"
+	rev.add_theme_font_size_override("font_size", 7)
 	rev.visible = false
 	dead_bar.add_child(rev)
 	# asks first when you could still be revived
@@ -2313,7 +2318,7 @@ func _start_from_menu() -> void:
 ## colour at the edge of the screen, with an arrow pointing their way and the
 ## first letters of their name. Grey with a cross while they're fainted.
 var markers: Control
-const MARK := 9.0
+const MARK := 11.0
 
 func marker_color(pname: String) -> Color:
 	return Color.from_hsv(float(hash(pname.to_lower()) % 360) / 360.0, 0.65, 0.95)
@@ -2369,10 +2374,10 @@ func _draw_markers() -> void:
 			markers.draw_line(Vector2(r.end.x - 2, r.position.y + 2), Vector2(r.position.x + 2, r.end.y - 2), Art.OUTLINE, 1.0)
 		var f: Font = Art.font_body
 		var label := pname.left(3)
-		var w := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6).x
-		var ly := r.end.y + 7 if at.y < 40 else r.position.y - 2
-		markers.draw_string_outline(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, 2, Art.OUTLINE)
-		markers.draw_string(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_WHITE)
+		var w := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
+		var ly := r.end.y + 8 if at.y < 40 else r.position.y - 3
+		markers.draw_string_outline(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Art.OUTLINE)
+		markers.draw_string(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, C_WHITE)
 
 ## Shows the faint bar. grave: single player's gravestone, so Respawn as a
 ## ghost is offered. The bar counts down to Pixel Town by itself (the
@@ -2408,7 +2413,7 @@ func _refresh_dead() -> void:
 	if main.level and main.level.player and main.level.player.ghost:
 		line = "Walk back to your gravestone and stand by it."
 		dead_bar.get_node("Revive").visible = false
-	dead_bar.get_node("Text").text = "%s Back to Pixel Town in %d." % [line, ceili(secs)]
+	dead_bar.get_node("Text").text = "You fainted. %s Pixel Town in %d." % [line, ceili(secs)]
 
 ## The text on top, the buttons in a row under it; the bar sits just under
 ## the sky clock, in the middle.
@@ -2417,7 +2422,7 @@ func _layout_dead() -> void:
 	var wake: Button = dead_bar.get_node("Wake")
 	var rev: Button = dead_bar.get_node("Revive")
 	var h := maxf(tl.get_combined_minimum_size().y, tl.get_line_count() * tl.get_line_height())
-	var y := roundf(tl.position.y + h + 3)
+	var y := roundf(tl.position.y + h + 2)
 	wake.size = wake.get_combined_minimum_size()
 	rev.size = rev.get_combined_minimum_size()
 	var w := wake.size.x + (rev.size.x + 6 if rev.visible else 0.0)
@@ -2426,9 +2431,9 @@ func _layout_dead() -> void:
 		rev.position = Vector2(x, y)
 		x += rev.size.x + 6
 	wake.position = Vector2(x, y)
-	dead_bar.size.y = y + wake.size.y + 6
+	dead_bar.size.y = y + wake.size.y + 4
 	var vs: Vector2 = get_viewport().get_visible_rect().size
-	dead_bar.position = Vector2(roundf((vs.x - dead_bar.size.x) / 2), 40)
+	dead_bar.position = Vector2(roundf((vs.x - dead_bar.size.x) / 2), 36)
 
 func open_info(title: String, text: String) -> void:
 	panels.info.get_node("Title").text = title

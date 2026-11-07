@@ -253,6 +253,7 @@ const GraveScript := preload("res://scripts/grave.gd")
 const PlayerScript := preload("res://scripts/player.gd")
 ## Your gravestone after fainting in single player, while it stands.
 var grave: Node = null
+var wake_tip := ""
 
 func player_died(on_purpose := false) -> void:
 	var lvl: Node = level
@@ -313,8 +314,8 @@ func player_died(on_purpose := false) -> void:
 	if level == null or level != lvl or not is_instance_valid(level.player) or not level.player.dead or level.player.ghost:
 		return
 	hud.show_dead(text, can_grave and is_instance_valid(grave))
-	if tip != "":
-		hud.toast("Tip: " + tip, "")
+	# the tip shows once you're back in Pixel Town, not behind the bar
+	wake_tip = tip
 
 ## "Respawn" on the faint screen: back as a ghost at the start of the map, to
 ## walk to your gravestone (or home, if it has crumbled meanwhile).
@@ -357,8 +358,11 @@ func respawn() -> void:
 			return
 		# back to your own Pixel Town: only you, the room isn't pulled along
 		Net.go("town", true)
-		return
-	change_level("town")
+	else:
+		change_level("town")
+	if wake_tip != "":
+		hud.toast("Tip: " + wake_tip, "")
+		wake_tip = ""
 
 ## A friend stood by your gravestone long enough: back up where you fell.
 func revived_by(who: String) -> void:

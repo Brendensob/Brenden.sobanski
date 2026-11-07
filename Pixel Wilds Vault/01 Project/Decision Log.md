@@ -7,7 +7,7 @@ Newest first. Each entry gives the decision, why, and where it came from.
 
 ## 2026-11-07 (fainting bar, gravestones in rooms, off-screen markers)
 - **This is "the death thing".** *Brenden: "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
-- **No big faint menu.** A small bar under the sky clock shows the countdown to Pixel Town and the buttons. Going home while a gravestone stands asks "Are you sure? You can still get revived." Tips show as a message.
+- **No big faint menu.** A small bar under the sky clock shows the countdown to Pixel Town and the buttons. Going home while a gravestone stands asks "Are you sure? You can still get revived." The tip shows once you're back in Pixel Town.
 - **The screen darkens a little** while you're fainted, ghost included.
 - **Gravestones in rooms:** friends see yours in your place and revive you by standing by it for 3.5 s (the same time as a ghost in single player). Giving up, or the stone crumbling after 50 s, takes only you home.
 - **Off-screen markers** for friends: a coloured square with an arrow at the edge of the screen, grey with a cross if they're fainted.

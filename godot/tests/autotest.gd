@@ -1743,9 +1743,9 @@ func menus_check() -> void:
 	var dp: Panel = main.hud.dead_bar
 	check(dp.visible, "fainting shows the faint bar")
 	var vs := get_viewport().get_visible_rect().size
-	check(dp.get_global_rect().position.y < 70 and dp.size.y <= 70 and dp.size.x < vs.x * 0.75, "the faint bar is small and at the top, not a menu in your face (%s)" % dp.get_global_rect())
-	check(main.dead_tint.visible, "the screen is a little darker while you're fainted")
-	check((dp.get_node("Text") as Label).text.contains("Back to Pixel Town in"), "the bar counts down to Pixel Town (%s)" % (dp.get_node("Text") as Label).text)
+	check(dp.get_global_rect().position.y < 50 and dp.size.y <= 48 and dp.size.x < vs.x * 0.55, "the faint bar is small and at the top, not a menu in your face (%s)" % dp.get_global_rect())
+	check(main.dead_tint.visible and main.dead_tint.size.x >= vs.x - 1, "the screen is a little darker while you're fainted")
+	check((dp.get_node("Text") as Label).text.contains("Pixel Town in 5"), "the bar counts down to Pixel Town (%s)" % (dp.get_node("Text") as Label).text)
 	var grave: Node = main.grave
 	check(is_instance_valid(grave) and grave.position.distance_to(fell_at) < 4, "a gravestone rises where you fainted")
 	await shot("60_fainted")
