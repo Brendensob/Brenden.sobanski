@@ -1069,9 +1069,10 @@ func _surv_scale() -> float:
 
 # ---------------------------------------------------------------- drops, effects, building
 ## personal: an item only you can pick up (your own overflow), never shared with the room.
-func drop(item: String, n: int, pos: Vector2, personal := false) -> void:
+func drop(item: String, n: int, pos: Vector2, personal := false, share := false) -> void:
 	var p := PickupScript.new()
 	p.setup(item, n, self)
+	p.share = share
 	p.position = pos + Vector2(randf_range(-4, 4), -6)
 	entities.add_child(p)
 	if personal:

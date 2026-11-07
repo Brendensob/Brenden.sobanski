@@ -5,8 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (shared drops; portals don't pull you in)
+- **Shared drops:** picking up a drop from a normal monster or a broken tree, rock, ore, plant or pot gives the same drop to every player right next to you (within 1.5 tiles). Boss drops (arena bosses, boss monsters) aren't shared. *Brenden: "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"*
+- **Going into a world no longer pulls anyone in.** Players can stay in town. The 20-second countdown is only for **leaving**: when someone leaves a world, everyone else in that world follows after 20 seconds.
+- **"Fix the death thing to what I told you to do before":** the only earlier instruction in the notes is "Make the menu when death fixed" (the faint screen layout, fixed 2026-10-27). It checks out at computer, wide-phone and tall-phone shapes. **Asked Brenden what he means** (see [[Open Questions]]).
+
 ## 2026-11-07 (portals one at a time in rooms)
-- **A portal takes only the player who goes in.** The rest follow through the portal, or are taken along after 20 seconds. Leaving works the same way. *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"*
+- **A portal takes only the player who goes in.** The rest follow through the portal, or are taken along after 20 seconds. Leaving works the same way. *(Changed the same day: entering no longer pulls anyone in; see above.)* *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"*
 - **While someone is going through, other portals say "Someone's in the current portal"** and don't open, so the room never splits between two worlds.
 - **The host still runs the shared map.** A guest who goes first plays a copy of the same map (the same seed) for up to 20 seconds, until the host arrives; then the copy is swapped for the host's map and the guest keeps their spot.
 - Before, any portal or Gatekeeper pick moved the whole room at once.

@@ -84,7 +84,7 @@ Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releas
   - the switch dialog (Cancel, Become, already that character);
   - the game clock (device clock ahead, set back, server time).
 - **Two-player test:**
-  - portal trips: the host goes alone and the friend is taken after 20 s; the friend goes first on their own copy, a second portal says someone's in the current portal, the host joins after the countdown; the friend goes home alone;
+  - portals: the host goes in alone and the friend stays in town, sees the portal on their street and walks in; a shared drop picked up next to the friend reaches the friend; the friend leaves first on their own copy, a second portal says someone's in the current portal, the host is taken along after the countdown; the friend goes home alone;
   - server time;
   - a friend's broken rock wall opens in the host's town;
   - the rebuilt town keeps it;

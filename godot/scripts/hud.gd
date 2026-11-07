@@ -644,8 +644,8 @@ func _process(_d: float) -> void:
 	day_label.text = "Day %d" % lvl.s_day
 	bomb_btn.visible = not town
 	var info := ""
-	if Net.trip_to != "" and lvl.id != Net.trip_to:
-		info = "Everyone goes to %s in %d" % [Data.WORLDS[Net.trip_to].name, ceili(Net.trip_left)]
+	if Net.trip_to != "" and lvl.id == Net.trip_from:
+		info = "Everyone here goes to %s in %d" % [Data.WORLDS[Net.trip_to].name, ceili(Net.trip_left)]
 	elif lvl.kind == "arena" and not lvl.bosses_spawned:
 		var s := int(lvl.arena_time_left())
 		info = "Boss in %d:%02d" % [s / 60, s % 60]

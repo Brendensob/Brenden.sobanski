@@ -406,9 +406,9 @@ func die() -> void:
 		drops = level.def.mob_drops
 	for d in drops:
 		if randf() < d[1]:
-			level.drop(d[0], randi_range(d[2], d[3]), position)
+			level.drop(d[0], randi_range(d[2], d[3]), position, false, not is_boss())
 	if def.has("coins"):
-		level.drop("coin", randi_range(def.coins[0], def.coins[1]), position)
+		level.drop("coin", randi_range(def.coins[0], def.coins[1]), position, false, not is_boss())
 	if is_boss():
 		level.announce("%s defeated!" % def.name, "good")
 		level.main.shake(6)

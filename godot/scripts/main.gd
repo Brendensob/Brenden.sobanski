@@ -113,10 +113,18 @@ func enter_level(id: String, seed: int = -1, solo := false) -> void:
 	hud.toast(Data.WORLDS[id].name, "big")
 	GS.save_game()
 
-## Someone in the room went through a portal: say so, and in town open the
-## same portal on your street so you can follow before the countdown ends.
-func trip_started(target: String, who: String) -> void:
-	hud.toast("%s went into the portal to %s. Everyone follows in %d seconds." % [who, Data.WORLDS[target].name, int(Net.TRIP_TIME)], "good")
+## Someone in the room left the world you're in: you follow when the
+## countdown ends (or go through the portal yourself).
+func trip_started(target: String, from: String, who: String) -> void:
+	if level and level.id == from:
+		hud.toast("%s left for %s. Everyone here follows in %d seconds." % [who, Data.WORLDS[target].name, int(Net.TRIP_TIME)], "good")
+
+## Someone went into a world from town: say so, and in town open the same
+## portal on your street in case you want to go too.
+func went(target: String, who: String) -> void:
+	if who == GS.player_name:
+		return
+	hud.toast("%s went into the portal to %s." % [who, Data.WORLDS[target].name], "")
 	if level and level.kind == "town" and target != "town":
 		level.open_town_portal(target)
 

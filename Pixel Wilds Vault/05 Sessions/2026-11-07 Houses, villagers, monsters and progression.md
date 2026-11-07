@@ -42,4 +42,17 @@ tags: [session]
   - the friend goes home alone and the host follows.
   - 0 failures on both sides.
 
+**Then Brenden asked:** "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"
+
+![[portal_street.png]]
+
+- **Shared drops:** players right next to whoever picks up a monster's or broken thing's drop get the same drop (not boss drops).
+- **Portals:** going in no longer pulls anyone. You can stay in town and see the portal on your street. Leaving a world still takes everyone in that world after 20 seconds.
+- **The death thing:** the faint screen checks out at three window shapes. Asked Brenden which death thing he meant (see [[Open Questions]]).
+- **Two-player test:**
+  - the friend stays in town, then walks through the portal;
+  - a shared Rock drop picked up next to the friend reaches the friend;
+  - leaving with the countdown and the busy portal still work.
+  - 0 failures.
+
 **Next:** Brenden plays the Grasslands and says if it feels right. 

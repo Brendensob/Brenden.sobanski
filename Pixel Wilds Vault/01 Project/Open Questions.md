@@ -13,6 +13,7 @@ Things only Brenden can answer. Claude asks these when they matter and moves the
   1. **Blood Long Sword:** add it to the Master Chest, as one of the wiki's "Long Swords" there.
   2. **Stone Wall:** a Survival Book combination, **Rock + Rock + Wood Wall**, at the Wood Wall's 90%.
   3. **Torch Stand:** remove it, since PSG2 doesn't seem to have it. Or keep it and craft it from **Torch + Wood**.
+- [ ] **"Fix the death thing to what I told you to do before"** (2026-11-07): which death thing? The faint screen's layout was fixed on 2026-10-27 and checks out. Is it what happens when you faint in a room (now: you get back up at the start of the same map), dying in Survival, or something else?
 - [ ] Which other worlds or events does he play most, so they get polished first?
 
 ## Answered

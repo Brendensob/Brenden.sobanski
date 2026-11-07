@@ -10,6 +10,7 @@ var landed := false
 var sprite: Sprite2D
 var nid := 0 # shared pickups in a room have a number; the host decides who gets them
 var taken := false
+var share := false # a monster's (not a boss's) or a broken thing's drop: players right next to whoever picks it up get one too
 
 func setup(id: String, count: int, lvl: Node) -> void:
 	item = id
@@ -62,6 +63,8 @@ func _collect() -> void:
 		taken = true
 		Net.pickup_gone.rpc(level.id, nid)
 		level.net_objs.erase(nid)
+		if share:
+			Net.share_drop(level, 1, item, n)
 	if item == "coin":
 		Sfx.play("coin")
 		GS.coins += n
