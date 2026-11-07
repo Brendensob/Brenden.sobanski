@@ -1,0 +1,81 @@
+---
+tags: [session]
+---
+# 2026-11-07: Houses, villagers, monsters and progression
+
+**Asked:** "now do the same for houses villagers and monsters test out the progression make sure players can actually develop good at grasslands while having fun and progress to better areas"
+
+![[art_houses_people_monsters.png]]
+
+**Art:**
+- **Houses:** cartoon cottages with shingled roofs, chimneys, framed windows with flower boxes, an arched door and a stone base.
+- **Faces:**
+  - the orange "beak" (a 3-pixel mouth poking out past the chin) is now a small mouth inside the face;
+  - blush on people's cheeks;
+  - a shine on the hair.
+- **Monsters and characters:** four-tone shading (lit top, shaded bottom, darker right edge) and a shine.
+
+**Progression:** a new journey test plays a fresh character through the goal card with real fights and gathering (see [[Testing#Journey test]]).
+
+| Run | What it showed | Change |
+|---|---|---|
+| 1 | Fainted on the first two trips; 10 Jellies at 34 min; goal card stuck on "10 Iron Bars" for 2.5 h | Card shows the first goal not done; health back 1/4 s after 6 s; easy monsters at the entrance |
+| 2–3 | No early faints, but 50 Jellies ≈ 3 h; worlds empty out; bag full every trip | More Slimes; monsters come back; bot stores and trashes like a player (the Slime and respawn changes were later replaced by Brenden's PR #41 versions) |
+| 5 | About 5 Jellies per 10 min | Copper Pickaxe and Grasslands 2 before 50 Jellies (Jelly drops 1–2 was tried, then dropped for Brenden's Jelly 30%) |
+| 6 | Grasslands 2 at 54 min, Golden Night 108, Grasslands 3 112, Blue Night 151, one faint | — |
+
+**Tests:**
+- Full autotest: 0 failures.
+- Data audit: 0 hard errors.
+- Progression audit: 0 softlocked.
+
+**Then Brenden asked:** "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"
+
+![[portal_countdown.png]]
+
+- **Portals in a room take one player at a time.** The others see a message and a countdown ("Everyone goes to Grasslands 1 in 20"), and get the portal on their town street too.
+- **After 20 seconds** whoever hasn't gone through is taken along. Leaving works the same way.
+- **During the countdown** another portal says "Someone's in the current portal".
+- **Two-player test:**
+  - the host goes alone and the friend is taken after the countdown;
+  - the friend goes first on their own copy, a second portal is refused, and the host joins after the countdown;
+  - the friend goes home alone and the host follows.
+  - 0 failures on both sides.
+
+**Then Brenden asked:** "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"
+
+![[portal_street.png]]
+
+- **Shared drops:** players right next to whoever picks up a monster's or broken thing's drop get the same drop (not boss drops).
+- **Portals:** going in no longer pulls anyone. You can stay in town and see the portal on your street. Leaving a world still takes everyone in that world after 20 seconds.
+- **The death thing:** the faint screen checks out at three window shapes. Asked Brenden which death thing he meant (see [[Open Questions]]).
+- **Two-player test:**
+  - the friend stays in town, then walks through the portal;
+  - a shared Rock drop picked up next to the friend reaches the friend;
+  - leaving with the countdown and the busy portal still work.
+  - 0 failures.
+
+**Then Brenden explained the death thing:** "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"
+
+![[faint_bar.png]]
+![[offscreen_marker.png]]
+
+- **Faint bar:** a small bar at the top replaces the faint menu, with a countdown to Pixel Town, Respawn as a ghost (single player) and Go to Pixel Town. Going home asks "Are you sure? You can still get revived." while your gravestone stands.
+- **Darker screen** while you're fainted.
+- **Gravestones in rooms:** friends stand by yours for 3.5 s to revive you, and giving up takes only you home.
+- **Off-screen markers:** a coloured square with an arrow at the screen's edge for each friend off screen, grey with a cross if they're down.
+- **Tests:**
+  - autotest: the bar is small and at the top, the screen darkens, the countdown shows, the are-you-sure has Yes and No, the ghost text appears, and everything clears when you're back up;
+  - two-player test: the friend faints, the host sees the gravestone, stands by it and revives them, then walks off and gets a marker pointing back.
+
+**Then Brenden asked:** "get rid of ghost thing and make gems purchasable with real money and make a drop table for every mob in the game that i can see so ik what to test n stuff", and then "make it so you cant completly remove dmg from mobs with high def its just a 50 50 chance for them to hit you for 1-2"
+
+![[drop_tables.png]]
+
+- **No ghost.** On your own the gravestone counts 10 seconds, then Pixel Town. In a room friends still revive you.
+- **Gem packs for real money** in the Gem Shop, paid through Stripe. They switch on once `STRIPE_SECRET_KEY` is set on Render (see [[Monetization]]). Prices are placeholders ([[Open Questions]]).
+- **Drop Tables:** Menu → Drop Tables shows every monster with its picture, where it lives, each drop's chance and amount, coins, arena loot and things you break. The same list is in [[Drop Tables]].
+- **Defense:** a fully blocked hit still does 1–2 half the time.
+- **Tests:** server tests (19, with a fake Stripe), autotest (gem packs box, Drop Tables page, no ghost, the defense chip over 400 rolls), data audit 0 hard errors, progression audit 0 softlocked.
+
+**Next:** Brenden plays the Grasslands and says if it feels right, sets prices for the gem packs and opens a Stripe account. 

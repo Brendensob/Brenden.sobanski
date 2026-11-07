@@ -46,14 +46,14 @@ The living list of every system and how finished it is. It's updated after each 
 | No hits through walls | ✅ | Swings and pets check for walls |
 | Bows, cannons and ammo | ✅ | One ammo per shot; stops when empty |
 | Staffs and mana | ✅ | Healing staffs don't waste mana at full health |
-| Defense and 0-damage blocks | ✅ | |
+| Defense and blocks | ✅ | 2026-11-07: a fully blocked hit still does 1–2 half the time (400-roll autotest) |
 | Status effects (poison, fatigue, slow, cold) and cures | ✅ | The Antidote cure and Jade Ring immunity are tested |
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
 | Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
-| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player (2026-11-05): slow fall, gravestone, Respawn as a ghost and stand by the stone 3.5 s within 50 s; one free revive in the Grasslands Arena. Autotest covers all of it |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player: slow fall and a gravestone that counts 10 s to Pixel Town (ghost removed 2026-11-07); one free revive in the Grasslands Arena. Autotest covers all of it |
 | Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
@@ -75,6 +75,8 @@ The living list of every system and how finished it is. It's updated after each 
 | Buying (and not without the money) | ✅ | |
 | Selling at the item's price | ✅ | |
 | Gem Shop and gems for coins | ✅ | |
+| Gem packs for real money (Stripe) | 🟡 | 2026-11-07: server routes and claim tested with a fake Stripe; the shop shows the packs or why not. Needs `STRIPE_SECRET_KEY` on Render and a real test purchase |
+| Drop Tables page | ✅ | 2026-11-07: Menu → Drop Tables lists every monster, arena loot and things you break; also `06 Data/Drop Tables.md` (autotest) |
 | Miner's Survival Token shop | ✅ | |
 | Every shop item | ✅ | All 45 items in all shops and the Gem Shop, bought for exactly their price |
 | Device-clock cheating (furnaces, daily chests) | ✅ | Steady in-game clock, server time when online, no rewinding a save. Offline, a clock moved forward *while the game is closed* still counts once (see [[Known Issues]]) |
@@ -106,6 +108,10 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
+| Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
+| Faint bar, gravestones in rooms, off-screen markers | ✅ | 2026-11-07: small top bar with countdown and an are-you-sure, darker screen, friends revive at your gravestone, markers at the screen's edge; autotest and two-player tested |
+| Shared drops | ✅ | 2026-11-07: players within 1.5 tiles of the picker get the same drop (not boss drops); two-player tested |
+| Portals one at a time in rooms | ✅ | 2026-11-07: only you go in and nobody is pulled in; leaving takes everyone in that world after 20 s; "Someone's in the current portal"; two-player tested both ways and for leaving |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
@@ -115,6 +121,8 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | HUD, menus and panels like PSG2 | ✅ | 2026-10-27: rounded cartoon boxes, pop-in, dimmed backdrop, tap outside to close, message bubbles that count up |
 | Depth and cartoon finish | ✅ | 2026-10-27: shadows, portal/drop/ore glows, smooth big sprites, clouds and hazy far mountains. Checked in the autotest screenshots |
+| Houses, villagers and monsters art | ✅ | 2026-11-07: cartoon cottages, faces with a proper mouth and blush, four-tone shading and a shine on every monster; art sheets in `look_check()` |
+| Grasslands pacing (journey test) | ✅ | 2026-11-07: a bot reaches Grasslands 2 at 54 min, Golden Night at 108, Blue Night at 151, one faint; `tests/journey_test.gd` |
 | Ground, map walls and backdrops | ✅ | 2026-10-27 remodel: tiles that look at their neighbours, stone map walls, themed back walls, plank ledges, spiked deadly walls, depth shading, new mountains and tree line. Every world checked by `look_check()` (builds under 3 s, stone at the edges) and its screenshots |
 | Item icons | ✅ | 2026-11-04: every one of the 567 items has its own icon; upgrades share a shape and gain marks. Checked by the autotest and `tools/icon_audit.gd` |
 | Map spacing | ✅ | 2026-11-04: Pixel Town 80 wide with villagers about four tiles apart; worlds with fewer, spaced-out resources and monsters. Autotest checks the street and saves screenshots along it and five worlds |

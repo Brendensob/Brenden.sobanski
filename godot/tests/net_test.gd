@@ -3,6 +3,7 @@ extends Node
 ## Run one with `-- --nettest host` and another with `-- --nettest client`.
 
 const PlacedScript := preload("res://scripts/placed.gd")
+const PortalScript := preload("res://scripts/portal.gd")
 const NodeScript := preload("res://scripts/res_node.gd")
 
 var main: Node
@@ -96,7 +97,10 @@ func run_host() -> void:
 	await wait(0.5)
 	await shot("net_host_town")
 	main.change_level("grass_1")
-	check(await until(func(): return main.level.puppets.size() == 1, 20.0), "the friend followed the host to Grasslands 1")
+	check(main.level.id == "grass_1", "the host went through the portal to Grasslands 1")
+	await wait(3.0)
+	check(main.level.puppets.is_empty(), "the portal took only the host: the friend wasn't pulled along")
+	check(await until(func(): return main.level.puppets.size() == 1, 30.0), "the friend chose to follow through the portal")
 	var lvl: Node = main.level
 	lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away so the slime picks the friend
 	lvl.player.invuln = 9999.0
@@ -105,6 +109,29 @@ func run_host() -> void:
 	lvl.drop("wood", 3, pp.position + Vector2(0, -10))
 	var slime: Node = lvl.spawn_mob_at("slime", pp.position + Vector2(14, 0))
 	slime.aggro_forced = true
+	# a monster's drop picked up right next to the friend: the friend gets one too
+	await wait(2.0)
+	if is_instance_valid(pp):
+		lvl.player.position = pp.position + Vector2(6, 0)
+		lvl.drop("rock", 2, lvl.player.position + Vector2(0, -8), false, true)
+		check(await until(func(): return GS.count("rock") >= 2, 5.0), "the host picked up the shared drop")
+		lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away again so the slime picks the friend
+	# the friend faints: a gravestone stands in their place, and standing by it revives them
+	check(await until(func(): return is_instance_valid(pp) and pp.dead, 90.0), "the friend fainted")
+	check(pp.stone.visible and not pp.body.visible, "a gravestone stands where the friend fell")
+	await shot("net_host_grave")
+	lvl.player.position = pp.position + Vector2(8, 0)
+	check(await until(func(): return pp.revive_held > 1.0, 5.0), "standing by it fills the revive bar")
+	check(await until(func(): return not pp.dead, 15.0), "3.5 seconds by the friend's gravestone revives them")
+	# far away from the friend: a marker at the edge of the screen points at them
+	lvl.player.position = lvl.cell_pos(Vector2i(mini(lvl.W - 6, int(pp.position.x / 16) + 40), lvl.surface[mini(lvl.W - 6, int(pp.position.x / 16) + 40)] - 1))
+	main.camera.position = lvl.player.position
+	main.camera.reset_smoothing()
+	await wait(0.6)
+	var marks: Array = main.hud.marker_points()
+	check(marks.size() == 1 and marks[0][0] == pp.peer and (marks[0][2] as Vector2).x < 0, "a marker at the screen's edge points left at the friend off screen (%s)" % [marks])
+	await shot("net_host_marker")
+	lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1))
 	check(await until(func(): return chat_log.has("hello from friend"), 90.0), "the friend's chat message arrived")
 	var em: Node = pp.get_node_or_null("Emote") if is_instance_valid(pp) else null
 	check(em != null and em.texture == Art.emote("heart"), "the friend's heart emote shows over their head")
@@ -113,15 +140,16 @@ func run_host() -> void:
 		if n is PlacedScript:
 			placed += 1
 	check(placed == 1, "the friend's wall was built in the host's world")
-	check(await until(func(): return main.level.id == "grass_2", 20.0), "the friend's portal request moved the whole room")
+	check(await until(func(): return main.level.id == "grass_2", 35.0), "the friend went through to Grasslands 2 and the host was taken along after the countdown")
 	await wait(1.0)
 	await shot("net_host_grass2")
 	# trading at the Trading Center
-	check(await until(func(): return main.level.id == "town", 30.0), "the room went back to Pixel Town")
+	check(await until(func(): return main.level.id == "town", 35.0), "the friend went home and the host followed after the countdown")
 	await wait(0.5)
 	check(rock_wall() == null, "back in town, the rebuilt town keeps the wall the friend opened")
 	GS.add_item("wood", 5)
 	var coins0 := GS.coins
+	var rock0 := GS.count("rock")
 	check(await until(func(): return chat_log.has("ready to trade"), 90.0), "the friend burned the wall and is at the Trading Center")
 	var host_wall: Node = null
 	for n in main.level.props.get_children():
@@ -140,7 +168,7 @@ func run_host() -> void:
 	await shot("net_host_trade")
 	Net.set_ready(true)
 	check(await until(func(): return not Net.trading(), 20.0), "the trade finished")
-	check(GS.count("rock") == 3 and GS.coins == coins0 + 50 and GS.count("wood") == 0, "the host got 3 Rocks and 50 coins for 5 Wood")
+	check(GS.count("rock") >= rock0 + 3 and GS.coins == coins0 + 50 and GS.count("wood") == 0, "the host got 3 Rocks and 50 coins for 5 Wood")
 	check(await until(func(): return Net.players.is_empty(), 30.0), "the friend left the room")
 	main.change_level("grass_1")
 	await wait(1.0)
@@ -206,7 +234,16 @@ func run_client() -> void:
 		rw.hit(5)
 		await wait(0.1)
 	check(GS.flags.get("rock_wall", false) and rock_wall() == null, "the friend broke their rock wall")
-	check(await until(func(): return main.level.id == "grass_1", 30.0), "followed the host to Grasslands 1")
+	check(await until(func(): return Net.last_went == "grass_1", 30.0), "the friend is told the host went through the portal")
+	await wait(3.0)
+	var street_portal := false
+	for n in main.level.props.get_children():
+		if n is PortalScript and n.target == "grass_1":
+			street_portal = true
+	check(main.level.id == "town" and street_portal, "the friend can stay in town; the same portal opened on their street")
+	await shot("net_client_portal_street")
+	main.change_level("grass_1")
+	check(await until(func(): return main.level.id == "grass_1" and main.level.netted, 15.0), "the friend went through and is on the host's Grasslands 1")
 	var lvl: Node = main.level
 	await wait(1.0)
 	var nodes := 0
@@ -215,8 +252,17 @@ func run_client() -> void:
 			nodes += 1
 	check(lvl.count_mobs() > 10 and nodes > 50, "the host's monsters (%d) and resources (%d) are here" % [lvl.count_mobs(), nodes])
 	check(await until(func(): return GS.count("wood") >= 3, 20.0), "picked up the wood the host dropped")
+	check(await until(func(): return GS.count("rock") >= 2, 25.0), "got the same drop the host picked up right next to the friend")
 	var hp0: float = GS.hp
 	check(await until(func(): return GS.hp < hp0, 20.0), "the host's slime hurt the friend")
+	# faint: a small bar at the top, a darker screen, and a friend can revive you
+	lvl.player.invuln = 0.0
+	lvl.player.hurt(9999, 0.0, lvl.player.position.x - 5)
+	check(await until(func(): return main.hud.dead_bar.visible, 5.0), "fainting in a room shows the small bar")
+	check(main.dead_tint.visible and (main.hud.dead_bar.get_node("Text") as Label).text.contains("friend can revive"), "the screen darkens and the bar says a friend can revive you (%s)" % (main.hud.dead_bar.get_node("Text") as Label).text)
+	await shot("net_client_fainted")
+	check(await until(func(): return not lvl.player.dead, 40.0), "the host stood by the gravestone and revived the friend")
+	check(not main.hud.dead_bar.visible and not main.dead_tint.visible and lvl.id == "grass_1", "back up where they fell, still in Grasslands 1")
 	await shot("net_client_grass1")
 	check(main.hud.chat_btn.visible and main.hud.chat_btn.size.y <= 14, "the Chat.. box shows under the bars")
 	GS.hp = GS.max_hp()
@@ -253,12 +299,17 @@ func run_client() -> void:
 	main.hud._send_chat()
 	await wait(1.0)
 	main.change_level("grass_2")
-	check(await until(func(): return main.level.id == "grass_2", 20.0), "the room moved to Grasslands 2")
+	check(await until(func(): return main.level.id == "grass_2", 10.0) and not main.level.netted, "the portal took the friend first, onto their own copy of Grasslands 2")
+	main.change_level("grass_3")
+	await wait(1.5)
+	check(Net.last_notice.contains("current portal") and main.level.id == "grass_2", "another portal says someone's in the current portal (%s)" % Net.last_notice)
+	await shot("net_client_portal_busy")
+	check(await until(func(): return main.level.id == "grass_2" and main.level.netted, 35.0), "the host came through after the countdown and the map is shared again")
 	await wait(1.0)
 	await shot("net_client_grass2")
 	# back to town, burn the wall with a torch, and go to the Trading Center
 	main.change_level("town")
-	check(await until(func(): return main.level.id == "town", 20.0), "the room went back to Pixel Town")
+	check(await until(func(): return main.level.id == "town", 10.0), "the friend went home on their own")
 	await wait(0.5)
 	lvl = main.level
 	var wall: Node = null

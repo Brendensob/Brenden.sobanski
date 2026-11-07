@@ -44,7 +44,8 @@ var best_survival_day := 0
 var look := "man_in_suit" # which character you look like
 var player_name := "Player"
 var online_token := "" # the key that proves this character owns its name on the online server
-var friend_names: Array = [] # last friends list seen online, so it can be put back if the server is wiped
+var friend_names: Array = []
+var gem_checkouts: Array = [] # Stripe checkouts opened for gem packs, until their gems arrive # last friends list seen online, so it can be put back if the server is wiped
 var pending_token := "" # a name just claimed for a character that's about to be made
 var slot := 0 # which character slot is being played
 ## The auto-hit switch: the weapon or tool you hold keeps swinging by itself, even
@@ -223,7 +224,12 @@ func roll_monster_hit(dmg: int, crit_chance: float) -> Dictionary:
 	if crit:
 		hit *= 2
 	var blocked := randi_range(0, maxi(0, stat("def")))
-	return {"dmg": maxi(0, hit - blocked), "crit": crit}
+	var taken := maxi(0, hit - blocked)
+	# defense never makes you untouchable: a hit it soaks up completely still
+	# lands for 1 or 2 half the time (Brenden, 2026-11-07)
+	if taken == 0 and randf() < 0.5:
+		taken = randi_range(1, 2)
+	return {"dmg": taken, "crit": crit}
 
 func add_status(effect: String) -> void:
 	if immune_to(effect):
@@ -624,7 +630,7 @@ func fight_score(wid: String, e: Array, for_test := false) -> float:
 		hit += int(pen[1])
 	var taken := 0.0 # the average hit after your defense
 	for b in my_def + 1:
-		taken += maxf(0, hit - b)
+		taken += maxf(0, hit - b) if hit > b else 0.75 # a soaked hit still lands for 1-2 half the time
 	taken /= my_def + 1
 	var hits_to_win := hp / ((r.x + r.y) / 2.0)
 	if hits_to_win > MINI_BOSS_HITS and not for_test:
@@ -662,15 +668,12 @@ func best_tier(kind: String) -> int:
 			best = maxi(best, int(Data.ITEMS[s.id].get("tier", 0)))
 	return best
 
-## The goal to show on the HUD: the first one after the last one you've done
-## (so older saves skip the early ones), then Miffie's next quest. Returns
-## {"text", "help", "progress", "index"}, or {} when nothing is left.
+## The goal to show on the HUD: the first one not done yet, then Miffie's next
+## quest. Doing a later goal early doesn't hide an earlier one: Miffie's quests
+## come in order, so "10 Iron Bars" can't be done before her "50 Jellies".
+## Returns {"text", "help", "progress", "index"}, or {} when nothing is left.
 func current_goal() -> Dictionary:
-	var last := -1
 	for i in Data.GOALS.size():
-		if goal_done(Data.GOALS[i]):
-			last = i
-	for i in range(last + 1, Data.GOALS.size()):
 		var g: Dictionary = Data.GOALS[i]
 		if goal_done(g):
 			continue
@@ -732,7 +735,7 @@ func save_game() -> void:
 		"v": VERSION, "inv": inv, "storage": storage, "backpacks": backpacks_owned, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
-		"friends": friend_names,
+		"friends": friend_names, "gem_checkouts": gem_checkouts,
 	}
 	_write_slot(slot, data)
 
@@ -862,6 +865,7 @@ func load_game() -> bool:
 	player_name = str(d.get("name", "Player"))
 	online_token = str(d.get("token", ""))
 	friend_names = Array(d.get("friends", [])).filter(func(f): return typeof(f) == TYPE_STRING)
+	gem_checkouts = Array(d.get("gem_checkouts", [])).filter(func(f): return typeof(f) == TYPE_STRING)
 	if not Data.CHARACTERS.has(look):
 		look = "man_in_suit"
 	hp = clampf(float(d.get("hp", max_hp())), 1, max_hp())

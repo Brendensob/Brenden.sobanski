@@ -1449,6 +1449,39 @@ func set_later_open(on: bool) -> void:
 	_find_set_aside()
 	_bounty.clear()
 
+## Every monster's drops, for the Drop Tables page and the vault: one entry per
+## monster that lives in an open world, with where it's found. In an arena a
+## normal monster drops the arena's own loot instead (arena_loot), and a boss
+## adds the arena's boss loot to its own.
+func drop_table() -> Array:
+	var where := {}
+	for w in WORLDS:
+		if not world_open(w):
+			continue
+		for m in WORLDS[w].get("mobs", []):
+			if not where.has(m[0]):
+				where[m[0]] = []
+			where[m[0]].append(WORLDS[w].name)
+		for b in WORLDS[w].get("bosses", []):
+			var bid: String = b if b is String else b[0]
+			if not where.has(bid):
+				where[bid] = []
+			where[bid].append(WORLDS[w].name + " (boss)")
+	var out := []
+	for id in MOBS:
+		if where.has(id) and not MOBS[id].get("invulnerable", false):
+			out.append({"id": id, "name": MOBS[id].name, "look": MOBS[id].look, "where": where[id], "drops": MOBS[id].drops,
+				"coins": MOBS[id].get("coins", []), "boss": MOBS[id].get("boss", false)})
+	return out
+
+## The arenas' own loot: what their normal monsters drop, and the bosses' extra.
+func arena_loot() -> Array:
+	var out := []
+	for w in WORLDS:
+		if WORLDS[w].kind == "arena" and world_open(w):
+			out.append({"world": WORLDS[w].name, "mobs": WORLDS[w].get("mob_drops", []), "boss": WORLDS[w].get("boss_drops", [])})
+	return out
+
 ## Whether the Gatekeeper offers this world right now.
 func world_open(w: String) -> bool:
 	return later_open or not w in LATER_WORLDS
@@ -1603,14 +1636,14 @@ const GOALS := [
 		"help": "Open your bag, put Wood and Rock in the combination slots and press Combine. Brutus (red hair) gives you the Survival Book and opens Survival Grasslands."},
 	{"text": "Bring the furnace GateKeeper a Pretzel", "done": {"quest": "warden_1"},
 		"help": "Combine a Honey Bug and an Herb (Combo Book I in your bag). Honey Bugs come from pots, Herbs from yellow and pink plants. The GateKeeper with the green face guards the furnace room."},
-	{"text": "Bring Miffie 50 Jellies", "done": {"quest": "mira_2"}, "count": ["jelly", 50],
-		"help": "More Slimes! Miffie gives you Combo Book II for these."},
-	{"text": "Bring Miffie 10 Copper Bars", "done": {"quest": "mira_3"}, "count": ["copper_bar", 10],
-		"help": "Mine copper rocks (orange) for Copper Ore, then smelt it in a furnace in the furnace room. Miffie gives you Golden Night, a better sword."},
 	{"text": "Make a Copper Pickaxe", "done": {"tier": ["pick", 2]},
 		"help": "The Crafter makes it from 5 Copper Bars and your Wooden Pick. You need it to mine iron and silver."},
 	{"text": "Find the portal to Grasslands 2", "done": {"flag": "been_grass_2"},
 		"help": "A purple portal is hidden deep underground on the right side of Grasslands 1. Dig down with your pickaxe."},
+	{"text": "Bring Miffie 50 Jellies", "done": {"quest": "mira_2"}, "count": ["jelly", 50],
+		"help": "More Slimes! Miffie gives you Combo Book II for these."},
+	{"text": "Bring Miffie 10 Copper Bars", "done": {"quest": "mira_3"}, "count": ["copper_bar", 10],
+		"help": "Mine copper rocks (orange) for Copper Ore, then smelt it in a furnace in the furnace room. Miffie gives you Golden Night, a better sword."},
 	{"text": "Reach Grasslands 3", "done": {"flag": "been_grass_3"},
 		"help": "Grasslands 2 has its own purple portal deep underground on the right. Octopuses hit hard: wear armor and carry potions."},
 	{"text": "Bring Miffie 10 Iron Bars", "done": {"quest": "mira_4"}, "count": ["iron_bar", 10],

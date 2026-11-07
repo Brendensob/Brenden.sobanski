@@ -29,3 +29,11 @@ All game numbers live in `godot/scripts/data.gd`.
 - Gem Shop prices for seeds and scrolls, and **2,500 coins per gem**.
 - The Wall Hammer coming from **night 10**.
 - Boss gem drops (1–2, rarely).
+
+## Pacing changes from the journey test (2026-11-07)
+| Number | Was | Now | Why |
+|---|---|---|---|
+| Health coming back out of a fight | 1 per 12 s after 8 s | 1 per 4 s after 6 s | new players fainted on their first trips |
+
+The journey test also found the Jelly grind; that was fixed the same week from Brenden's own request (Jelly 30%, more Slimes that come back, PR #41).
+

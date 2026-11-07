@@ -78,6 +78,27 @@ Brenden asked to *"remodel everything especially the walls around the map like a
 - **Mountains:** a sunny left face and a shaded right face, a ragged ridge with a lit rim, creases, small snow caps with a zig-zag edge, and haze toward the bottom. The far range is paler.
 - **Tree line** instead of round blobs: two rows of treetops (the back row darker), each lit along its top and speckled with leaves. It takes each world's colours, so dark worlds get dark forests.
 
+## Houses, villagers and monsters (2026-11-07)
+
+![[art_houses_people_monsters.png]]
+
+*Brenden: "now do the same for houses villagers and monsters test out the progression make sure players can actually develop good at grasslands while having fun and progress to better areas"*
+- **Houses** are little cartoon cottages:
+  - a shingled roof with eaves, a ridge cap and a round attic window;
+  - a brick chimney;
+  - wooden siding between corner posts, with shade under the eaves;
+  - framed windows with a shine and flower boxes;
+  - an arched door with a brass knob and a stone step, and a stone foundation.
+- **Villagers' faces:**
+  - the mouth used to be 3 bright orange pixels poking out past the chin, like a beak. Now it's a small dark-red mouth inside the face;
+  - people get a touch of blush on the cheeks. Masks, robots, mummies and zombies don't;
+  - hair gets a small shine.
+- **Shading** (`Art.volume()`), for every monster, pet and character:
+  - the top quarter of the body is lit and the bottom third shaded;
+  - the right edge is a little darker;
+  - a small shine sits up on the top left;
+  - eyes and very dark or white details are left alone. With the cartoon rim on top, that's four tones, so they look round instead of flat.
+- `look_check()` saves sheets of every monster (`75_monsters`, close-up `78_common_monsters`), every villager (`76_villagers`) and the houses (`77_houses`).
 ## Item icons (2026-11-04)
 
 ![[item_icons_sheet.png]]

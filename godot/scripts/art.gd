@@ -34,7 +34,7 @@ const HAIR := {
 		".hhhsbbsbbs.",
 		".hhssweswes.",
 		".hhssweswes.",
-		"..hsssssmmm.",
+		"..hs+ssmms+.",
 		"...SSsssSS..",
 	],
 	"bald": [
@@ -45,7 +45,7 @@ const HAIR := {
 		".Ssssbbsbbs.",
 		".Ssssweswes.",
 		".Ssssweswes.",
-		"..Sssssmmm..",
+		"..Ss+smms+..",
 		"...SSsssSS..",
 	],
 }
@@ -251,6 +251,80 @@ func cartoon(src: Image) -> Image:
 			elif _clear(src, x + 1, y):
 				c = c.darkened(0.12)
 			img.set_pixel(x, y, c)
+	return img
+
+## Rounds a flat sprite: within each column the top quarter is lit and the bottom
+## third shaded, the right edge a little darker, and a small shine sits up on
+## the top left. Eyes and dark details (near black or near white) are left as
+## they are. cartoon() then adds its rim on top, for four tones in all.
+func volume(src: Image) -> Image:
+	var w := src.get_width()
+	var h := src.get_height()
+	var img := src.duplicate()
+	var top := PackedInt32Array()
+	var bot := PackedInt32Array()
+	top.resize(w)
+	bot.resize(w)
+	var lo := Vector2i(w, h)
+	var hi := Vector2i(-1, -1)
+	for x in w:
+		top[x] = -1
+		for y in h:
+			if src.get_pixel(x, y).a > 0.5:
+				if top[x] < 0:
+					top[x] = y
+				bot[x] = y
+				lo = Vector2i(mini(lo.x, x), mini(lo.y, y))
+				hi = Vector2i(maxi(hi.x, x), maxi(hi.y, y))
+	if hi.x < 0:
+		return img
+	var left := PackedInt32Array()
+	var right := PackedInt32Array()
+	left.resize(h)
+	right.resize(h)
+	for y in h:
+		left[y] = -1
+		for x in w:
+			if src.get_pixel(x, y).a > 0.5:
+				if left[y] < 0:
+					left[y] = x
+				right[y] = x
+	for y in h:
+		for x in w:
+			var c := src.get_pixel(x, y)
+			if c.a < 0.5 or c.v < 0.22 or (c.s < 0.08 and c.v > 0.92):
+				continue
+			var span := bot[x] - top[x]
+			if span < 4:
+				continue
+			var t := float(y - top[x]) / span
+			if t < 0.28:
+				c = c.lightened(0.1)
+			elif t > 0.66:
+				c = c.darkened(0.14)
+			if right[y] - left[y] >= 5 and x >= right[y] - 1 and x > left[y] + 2:
+				c = c.darkened(0.06)
+			img.set_pixel(x, y, c)
+	# the shine
+	var bw := hi.x - lo.x
+	var bh := hi.y - lo.y
+	if bw >= 8 and bh >= 7:
+		var sp := Vector2i(lo.x + int(bw * 0.28), lo.y + int(bh * 0.24))
+		for r in 3:
+			var hit := false
+			for dy in range(-r, r + 1):
+				for dx in range(-r, r + 1):
+					var q := sp + Vector2i(dx, dy)
+					if hit or q.x < 0 or q.y < 0 or q.x + 1 >= w or q.y >= h:
+						continue
+					var a := src.get_pixel(q.x, q.y)
+					var b := src.get_pixel(q.x + 1, q.y)
+					if a.a > 0.5 and b.a > 0.5 and a.v >= 0.22 and b.v >= 0.22 and a.s >= 0.08 and q.y > top[q.x] and q.y > top[q.x + 1]:
+						img.set_pixel(q.x, q.y, a.lerp(Color.WHITE, 0.6))
+						img.set_pixel(q.x + 1, q.y, b.lerp(Color.WHITE, 0.4))
+						hit = true
+			if hit:
+				break
 	return img
 
 func _clear(img: Image, x: int, y: int) -> bool:
@@ -572,7 +646,7 @@ func eyes(img: Image, x1: int, x2: int, y: int, size: int = 1, c: Color = OUTLIN
 ## A person sprite. helmet and armor are item ids, drawn over the character.
 func character(look: String, frame: String = "stand", scale: int = 1, helmet: String = "", armor: String = "") -> Texture2D:
 	return cached("char_%s_%s_%d_%s_%s" % [look, frame, scale, helmet, armor], func():
-		return to_tex(outline(_char_img(look, frame, scale, helmet, armor))))
+		return to_tex(outline(volume(_char_img(look, frame, scale, helmet, armor)))))
 
 func character_flash(look: String) -> Texture2D:
 	return cached("charflash_" + look, func():
@@ -585,7 +659,11 @@ func _char_map(look: String, armor: String) -> Dictionary:
 		if d[k] is String:
 			map[k] = d[k]
 	if not map.has("e"): map.e = "1b1a24"
-	if not map.has("m"): map.m = "e8501e"
+	if not map.has("m"): map.m = "b8403a"
+	# blush on the cheeks of people, not on masks, robots, mummies or zombies
+	var skin := col(map.get("s", PAL.s))
+	var human := skin.h < 0.13 and skin.s > 0.2 and skin.v > 0.45 and not col(map.m).is_equal_approx(skin)
+	map["+"] = skin.lerp(Color("ff7a8a"), 0.4) if human else skin
 	if not map.has("b"): map.b = "4a2a1a"
 	if not map.has("w"): map.w = "ffffff"
 	if not map.has("t"): map.t = map.get("c", "4a4a5a")
@@ -612,6 +690,11 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 	var d: Dictionary = LOOKS.get(look, LOOKS.man_in_suit)
 	var map := _char_map(look, armor)
 	var base := grid_image(HAIR[d.get("hair", "short")] + BODY + LEGS[frame], map)
+	# a shine on the hair
+	var hc := col(map.get("h", "3a2a22"))
+	for p in [Vector2i(4, 1), Vector2i(5, 1), Vector2i(3, 2)]:
+		if base.get_pixel(p.x, p.y).is_equal_approx(hc):
+			base.set_pixel(p.x, p.y, hc.lightened(0.3))
 	if d.get("long", false):
 		for y in range(6, 11):
 			for x in [1, 2]:
@@ -669,7 +752,7 @@ func _draw_helmet(img: Image, helmet: String) -> void:
 		"bear_head":
 			_overlay(img, [[1, 1, [".nn.....nn..", "nNNnnnnnNNn.", "nnnnnnnnnnnn", "nnnnnnnnnnnn", "nnn.......nn"]]], {"n": "8a5a32", "N": "c8a070"})
 		"green_face":
-			_overlay(img, [[3, 7, ["ggggggggg", "ggbbgbbgg", "ggwegwegg", "ggwegwegg", "gggggmmmg", ".gGGGGGg."]]], {"g": "5cbf3f", "G": "2e7a2a", "b": "1b1a24", "w": "ffffff", "e": "1b1a24", "m": "e8501e"})
+			_overlay(img, [[3, 7, ["ggggggggg", "ggbbgbbgg", "ggwegwegg", "ggwegwegg", "ggggmmggg", ".gGGGGGg."]]], {"g": "5cbf3f", "G": "2e7a2a", "b": "1b1a24", "w": "ffffff", "e": "1b1a24", "m": "8a2a2a"})
 		"the_fly":
 			_overlay(img, [[2, 6, ["..kkkkkk...", ".kkkkkkkkk.", "kkkcCkcCkk.", "kkkCCkCCkk."]]], {"c": "a6e6f2", "C": "4fb6d0"})
 		"wood_mask", "skull_mask":
@@ -1442,7 +1525,7 @@ func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
 			"reaper": img = ghost_img(14, 16, Color("2a2a3a"), Color("8affc8"), alt)
 			"moonwisp": img = flame_img(Color("a6e6f2"), alt)
 			_: img = blob(Color("ff00ff"), 12, 10, alt)
-		img = outline(img)
+		img = outline(volume(img))
 		if flash:
 			img = flash_image(img)
 		return to_tex(img))
@@ -2090,18 +2173,113 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 		return to_tex(outline(img)))
 
 # ---------------------------------------------------------------- village and props
+## A Pixel Town house, drawn like a little cartoon cottage: a shingled roof with
+## eaves, a ridge cap and a brick chimney, wooden siding between corner posts,
+## framed windows with a shine and a flower box, an arched door with a knob and
+## a stone step, and a stone foundation. The wall and roof colours vary per house.
 func house_tex(wall: Color, roof: Color, w: int = 52) -> Texture2D:
 	return cached("house_%s_%s_%d" % [wall.to_html(), roof.to_html(), w], func():
-		var img := blank(w, 46)
-		rect(img, 4, 20, w - 8, 26, wall)
-		for y in range(22, 46, 4):
-			rect(img, 4, y, w - 8, 1, wall.darkened(0.15))
-		for i in 20:
-			rect(img, i, 20 - i, w - i * 2, 1, roof if i % 3 else roof.darkened(0.2))
-		rect(img, w / 2 - 5, 32, 10, 14, Color("6e4426"))
-		px(img, w / 2 + 3, 39, Color("f2cf5b"))
-		rect(img, 8, 27, 8, 7, Color("a6e6f2"))
-		rect(img, w - 16, 27, 8, 7, Color("a6e6f2"))
+		var h := 46
+		var img := blank(w, h)
+		var trim := wall.lerp(Color("fff8ec"), 0.6)
+		var wood := Color("8a5a32")
+		var x0 := 4
+		var x1 := w - 5 # the wall's last column
+		var wall_top := 21
+		# stone foundation
+		for y in range(h - 4, h):
+			for x in range(x0 - 1, x1 + 2):
+				var stone := Color("8f8a96") if ((x + (2 if y >= h - 2 else 0)) / 4) % 2 == 0 else Color("7d7884")
+				px(img, x, y, stone if (x + (2 if y >= h - 2 else 0)) % 4 != 3 else Color("5e5a66"))
+		rect(img, x0 - 1, h - 4, x1 - x0 + 3, 1, Color("a8a4b0"))
+		# siding: boards three pixels tall, a groove and a lit top line on each
+		for y in range(wall_top, h - 4):
+			var row := (y - wall_top) % 3
+			var c := wall if row != 2 else wall.darkened(0.16)
+			if row == 0:
+				c = wall.lightened(0.08)
+			rect(img, x0, y, x1 - x0 + 1, 1, c)
+		# a soft shadow under the eaves
+		rect(img, x0, wall_top, x1 - x0 + 1, 2, wall.darkened(0.28))
+		# corner posts
+		for x in [x0, x0 + 1, x1 - 1, x1]:
+			rect(img, x, wall_top, 1, h - 4 - wall_top, trim if x == x0 or x == x1 - 1 else trim.darkened(0.12))
+		# windows: a frame, four panes with a sky gradient and a shine, a sill and a flower box
+		for wx in [x0 + 4, x1 - 13]:
+			var wy := 27
+			rect(img, wx - 1, wy - 1, 11, 10, trim)
+			rect(img, wx, wy, 9, 8, Color("8fd8f2"))
+			rect(img, wx, wy + 4, 9, 4, Color("5ab0d8"))
+			rect(img, wx + 4, wy, 1, 8, trim)
+			rect(img, wx, wy + 3, 9, 1, trim)
+			px(img, wx + 1, wy + 1, Color("f2fbff"))
+			px(img, wx + 2, wy + 1, Color("f2fbff"))
+			px(img, wx + 1, wy + 2, Color("f2fbff"))
+			px(img, wx + 6, wy + 5, Color("d8f2fb"))
+			rect(img, wx - 2, wy + 8, 13, 1, trim.darkened(0.15))
+			# a flower box
+			rect(img, wx - 1, wy + 9, 11, 2, wood)
+			rect(img, wx - 1, wy + 9, 11, 1, wood.lightened(0.15))
+			for f in 4:
+				var fc: Color = [Color("f25a6a"), Color("ffe46a"), Color("f2f2f6"), Color("f25a6a")][(f + int(roof.h * 10)) % 4]
+				px(img, wx + f * 3, wy + 8, Color("4f9a44"))
+				px(img, wx + f * 3, wy + 7, fc)
+		# the door: an arch, planks, a knob and a stone step
+		var dw := 10
+		var dx := w / 2 - dw / 2
+		var dy := 30
+		rect(img, dx - 1, dy - 1, dw + 2, h - 4 - dy + 1, trim)
+		rect(img, dx, dy, dw, h - 4 - dy, wood)
+		for k in [2, 5, 8]:
+			rect(img, dx + k, dy + 1, 1, h - 5 - dy, wood.darkened(0.2))
+		rect(img, dx, dy, dw, 1, wood.lightened(0.18))
+		# a rounded top: the frame wraps the door's top corners
+		px(img, dx, dy, trim)
+		px(img, dx + dw - 1, dy, trim)
+		px(img, dx - 1, dy - 1, wall.darkened(0.16))
+		px(img, dx + dw, dy - 1, wall.darkened(0.16))
+		rect(img, dx + dw - 3, dy + 7, 2, 2, Color("f2cf5b"))
+		px(img, dx + dw - 3, dy + 7, Color("fff2b0"))
+		rect(img, dx - 2, h - 5, dw + 4, 1, Color("b8b4c0"))
+		# a brick chimney on the right slope
+		var cx := w - 16
+		for y in range(5, 16):
+			for x in range(cx, cx + 6):
+				var brick := Color("b8583a") if ((x + (2 if (y / 2) % 2 else 0)) / 3) % 2 == 0 else Color("a24a30")
+				px(img, x, y, brick if y % 2 == 0 or (x + (2 if (y / 2) % 2 else 0)) % 3 != 0 else Color("7a3424"))
+		rect(img, cx - 1, 4, 8, 2, Color("6e6a76"))
+		rect(img, cx - 1, 4, 8, 1, Color("8f8a96"))
+		# the roof: shingle rows with a lit left slope and a shaded right slope,
+		# eaves sticking out past the walls, and a ridge cap on top
+		var peak := 3
+		for y in range(peak, wall_top + 1):
+			var half := int((y - peak) * 1.42) + 3
+			var l := w / 2 - half
+			var r := w / 2 + half - 1
+			l = maxi(l, 0)
+			r = mini(r, w - 1)
+			var band := (y - peak) % 3
+			for x in range(l, r + 1):
+				var lit := x < w / 2
+				var c := roof.lightened(0.08) if lit else roof.darkened(0.12)
+				if band == 2:
+					c = c.darkened(0.22)
+				elif band == 0 and (x + (y / 3) * 2) % 4 == 0:
+					c = c.darkened(0.12)
+				px(img, x, y, c)
+			# the roof's edge
+			px(img, l, y, roof.darkened(0.35))
+			px(img, r, y, roof.darkened(0.45))
+		# eaves board
+		rect(img, 0, wall_top - 1, w, 2, roof.darkened(0.4))
+		rect(img, 0, wall_top - 1, w, 1, roof.darkened(0.25))
+		# ridge cap
+		rect(img, w / 2 - 4, peak - 1, 8, 2, roof.darkened(0.3))
+		rect(img, w / 2 - 4, peak - 1, 8, 1, roof.lightened(0.15))
+		# a round attic window in the gable
+		ellipse(img, w / 2, 13, 3.2, 3.2, trim)
+		ellipse(img, w / 2, 13, 2.2, 2.2, Color("5ab0d8"))
+		px(img, w / 2 - 1, 12, Color("f2fbff"))
 		return to_tex(outline(img)))
 
 func prop_tex(kind: String, state: String = "") -> Texture2D:

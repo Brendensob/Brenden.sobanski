@@ -100,7 +100,7 @@ func hit(tier: int, _from_net: bool = false) -> void:
 		level.burst(position + Vector2(0, -8), c, 10)
 		for d in def.drops:
 			if randf() < d[1]:
-				level.drop(d[0], randi_range(d[2], d[3]), position + Vector2(0, -6))
+				level.drop(d[0], randi_range(d[2], d[3]), position + Vector2(0, -6), false, true)
 		if level.netted and Net.is_host():
 			Net.node_changed.rpc(level.id, nid, hits, alive)
 		if def.get("wall", false):

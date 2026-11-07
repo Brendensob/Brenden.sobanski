@@ -63,13 +63,15 @@ var s_boss_day := 0
 var regrow_timer := 20.0
 
 ## seed and net_state come from the room host when you're a guest in a room.
-func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}) -> void:
+## solo: in a room, a copy of the map that runs on your own game, until the
+## room's host comes through the portal too (see Net trips).
+func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}, solo := false) -> void:
 	id = world_id
 	def = Data.WORLDS[id]
 	kind = def.kind
 	main = main_node
 	th = Art.theme(def.theme)
-	netted = Net.active and kind != "town"
+	netted = Net.active and kind != "town" and not solo
 	rng.seed = seed if seed >= 0 else randi()
 	seed_used = rng.seed
 	match kind:
@@ -745,6 +747,11 @@ func _populate_explore() -> void:
 			continue
 		mob_cells[c] = 5
 		var m: Array = _weighted(def.mobs)
+		# near the way in to the first Grasslands, only Slimes and Firas: a new
+		# player meets the easy ones first, and Mummies and Shellys further on
+		if id == "grass_1" and c.x < 45 and c.y <= surface[c.x] + 2:
+			while not m[0] in ["slime", "wisp"]:
+				m = _weighted(def.mobs)
 		var hpm: float = (float(m[2]) if m.size() > 2 else 1.0) * mult
 		var dmm: float = (float(m[3]) if m.size() > 3 else 1.0) * mult
 		spawn_mob_at(m[0], cell_pos(c), hpm, dmm)
@@ -1105,9 +1112,10 @@ func _surv_scale() -> float:
 
 # ---------------------------------------------------------------- drops, effects, building
 ## personal: an item only you can pick up (your own overflow), never shared with the room.
-func drop(item: String, n: int, pos: Vector2, personal := false) -> void:
+func drop(item: String, n: int, pos: Vector2, personal := false, share := false) -> void:
 	var p := PickupScript.new()
 	p.setup(item, n, self)
+	p.share = share
 	p.position = pos + Vector2(randf_range(-4, 4), -6)
 	entities.add_child(p)
 	if personal:

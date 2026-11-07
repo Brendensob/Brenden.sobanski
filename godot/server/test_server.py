@@ -266,5 +266,89 @@ class RestoreTest(unittest.TestCase):
         self.assertNotIn("Alice", [f["name"] for f in ps.handle("/friends", {"token": c}, "")["friends"]])
 
 
+class GemsTest(ServerTest):
+    """Gems for real money: Stripe is faked, so no real payment happens."""
+
+    def setUp(self):
+        super().setUp()
+        self.a = self.call("/register", {"name": "Payer"})["token"]
+        self.b = self.call("/register", {"name": "Other"})["token"]
+        self.stripe = {"sessions": {}, "intents": {}}
+        self.calls = []
+
+        def fake(method, path, form=None):
+            self.calls.append((method, path, form))
+            if method == "POST" and path == "/v1/checkout/sessions":
+                sid = "cs_test_%d" % len(self.stripe["sessions"])
+                pid = "pi_test_%d" % len(self.stripe["intents"])
+                self.stripe["intents"][pid] = {"id": pid, "metadata": {"player": form["metadata[player]"], "pack": form["metadata[pack]"]}}
+                self.stripe["sessions"][sid] = {"id": sid, "url": "https://checkout.stripe.com/" + sid, "status": "open",
+                                                "payment_status": "unpaid", "metadata": {"player": form["metadata[player]"], "pack": form["metadata[pack]"]},
+                                                "payment_intent": pid, "price": form["line_items[0][price_data][unit_amount]"]}
+                return self.stripe["sessions"][sid]
+            if method == "GET" and path.startswith("/v1/checkout/sessions/"):
+                sid = path.split("/")[-1].split("?")[0]
+                if sid not in self.stripe["sessions"]:
+                    return {"error": {"message": "No such checkout.session"}}
+                s = dict(self.stripe["sessions"][sid])
+                s["payment_intent"] = self.stripe["intents"][s["payment_intent"]]
+                return s
+            if method == "POST" and path.startswith("/v1/payment_intents/"):
+                pid = path.split("/")[-1]
+                self.stripe["intents"][pid]["metadata"]["credited"] = form["metadata[credited]"]
+                return self.stripe["intents"][pid]
+            return {"error": {"message": "unexpected"}}
+
+        self.old = (ps.stripe_api, ps.STRIPE_KEY)
+        ps.stripe_api = fake
+        ps.STRIPE_KEY = "sk_test_fake"
+
+    def tearDown(self):
+        ps.stripe_api, ps.STRIPE_KEY = self.old
+
+    def test_not_set_up_without_a_key(self):
+        ps.STRIPE_KEY = ""
+        r = self.call("/gems/buy", {"token": self.a, "pack": "gems_100"})
+        self.assertFalse(r["ok"])
+        self.assertIn("isn't set up", r["error"])
+        self.assertFalse(self.call("/gems/packs", {"token": self.a})["enabled"])
+
+    def test_packs(self):
+        r = self.call("/gems/packs", {"token": self.a})
+        self.assertTrue(r["enabled"])
+        self.assertEqual([p["gems"] for p in r["packs"]], [100, 550, 1200, 2500])
+
+    def test_buy_pay_and_claim_once(self):
+        r = self.call("/gems/buy", {"token": self.a, "pack": "gems_550"})
+        self.assertTrue(r["ok"])
+        self.assertTrue(r["url"].startswith("https://checkout.stripe.com/"))
+        sid = r["session"]
+        self.assertEqual(self.stripe["sessions"][sid]["price"], "499")
+        # not paid yet: nothing, and the game keeps asking
+        c = self.call("/gems/claim", {"token": self.a, "sessions": [sid]})
+        self.assertEqual((c["gems"], c["done"]), (0, []))
+        # paid: the gems come once, and the payment is marked on Stripe
+        self.stripe["sessions"][sid]["payment_status"] = "paid"
+        self.stripe["sessions"][sid]["status"] = "complete"
+        c = self.call("/gems/claim", {"token": self.a, "sessions": [sid]})
+        self.assertEqual((c["gems"], c["done"]), (550, [sid]))
+        self.assertEqual(self.stripe["intents"]["pi_test_0"]["metadata"]["credited"], "1")
+        # asking again (or after the server forgot everything) gives nothing more
+        ps.db = {"players": ps.db["players"]}
+        c = self.call("/gems/claim", {"token": self.a, "sessions": [sid]})
+        self.assertEqual((c["gems"], c["done"]), (0, [sid]))
+
+    def test_someone_elses_payment_gives_nothing(self):
+        sid = self.call("/gems/buy", {"token": self.a, "pack": "gems_100"})["session"]
+        self.stripe["sessions"][sid]["payment_status"] = "paid"
+        c = self.call("/gems/claim", {"token": self.b, "sessions": [sid, "not a session"]})
+        self.assertEqual(c["gems"], 0)
+        self.assertNotIn("credited", self.stripe["intents"]["pi_test_0"]["metadata"])
+        self.assertEqual(self.call("/gems/claim", {"token": self.a, "sessions": [sid]})["gems"], 100)
+
+    def test_bad_pack(self):
+        self.assertFalse(self.call("/gems/buy", {"token": self.a, "pack": "gems_999999"})["ok"])
+
+
 if __name__ == "__main__":
     unittest.main()

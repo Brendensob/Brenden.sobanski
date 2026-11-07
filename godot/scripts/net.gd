@@ -64,6 +64,18 @@ var _restored := false # already tried putting this name back on the server this
 
 ## A public room is listed under "Find Public Game" and anyone can join it.
 ## Otherwise only friends can (from their friends list).
+## Portal trips: in a room, a portal takes only the player who goes in. The
+## host keeps the trip: anyone else can follow through the portal, and after
+## TRIP_TIME seconds whoever hasn't is taken along. While a trip is on, a
+## portal somewhere else says someone's in the current portal.
+const TRIP_TIME := 20.0
+var trip := {} # host only: {"to", "seed", "left", "in": {peer: true}}
+var trip_to := "" # everyone: where the players leaving a world are going, while a trip is on
+var trip_from := "" # the world they're leaving
+var trip_left := 0.0
+var trip_who := ""
+var last_notice := "" # the last message the host sent you (tests read it)
+var last_went := "" # where someone last went from town
 var room_public := false
 var want_public := false # set by "Host Public Game" for the next room you open
 
@@ -108,6 +120,10 @@ func leave() -> void:
 	active = false
 	players.clear()
 	_pending_take.clear()
+	trip = {}
+	trip_to = ""
+	trip_from = ""
+	room_seeds.clear()
 	players_changed.emit()
 
 ## True when anyone in your room (you included) has opened this town wall.
@@ -215,11 +231,157 @@ func load_world(world_id: String, seed: int, state: Dictionary) -> void:
 	_pending_take.clear()
 	main.net_load_world(world_id, seed, state)
 
-## A friend asks to go somewhere (portal or Gatekeeper): the whole room goes.
+## You go through a portal (or pick a world at the Gatekeeper) in a room.
+## alone: just you, with no countdown for the others (going home after fainting).
+func go(target: String, alone := false) -> void:
+	if is_host():
+		_want_trip(1, target, alone)
+	else:
+		want_trip.rpc_id(1, target, alone)
+
 @rpc("any_peer", "reliable")
-func request_level(target: String) -> void:
-	if is_host() and Data.WORLDS.has(target):
-		main.change_level(target)
+func want_trip(target: String, alone := false) -> void:
+	if is_host():
+		_want_trip(multiplayer.get_remote_sender_id(), target, alone)
+
+## You stood by a fainted friend's gravestone long enough: they get back up.
+func revive_friend(peer: int) -> void:
+	if is_host():
+		_revive(1, peer)
+	else:
+		ask_revive.rpc_id(1, peer)
+
+@rpc("any_peer", "reliable")
+func ask_revive(peer: int) -> void:
+	if is_host():
+		_revive(multiplayer.get_remote_sender_id(), peer)
+
+func _revive(by: int, peer: int) -> void:
+	var who: String = GS.player_name if by == 1 else players.get(by, {}).get("name", "A friend")
+	if peer == 1:
+		revived(who)
+	elif players.has(peer):
+		revived.rpc_id(peer, who)
+
+@rpc("authority", "reliable")
+func revived(who: String) -> void:
+	if main:
+		main.revived_by(who)
+
+## Where a player is: the host's own map, or what a guest last said.
+func world_of(peer: int) -> String:
+	if peer == 1:
+		return main.level.id if main and main.level else ""
+	return String(players.get(peer, {}).get("state", {}).get("world", ""))
+
+## Going into a world takes only you; nobody else is pulled in, so friends can
+## stay in town. Leaving a world (home, or on to another) takes you now and,
+## after TRIP_TIME seconds, everyone still in that world.
+func _want_trip(peer: int, target: String, alone := false) -> void:
+	if not Data.WORLDS.has(target):
+		return
+	if alone:
+		_move(peer, target)
+		return
+	var from := world_of(peer)
+	if not trip.is_empty():
+		if trip.to != target:
+			_notice(peer, "Someone's in the current portal (to %s). Wait until everyone has gone through." % Data.WORLDS[trip.to].name)
+			return
+		_send_in(peer)
+		return
+	var who: String = GS.player_name if peer == 1 else players.get(peer, {}).get("name", "Someone")
+	if from != "" and from != "town" and _others_in(from, peer) > 0:
+		trip = {"to": target, "from": from, "left": TRIP_TIME, "in": {}}
+		trip_started.rpc(target, from, who)
+	else:
+		went.rpc(target, who)
+		_move(peer, target)
+		return
+	_send_in(peer)
+
+func _others_in(world: String, but: int) -> int:
+	var n := 0
+	for q in [1] + players.keys():
+		if q != but and world_of(q) == world:
+			n += 1
+	return n
+
+## The seed a world is made with in this room, so everyone who goes there
+## gets the same map. A world nobody is in gets a new one.
+var room_seeds := {}
+func _seed_for(target: String) -> int:
+	if not room_seeds.has(target) or _others_in(target, -1) == 0:
+		room_seeds[target] = randi()
+	return room_seeds[target]
+
+## Takes one player through: the host loads the real map (and sends it to
+## guests already there); a guest gets the host's map if the host is there,
+## or a copy of their own until the host comes.
+func _send_in(peer: int) -> void:
+	if not trip.is_empty():
+		if trip.in.has(peer):
+			return
+		trip.in[peer] = true
+	var target: String = trip.to if not trip.is_empty() else ""
+	if target == "":
+		return
+	_move(peer, target)
+	if not trip.is_empty() and _others_in(trip.from, -1) == 0:
+		_end_trip()
+
+func _move(peer: int, target: String) -> void:
+	var seed := _seed_for(target)
+	if peer == 1:
+		main.enter_level(target, seed, false)
+		for q in players:
+			if world_of(q) == target:
+				send_world(q)
+	elif world_of(1) == target:
+		send_world(peer)
+	else:
+		go_solo.rpc_id(peer, target, seed)
+
+func _notice(peer: int, text: String) -> void:
+	if peer == 1:
+		notice(text)
+	else:
+		notice.rpc_id(peer, text)
+
+@rpc("authority", "reliable")
+func notice(text: String) -> void:
+	last_notice = text
+	if main:
+		main.hud.toast(text, "warn")
+
+func _end_trip() -> void:
+	trip = {}
+	trip_ended.rpc()
+
+## Someone went into a world from town: just tell everyone.
+@rpc("authority", "reliable", "call_local")
+func went(target: String, who: String) -> void:
+	last_went = target
+	if main:
+		main.went(target, who)
+
+@rpc("authority", "reliable", "call_local")
+func trip_started(target: String, from: String, who: String) -> void:
+	trip_to = target
+	trip_from = from
+	trip_left = TRIP_TIME
+	trip_who = who
+	if main:
+		main.trip_started(target, from, who)
+
+@rpc("authority", "reliable", "call_local")
+func trip_ended() -> void:
+	trip_to = ""
+
+@rpc("authority", "reliable")
+func go_solo(target: String, seed: int) -> void:
+	if main:
+		main.enter_level(target, seed, true)
 
 func _reopen_after_restore() -> void:
 	if await Online.restore():
@@ -230,6 +392,18 @@ func _reopen_after_restore() -> void:
 func _process(delta: float) -> void:
 	if not active or main == null or main.level == null or main.on_title():
 		return
+	if trip_to != "":
+		trip_left = maxf(0.0, trip_left - delta)
+	# the countdown ran out: whoever is still in the world being left goes too
+	if is_host() and not trip.is_empty():
+		trip.left -= delta
+		if trip.left <= 0.0:
+			var from: String = trip.from
+			for q in [1] + players.keys():
+				if not trip.is_empty() and world_of(q) == from:
+					_send_in(q)
+			if not trip.is_empty():
+				_end_trip()
 	# your own room closed (the online server went away): keep playing alone
 	if is_host() and relay and relay.status == MultiplayerPeer.CONNECTION_DISCONNECTED:
 		var why: String = relay.last_error
@@ -387,9 +561,37 @@ func take_pickup(world_id: String, nid: int) -> void:
 	if p == null or not is_instance_valid(p) or p.taken:
 		return
 	p.taken = true
-	grant.rpc_id(multiplayer.get_remote_sender_id(), nid, p.item, p.n)
+	var who := multiplayer.get_remote_sender_id()
+	grant.rpc_id(who, nid, p.item, p.n)
+	if p.share:
+		share_drop(_lvl(), who, p.item, p.n)
 	_lvl().net_remove(nid)
 	pickup_gone.rpc(world_id, nid)
+
+## Players standing right next to whoever picked up a shared drop get the same
+## drop too (not a boss's). The host knows where everyone on its map stands.
+const SHARE_DIST := 24.0
+
+func share_drop(lvl: Node, picker: int, item: String, n: int) -> void:
+	var at: Variant = _where(lvl, picker)
+	if at == null:
+		return
+	for q in [1] + players.keys():
+		if q == picker:
+			continue
+		var pos: Variant = _where(lvl, q)
+		if pos == null or (pos as Vector2).distance_to(at) > SHARE_DIST:
+			continue
+		if q == 1:
+			grant(0, item, n)
+		else:
+			grant.rpc_id(q, 0, item, n)
+
+func _where(lvl: Node, peer: int) -> Variant:
+	if peer == 1:
+		return lvl.player.position if lvl.player and not lvl.player.dead else null
+	var pp: Node = lvl.puppets.get(peer)
+	return pp.position if pp and is_instance_valid(pp) else null
 
 func ask_pickup(nid: int) -> void:
 	if _pending_take.has(nid):

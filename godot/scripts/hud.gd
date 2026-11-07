@@ -534,6 +534,14 @@ func _build_hud() -> void:
 	bomb_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	bomb_btn.position = Vector2(-29, 96)
 	hud_root.add_child(bomb_btn)
+	# friends off the screen: a little square at the edge, pointing their way
+	markers = Control.new()
+	markers.name = "Markers"
+	markers.set_anchors_preset(Control.PRESET_FULL_RECT)
+	markers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	markers.draw.connect(_draw_markers)
+	hud_root.add_child(markers)
+	hud_root.move_child(markers, 0)
 	boss_box = Control.new()
 	boss_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	boss_box.position = Vector2(-90, 46)
@@ -666,6 +674,21 @@ func _process(_d: float) -> void:
 	var lvl: Node = main.level if main else null
 	if lvl == null:
 		return
+	var down: bool = is_instance_valid(lvl.player) and lvl.player.dead and not main.on_title()
+	main.dead_tint.visible = down
+	main.dead_tint.size = get_viewport().get_visible_rect().size
+	if dead_bar.visible:
+		if not down:
+			hide_dead()
+		else:
+			if not is_instance_valid(main.grave) and not any_open():
+				dead_left -= _d
+				if dead_left <= 0.0:
+					hide_dead()
+					main.respawn()
+					return
+			_refresh_dead()
+	markers.queue_redraw()
 	var town: bool = lvl.kind == "town"
 	chat_btn.visible = Net.active
 	status_label.position.y = 168 if emote_panel.visible else 92
@@ -680,7 +703,9 @@ func _process(_d: float) -> void:
 	day_label.text = "Day %d" % lvl.s_day
 	bomb_btn.visible = not town
 	var info := ""
-	if lvl.kind == "arena" and not lvl.bosses_spawned:
+	if Net.trip_to != "" and lvl.id == Net.trip_from:
+		info = "Everyone here goes to %s in %d" % [Data.WORLDS[Net.trip_to].name, ceili(Net.trip_left)]
+	elif lvl.kind == "arena" and not lvl.bosses_spawned:
 		var s := int(lvl.arena_time_left())
 		info = "Boss in %d:%02d" % [s / 60, s % 60]
 	info_label.text = info
@@ -1724,7 +1749,7 @@ func _build_panels() -> void:
 	itext.position = Vector2(10, 26)
 	info.add_child(itext)
 
-	var pz := _panel("pause", Vector2(260, 236), "Menu", false)
+	var pz := _panel("pause", Vector2(260, 258), "Menu", false)
 	var pv := VBoxContainer.new()
 	pv.position = Vector2(20, 28)
 	pv.custom_minimum_size = Vector2(220, 0)
@@ -1732,6 +1757,7 @@ func _build_panels() -> void:
 	pz.add_child(pv)
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): open_panel("leave")))
+	pv.add_child(_button("Drop Tables", func(): open_drops()))
 	pv.add_child(_button("Friends", func(): open_friends()))
 	for kind in ["Sound", "Music"]:
 		var vb := _button(volume_text(kind), func(): pass)
@@ -1743,6 +1769,10 @@ func _build_panels() -> void:
 	room_box = VBoxContainer.new()
 	room_box.add_theme_constant_override("separation", 2)
 	pv.add_child(room_box)
+
+	# every monster's drops, to know what to look for (Brenden, 2026-11-07)
+	var dt := _panel("drops", Vector2(320, 240), "Drop Tables")
+	_scroll(dt, Vector2(8, 26), Vector2(306, 208)).get_parent().name = "Scroll"
 
 	# the original asks first: "Save and Leave Game?" Yes / No
 	var lv := _panel("leave", Vector2(220, 96), "", false)
@@ -1777,20 +1807,35 @@ func _build_panels() -> void:
 	bno.custom_minimum_size = Vector2(100, 26)
 	bc.add_child(_at(bno, Vector2(150, 96)))
 
-	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
-	var dtext := _wrap("", 240)
+	# fainting: a small bar at the top, not a menu in your face (Brenden,
+	# 2026-11-07): what's happening, the time left before you go back to Pixel
+	# Town, and the buttons. The world keeps going behind it.
+	dead_bar = _panel("dead", Vector2(232, 40), "", false)
+	panels.erase("dead")
+	dead_bar.get_node("Title").visible = false
+	dead_bar.modulate.a = 0.92
+	var dtext := _wrap("", 220, C_INK, 7)
 	dtext.name = "Text"
-	dtext.position = Vector2(10, 26)
-	dead.add_child(dtext)
-	var wake := _button("Wake up in Pixel Town", func(): main.respawn(), true)
+	dtext.position = Vector2(6, 4)
+	dtext.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dead_bar.add_child(dtext)
+	var wake := _button("Go to Pixel Town", func(): _wake_pressed(), true)
 	wake.name = "Wake"
-	wake.position = Vector2(10, 78)
-	dead.add_child(wake)
-	# single player: come back as a ghost and get up again at your gravestone
-	var rev := _button("Respawn", func(): main.ghost_respawn(), true)
-	rev.name = "Revive"
-	rev.visible = false
-	dead.add_child(rev)
+	wake.add_theme_font_size_override("font_size", 7)
+	dead_bar.add_child(wake)
+	# asks first when you could still be revived
+	var gu := _panel("give_up", Vector2(230, 96), "", false)
+	var gq := _wrap("Go back to Pixel Town? Are you sure? You can still get revived.", 210, C_INK, 9)
+	gq.name = "Text"
+	gu.add_child(_at(gq, Vector2(10, 12)))
+	var gy := _menu_button("Yes", func(): close_panels(); main.respawn())
+	gy.name = "Yes"
+	gy.custom_minimum_size = Vector2(80, 26)
+	gu.add_child(_at(gy, Vector2(22, 60)))
+	var gn := _menu_button("No", func(): close_panels())
+	gn.name = "No"
+	gn.custom_minimum_size = Vector2(80, 26)
+	gu.add_child(_at(gn, Vector2(128, 60)))
 
 	# the main menu: title, three character slots, creating a character, play mode
 	var t := Control.new()
@@ -2267,40 +2312,184 @@ func _start_from_menu() -> void:
 	else:
 		main.start_game(true)
 
-func show_dead(text: String, grave := false) -> void:
-	if Net.active:
-		text = "Your friends can keep going. Get back up at the start of this map."
-	var dp: Panel = panels.dead
-	dp.get_node("Revive").visible = grave
-	var wake: Button = dp.get_node("Wake")
-	var tl: Label = dp.get_node("Text")
-	wake.text = "Get back up" if Net.active else "Wake up in Pixel Town"
-	tl.text = text
-	tl.size = Vector2(240, 0)
-	open_panel("dead")
-	_layout_dead.call_deferred()
+## The Drop Tables page: every monster in the worlds you can go to, where it
+## lives and what it drops (chance and amount), then the arenas' own loot and
+## what trees, rocks, ores, plants and pots give.
+func open_drops() -> void:
+	var list: VBoxContainer = panels.drops.get_node("Scroll/List")
+	_clear(list)
+	list.add_child(_wrap("Chance each time it's beaten. In an arena, normal monsters drop the arena's loot instead (see the end).", 290, C_MUTED, 7))
+	for e in Data.drop_table():
+		var head := HBoxContainer.new()
+		head.add_theme_constant_override("separation", 5)
+		var pic := TextureRect.new()
+		pic.texture = Art.mob_tex(e.look, false)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.custom_minimum_size = Vector2(22, 18)
+		head.add_child(pic)
+		var name_l := _label(e.name + ("  (boss)" if e.boss else ""), 9, C_GOOD if e.boss else C_INK, true)
+		head.add_child(name_l)
+		list.add_child(head)
+		list.add_child(_wrap("Found in " + ", ".join(e.where), 290, C_MUTED, 7))
+		var rows: Array = e.drops.duplicate()
+		if not e.coins.is_empty():
+			rows.append(["coin", 1.0, e.coins[0], e.coins[1]])
+		list.add_child(_drop_rows(rows))
+	for a in Data.arena_loot():
+		list.add_child(_label(a.world, 9, C_INK, true))
+		list.add_child(_wrap("Normal monsters here drop:", 290, C_MUTED, 7))
+		list.add_child(_drop_rows(a.mobs))
+		list.add_child(_wrap("The boss also drops:", 290, C_MUTED, 7))
+		list.add_child(_drop_rows(a.boss))
+	list.add_child(_label("Things you break", 9, C_INK, true))
+	for k in Data.NODES:
+		var nd: Dictionary = Data.NODES[k]
+		if nd.get("drops", []).is_empty() or nd.get("wall", false):
+			continue
+		list.add_child(_wrap(k.replace("_", " ").capitalize(), 290, C_MUTED, 7))
+		list.add_child(_drop_rows(nd.drops))
+	open_panel("drops")
 
-## Fits the faint screen to its text (a tip can make it longer), with the
-## button centred underneath. Runs a frame later, once the text has wrapped.
+## Little chips: an item's icon, its name, the chance and how many.
+func _drop_rows(rows: Array) -> Control:
+	var flow := HFlowContainer.new()
+	flow.custom_minimum_size = Vector2(290, 0)
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 1)
+	if rows.is_empty():
+		flow.add_child(_label("Nothing", 7, C_MUTED))
+	for d in rows:
+		var chip := HBoxContainer.new()
+		chip.add_theme_constant_override("separation", 2)
+		var ic := TextureRect.new()
+		ic.texture = Art.icon(d[0]) if Data.ITEMS.has(d[0]) else null
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.custom_minimum_size = Vector2(10, 10)
+		chip.add_child(ic)
+		var nm: String = "Pixel Coins" if d[0] == "coin" else Data.ITEMS[d[0]].name
+		var amt := "" if int(d[2]) == 1 and int(d[3]) == 1 else (" x%d" % d[2] if d[2] == d[3] else " x%d-%d" % [d[2], d[3]])
+		chip.add_child(_label("%s %s%s" % [nm, _pct(float(d[1])), amt], 7))
+		flow.add_child(chip)
+	return flow
+
+static func _pct(p: float) -> String:
+	var v := p * 100.0
+	if absf(v - roundf(v)) < 0.001:
+		return "%d%%" % int(roundf(v))
+	return ("%.1f%%" % v) if v >= 1.0 else ("%.2f%%" % v)
+
+## Off-screen markers (Brenden, 2026-11-07): every other player in the room
+## who's on your map but off your screen gets a small square in their own
+## colour at the edge of the screen, with an arrow pointing their way and the
+## first letters of their name. Grey with a cross while they're fainted.
+var markers: Control
+const MARK := 11.0
+
+func marker_color(pname: String) -> Color:
+	return Color.from_hsv(float(hash(pname.to_lower()) % 360) / 360.0, 0.65, 0.95)
+
+## The screen point of each off-screen friend's marker: [peer, point, arrow direction].
+func marker_points() -> Array:
+	var out := []
+	var lvl: Node = main.level if main else null
+	if lvl == null or main.on_title():
+		return out
+	var vr: Rect2 = get_viewport().get_visible_rect()
+	var xf: Transform2D = get_viewport().get_canvas_transform()
+	var inner := vr.grow(-14.0)
+	for peer in lvl.puppets:
+		var pp: Node2D = lvl.puppets[peer]
+		if not is_instance_valid(pp):
+			continue
+		var sp: Vector2 = xf * (pp.position + Vector2(0, -10))
+		if vr.grow(-4.0).has_point(sp):
+			continue
+		var c := inner.get_center()
+		var d := sp - c
+		if d.length() < 0.01:
+			continue
+		# where the line from the middle of the screen to them leaves the inner box
+		var t := INF
+		if d.x != 0:
+			t = minf(t, ((inner.end.x if d.x > 0 else inner.position.x) - c.x) / d.x)
+		if d.y != 0:
+			t = minf(t, ((inner.end.y if d.y > 0 else inner.position.y) - c.y) / d.y)
+		out.append([peer, c + d * t, d.normalized()])
+	return out
+
+func _draw_markers() -> void:
+	var lvl: Node = main.level if main else null
+	for m in marker_points():
+		var pp: Node = lvl.puppets[m[0]]
+		var pname: String = pp.name_label.text if pp.get("name_label") else "?"
+		var col := Color("8a8a96") if pp.dead else marker_color(pname)
+		var at: Vector2 = m[1]
+		var dir: Vector2 = m[2]
+		# the arrow, just outside the square, pointing at them
+		var tip := at + dir * (MARK * 0.5 + 6)
+		var side := dir.orthogonal() * 3.5
+		var base := at + dir * (MARK * 0.5 + 1.5)
+		markers.draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), C_WHITE)
+		markers.draw_polyline(PackedVector2Array([tip, base + side, base - side, tip]), Art.OUTLINE, 1.0)
+		var r := Rect2(at - Vector2(MARK, MARK) * 0.5, Vector2(MARK, MARK))
+		markers.draw_rect(r.grow(1), Art.OUTLINE)
+		markers.draw_rect(r, col)
+		if pp.dead:
+			markers.draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), Art.OUTLINE, 1.0)
+			markers.draw_line(Vector2(r.end.x - 2, r.position.y + 2), Vector2(r.position.x + 2, r.end.y - 2), Art.OUTLINE, 1.0)
+		var f: Font = Art.font_body
+		var label := pname.left(3)
+		var w := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
+		var ly := r.end.y + 8 if at.y < 40 else r.position.y - 3
+		markers.draw_string_outline(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Art.OUTLINE)
+		markers.draw_string(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, C_WHITE)
+
+## Shows the faint bar. It counts down to Pixel Town by itself (your
+## gravestone's time, or DEAD_WAIT without one) and goes when you're back up.
+const DEAD_WAIT := 10.0
+var dead_bar: Panel
+var dead_text := ""
+var dead_left := 0.0
+
+func show_dead(text: String, _grave := false) -> void:
+	dead_text = text
+	dead_left = DEAD_WAIT
+	dead_bar.visible = true
+	_refresh_dead()
+	_layout_dead()
+
+func hide_dead() -> void:
+	dead_bar.visible = false
+	if panels.give_up.visible:
+		close_panels()
+
+## In a room, while your gravestone stands a friend can still revive you, so
+## going home asks first.
+func _wake_pressed() -> void:
+	if Net.active and is_instance_valid(main.grave):
+		open_panel("give_up")
+	else:
+		main.respawn()
+
+func _refresh_dead() -> void:
+	var secs: float = main.grave.left if is_instance_valid(main.grave) else dead_left
+	var line := (dead_text + " ") if dead_text != "" else ""
+	dead_bar.get_node("Text").text = "You fainted. %sPixel Town in %d." % [line, ceili(secs)]
+
+## The text on top, the buttons in a row under it; the bar sits just under
+## the sky clock, in the middle.
 func _layout_dead() -> void:
-	var dp: Panel = panels.dead
-	var wake: Button = dp.get_node("Wake")
-	var tl: Label = dp.get_node("Text")
-	var h := maxf(tl.size.y, tl.get_line_count() * tl.get_line_height())
+	var tl: Label = dead_bar.get_node("Text")
+	var wake: Button = dead_bar.get_node("Wake")
+	var h := maxf(tl.get_combined_minimum_size().y, tl.get_line_count() * tl.get_line_height())
+	var y := roundf(tl.position.y + h + 2)
 	wake.size = wake.get_combined_minimum_size()
-	var y := roundf(tl.position.y + h + 8)
-	var rev: Button = dp.get_node("Revive")
-	if rev.visible:
-		# Respawn on top, Wake up in Pixel Town under it, the same width
-		rev.size = rev.get_combined_minimum_size()
-		var bw := maxf(rev.size.x, wake.size.x)
-		rev.size.x = bw
-		wake.size.x = bw
-		rev.position = Vector2(roundf((dp.size.x - bw) / 2), y)
-		y += rev.size.y + 6
-	wake.position = Vector2(roundf((dp.size.x - wake.size.x) / 2), y)
-	dp.size.y = wake.position.y + wake.size.y + 10
-	_place("dead")
+	wake.position = Vector2(roundf((dead_bar.size.x - wake.size.x) / 2), y)
+	dead_bar.size.y = y + wake.size.y + 4
+	var vs: Vector2 = get_viewport().get_visible_rect().size
+	dead_bar.position = Vector2(roundf((vs.x - dead_bar.size.x) / 2), 36)
 
 func open_info(title: String, text: String) -> void:
 	panels.info.get_node("Title").text = title
@@ -2361,6 +2550,43 @@ func _drop_extra(id: String, n: int) -> void:
 		main.level.drop(id, n, main.level.player.position, true)
 		toast("Your bag is full: %s dropped at your feet." % Data.ITEMS[id].name, "warn")
 
+## The real-money gem packs, from the online server. Buying opens Stripe's
+## checkout in the browser; the gems arrive by themselves once it's paid.
+func _fill_gem_packs(box: VBoxContainer) -> void:
+	if GS.online_token == "":
+		box.add_child(_wrap("To buy gem packs, claim your name online first (Multiplayer on the main menu), so the gems can find you.", 190, C_MUTED, 8))
+		return
+	box.add_child(_wrap("Looking for gem packs...", 190, C_MUTED, 8))
+	var r := await Online.gem_packs()
+	if not is_instance_valid(box):
+		return
+	_clear(box)
+	if not r.get("ok", false):
+		box.add_child(_wrap(r.get("error", "Can't reach the online server."), 190, C_BAD, 8))
+		return
+	if not r.get("enabled", false):
+		box.add_child(_wrap("Gem packs for real money aren't set up yet.", 190, C_MUTED, 8))
+		return
+	for p in r.get("packs", []):
+		var pack: String = p.id
+		var price := "$%d.%02d" % [int(p.cents) / 100, int(p.cents) % 100]
+		var row := _row("gem", "%d Gems  %s" % [int(p.gems), price], "Buy", true, func(): _buy_pack(pack))
+		row.name = pack
+		box.add_child(row)
+	if not GS.gem_checkouts.is_empty():
+		box.add_child(_wrap("Waiting for a payment to finish...", 190, C_MUTED, 8))
+
+func _buy_pack(pack: String) -> void:
+	toast("Opening the checkout...")
+	var r := await Online.buy_gems(pack)
+	if not r.get("ok", false):
+		toast(r.get("error", "Couldn't start the payment."), "warn")
+		return
+	GS.gem_checkouts.append(r.session)
+	GS.save_game()
+	OS.shell_open(r.url)
+	toast("Finish paying in your browser. Your gems arrive here by themselves.", "good")
+
 func open_shop(npc_id: String) -> void:
 	open_panel("shop")
 	_refresh_shop(npc_id)
@@ -2401,9 +2627,15 @@ func _refresh_shop(npc_id: String) -> void:
 			toast(("%s x%d obtained" % [Data.ITEMS[id].name, qty]) if qty > 1 else "%s obtained" % Data.ITEMS[id].name)
 			_refresh_shop(npc_id)))
 	if shop.has("buy_gems"):
-		# gems for Pixel Coins, in place of the original's real-money gem packs
+		# gem packs for real money (Brenden, 2026-11-07), then gems for Pixel Coins
+		sell.add_child(_wrap("You have %d gems." % GS.count("gem"), 190, C_MUTED))
+		var packs := VBoxContainer.new()
+		packs.name = "Packs"
+		packs.add_theme_constant_override("separation", 2)
+		sell.add_child(packs)
+		_fill_gem_packs(packs)
 		var gp: int = shop.buy_gems
-		sell.add_child(_wrap("You have %d gems. Buy gems with Pixel Coins:" % GS.gems, 190, C_MUTED))
+		sell.add_child(_wrap("Or buy gems with Pixel Coins:", 190, C_MUTED))
 		for n in [1, 5, 20]:
 			var cost: int = gp * n
 			sell.add_child(_row("gem", "%d Gem%s  %dc" % [n, "" if n == 1 else "s", cost], "Buy", GS.coins >= cost, func():

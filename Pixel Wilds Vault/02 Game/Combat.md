@@ -6,13 +6,14 @@ tags: [game, combat]
 Matched to the PSG2 trailer (PR #11, 2026-10-10).
 
 - **Your hits:** a random number from **atk + 1 to atk + weapon damage**. Critical hits are yellow.
-- **Monster hits:** `max(0, hit − random(0 … your defense))`. Defense can soak a whole hit to **0**, as in the trailer.
+- **Monster hits:** `max(0, hit − random(0 … your defense))`. When defense soaks a whole hit, there's still a **50/50 chance it hurts you for 1–2** (since 2026-11-07), so high defense never makes you untouchable. *Brenden: "make it so you cant completly remove dmg from mobs with high def its just a 50 50 chance for them to hit you for 1-2"*
 - **Knockback strength (2026-11-06):** each weapon has its own strength (`kb` in data.gd, from `Data.weapon_knockback`): 0 for none, 1 at the least (about a tile, what every knockback weapon did before, so early fights stay balanced), up to 2.5. Slow, long and heavy weapons (axes, hammers, clubs, maces, spikes) push hardest; quick little blades (Fluorescents, Gradius, Pops, knives) the least; each upgrade a little more. The distance grows with the strength (1 ≈ a tile, 2 ≈ two) and stronger hits daze a little longer. The info card says light, medium, strong or huge. Our estimates.
 - **Knockback:** a knockback weapon throws a monster back about a tile (≈16 px: KNOCK_SPEED 160, slowing by 800/s). Heavy monsters and bosses don't move. Monsters barely push you (KNOCKBACK 60). Changed 2026-10-24: the old 7 px nudge made the Grasslands too hard for a starter (see [[Decision Log]]).
 - **Starter weapon:** the **Plunger** (attack 4, 0.4 s a swing), like PSG2, since 2026-11-06. Before that it was the Sword Cast (attack 4, 0.5 s).
 - **Potions from monsters:** every Grasslands and Darklands monster can drop a Small Potion (4%, placeholder), Grasslands Arena monsters 6%, and the Grasslands Arena boss can drop a Holy Banana.
 - **Bosses are big:** drawn twice the size of before (2026-11-06), with hit boxes to match. Every weapon has its own size in your hand (`size`, from reach and weight: 0.9× to 2.4×, 2026-11-06).
 - **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
+- **Health comes back** on its own: 1 every 4 seconds once you've gone 6 seconds without being hurt (1 every 12 s after 8 s before 2026-11-07). Ours, not the wiki's.
 - **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.
 - **Potions:** Small Potion heals 5, Potion 12, Medium 25, Big 60 (raised 2026-10-27; these were always our estimates).
 - **Flying monsters tumble longer:** a knockback hit leaves a flying monster knocked about for 1 s instead of 0.4 s, since it has nothing to land on.
@@ -70,17 +71,17 @@ The bare starter kit is too weak for two bosses at once; the goal card sends you
 
 ## Fainting (single player, 2026-11-05)
 - **A slow fall:** you stagger, keel over, lie still a moment and fade. Your **gravestone** rises where you fell.
-- The faint screen offers **Respawn** and **Wake up in Pixel Town**.
-- **Respawn** brings you back as a see-through **ghost** at the start of the map. A ghost can walk and jump but can't hit, pick things up or be hurt.
-- The gravestone shows how long it has left (**50 seconds**). Stand by it for **3.5 seconds** and a little timer and bar count down over it; then you get back up right there with full health and 3 seconds of safety.
-- After 50 seconds it crumbles and you wake up in Pixel Town (nothing is lost, as before).
+- **No menu in your face** (since 2026-11-07): a small bar at the top, under the sky clock, says what to do and counts down to Pixel Town ("Back to Pixel Town in 42"), with **Go to Pixel Town**. While your gravestone stands, Go to Pixel Town asks first: "Are you sure? You can still get revived." The world keeps going behind the bar, and **your screen is a little darker** until you're back up. Without a gravestone (Survival, the bomb, the arena after its free revive) the bar counts 10 seconds and then takes you home. The tip shows once you're back in Pixel Town.
+- **No ghost** (removed 2026-11-07, *Brenden: "get rid of ghost thing"*). On your own nobody can revive you, so the gravestone counts **10 seconds** and you wake up in Pixel Town (nothing is lost).
 - **Grasslands Arena:** one free revive instead: the first faint gets you straight back up on the spot. The second sends you home.
 - No gravestone in **Survival** (fainting ends the run and gives its keys), or after the bomb button (you meant to go home).
-- **Multiplayer** is unchanged: you get back up at the start of the map.
+- **Multiplayer** (since 2026-11-07): your gravestone rises too, and everyone in the room sees it in your place. A friend who stands by it for **3.5 seconds** (a bar fills over it) gets you back up right there. The stone lasts **50 seconds** there. Going to Pixel Town (or the stone crumbling after 50 seconds) takes **only you** home; the room isn't pulled along.
+- *Brenden (2026-11-07): "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
 - *Brenden: "When a player dies in single player they get a option to respawn only make it have a slow animation into a death and then a gravestone and players have 50 seconds to revive by standing close it for 3.5 sec and it shows a little timer"*
 
 ![[gravestone_timer.png]]
+![[faint_bar.png]]
 
-Code: `scripts/grave.gd`, `_slow_fall`, `become_ghost` and `revive_here` in player.gd, `player_died` and `ghost_respawn` in main.gd.
+Code: `scripts/grave.gd`, `show_dead` and the faint bar in hud.gd, the gravestone and revive bar in remote_player.gd, `_slow_fall` and `revive_here` in player.gd, `player_died` and `respawn` in main.gd.
 
-Code: `GS.roll_attack` and the damage formula in game_state.gd, `take_damage`, `can_knock` and `_hit_fx` in mob.gd, `_do_hit` and the tap buffer in player.gd, numbers in fx.gd.
+Code: `GS.roll_attack`, `GS.roll_monster_hit` and the damage formula in game_state.gd, `take_damage`, `can_knock` and `_hit_fx` in mob.gd, `_do_hit` and the tap buffer in player.gd, numbers in fx.gd.

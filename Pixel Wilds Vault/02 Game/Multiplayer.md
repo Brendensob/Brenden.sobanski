@@ -14,6 +14,24 @@ tags: [game, multiplayer]
 - **IPs stay private:** all room traffic goes through the [[Online Server]] relay.
 - **Names:** each name can be taken once. It's tied to a secret key saved with the character.
 - **Shared world:** the host's game runs the map, monsters, drops and time. Everyone keeps their own bag and gear.
+- **Portals take one player at a time** (since 2026-11-07). *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer..."*, then "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"
+
+  ![[portal_street.png]]
+
+  - **Going into a world** takes only you. Everyone is told "X went into the portal to Y", and players in town get the same portal on their street. **Nobody is pulled in**: you can stay in town as long as you like, or walk through to join.
+  - **Leaving a world** (the Town portal, or on to the next world) takes you now. Everyone else **in that world** sees "X left for Y. Everyone here follows in 20 seconds." and a countdown, and is taken along when it ends unless they went first. Players elsewhere aren't affected.
+
+  - **Someone's in the current portal:** while that countdown runs, a portal to anywhere else says "Someone's in the current portal (to Y). Wait until everyone has gone through."
+
+  ![[portal_busy.png]]
+
+  - **How it works:** the host runs the shared map. A guest who goes somewhere the host isn't gets their own copy of the same map (the room keeps one seed per world). When the host comes, everyone there shares the host's map and keeps their spot. Kills made on a copy aren't shared.
+- **Off-screen markers** (since 2026-11-07): a friend on your map but off your screen shows as a small square in their own colour at the edge of the screen, with an arrow pointing their way and the first letters of their name. Grey with a cross while they're fainted, so you can find their gravestone. (This is usually called an off-screen indicator.)
+
+  ![[offscreen_marker.png]]
+
+- **Fainting in a room:** your gravestone stands in your place for everyone, and a friend standing by it for 3.5 s revives you (see [[Combat#Fainting (single player, 2026-11-05)]]).
+- **Shared drops** (since 2026-11-07): when you pick up a drop from a normal monster or something you broke (trees, rocks, ores, plants, pots), every player standing **right next to you** (within 1.5 tiles) gets the same drop too. Boss drops aren't shared. The host checks who is close.
 - **Town walls in a room:** each player has their own Pixel Town, built from their own unlocks. In a room, a wall (rock wall, Trading Center wall, stone wall to the basement) is open if **anyone in the room** has opened it, so everyone sees the same town. Breaking a wall opens it on everyone's screen at once. The unlock is saved only for the player who broke it. Others get their own wall back when they leave the room. (A design decision: PSG2's behaviour here isn't documented.)
 - **Chat:** the Chat.. box under the bars, or press T.
 - **Emotes:** shown to everyone in the room (see [[Emotes]]).

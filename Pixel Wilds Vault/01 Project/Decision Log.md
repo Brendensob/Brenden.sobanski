@@ -5,6 +5,42 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (no ghost, gem packs, drop tables, defense chip)
+- **The ghost is gone.** *Brenden: "get rid of ghost thing"*. On your own the gravestone counts 10 s and you wake in Pixel Town; in a room friends still revive you at your gravestone (50 s).
+- **Gems for real money** through Stripe Checkout. *Brenden: "make gems purchasable with real money"*. Stripe works on the web build and needs only a small check on our server; Steam or app-store purchases would need those stores. Prices (100/550/1,200/2,500 gems for $0.99/$4.99/$9.99/$19.99) are placeholders. Needs `STRIPE_SECRET_KEY` on Render, and the Stripe account needs an adult. See [[Monetization]].
+- **Drop Tables page** in the Menu and in `06 Data/Drop Tables.md`. *Brenden: "make a drop table for every mob in the game that i can see so ik what to test n stuff"*
+- **Defense can't block everything.** When defense soaks a whole hit, it's a coin flip whether you still take 1–2. *Brenden: "make it so you cant completly remove dmg from mobs with high def its just a 50 50 chance for them to hit you for 1-2"*
+
+## 2026-11-07 (fainting bar, gravestones in rooms, off-screen markers)
+- **This is "the death thing".** *Brenden: "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
+- **No big faint menu.** A small bar under the sky clock shows the countdown to Pixel Town and the buttons. Going home while a gravestone stands asks "Are you sure? You can still get revived." The tip shows once you're back in Pixel Town.
+- **The screen darkens a little** while you're fainted, ghost included.
+- **Gravestones in rooms:** friends see yours in your place and revive you by standing by it for 3.5 s (the same time as a ghost in single player). Giving up, or the stone crumbling after 50 s, takes only you home.
+- **Off-screen markers** for friends: a coloured square with an arrow at the edge of the screen, grey with a cross if they're fainted.
+- The single-player ghost and the Grasslands Arena's free revive (2026-11-05) are unchanged.
+
+## 2026-11-07 (shared drops; portals don't pull you in)
+- **Shared drops:** picking up a drop from a normal monster or a broken tree, rock, ore, plant or pot gives the same drop to every player right next to you (within 1.5 tiles). Boss drops (arena bosses, boss monsters) aren't shared. *Brenden: "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"*
+- **Going into a world no longer pulls anyone in.** Players can stay in town. The 20-second countdown is only for **leaving**: when someone leaves a world, everyone else in that world follows after 20 seconds.
+- **"Fix the death thing to what I told you to do before":** the only earlier instruction in the notes is "Make the menu when death fixed" (the faint screen layout, fixed 2026-10-27). It checks out at computer, wide-phone and tall-phone shapes. Brenden answered with the next message (see the entry above).
+
+## 2026-11-07 (portals one at a time in rooms)
+- **A portal takes only the player who goes in.** The rest follow through the portal, or are taken along after 20 seconds. Leaving works the same way. *(Changed the same day: entering no longer pulls anyone in; see above.)* *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"*
+- **While someone is going through, other portals say "Someone's in the current portal"** and don't open, so the room never splits between two worlds.
+- **The host still runs the shared map.** A guest who goes first plays a copy of the same map (the same seed) for up to 20 seconds, until the host arrives; then the copy is swapped for the host's map and the guest keeps their spot.
+- Before, any portal or Gatekeeper pick moved the whole room at once.
+
+## 2026-11-07 (houses, villagers, monsters, and the Grasslands progression)
+- **Houses, villagers and monsters were redrawn like the ground** (see [[Art Style]]):
+  - cartoon cottages for the houses;
+  - a proper small mouth instead of the orange "beak" on every face, with blush and a hair shine;
+  - four-tone shading and a shine on every monster. *Brenden: "now do the same for houses villagers and monsters test out the progression make sure players can actually develop good at grasslands while having fun and progress to better areas"*
+- **The progression was playtested by a bot** that plays a new character through the goal card ([[Testing#Journey test]]). What it found and what changed:
+  - **New players fainted on their first two trips** (in under 3 minutes). Fix: health comes back 1 every 4 s after 6 s out of a fight (was 1 every 12 s after 8 s), and Grasslands 1 only places Slimes and Firas near the way in.
+  - **The goal card hid goals.** Doing a later goal early (the Copper Pickaxe) hid "50 Jellies" for good, and the card asked for "10 Iron Bars", which Miffie can't take before her Jelly and Copper quests. Fix: the card shows the first goal not done.
+  - **50 Jellies was a 3-hour grind.** Brenden's own fix from 2026-11-05 covers most of it (Jelly 30%, more Slimes that come back; see below). On top of it, the goal card now puts the Copper Pickaxe and Grasslands 2 before the 50 Jellies, so Jellies pile up while you explore. (This session's own 1–2 Jellies per drop and general monster respawn were dropped in favour of his.)
+- **No wiki number changed here:** monster health and damage, quest amounts.
+- After the changes the bot reached Grasslands 2 at 54 minutes, Golden Night at 108 and Blue Night at 151, with one faint (two Rexys and a Dark Rexy in Grasslands 3).
 ## 2026-11-06 (clean text, crystals and ores, distinct weapons and armour)
 *"Fix all these little bugs where the writing looks weird and double check to make sure there's nothing like that I need the game clean asf also make crystals better looking and thinner same with orders give them more detail and the armor and weopon a should be all diff in knockback and size and everything and look distinct from each other same with the armors and helms"*
 - **The weird writing:** letters were snapped to the game's small 480×270 grid before being stretched to the screen, so gaps between letters came and went and outlines landed off their letters. Turned off vertex snapping (`snap_2d_vertices_to_pixel`; sprites still snap by position), letters are placed at quarter pixels without hinting, and outlines are about a fifth of the letter size (2 for most text, was 3). Dark coloured words (brown, orange, green, red) are lifted so they don't vanish into the black outline.

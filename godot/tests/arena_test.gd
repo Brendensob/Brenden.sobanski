@@ -90,7 +90,7 @@ func arena_run(kit: Dictionary, boss: Array) -> Dictionary:
 				_press(a, false)
 			if not was_dead:
 				was_dead = true
-			if main.hud.panels.dead.visible:
+			if main.hud.dead_bar.visible:
 				break # out of revives
 			continue
 		if was_dead:

@@ -17,6 +17,18 @@ tags: [tech, server]
 
 The game uses the WebSocket relay everywhere, so the **phone/browser build can host and join rooms**. Browsers can't open raw connections, which is why phones couldn't go online before (2026-10-27). The server also answers the browser's CORS check, since the web game lives on GitHub Pages.
 
+## Gem packs (Stripe, 2026-11-07)
+| Route | What it does |
+|---|---|
+| `POST /gems/packs` | The packs and whether Stripe is on (`STRIPE_SECRET_KEY` set) |
+| `POST /gems/buy` | Makes a Stripe Checkout page for a pack, tagged with the player's name |
+| `POST /gems/claim` | Checks the game's open checkouts with Stripe; paid ones not yet credited give their gems and are marked `credited` on the payment |
+| `GET /paid` | The thank-you page after paying |
+
+- Set `STRIPE_SECRET_KEY` on Render (Environment). Without it the shop says packs aren't set up yet.
+- Nothing is stored on the server: Stripe keeps the "credited" mark, so a payment never gives gems twice.
+- Tests: `GemsTest` in `server/test_server.py` with a fake Stripe.
+
 ## Hosting (Render, free)
 - `render.yaml` at the repo root sets it up as a free Render web service named `pixel-wilds-brendensob`.
 - **Live** since 2026-10-27 (Brenden deployed it).

@@ -1,9 +1,9 @@
 extends Node2D
-## Your gravestone, single player only. It rises where you fainted. Pick
-## "Respawn" and you come back as a ghost at the start of the map: stand by
-## the stone for 3.5 seconds (a little timer counts down over it) and you get
-## back up right there. After 50 seconds it crumbles and you wake up in Pixel
-## Town as usual (Brenden, 2026-11-05).
+## Your gravestone. It rises where you fainted and counts down over it. In a
+## room, a friend who stands by it for 3.5 seconds gets you back up right there
+## (see remote_player.gd); after 50 seconds it crumbles and you wake up in Pixel
+## Town. On your own it's 10 seconds, since nobody can revive you (the ghost
+## who walked back to it is gone: Brenden, 2026-11-07).
 
 const WINDOW := 50.0 # seconds the gravestone lasts
 const HOLD := 3.5 # seconds to stand by it
@@ -11,10 +11,7 @@ const NEAR := 26.0 # how close counts as "by it", in pixels
 
 var level: Node
 var left := WINDOW
-var held := 0.0
 var label: Label
-var bar_back: ColorRect
-var bar: ColorRect
 
 func setup(lvl: Node) -> void:
 	level = lvl
@@ -33,18 +30,8 @@ func _ready() -> void:
 	label.add_theme_constant_override("outline_size", Art.outline_for(7))
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.size = Vector2(40, 10)
-	label.position = Vector2(-20, -47) # above the name of a ghost standing by it
+	label.position = Vector2(-20, -32)
 	add_child(label)
-	bar_back = ColorRect.new()
-	bar_back.color = Color("1b1a24")
-	bar_back.size = Vector2(22, 4)
-	bar_back.position = Vector2(-11, -52)
-	add_child(bar_back)
-	bar = ColorRect.new()
-	bar.color = Color("5cbf3f")
-	bar.size = Vector2(0, 2)
-	bar.position = Vector2(-10, -51)
-	add_child(bar)
 	# it pops up out of the ground
 	scale = Vector2(1, 0.1)
 	var tw := create_tween()
@@ -107,17 +94,6 @@ func _process(delta: float) -> void:
 		return
 	var p: Node2D = level.player
 	left -= delta
-	if p.ghost and p.position.distance_to(position) < NEAR:
-		held += delta
-	else:
-		held = 0.0
-	if held >= HOLD:
-		p.position = position + Vector2(0, -1)
-		p.revive_here()
-		Sfx.play("heal", 0.0)
-		level.main.hud.toast("You got back up!", "good")
-		_gone()
-		return
 	if left <= 0:
 		level.burst(position + Vector2(0, -8), Color("9aa0ac"), 14)
 		_gone()
@@ -128,17 +104,8 @@ func _process(delta: float) -> void:
 	_show()
 
 func _show() -> void:
-	if held > 0:
-		label.text = "%.1f" % maxf(0.0, HOLD - held)
-		label.add_theme_color_override("font_color", Color("8fe05a"))
-		bar.size.x = 20.0 * clampf(held / HOLD, 0, 1)
-		bar_back.visible = true
-		bar.visible = true
-	else:
-		label.text = str(int(ceil(left)))
-		label.add_theme_color_override("font_color", Color("ff6a5a") if left < 10 else Color.WHITE)
-		bar_back.visible = false
-		bar.visible = false
+	label.text = str(int(ceil(left)))
+	label.add_theme_color_override("font_color", Color("ff6a5a") if left < 10 else Color.WHITE)
 
 func _gone() -> void:
 	if level and level.main.get("grave") == self:

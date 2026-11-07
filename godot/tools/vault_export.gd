@@ -16,6 +16,7 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://").path_join(OUT))
 	_items()
 	_monsters()
+	_drop_tables()
 	_worlds()
 	_recipes()
 	_crafter()
@@ -85,6 +86,39 @@ func _items() -> void:
 			body += "| %s | `%s` | %d | %s | %s |\n" % [_cell(it.name), id, it.sell, _cell(", ".join(st)), _cell(it.desc)]
 		body += "\n"
 	_write("Items", "Items", body)
+
+## One small table per monster, to know what to look for when testing: the
+## same lists as the game's Drop Tables page (Menu → Drop Tables).
+func _drop_tables() -> void:
+	var body := "Every monster in the worlds you can go to now, with what it drops: the chance each time it's beaten and how many. The same as **Menu → Drop Tables** in the game. In an arena, normal monsters drop the arena's own loot instead (at the end), and a boss adds the arena's boss loot.\n\n"
+	for e in D.drop_table():
+		body += "## %s%s\n*Found in %s.*\n\n| Drop | Chance | How many |\n|---|---|---|\n" % [e.name, " (boss)" if e.boss else "", ", ".join(e.where)]
+		for d in e.drops:
+			body += "| %s | %s | %s |\n" % [_n(d[0]), _pct(d[1]), _amount(d[2], d[3])]
+		if not e.coins.is_empty():
+			body += "| Pixel Coins | 100%% | %s |\n" % _amount(e.coins[0], e.coins[1])
+		if e.drops.is_empty() and e.coins.is_empty():
+			body += "| Nothing | | |\n"
+		body += "\n"
+	body += "# Arena loot\n\n"
+	for a in D.arena_loot():
+		body += "## %s\n**Normal monsters drop:**\n\n| Drop | Chance | How many |\n|---|---|---|\n" % a.world
+		for d in a.mobs:
+			body += "| %s | %s | %s |\n" % [_n(d[0]), _pct(d[1]), _amount(d[2], d[3])]
+		body += "\n**The boss also drops:**\n\n| Drop | Chance | How many |\n|---|---|---|\n"
+		for d in a.boss:
+			body += "| %s | %s | %s |\n" % [_n(d[0]), _pct(d[1]), _amount(d[2], d[3])]
+		body += "\n"
+	body += "# Things you break\n\n"
+	for k in D.NODES:
+		var nd: Dictionary = D.NODES[k]
+		if nd.get("drops", []).is_empty() or nd.get("wall", false):
+			continue
+		body += "## %s\n| Drop | Chance | How many |\n|---|---|---|\n" % k.replace("_", " ").capitalize()
+		for d in nd.drops:
+			body += "| %s | %s | %s |\n" % [_n(d[0]), _pct(d[1]), _amount(d[2], d[3])]
+		body += "\n"
+	_write("Drop Tables", "Drop Tables", body)
 
 func _monsters() -> void:
 	var where := {}
@@ -245,7 +279,7 @@ func _pets() -> void:
 
 func _index() -> void:
 	var body := "Every number in the game, exported from `scripts/data.gd`.\n\n"
-	for n in ["Items", "Monsters", "World Data", "Combinations", "Crafter Recipes", "Smelting", "Resources", "Shops", "Chests and Seeds", "Quests", "Character Data", "Pets"]:
+	for n in ["Items", "Monsters", "World Data", "Combinations", "Crafter Recipes", "Smelting", "Resources", "Shops", "Chests and Seeds", "Quests", "Character Data", "Pets", "Drop Tables"]:
 		body += "- [[%s]]\n" % n
 	body += "\nWhich numbers are real and which are estimates: [[Numbers and Estimates]].\n"
 	_write("Game Data", "Game Data", body)
