@@ -56,6 +56,12 @@ func _ready() -> void:
 		var ft: Node = load("res://tests/fight_test.gd").new()
 		ft.main = self
 		add_child(ft)
+	if "--arenatest" in OS.get_cmdline_user_args():
+		var at: Node = load("res://tests/arena_test.gd").new()
+		at.main = self
+		add_child(at)
+	if "--gallery" in OS.get_cmdline_user_args():
+		add_child(load("res://tests/gallery.gd").new())
 	if "--autotest" in OS.get_cmdline_user_args():
 		var t: Node = load("res://tests/autotest.gd").new()
 		t.main = self
@@ -235,8 +241,31 @@ func drop_from_player(id: String, n: int) -> void:
 	pk.life = -2.0
 	level.entities.add_child(pk)
 
-func player_died() -> void:
+const GraveScript := preload("res://scripts/grave.gd")
+const PlayerScript := preload("res://scripts/player.gd")
+## Your gravestone after fainting in single player, while it stands.
+var grave: Node = null
+
+func player_died(on_purpose := false) -> void:
+	var lvl: Node = level
+	var pl: Node = level.player
+	var solo := not Net.active and not on_purpose
+	# the Grasslands Arena gives one free revive in single player: you get
+	# straight back up where you fell (Brenden, 2026-11-05)
+	if solo and lvl.def.get("free_revive", false) and not lvl.free_revive_used:
+		lvl.free_revive_used = true
+		await get_tree().create_timer(PlayerScript.DEATH_ANIM + 0.2).timeout
+		if level != lvl or not is_instance_valid(pl) or not pl.dead:
+			return
+		pl.revive_here()
+		hud.toast("Free revive! The Grasslands Arena gives you one.", "good")
+		return
+	# everywhere else in single player (not Survival, which ends when you faint,
+	# and not the free-revive arena once it's used) your gravestone rises
+	var can_grave: bool = solo and lvl.kind in ["explore", "arena"] and not lvl.def.get("free_revive", false)
 	var text := "You'll wake up in Pixel Town with everything still in your bag."
+	if can_grave:
+		text = "Respawn as a ghost at the start of this map, then stand by your gravestone for 3.5 seconds to get back up there. You have 50 seconds."
 	if level.kind == "survival" and not Net.active: # keys are single player only, like the original
 		var d: int = level.s_day
 		var key := ""
@@ -257,11 +286,35 @@ func player_died() -> void:
 	var tip := faint_tip()
 	if tip != "":
 		text += "\n\nTip: " + tip
-	await get_tree().create_timer(1.0).timeout
+	if solo:
+		await get_tree().create_timer(PlayerScript.DEATH_ANIM).timeout
+		if level != lvl or not is_instance_valid(pl) or not pl.dead or pl.ghost:
+			return
+		if can_grave:
+			if is_instance_valid(grave):
+				grave.queue_free()
+			grave = GraveScript.new()
+			grave.setup(lvl)
+			grave.position = Vector2(pl.position.x, pl.position.y)
+			lvl.entities.add_child(grave)
+		await get_tree().create_timer(0.4).timeout
+	else:
+		await get_tree().create_timer(1.0).timeout
 	# already back up (woken early or moved to another map): no faint screen
-	if level == null or not is_instance_valid(level.player) or not level.player.dead:
+	if level == null or level != lvl or not is_instance_valid(level.player) or not level.player.dead or level.player.ghost:
 		return
-	hud.show_dead(text)
+	hud.show_dead(text, can_grave and is_instance_valid(grave))
+
+## "Respawn" on the faint screen: back as a ghost at the start of the map, to
+## walk to your gravestone (or home, if it has crumbled meanwhile).
+func ghost_respawn() -> void:
+	hud.close_panels()
+	if not is_instance_valid(grave) or not level.player.dead:
+		respawn()
+		return
+	level.player.become_ghost(level.cell_pos(level.spawn_cell))
+	camera.reset_smoothing()
+	hud.toast("Walk back to your gravestone and stand by it!", "warn")
 
 ## One tip for after fainting: the first thing that would help most.
 func faint_tip() -> String:
@@ -274,12 +327,13 @@ func faint_tip() -> String:
 		if s and Data.ITEMS[s.id].get("heal", 0) > 0:
 			heals += s.n
 	if heals == 0:
-		return "Carry potions. The Merchant sells Small Potions. Pick one on the hotbar and press A to drink it."
+		return "Carry potions. The Plumber sells Small Potions. Pick one on the hotbar and press A to drink it."
 	if level and Data.WORLDS.has(level.id) and GS.world_danger(level.id) >= 2:
 		return "This place is %s for your gear. Upgrade your sword and armor at the Crafter first." % ["Easy", "Fair", "Hard", "Deadly"][GS.world_danger(level.id)]
 	return "Hit monsters as they come: each hit pushes them back and stuns them for a moment."
 
 func respawn() -> void:
+	grave = null
 	GS.hp = GS.max_hp()
 	GS.st = GS.max_st()
 	GS.status.clear()

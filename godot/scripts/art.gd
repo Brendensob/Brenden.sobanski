@@ -4,9 +4,12 @@ extends Node
 ## Every sprite gets a dark outline added automatically.
 
 const OUTLINE := Color("1b1a24")
+const ItemIcons := preload("res://scripts/item_icons.gd")
 var _cache := {}
-var font_body: FontFile
-var font_title: FontFile
+var font_body: Font # menus and the HUD
+var font_title: Font
+var font_world: Font # names and numbers in the world (seen through the 2x camera)
+var font_world_title: Font
 
 const PAL := {
 	"k": "1b1a24", "w": "f2efe6", "s": "f2c29a", "S": "d49a72", "b": "3a2a22",
@@ -145,13 +148,40 @@ const HAT_LOOKS := {"pirate_hat": "pirate", "soldier_helmet": "soldier", "spy_ma
 	"trooper_pro": "drone", "dark_night": "dark_knight", "bad_mask": "bad_man"}
 
 func _ready() -> void:
-	font_body = load("res://fonts/PixelifySans.ttf")
-	font_title = load("res://fonts/Silkscreen-Regular.ttf")
-	font_title.antialiasing = TextServer.FONT_ANTIALIASING_NONE
-	font_title.hinting = TextServer.HINTING_NONE
-	font_title.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_DISABLED
-	font_body.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
-	font_body.hinting = TextServer.HINTING_LIGHT
+	# Smooth, round letters instead of pixel ones (Brenden, 2026-11-06: "make the
+	# words on the screen non pixelated and just smooth white letters with black
+	# outline"). Fredoka, OFL. The world copy is drawn 8x finer, because the
+	# camera's 2x zoom would otherwise blow its letters up into blocks.
+	var ui: FontFile = load("res://fonts/Fredoka.ttf")
+	ui.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+	# No hinting and quarter-pixel placement: hinted or whole-pixel letters land
+	# unevenly once the 480x270 screen is stretched to the phone, so gaps came
+	# and went between letters (Brenden, 2026-11-06: "the writing looks weird").
+	ui.hinting = TextServer.HINTING_NONE
+	ui.subpixel_positioning = TextServer.SUBPIXEL_POSITIONING_ONE_QUARTER
+	var world: FontFile = ui.duplicate()
+	world.oversampling = 8.0
+	font_body = _weight(ui, 600)
+	font_title = _weight(ui, 700)
+	font_world = _weight(world, 600)
+	font_world_title = _weight(world, 700)
+
+func _weight(f: FontFile, w: int) -> FontVariation:
+	var v := FontVariation.new()
+	v.base_font = f
+	v.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): w}
+	return v
+
+## How thick a text outline is for a font size. A third of the letter height
+## (the old fixed 3) swallowed the gaps between small letters, so they ran
+## together: Brenden's "writing looks weird". About a fifth reads cleanly.
+func outline_for(size: int) -> int:
+	return clampi(roundi(size * 0.2), 1, 8)
+
+## Gives a label in the world the smooth world font, sampled smoothly.
+func world_text(l: Label, title: bool = false) -> void:
+	l.add_theme_font_override("font", font_world_title if title else font_world)
+	l.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 # ---------------------------------------------------------------- helpers
 func col(v) -> Color:
@@ -335,6 +365,24 @@ func ellipse(img: Image, cx: float, cy: float, rx: float, ry: float, c: Color) -
 			var dy := (y + 0.5 - cy) / maxf(ry, 0.1)
 			if dx * dx + dy * dy <= 1.0:
 				px(img, x, y, c)
+
+## A shiny faceted lump of ore set in rock: lit top left, shaded bottom right.
+func nugget(img: Image, x: int, y: int, c: Color) -> void:
+	px(img, x + 1, y, c.lightened(0.45))
+	px(img, x + 2, y, c)
+	px(img, x, y + 1, c)
+	px(img, x + 1, y + 1, c)
+	px(img, x + 2, y + 1, c.darkened(0.3))
+	px(img, x + 1, y + 2, c.darkened(0.45))
+
+## A thin crystal standing up out of the rock: a light face, a dark face and a
+## bright pointed tip. `y` is where it leaves the rock.
+func shard(img: Image, x: int, y: int, h: int, c: Color) -> void:
+	for yy in range(y - h + 2, y + 3):
+		px(img, x, yy, c.lightened(0.3))
+		px(img, x + 1, yy, c.darkened(0.2))
+	px(img, x, y - h + 1, c.lightened(0.6))
+	px(img, x, y - h + 3, Color(1, 1, 1, 0.9))
 
 # ---------------------------------------------------------------- clean upscaling
 ## Makes pixel art bigger without the jagged staircase look: Scale2x and Scale3x
@@ -627,6 +675,10 @@ func _char_map(look: String, armor: String) -> Dictionary:
 		map.C = mc.x
 		map.v = mc.X
 		map.t = mc.x
+		# armour (not robes) comes with matching leg guards
+		if not ItemIcons.armor_parts(ItemIcons.split_tier(armor)[0]).robe:
+			map.q = mc.x
+			map.j = mc.x
 	return map
 
 func _overlay(img: Image, parts: Array, map: Dictionary) -> void:
@@ -678,6 +730,8 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 			rect(img, 2, 3, 9, 2, Color("2a2a2a"))
 			px(img, 1, 10, Color("a8a8b0"))
 			px(img, 10, 10, Color("a8a8b0"))
+	if armor != "":
+		_draw_armor(img, armor)
 	if helmet != "":
 		_draw_helmet(img, helmet)
 	if scale > 1:
@@ -685,6 +739,9 @@ func _char_img(look: String, frame: String, scale: int, helmet: String = "", arm
 	return img
 
 func _draw_helmet(img: Image, helmet: String) -> void:
+	if helmet == "bad_mask":
+		# the Bad Man's dark face, worn as a mask, with his white eyes
+		_overlay(img, [[1, 6, ["..XXXXXXXXX.", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXXXXXXXX", "..XXXXXXXXX."]]], {"X": "3a3a44"})
 	if HAT_LOOKS.has(helmet):
 		var hl: String = HAT_LOOKS[helmet]
 		_overlay(img, LOOKS[hl].get("over", []), _char_map(hl, ""))
@@ -705,10 +762,169 @@ func _draw_helmet(img: Image, helmet: String) -> void:
 			var c3: Array = {"cool_hat": ["1b1a24", "3a3a48"], "roman_hat": ["f2cf5b", "d8433a"], "storm_hat": ["6b8ff0", "2c4596"]}[helmet]
 			_overlay(img, [[1, 2, ["...XXXXXX...", "..XXXXXXXX..", "..XxxxxxxX..", "XXXXXXXXXXXX"]]], {"X": c3[0], "x": c3[1]})
 		_:
-			if helmet.contains("hat") or helmet.contains("witch") or helmet.contains("hood"):
-				_overlay(img, [[1, 1, ["....XXXX....", "...XXXXXX...", "...XwXXXX...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]], map)
-			else:
-				_overlay(img, [[1, 2, ["...XXXXXX...", "..XXwXXXXXX.", ".XXXXXXXXXXX", ".XXxxxxxxxx.", ".Xx.........", ".Xx........."]]], map)
+			_draw_helmet_kind(img, helmet, map)
+
+## Worn helmets take the shape of their icon (Brenden, 2026-11-06: armours and
+## helmets should "look distinct from each other"): a dome, a knight's visor,
+## a plume, horns, wings, a crown, a hood, a mask and so on, in the helmet's
+## colours. Upgrades add a gem on the front.
+func _draw_helmet_kind(img: Image, helmet: String, map: Dictionary) -> void:
+	var bt: Array = ItemIcons.split_tier(helmet)
+	var base: String = bt[0]
+	var kind: String = ItemIcons.helmet_kind(base)
+	map.w = "f2efe6"
+	map.k = "1b1a24"
+	map.G = ItemIcons.pick(base, 2, ItemIcons.GUARDS)
+	map.a = ItemIcons.pick(base, 1, ItemIcons.GEMS)
+	map.y = "f2cf5b"
+	var dome := ["....XXXX....", "..XXwXXXXX..", ".XXwXXXXXXX.", ".XXXXXXXXXXX", ".GGGGGGGGGGG", ".Xx.........", ".Xx........."]
+	var parts := []
+	match kind:
+		"dome":
+			parts = [[0, 2, dome]]
+		"visor":
+			parts = [[0, 2, dome], [0, 8, ["...XXXXXXXX.", "...XkkkkkkkX", "...XXXXXXXX."]]]
+		"crest":
+			parts = [[0, 2, dome], [0, 0, ["...aaaaa....", "..aaaaaaa..."]]]
+		"horned":
+			parts = [[0, 2, dome], [0, 0, ["w..........w", "w..........w", ".w........w."]]]
+		"winged":
+			parts = [[0, 2, dome], [0, 1, ["w..........w", "ww........ww", "ww........ww", ".w........w."]]]
+		"hat":
+			parts = [[0, 0, [".....XX.....", "....XXXX....", "....XwXX....", "...XXXXXX...", "...GGGGGG...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]]
+		"tophat":
+			parts = [[0, 0, ["...XXXXXX...", "...XwXXXX...", "...XXXXXX...", "...GGGGGG...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]]
+		"witch":
+			parts = [[0, 0, [".......XX...", "......XXX...", ".....XXXX...", "....XwXXX...", "...GGGGGGG..", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]]
+		"cap":
+			parts = [[0, 2, ["...XXXXXX...", "..XXwXXXXX..", "..XXXXXXXXGG", "..xxxxxxxxGG"]]]
+		"crown":
+			map.X = "f2cf5b"
+			map.x = "c99a2e"
+			parts = [[0, 1, ["..X..X..X...", "..XX.XX.XX..", "..XXXXXXXX..", "..XaXXaXXa..", "..xxxxxxxx.."]]]
+		"hood":
+			parts = [[0, 2, ["...XXXXXX...", "..XXXXXXXXX.", ".XXXXXXXXXXX", ".XXX......XX", ".XX.......XX", ".XX.......X.", ".XX.......X.", ".XXX.....XX.", "..XX.....X.."]]]
+		"mask", "face":
+			parts = [[0, 8, ["...XXXXXXXX.", "...XX..X..X.", "...xXXXXXXx."]]]
+		"robo", "alien":
+			if kind == "alien":
+				map.X = "7cf06a"
+				map.x = "3e9a2a"
+			parts = [[0, 0, [".....a......", ".....G......", "...XXXXXX...", "..XXwXXXXX..", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXGaaaaaaaG", ".XXXXXXXXXXX", ".xXXXXXXXXx.", "..xxxxxxxx.."]]]
+		"pumpkin":
+			map.X = "ea8a33"
+			map.x = "b85e1c"
+			parts = [[0, 2, [".....gg.....", "...XXXXXX...", "..XXXXXXXXX.", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXXXXXXXX", ".XXXXkXXkXXX", ".XXXXXXXXXXX", ".XXXkXkXkXX.", "..xxxxxxxx.."]]]
+			map.g = "5cbf3f"
+		"moon":
+			parts = [[0, 0, [".......yy...", "......y.....", "......yy....", "...XXXXXX...", "...XwXXXX...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]]
+		"snowman":
+			map.X = "3a3a48"
+			map.x = "1b1a24"
+			parts = [[0, 0, ["...XXXXXX...", "...XwXXXX...", "...XXXXXX...", "...rrrrrr...", "XXXXXXXXXXXX", ".xxxxxxxxxx."]]]
+			map.r = "d8433a"
+		"rooster":
+			map.r = "d8433a"
+			parts = [[0, 0, ["....r.r.r...", "....rrrrr...", "...XXXXXX...", "..XXwXXXXX..", ".XXXXXXXXXXX", ".xxxxxxxxxx."]]]
+		_:
+			parts = [[0, 2, dome]]
+	_overlay(img, parts, map)
+	if bt[1] >= 2:
+		px(img, 6, 4 if kind not in ["hat", "tophat", "witch", "moon", "snowman"] else 4, col(map.a))
+	if bt[1] >= 4:
+		px(img, 3, 3, Color("f2efe6"))
+
+## Worn armour gets the same shoulders, belt and front as its icon, so two
+## armours never look like the same shirt in another colour.
+func _draw_armor(img: Image, armor: String) -> void:
+	var bt: Array = ItemIcons.split_tier(armor)
+	var base: String = bt[0]
+	var ap: Dictionary = ItemIcons.armor_parts(base)
+	var mc := material_colors(armor)
+	var X := col(mc.X)
+	var x := col(mc.x)
+	var G := col(ItemIcons.pick(base, 2, ItemIcons.GUARDS))
+	var a := col(ItemIcons.pick(base, 1, ItemIcons.GEMS))
+	var w := Color("f2efe6")
+	var k := Color("1b1a24")
+	var y0 := PAD + 9 # the top row of the body
+	match ap.sh:
+		"pads":
+			rect(img, 1, y0, 3, 1, G)
+			rect(img, 8, y0, 3, 1, G)
+			px(img, 1, y0 + 1, G)
+			px(img, 10, y0 + 1, G)
+		"spikes":
+			px(img, 1, y0 - 1, w)
+			px(img, 10, y0 - 1, w)
+			rect(img, 1, y0, 3, 1, G)
+			rect(img, 8, y0, 3, 1, G)
+		"round":
+			rect(img, 1, y0, 2, 2, X)
+			rect(img, 9, y0, 2, 2, X)
+			px(img, 1, y0, X.lightened(0.3))
+			px(img, 9, y0, X.lightened(0.3))
+	match ap.collar:
+		"v": rect(img, 5, y0, 2, 1, x)
+		"high":
+			px(img, 4, y0, G)
+			px(img, 7, y0, G)
+	if ap.robe:
+		# a long skirt over the legs
+		for yy in range(y0 + 4, y0 + 7):
+			rect(img, 2, yy, 8, 1, X if yy < y0 + 6 else x)
+		if ap.front == "ghost":
+			for xx in range(2, 10, 2):
+				px(img, xx, y0 + 6, Color(0, 0, 0, 0))
+	if ap.belt:
+		rect(img, 3, y0 + 4, 6, 1, G)
+		px(img, 5, y0 + 4, a)
+	match ap.front:
+		"plates":
+			px(img, 4, y0 + 1, x)
+			px(img, 7, y0 + 1, x)
+			rect(img, 4, y0 + 3, 4, 1, x)
+		"rivets":
+			for q in [[4, 1], [7, 1], [4, 3], [7, 3]]:
+				px(img, q[0], y0 + q[1], G)
+		"emblem":
+			rect(img, 5, y0 + 1, 2, 2, a)
+			px(img, 5, y0 + 1, a.lightened(0.4))
+		"stripe":
+			rect(img, 5, y0, 2, 4, G)
+		"rings":
+			for yy in range(y0, y0 + 4):
+				for xx in range(3, 9):
+					if (xx + yy) % 2 == 0 and img.get_pixel(xx, yy).a > 0.5:
+						px(img, xx, yy, x)
+		"scales":
+			for yy in range(y0 + 1, y0 + 4):
+				for xx in range(3 + yy % 2, 9, 2):
+					px(img, xx, yy, x)
+		"skull":
+			rect(img, 4, y0 + 1, 3, 1, w)
+			px(img, 4, y0 + 2, k)
+			px(img, 5, y0 + 2, w)
+			px(img, 6, y0 + 2, k)
+		"flake":
+			for q in [[5, 1], [4, 2], [5, 2], [6, 2], [5, 3]]:
+				px(img, q[0], y0 + q[1], w)
+		"jelly":
+			for q in [[4, 1], [7, 2], [5, 3]]:
+				px(img, q[0], y0 + q[1], w)
+		"eye":
+			px(img, 5, y0 + 1, w)
+			px(img, 6, y0 + 1, w)
+			px(img, 5, y0 + 2, a)
+			px(img, 6, y0 + 2, k)
+		"feather":
+			px(img, 2, y0 - 1, Color("d8433a"))
+			px(img, 3, y0 - 1, Color("d8433a"))
+	# upgrades: a gem on the chest, then a shine
+	if bt[1] >= 2:
+		px(img, 6, y0 + 1, a)
+	if bt[1] >= 5:
+		px(img, 3, y0 + 1, w)
 
 # ---------------------------------------------------------------- monster shapes
 func blob(body: Color, w: int, h: int, squash: bool, face := true) -> Image:
@@ -721,6 +937,47 @@ func blob(body: Color, w: int, h: int, squash: bool, face := true) -> Image:
 	if face:
 		var s := 2 if ww > 20 else 1
 		eyes(img, int(ww * 0.55), int(ww * 0.78), int(hh * 0.5), s)
+	return img
+
+## The Jelly King: a big pink slime with a gold crown slipped half off its
+## head, hanging crooked over one side (Brenden, 2026-11-05). `alt` is the
+## squashed frame, `crouch` the deep squash before a big jump.
+func jelly_king_img(alt: bool, crouch := false) -> Image:
+	var body := Color("f06aa0")
+	var w := 24
+	var h := 15
+	if alt:
+		w += 2
+		h -= 1
+	if crouch:
+		w += 4
+		h -= 4
+	var top := 7 # room for the crown
+	var img := blank(w + 2, h + top + 1)
+	var cx := (w + 2) / 2.0
+	ellipse(img, cx, top + h * 0.6, w / 2.0, h * 0.6, body)
+	rect(img, 2, top + h - 2, w - 2, 2, body.darkened(0.3))
+	ellipse(img, cx - w * 0.2, top + h * 0.35, w * 0.12, h * 0.12, body.lightened(0.4))
+	px(img, int(cx - w * 0.3), top + int(h * 0.5), body.lightened(0.25))
+	# a grumpy royal face
+	eyes(img, int(cx + w * 0.05), int(cx + w * 0.3), top + int(h * 0.48), 2)
+	rect(img, int(cx + w * 0.05) - 1, top + int(h * 0.48) - 2, 3, 1, OUTLINE)
+	rect(img, int(cx + w * 0.3) - 1, top + int(h * 0.48) - 2, 3, 1, OUTLINE)
+	rect(img, int(cx + w * 0.12), top + int(h * 0.75), 4, 1, OUTLINE)
+	# the crown, tipped over to the right and slipping down the side of the head
+	var gold := Color("f2cf5b")
+	var shade := Color("c89a2a")
+	var x0 := int(cx + 1)
+	for i in 10:
+		var drop := i / 3 # each column a little lower: crooked
+		var y0 := top - 3 + drop + (1 if crouch else 0)
+		px(img, x0 + i, y0 + 1, gold)
+		px(img, x0 + i, y0 + 2, shade)
+		if i % 4 == 0:
+			px(img, x0 + i, y0, gold)
+			px(img, x0 + i, y0 - 1, gold)
+	px(img, x0 + 4, top - 1 + 1, Color("d8433a"))
+	px(img, x0 + 8, top + 1 + 1, Color("4f8fe0"))
 	return img
 
 func eye_img(r: int, iris: Color, lashes: bool, crown: bool, feet: bool, alt: bool) -> Image:
@@ -1140,28 +1397,36 @@ func big(img: Image, k: int) -> Image:
 
 ## The boss version of a character: three times as big, with extras.
 func boss_char(look: String, alt: bool) -> Image:
-	var img := _char_img(look, "walk" if alt else "stand", 3)
+	var img := _char_img(look, "walk" if alt else "stand", 4)
+	# the extras are laid out for a 3x character; q() moves them onto the 4x one
+	var q := func(v: int) -> int: return int(round(v * 4.0 / 3.0))
 	match look:
 		"modina", "modina_2":
 			# four swords, two on each side
 			for side in [0, 1]:
 				for k in 2:
 					var x: int = 2 + side * 28 + k * 3
-					rect(img, x, 22 + k * 6, 2, 22, Color("e3ebf5"))
-					rect(img, x - 1, 40 + k * 6, 4, 2, Color("f2cf5b"))
+					rect(img, q.call(x), q.call(22 + k * 6), 3, q.call(22), Color("e3ebf5"))
+					rect(img, q.call(x - 1), q.call(40 + k * 6), 5, 3, Color("f2cf5b"))
 		"evil_santa":
-			rect(img, 6, 6, 26, 6, Color("c8202a"))
-			rect(img, 30, 2, 6, 6, Color("c8202a"))
-			rect(img, 34, 0, 4, 4, Color("f2efe6"))
-			rect(img, 6, 12, 26, 3, Color("f2efe6"))
-			rect(img, 9, 36, 20, 12, Color("f2efe6"))
+			rect(img, q.call(6), q.call(6), q.call(26), q.call(6), Color("c8202a"))
+			rect(img, q.call(30), q.call(2), q.call(6), q.call(6), Color("c8202a"))
+			rect(img, q.call(34), 0, q.call(4), q.call(4), Color("f2efe6"))
+			rect(img, q.call(6), q.call(12), q.call(26), q.call(3), Color("f2efe6"))
+			rect(img, q.call(9), q.call(36), q.call(20), q.call(12), Color("f2efe6"))
 	return img
 
-func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
+func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
+	if k > 1:
+		# a boss drawn k times bigger, smoothly enlarged so it doesn't look blown up
+		return cached("mob_%s_%s_%s_x%d" % [look, alt, flash, k], func():
+			return to_tex(upscale(mob_tex(look, alt, flash).get_image(), k)))
 	return cached("mob_%s_%s_%s" % [look, alt, flash], func():
 		var img: Image
 		match look:
 			"slime_pink": img = blob(Color("f06aa0"), 14, 11, alt)
+			"jelly_king": img = big(jelly_king_img(alt), 3)
+			"jelly_king_crouch": img = big(jelly_king_img(true, true), 3)
 			"slime_dark": img = blob(Color("7b4fb8"), 16, 12, alt)
 			"small_stone": img = blob(Color("8a9099"), 16, 13, alt)
 			"farmland": img = blob(Color("ea8a33"), 15, 13, alt)
@@ -1229,14 +1494,14 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 				px(li, 19, 7, OUTLINE)
 				px(li, 21, 7, OUTLINE)
 				rect(li, 19, 9, 3, 1, Color("d8433a"))
-				img = big(li, 3)
+				img = big(li, 4)
 			"pineapple_killer":
 				var pk := fruit_img("pineapple", alt)
 				rect(pk, 1, 10, 3, 2, Color("3a3a48"))
 				rect(pk, 14, 10 - (1 if alt else 0), 3, 2, Color("3a3a48"))
 				eyes(pk, 8, 11, 10, 1, Color("d8433a"))
-				img = big(pk, 3)
-			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 3)
+				img = big(pk, 4)
+			"harakattu": img = big(bunny_img(Color("f2efe6"), alt), 4)
 			# Tomb of Makara
 			"sand_mantis": img = bug_img(18, 12, Color("e8a0a8"), Color("b06a7a"), alt)
 			"tombstone": img = tombstone_img(alt)
@@ -1247,7 +1512,7 @@ func mob_tex(look: String, alt: bool, flash := false) -> Texture2D:
 			"mini_ball": img = blob(Color("5a5a6a"), 10, 9, alt)
 			"chick_aiai", "chick_cici", "chick_bibi", "chick_dede", "chick_fofo":
 				img = chick_img(alt)
-				var tint: Color = {"chick_aiai": Color("f06a5a"), "chick_cici": Color("5cbf3f"), "chick_bibi": Color("6b8ff0"), "chick_dede": Color("f2cf5b"), "chick_fofo": Color("a77ee0")}[look]
+				var tint: Color = {"chick_aiai": Color("f06a5a"), "chick_cici": Color("5cbf3f"), "chick_bibi": Color("6b8ff0"), "chick_dede": Color("ea8a33"), "chick_fofo": Color("a77ee0")}[look]
 				for y in img.get_height():
 					for x in img.get_width():
 						var c := img.get_pixel(x, y)
@@ -1270,11 +1535,11 @@ const ICON_GRIDS := {
 	"log": ["..........", "......nnn.", ".....nlln.", "....nlnn..", "...nlnn...", "..nlnn....", ".nlnn.....", ".nnl......", "..........", ".........."],
 	"stick": ["..........", "........n.", ".......nl.", "......nl..", ".....nl...", "....nlg...", "...nl.....", "..nl......", ".nl.......", ".........."],
 	"lump": ["..........", "..........", "...XXXX...", "..XxXXXX..", ".XXXXXxXX.", ".XxXXXXXx.", ".XXXXxXXx.", "..xxxxxx..", "..........", ".........."],
-	"ore": ["..........", "..........", "...aaaa...", "..aXaaAa..", ".aaaaXaaa.", ".aXaaaaXa.", ".aaaXaaaD.", "..DDDDDD..", "..........", ".........."],
+	"ore": ["..........", "...AAAa...", "..AAaaaad.", ".AaXwaaad.", ".AaXxaXwd.", "AaaaaaXxdD", "AaXwaaaadD", ".aXxadddD.", "..dDDDDD..", ".........."],
 	"bar": ["..........", "..........", "..........", "....XXXXX.", "...XwXXXx.", "..XXXXXxx.", ".xxxxxxx..", "..........", "..........", ".........."],
 	"blob": ["..........", "....X.....", "...XXx....", "..XXXXx...", ".XXwXXXx..", ".XXXXXXx..", ".XXXXXxx..", "..xxxxx...", "..........", ".........."],
-	"crystal": ["....X.....", "...XwX....", "..XwXXx...", "..XXXXx...", "..XXXxx...", "..XXXxx...", "...Xxx....", "....x.....", "..........", ".........."],
-	"gem": ["..........", "..XXXXX...", ".XwXXXXx..", "XwXXXXXXx.", ".XXXXXXx..", "..XXXXx...", "...XXx....", "....x.....", "..........", ".........."],
+	"crystal": [".....w....", "....LXx...", "....LXx...", "....LXx...", ".w..LXx...", "LXx.LXx.w.", "LXx.LXxLx.", "LXxwLXxLx.", ".dDDDDDDd.", ".........."],
+	"gem": ["..........", "..LLXXX...", ".LwLXXXx..", "LLLLxxxxx.", ".XXXXXXx..", "..XXXXx...", "...XXx....", "....x.....", "..........", ".........."],
 	"bug": ["..........", "...k..k...", "....kk....", "...XwwX...", "..XwXXwX..", "..XXxxXX..", "..XXXXXX..", "...k..k...", "..........", ".........."],
 	"leaf": ["..........", "....g.....", "...gGg....", "..g.G.g...", ".gG.G.Gg..", "..g.G.g...", "....G.....", "....G.....", "..........", ".........."],
 	"flower": ["..........", "...X.X....", "..XXwXX...", "...XXX....", "....g.....", "..g.g.....", "...gg.....", "....g.....", "..........", ".........."],
@@ -1323,6 +1588,12 @@ const ICON_GRIDS := {
 	"mask": ["..........", "..XXXXXX..", ".XXXXXXXX.", ".XkkXXkkX.", ".XkkXXkkX.", ".XXXXXXXX.", "..XXxxXX..", "...XXXX...", "..........", ".........."],
 	"bighammer": ["XXXXX.....", "XwXXXx....", "XXXXXx....", "XXXXXx....", ".xxnlx....", "....nl....", ".....nl...", "......nl..", ".......nl.", "........nl"],
 	"fist": ["..........", "..XXXX....", ".XwXXXX...", ".XXXXXXk..", ".XxXxXXo..", ".XXXXXXk..", "..XXXXx...", "...xxx....", "..........", ".........."],
+	"vial": ["..........", "..........", "....nn....", "....AA....", "...AXXA...", "...AwXA...", "...AxxA...", "....AA....", "..........", ".........."],
+	"flask": ["....nn....", "....AA....", "....AA....", "...AXXA...", "..AXwXXA..", ".AXXXXXXA.", ".AXXXXXXA.", ".AxxxxxxA.", "..AAAAAA..", ".........."],
+	"jug": ["...nnnn...", "...AAAA...", "..AXXXXA..", ".AXwXXXXAA", ".AXXXXXXAA", ".AXXXXXXAA", ".AXXXXXXA.", ".AxxxxxxA.", "..AAAAAA..", ".........."],
+	"shard": ["..........", "..........", ".....w....", "....LXx...", "....LXx...", "....LXx...", "....LXx...", ".....xx...", "..........", ".........."],
+	"egg_spots": ["..........", "...ww.....", "..wXww....", ".wwaawX...", ".wXwwww...", ".waawaw...", "..wwww....", "..........", "..........", ".........."],
+	"torch_stand": ["....y.....", "...yoy....", "...oRo....", "..aaoaa...", "...aaa....", "....a.....", "....a.....", "...aaa....", "..aaaaa...", ".........."],
 	"torch_i": ["....y.....", "...yoy....", "...oRo....", "....o.....", "....l.....", "....n.....", "....n.....", "....n.....", "....n.....", ".........."],
 }
 
@@ -1401,7 +1672,8 @@ func icon_spec(id: String) -> Array:
 		"water_crystal": return ["crystal", {"X": "6b8ff0", "x": "2c4596"}]
 		"earth_crystal": return ["crystal", {"X": "a8703f", "x": "5cbf3f"}]
 		"dark_crystal": return ["crystal", {"X": "7b4fb8", "x": "3a2a5a"}]
-		"evil_crystal", "small_evil_crystal": return ["crystal", {"X": "5a2a6a", "x": "d8433a"}]
+		"evil_crystal": return ["crystal", {"X": "5a2a6a", "x": "d8433a"}]
+		"small_evil_crystal": return ["shard", {"X": "5a2a6a", "x": "d8433a"}]
 		"catalyst": return ["gem", {"X": "f2cf5b", "x": "4fb6d0"}]
 		"dongle": return ["gadget", {"X": "5cbf3f"}]
 		"monster_hide": return ["hide", {"X": "a07a55", "x": "6e4a2a"}]
@@ -1416,7 +1688,10 @@ func icon_spec(id: String) -> Array:
 		"apple": return ["apple", {"X": "d8433a", "x": "8a1e1a"}]
 		"evil_apple": return ["apple", {"X": "5a2a6a", "x": "2a1030"}]
 		"living_flame": return ["blob", {"X": "f2a33a", "x": "d8433a"}]
-		"em_stone", "ruby_stone", "sapphire_stone", "dark_stone", "sky_stone": return ["gem", mc]
+		"em_stone": return ["gem", {"X": "5cbf3f", "x": "2e7a2a"}]
+		"ruby_stone": return ["gem", {"X": "d8433a", "x": "8a1e1a"}]
+		"sapphire_stone": return ["gem", {"X": "3b5dc9", "x": "1e2a6a"}]
+		"dark_stone", "sky_stone": return ["gem", mc]
 		"dragon_spine": return ["bone", {"w": "a8e86a"}]
 		"volcan_axe": return ["axe", mc]
 		"sky_pole_axe": return ["pole", mc]
@@ -1442,7 +1717,10 @@ func icon_spec(id: String) -> Array:
 		"forbidden_stone": return ["gem", mc]
 		"fortune_nugget": return ["lump", {"X": "f2cf5b", "x": "c99a2e"}]
 		"honey": return ["blob", {"X": "f2b83a", "x": "c8802a"}]
-		"eggency": return ["egg", {"X": "f2a33a"}]
+		"eggency": return ["egg_spots", {"X": "f2a33a", "a": "d8433a"}]
+		"christmas_egg": return ["egg_spots", {"X": "d8433a", "a": "3e9a3a"}]
+		"easter_egg": return ["egg_spots", {"X": "f08ac8", "a": "6bc8f0"}]
+		"halloween_egg": return ["egg_spots", {"X": "ea8a33", "a": "1b1a24"}]
 		"nightmare_ingot": return ["bar", mc]
 		"plunger": return ["plunger", mc]
 		"arrow": return ["arrow", {}]
@@ -1452,7 +1730,7 @@ func icon_spec(id: String) -> Array:
 		"wooden_spikes": return ["spikes", {}]
 		"work_station": return ["station", {}]
 		"campfire": return ["fire", {}]
-		"torch": return ["torch_i", {}]
+		"torch": return ["torch_stand", {}]
 		"survival_token": return ["token", {"X": "5cbf3f", "x": "2e7a2a"}]
 		"coin": return ["token", {"X": "f2cf5b", "x": "c99a2e"}]
 		"gem": return ["gem", {"X": "dcecf8", "x": "7a9ab8"}] # the original's white-blue diamond
@@ -1470,7 +1748,7 @@ func icon_spec(id: String) -> Array:
 		"hell_pole_axe": return ["pole", mc]
 		"devil_spike_2", "devil_spike_3", "devil_spike_u": return ["spike", mc]
 	if id.ends_with("_ore") or id == "erbium":
-		return ["ore", {"X": mc.X}]
+		return ["ore", {"X": mc.X, "x": mc.x}]
 	if id.ends_with("_bar"):
 		return ["bar", mc]
 	match t:
@@ -1480,12 +1758,17 @@ func icon_spec(id: String) -> Array:
 			elif id.contains("rejuvenate"): c = "a77ee0"
 			elif id == "antidote": c = "5cbf3f"
 			elif id == "fatigue_potion": c = "f2cf5b"
-			return ["potion", {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
+			# bottles get bigger with the potion: small, normal, medium, big
+			var shape := "potion"
+			if id.begins_with("small_"): shape = "vial"
+			elif id.begins_with("medium_"): shape = "flask"
+			elif id.begins_with("big_"): shape = "jug"
+			return [shape, {"X": c, "x": Color(c).darkened(0.35).to_html(false)}]
 		"weapon":
 			return ["long" if id.contains("long") or id == "excalibur" else "sword", mc]
 		"staff":
 			if id.begins_with("iron_fist"):
-				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else "e3ebf5")), "x": "6a1e14"}]
+				return ["fist", {"X": "c83a2a" if id == "iron_fist" else ("f2a33a" if id == "iron_fist_2" else ("f2cf5b" if id == "iron_fist_3" else ("e3ebf5" if id == "iron_fist_4" else "a77ee0"))), "x": "6a1e14"}]
 			return ["staff", mc]
 		"bow": return ["cannon", mc] if it.get("cannon", false) else ["bow", {}]
 		"ammo": return ["balls", mc] if id.begins_with("cc_") or id == "devil_cannon_ball" else ["missile", mc]
@@ -1518,6 +1801,33 @@ func pet_look(id: String) -> String:
 	var look: String = Data.PETS[id].look
 	return look
 
+## Long weapons (reach 24 or more: long swords, Excalibur, pole axes, lances,
+## Modina swords and the like) are drawn twice as big in your hand, like the
+## original (Brenden, 2026-11-06). Short ones stay icon-sized.
+## How big an item looks in the hand (1 = its icon's size). Each weapon has its
+## own size from its reach and weight, so a Gradius is a little knife and a
+## Long Lance is twice your height (Brenden, 2026-11-06).
+func held_size(id: String) -> float:
+	return float(Data.ITEMS.get(id, {}).get("size", 1.0))
+
+## Held items are drawn from a 4x smoothed copy of the icon and scaled down to
+## their size, so every size from 0.9 to 2.6 stays clean instead of blocky.
+const HELD_K := 4
+
+## The texture for an item held in the hand.
+func held_tex(id: String) -> Texture2D:
+	return cached("held_%s" % id, func(): return to_tex(upscale(icon(id).get_image(), HELD_K)))
+
+## The scale to draw `held_tex` at.
+func held_scale(id: String) -> Vector2:
+	return Vector2.ONE * held_size(id) / HELD_K
+
+## Puts the held item's handle (its lower corner) in the hand, whatever its size.
+func held_offset(tex: Texture2D, facing: int) -> Vector2:
+	if tex == null:
+		return Vector2(4 * facing, -5)
+	return Vector2((tex.get_width() / 2.0 - 2.0 * HELD_K) * facing, -(tex.get_height() / 2.0 - 1.0 * HELD_K))
+
 func icon(id: String) -> Texture2D:
 	return cached("icon_" + id, func():
 		var it: Dictionary = Data.ITEMS.get(id, {})
@@ -1525,13 +1835,21 @@ func icon(id: String) -> Texture2D:
 			var full: Image = _char_img(it.look, "stand", 1)
 			return to_tex(outline(full.get_region(Rect2i(0, 1, full.get_width(), 16))))
 		if it.get("type", "") == "pet":
-			var img: Image = mob_tex(pet_look(id), false).get_image()
-			var s := 12.0 / maxf(img.get_width(), img.get_height())
-			if s < 1.0:
+			var img: Image = mob_tex(pet_look(id), false).get_image().duplicate()
+			# a Jr pet is drawn a little smaller than the grown-up one
+			var s := (9.0 if id.ends_with("_jr") else 12.0) / maxf(img.get_width(), img.get_height())
+			if s < 1.0 or id.ends_with("_jr"):
 				img.resize(maxi(1, int(img.get_width() * s)), maxi(1, int(img.get_height() * s)), Image.INTERPOLATE_NEAREST)
 			return to_tex(img)
+		var drawn: Array = ItemIcons.make(id, it, material_colors(id))
+		if not drawn.is_empty():
+			return to_tex(outline(grid_image(drawn[0], drawn[1])))
 		var spec := icon_spec(id)
-		return to_tex(outline(grid_image(ICON_GRIDS[spec[0]], spec[1]))))
+		var map: Dictionary = spec[1].duplicate()
+		# "L" is the lit face of crystals and gems: a lighter shade of the main colour
+		if not map.has("L"):
+			map["L"] = col(map.get("X", "c8ced6")).lightened(0.4).to_html(false)
+		return to_tex(outline(grid_image(ICON_GRIDS[spec[0]], map))))
 
 ## The same icon at double size, for the big bag and hotbar slots.
 func icon_big(id: String) -> Texture2D:
@@ -1737,7 +2055,8 @@ const THEMES := {
 	"hell": {"sky": ["3a1020", "7a2a3a"], "mount": "5a1e3a", "snow": "c83a6a", "hills": "3a1028", "top": "8a3a6a", "top2": "5a2048", "dirt": "3a1a30", "dirt2": "2a1020", "cave": "1a0a14"},
 	"ice": {"sky": ["9ad0f0", "e3f2f8"], "mount": "8ab0d0", "snow": "ffffff", "hills": "a6c8e0", "top": "e3f2f8", "top2": "a6d0e8", "dirt": "5a8ab0", "dirt2": "4a7098", "cave": "2a4a6a"},
 	"dream": {"sky": ["f0a8d8", "fde2f2"], "mount": "c88ac8", "snow": "fff0fa", "hills": "a870c0", "top": "f08ac8", "top2": "c86aa8", "dirt": "7a4a8a", "dirt2": "5a3a6a", "cave": "3a2a4a"},
-	"modina": {"sky": ["2a3a2a", "6a8a4a"], "mount": "3a4a36", "snow": "8ac85a", "hills": "2a3a28", "top": "7ab83a", "top2": "4a7a2a", "dirt": "4a3a3a", "dirt2": "3a2a2a", "cave": "1a1414"},
+	# Modina Ruins is yellow (Brenden, 2026-11-06); it was a poison green
+	"modina": {"sky": ["c8901e", "f6dc6a"], "mount": "b8862a", "snow": "fff2a0", "hills": "8a6418", "top": "f2cf3a", "top2": "c89a1e", "dirt": "8a6a2a", "dirt2": "6a4e1e", "cave": "2a1e0a"},
 	"nightmare": {"sky": ["120a14", "4a1424"], "mount": "2a0e1a", "snow": "8a1e2a", "hills": "1e0a12", "top": "6a1e30", "top2": "3a1420", "dirt": "2a1218", "dirt2": "1e0c10", "cave": "0e060a"},
 	"forbidden": {"sky": ["c8503a", "f2c27a"], "mount": "8a2a2a", "snow": "f2cf5b", "hills": "6a1e1e", "top": "c83a2a", "top2": "8a2a1e", "dirt": "5a2a1e", "dirt2": "3e1e14", "cave": "2a120c"},
 	"snow": {"sky": ["1e2a4a", "5a7aa8"], "mount": "3a4a6a", "snow": "ffffff", "hills": "2a3a5a", "top": "f2f6fa", "top2": "c8d8e8", "dirt": "4a5a7a", "dirt2": "3a4a68", "cave": "1e2638"},
@@ -1819,18 +2138,38 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 						rect(img, x + 1, y + 1, 9, 7, Color("8a9099"))
 						rect(img, x + 1, y + 1, 9, 1, Color("b8bec6"))
 			_:
-				img = blank(18, 14)
+				# a lumpy boulder lit from the top left, with cracks; ore shows as
+				# shiny faceted nuggets, crystal rocks grow thin shards on top
+				# (Brenden, 2026-11-06: "make crystals better looking and thinner
+				# same with ores give them more detail")
+				var crystal := kind in ["ice_rock", "erbium_rock"]
+				var top := 7 if crystal else 0
+				img = blank(18, 14 + top)
 				var base := Color("8a9099")
 				if th.name == "ice": base = Color("a6c0d8")
 				if th.name == "hell": base = Color("6a4a5a")
 				if th.name == "tomb": base = Color("8a6a4a")
 				if kind == "volcanic_rock": base = Color("3a2a2e")
-				ellipse(img, 9, 8, 9, 6, base)
-				ellipse(img, 7, 6, 5, 3, base.lightened(0.2))
-				rect(img, 2, 12, 14, 2, base.darkened(0.3))
+				ellipse(img, 9, 8 + top, 9, 6, base)
+				ellipse(img, 7, 7 + top, 6, 4, base.lightened(0.12))
+				ellipse(img, 6, 5 + top, 3, 2, base.lightened(0.28))
+				rect(img, 2, 12 + top, 14, 2, base.darkened(0.3))
+				rect(img, 12, 6 + top, 3, 6, base.darkened(0.12))
+				# cracks
+				for cr in [[4, 9, 1], [11, 5, -1]]:
+					for d in 3:
+						px(img, cr[0] + d * cr[2], cr[1] + top + d, base.darkened(0.4))
 				if ore.has(kind):
-					for i in 8:
-						rect(img, rng.randi_range(3, 13), rng.randi_range(4, 11), 2, 2, Color(ore[kind]))
+					var oc := Color(ore[kind])
+					if crystal:
+						for s in [[5, 7], [8, 10], [12, 6]]:
+							shard(img, s[0], top + 5, s[1], oc)
+						for i in 3:
+							nugget(img, [3, 9, 12][i], [8, 10, 9][i] + top, oc)
+					else:
+						var spots := [[3, 6], [8, 4], [12, 7], [6, 9], [11, 10]]
+						for sp in spots:
+							nugget(img, sp[0] + rng.randi_range(0, 1), sp[1] + top, oc)
 		return to_tex(outline(img)))
 
 # ---------------------------------------------------------------- village and props

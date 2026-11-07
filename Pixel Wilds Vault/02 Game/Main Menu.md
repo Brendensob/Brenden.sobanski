@@ -16,7 +16,7 @@ Laid out like Brenden's 2026-10-20 recording of the real game (see [[PSG2 Screen
 ## Select a character
 ![[menu_select_character.png]]
 
-- Three rows, one per save slot: the character's face, name, and kind plus day.
+- Three rows, one per save slot: the character's face, name and kind. No day count (2026-11-06): days only count in Survival Grasslands, where the HUD shows them.
 - A **red X** left of a full slot deletes it, after a "Delete ...? This can't be undone." Yes / No.
 - An empty slot says **New character**. Tap it to make one (see [[Characters]]).
 - **Menu** at the bottom left goes back to the title.
@@ -28,7 +28,7 @@ Laid out like Brenden's 2026-10-20 recording of the real game (see [[PSG2 Screen
 - **Multiplayer** opens its own screen (see [[Multiplayer]]):
   - the character's name in green, and whether it's yours: "This name is yours. It belongs to this character, and nobody else can use it." (If the name was never claimed, it says to claim it in Friends.)
   - **Friends**, **Find Public Game**, **Host Public Game** and **Back**.
-- **The faint screen** fits its text: the button sits under the text (and the tip), never on top of it.
+- **The faint screen** fits its text: the button sits under the text (and the tip), never on top of it. In single player it has two buttons, **Respawn** above **Wake up in Pixel Town** (2026-11-05, see [[Combat#Fainting (single player, 2026-11-05)]]).
 
 ## Leaving a game
 ![[menu_save_and_leave.png]]

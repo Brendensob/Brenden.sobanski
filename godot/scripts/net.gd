@@ -512,7 +512,7 @@ func grant(nid: int, item: String, n: int) -> void:
 
 # ---------------------------------------------------------------- requests to the host
 @rpc("any_peer", "reliable")
-func hit_mob(world_id: String, nid: int, amount: int, from_x: float, knock: bool) -> void:
+func hit_mob(world_id: String, nid: int, amount: int, from_x: float, knock: float) -> void:
 	if is_host() and _lvl() and _lvl().id == world_id:
 		var m: Node = _lvl().net_objs.get(nid)
 		if m and is_instance_valid(m) and m.has_method("take_damage"):

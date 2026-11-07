@@ -20,8 +20,8 @@ tags: [session]
 | Run | What it showed | Change |
 |---|---|---|
 | 1 | Fainted on the first two trips; 10 Jellies at 34 min; goal card stuck on "10 Iron Bars" for 2.5 h | Card shows the first goal not done; health back 1/4 s after 6 s; easy monsters at the entrance |
-| 2–3 | No early faints, but 50 Jellies ≈ 3 h; worlds empty out; bag full every trip | More Slimes; monsters come back; bot stores and trashes like a player |
-| 5 | About 5 Jellies per 10 min | Jelly drops 1–2; Copper Pickaxe and Grasslands 2 before 50 Jellies |
+| 2–3 | No early faints, but 50 Jellies ≈ 3 h; worlds empty out; bag full every trip | More Slimes; monsters come back; bot stores and trashes like a player (the Slime and respawn changes were later replaced by Brenden's PR #41 versions) |
+| 5 | About 5 Jellies per 10 min | Copper Pickaxe and Grasslands 2 before 50 Jellies (Jelly drops 1–2 was tried, then dropped for Brenden's Jelly 30%) |
 | 6 | Grasslands 2 at 54 min, Golden Night 108, Grasslands 3 112, Blue Night 151, one faint | — |
 
 **Tests:**

@@ -12,6 +12,7 @@ xvfb-run -a <godot> --path . --resolution 960x540 -- --autotest --touch
 ```
 - It ends with `AUTOTEST DONE, 0 failures` and runs **137 checks** (2026-10-17), plus 6 menu and greeting checks (2026-10-20).
 - `AT_QUICK=1` stops early, after the town, jump and underground checks.
+- **Writing check (2026-11-06):** every screenshot taken while a window is open also checks that no two pieces of writing in it overlap (labels by their real text size, buttons by their caption). A failure names the screenshot, the window and both texts. The title logo's two lines are allowed to touch.
 - Screenshots go to `~/.local/share/godot/app_userdata/Pixel Wilds/shots/`.
 
 ## Two-player network test
@@ -47,9 +48,23 @@ cd godot
 - It prints every goal and upgrade with the minute it happened, time spent fighting, harvesting, walking and in town, faints, and the longest stretch with nothing new.
 - It checks that every goal up to "Clear the Grassland Arena" is reached.
 - `JOURNEY_MINUTES=n` sets the most game time (240). 150 game minutes take about 50 minutes to run.
+## Grasslands Arena test
+```
+cd godot
+<godot> --headless --path . --fixed-fps 60 -- --arenatest
+```
+- A bot plays the real Grasslands Arena in single player: the last 15 seconds of monsters, then Rexy and the Hand together, with the real free revive. It drinks a potion under 40% health and backs off when a boss is above it, so the boss comes down.
+- Wooden, stone and copper gear must win 3 times in 4; the bare starter kit is only printed. `ARENA_TRIALS=n` sets the tries (8), `ARENA_KITS=wood,stone` picks kits. About 4 minutes. Ends with `ARENATEST DONE, 0 failures`. Results are in [[Combat#Grasslands Arena boss test]].
 
 ## Server checks
 `python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
+
+## Icon audit
+```
+cd godot
+<godot> --headless --path . -s tools/icon_audit.gd
+```
+Lists items that share an icon and exits with an error if any do. `AUDIT_SHEET=/path/sheet.png` also saves a picture of every icon.
 
 ## Data audit
 ```
@@ -107,7 +122,7 @@ Download `Godot_v4.3-stable_linux.x86_64.zip` from the godotengine GitHub releas
 `AT_MENUS=1` runs the faint screen and Multiplayer screen checks, then `auto_hit_check()` (also part of the full run): the AUTO button lights up, keeps swinging with the bag open, stays on through A and item switches, turns off with the button and back on with Q, and is saved.
 
 ## Only the ground art checks
-`AT_LOOK=1` runs only `look_check()` (also part of the full run). It builds every world, checks each builds in under 3 s with stone at its edges, and saves screenshots of every world's surface (`70_<world>`), a cave spot (`71_<world>_cave`) and Pixel Town upstairs, in the basement and at the west wall (`72`–`74`).
+`AT_LOOK=1` runs only `look_check()` (also part of the full run). It builds every world, checks each builds in under 3 s with stone at its edges, and saves screenshots of every world's surface (`70_<world>`), a cave spot (`71_<world>_cave`) and Pixel Town upstairs, in the basement and at the west wall (`72`–`74`), the whole street a screen at a time (`75`), and three spots along the surface of five worlds (`76`). It also checks that every item has its own icon and that the villagers on the street stand at least two tiles apart.
 
 ## Only the systems checks
 `AT_SYSTEMS=1` runs only `systems_check()`, about a minute instead of 12. It covers rewards on a full bag, shops, gear, ammo, mana, keys, furnaces, quests, walls, tool tiers, the token shop, cures, characters and saving.

@@ -34,7 +34,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Rewards never lost when the bag is full | ✅ | Chests, the Crafter, quests, combining, harvests, survival tokens, trades and multiplayer pickups drop the overflow at your feet |
 | Using each item type | ✅ | All 22 usable types are tested (coin and gem are currencies, not bag items) |
 | Equipment: 6 slots and stat sums | ✅ | Helmet test, and the earlier ring tests |
-| Banka's storage (6 × 30) | ✅ | |
+| Banka's storage (6 × 30) | ✅ | First backpack free, the rest cost gems (tested) |
 | Drag-and-drop, stack splitting, sorting | ⛔ | Tap to move works. PSG2 is tap-based too, so this is optional |
 | Item tooltips and descriptions | 🟡 | Every item has a description and stats line |
 | Item rarity colours | ⛔ | PSG2 has none that we know of |
@@ -51,8 +51,9 @@ The living list of every system and how finished it is. It's updated after each 
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
-| Bosses in all 8 arenas | ✅ | Arrive at 3 minutes |
-| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27) |
+| Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
+| Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player (2026-11-05): slow fall, gravestone, Respawn as a ghost and stand by the stone 3.5 s within 50 s; one free revive in the Grasslands Arena. Autotest covers all of it |
 | Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
@@ -108,6 +109,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
 | Shared drops | ✅ | 2026-11-07: players within 1.5 tiles of the picker get the same drop (not boss drops); two-player tested |
 | Portals one at a time in rooms | ✅ | 2026-11-07: only you go in and nobody is pulled in; leaving takes everyone in that world after 20 s; "Someone's in the current portal"; two-player tested both ways and for leaving |
+| Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 
@@ -119,6 +121,8 @@ The living list of every system and how finished it is. It's updated after each 
 | Houses, villagers and monsters art | ✅ | 2026-11-07: cartoon cottages, faces with a proper mouth and blush, four-tone shading and a shine on every monster; art sheets in `look_check()` |
 | Grasslands pacing (journey test) | ✅ | 2026-11-07: a bot reaches Grasslands 2 at 54 min, Golden Night at 108, Blue Night at 151, one faint; `tests/journey_test.gd` |
 | Ground, map walls and backdrops | ✅ | 2026-10-27 remodel: tiles that look at their neighbours, stone map walls, themed back walls, plank ledges, spiked deadly walls, depth shading, new mountains and tree line. Every world checked by `look_check()` (builds under 3 s, stone at the edges) and its screenshots |
+| Item icons | ✅ | 2026-11-04: every one of the 567 items has its own icon; upgrades share a shape and gain marks. Checked by the autotest and `tools/icon_audit.gd` |
+| Map spacing | ✅ | 2026-11-04: Pixel Town 80 wide with villagers about four tiles apart; worlds with fewer, spaced-out resources and monsters. Autotest checks the street and saves screenshots along it and five worlds |
 | Damage numbers and death puffs | ✅ | |
 | Low-health warning | ✅ | The health bar's border pulses red under 25% |
 | HUD at different window shapes | ✅ | 16:9, 21:9, 4:3 and portrait 3:4: nothing off screen, no overlapping buttons |
@@ -128,6 +132,9 @@ The living list of every system and how finished it is. It's updated after each 
 | Dark screen edges in caves | ✅ | Dark worlds and deep caves; under the HUD; tested at 3 window shapes |
 | Character switch confirmation | ✅ | Cancel and Become tested |
 | Touch button sizes | ✅ | 2026-10-27: ◀ ▶ 90 × 34, A and B 68 × 34 again, as before the cartoon pass; checked by the autotest |
+| Clean text | ✅ | 2026-11-06: no snapping of letters to the low-res grid, thinner outlines, dark words brightened. Every autotest screenshot of an open window checks that no writing overlaps |
+| Weapon feel and worn gear looks | ✅ | 2026-11-06: knockback strength and hand size per weapon; worn armour and helmets shaped like their icons; thin crystals and detailed ores. Autotest checks the order of sizes and strengths and that weapons differ |
+| Item hover card and drag-and-drop | ✅ | 2026-11-06: hover pops the icon and shows a card; drag between hotbar, bag, gear and Banka's backpacks. Autotest drags with a real mouse |
 | Auto-hit button | ✅ | 2026-10-27: round AUTO button above A (and Q). Tested: lights up, swings with the bag open, the bag doesn't pause, stays on through A and item switches, turns off, pauses again when off, saved |
 
 ## Phase 2 review: every system, A to E
@@ -138,19 +145,19 @@ The living list of every system and how finished it is. It's updated after each 
 | Main menu and character selection | A | Slots, create with all 18 characters (locked ones show how to unlock; tasks, owning one, gems tested), delete with confirm, Single/Multiplayer |
 | World selection and transitions | A | Gatekeeper cards with screenshot-style map pictures (2026-10-29), portals, all 23 worlds load, return to town. Town portal under the middle of the opening, Crafter and Gatekeeper either side (tested 2026-10-29) |
 | Movement and combat feedback | A | Jumps, knockback, hit stun, numbers, low-health pulse |
-| Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented |
+| Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented. Bosses drawn twice as big (2026-11-06) |
 | Mining, chopping, resources | A | Tool tiers and hits |
 | Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
 | Crafting, combining, smelting | A | Every recipe tested |
-| Shops, currencies, merchants | A | Every shop item tested |
-| Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished) |
+| Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04). Prices, chest coins and the 99,999 cap from the wiki (2026-11-06) |
+| Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished). Since 2026-11-06 you hit a chest with its key and the loot shoots out (no window), tested by the autotest |
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |
 | Survival mechanics and stamina | A | Nights, tokens, keys, stamina gates for the Tomb and Snow Valley |
 | Town building and storage | A / E | Banka's storage, walls, Wood Wall and campfire. Stone Wall and Torch Stand are blocked (E) |
 | Multiplayer sync | A | Two-player test: world, pickups, monsters, walls, trading, chat, emotes, server time |
 | Saving, loading, recovery | A | Backups, damaged and old saves, interrupted timers |
-| Death, respawn, item recovery | A | Nothing is lost on fainting |
+| Death, respawn, item recovery | A | Nothing is lost on fainting; gravestone revive in single player (2026-11-05) |
 | Settings, audio, interface scaling | A | Sound and Music volume; HUD tested at 4 window shapes |
 | Music | A | 7 original loops; made a piece at a time on the web build |
 
@@ -230,7 +237,7 @@ The living list of every system and how finished it is. It's updated after each 
 - which night gives the Wall Hammer;
 - sources for the Blood Long Sword, Stone Wall and Torch Stand.
 
-**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL. The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
+**8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL (Fredoka since 2026-11-06). The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
 
 **9. Performance and save risks:**
 - Music building takes about 2 s of a background thread at start. On the web it's sliced at about 3 ms per frame, which is untested in a real browser.

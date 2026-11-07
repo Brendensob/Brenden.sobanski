@@ -24,13 +24,74 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **The progression was playtested by a bot** that plays a new character through the goal card ([[Testing#Journey test]]). What it found and what changed:
   - **New players fainted on their first two trips** (in under 3 minutes). Fix: health comes back 1 every 4 s after 6 s out of a fight (was 1 every 12 s after 8 s), and Grasslands 1 only places Slimes and Firas near the way in.
   - **The goal card hid goals.** Doing a later goal early (the Copper Pickaxe) hid "50 Jellies" for good, and the card asked for "10 Iron Bars", which Miffie can't take before her Jelly and Copper quests. Fix: the card shows the first goal not done.
-  - **50 Jellies was a 3-hour grind.** Fixes:
-    - more Slimes (Grasslands 1: 40 monsters, Slime weight 10; Grasslands 2: Slime weight 8);
-    - a Jelly drop gives 1–2 (the wiki only gives the 20% chance);
-    - the goal card now puts the Copper Pickaxe and Grasslands 2 before the 50 Jellies, so Jellies pile up while you explore.
-  - **Worlds emptied out.** Monsters now come back in exploration worlds, 1 every 15 s, out of sight, up to 90% of the start.
-- **No wiki number changed:** monster health and damage, the 20% Jelly chance, quest amounts.
+  - **50 Jellies was a 3-hour grind.** Brenden's own fix from 2026-11-05 covers most of it (Jelly 30%, more Slimes that come back; see below). On top of it, the goal card now puts the Copper Pickaxe and Grasslands 2 before the 50 Jellies, so Jellies pile up while you explore. (This session's own 1–2 Jellies per drop and general monster respawn were dropped in favour of his.)
+- **No wiki number changed here:** monster health and damage, quest amounts.
 - After the changes the bot reached Grasslands 2 at 54 minutes, Golden Night at 108 and Blue Night at 151, with one faint (two Rexys and a Dark Rexy in Grasslands 3).
+## 2026-11-06 (clean text, crystals and ores, distinct weapons and armour)
+*"Fix all these little bugs where the writing looks weird and double check to make sure there's nothing like that I need the game clean asf also make crystals better looking and thinner same with orders give them more detail and the armor and weopon a should be all diff in knockback and size and everything and look distinct from each other same with the armors and helms"*
+- **The weird writing:** letters were snapped to the game's small 480×270 grid before being stretched to the screen, so gaps between letters came and went and outlines landed off their letters. Turned off vertex snapping (`snap_2d_vertices_to_pixel`; sprites still snap by position), letters are placed at quarter pixels without hinting, and outlines are about a fifth of the letter size (2 for most text, was 3). Dark coloured words (brown, orange, green, red) are lifted so they don't vanish into the black outline.
+- **Double-checked:** every autotest screenshot of an open window now checks that no two pieces of writing overlap. It found the stats page's Coins line running into the tip below it, now fixed.
+- **Read "orders" as ores.** Crystals are thin shards (a tall one and two short ones on a little rock) with a lit face, a dark face and a bright tip. Ore icons are a shaded rock with shiny faceted nuggets. In the world, ore rocks have shaded faces, cracks and lit nuggets, and ice and erbium rocks grow thin crystal shards.
+- **Every weapon feels different:** knockback is a strength now, not on/off: slow, long, heavy weapons (axes, hammers, clubs, maces, spikes) push hardest, quick small blades (Fluorescents, Gradius, Pops, knives) the least, and each upgrade a touch more. **No weapon pushes weaker than before** (1, about a tile): the Grasslands Arena's balance test failed when the Gradius pushed less, so the light ones stay at 1 and the rest go up to 2.5. Lances, Modina swords and the others that had none still have none. The info card says "Reach N, light/medium/strong/huge knockback". These strengths are **our estimates** (PSG2's aren't published).
+- **Every weapon is its own size in your hand,** from its reach and weight (0.9× for a Gradius up to 2.4× for a Long Lance), drawn from a smooth 4× copy so no size looks blocky. This replaces "reach 24+ is 2×".
+- **Worn armour and helmets look like their icons:** armour adds its shoulders (pads, spikes, round), collar, belt with a gem buckle, chest pattern (plates, rivets, emblem, chain rings, scales, skull, snowflake, eye) and leg guards; robes and dresses get a skirt. Helmets take their icon's shape (dome, knight's visor, plume, horns, wings, crown, hood, mask, top hat, witch hat, robot, pumpkin and more). Upgrades add a gem.
+
+## 2026-11-06 (hover cards and dragging items)
+*"When hovering over items make it satisfying and show info and you can drag to move them anytime"*
+- **Hover:** the icon pops up (1.2×, springy) and brightens with a quiet tick, and an info card shows the name, stats, description and sell price. Read "satisfying" as that pop, sound and a bounce when an item lands.
+- **Drag anytime:** hotbar (even with the bag closed), bag, gear slots and Banka's backpacks. Same items stack; gear only drops on its own slot. Tapping and the Move button still work.
+
+## 2026-11-06 (smooth text, chests you hit, yellow Modina Ruins, no days outside Survival)
+*"There's ui bugs make the works on the screen non pixelated and js smooth white letters with black outline and when opening a chest there's not open you just it with your key and items shoot out also modi's ruins is yellow and don't show days for players that's a survival grasslands only"*
+- **Smooth text:** all words use the round Fredoka font instead of pixel fonts, white with a black outline (coloured text keeps its colour). Read "words on the screen" as all text, menus and HUD included.
+- **Chests have no Open window.** Hold the key and hit the chest: one key is used and the items shoot out of it as pickups. Not holding it gives a hint. The world reward chests pop open on a hit too.
+- **Modina Ruins is yellow.** Read "modi's ruins is yellow" as "should be yellow": its sky, hills and ground went from poison green to gold.
+- **No day count outside Survival Grasslands.** The HUD already showed days only there; the save-slot list also said "Day N", and that's gone.
+
+## 2026-11-06 (plunger start, potion drops, PSG2 money, bigger bosses)
+*"Make the starting weopon the plunger make sure potions can be dropped and other heals are obtainable make sure the money system is simaller certain Weapons are bigger and bosses are like way bigger in thre real game"*
+- **Everyone starts with the Plunger** instead of the Sword Cast (the wiki calls it "probably the first weapon you'll ever use"). The Sword Cast still comes from Silver Chests.
+- **Monsters drop potions.** Read "potions can be dropped" as monsters dropping them. Every Grasslands and Darklands monster can drop a Small Potion, and Grasslands Arena monsters drop Small Potions and Herbs. The chances (4% and 6%) are **placeholders for Brenden to set**.
+- **Other heals:** the Grasslands Arena boss can now drop a Holy Banana (the wiki lists it for the Hand). Potions, Medium and Big Potions, Rejuvenate Potions, the Pretzel, the Campfire and Healing Staffs were already obtainable (the progression check confirms every one).
+- **Money like PSG2, using the wiki's numbers:** Silver Chests can hold 1, 10, 11, 100 or 111 Pixel Coins; the Plumber sells the Pink Egg for 10,000 and the Green Egg for 20,000 (was 10,000); Brutus sells Copper Ore for 250; sell prices for Fira 1 (was 60), Gold and Erbium Pickaxes 50 (was 25), and the Gradius can't be sold. Coins stop at 99,999, the original's limit. Other prices were already the wiki's or stay our estimates. Gems stay the third currency.
+- **Bosses are drawn twice as big:** King, Queen, Butterfly Boss, Ghost Boss, Doom and Makara, and Rexy, Dark Rexy and the Hand when they come as an arena's boss. Modina, Evil Santa, the Pineapple Killer, the Fortune Boss and Harakattu, already drawn big, grew by a third. The Jelly King stays as Brenden approved him. Their hit boxes grew with them.
+- **Long weapons are drawn twice as big in your hand:** every weapon with reach 24 or more (long swords, Excalibur, pole axes, lances, Modina swords, Devil Spikes, the later Moon Blades and the like). Read "certain weapons" as the long ones, since those are the big ones in the original. Short swords, tools and the Plunger stay icon-sized.
+
+## 2026-11-05 (one arena boss, the Jelly King)
+- **The Grasslands Arena brings one boss, not two:** Rexy, the Hand or the new Jelly King, a third of the time each. Rexy and the Hand keep the lower health and hit from earlier today. *"Don't make rexy and hand come out together make it 33% chance for each"*
+- **The Jelly King** is our own boss (not from PSG2): a big pink slime with his crown slipped half off. He hops after you, and every few seconds squashes down, leaps high and slams; jelly rolls along the ground both ways and hurts unless you jump it. 300 health, touch 2, slam 3, drops Jelly; all our estimates, set so wooden gear wins (bot test 4/4). Read "slams and you have to jump" as a ground shockwave you jump over. In multiplayer only the host's screen shows the waves for now. *"make a big slime boss called jelly king with a half slipped off crown and he jumps high sometimes slams and you have to jump"*
+
+## 2026-11-05 (Grasslands polish, gravestone revive, past Hell set aside)
+- **More slimes in the Grasslands, and more Jelly.** Slimes are a bigger share of the monsters in Grasslands 1 to 3 and the Grasslands Arena, the worlds start with a few more monsters, and slimes come back over time (one every 20 s, out of sight, up to the starting number). Slimes drop Jelly 30% of the time instead of the wiki's 20%. Read "jelly's" as both the slimes and their Jelly drop. *"Make the jelly's have more spawns in grasslands ... Make jelly's slightly more common."*
+- **The Grasslands Arena boss is beatable at a low level.** Both bosses still come together, but with about a quarter of their old health (Rexy 999 → 270, Hand 1,251 → 266), 30% of their hit, and a short stagger when hit (at most once a second). A bot test played the real arena: before, no gear won; now wooden gear wins 7 in 8 and stone or copper gear 8 in 8. A player with no armor at all still loses. Monsters no longer pace on a ledge right above you. *"Make the boss for grasslands arena kill able for lower level players ... Have agents test the boss fight for grasslands arena and see if it works well."*
+- **One free revive in the single-player Grasslands Arena:** the first faint gets you back up on the spot with full health. Read as "only this arena, only single player". *"make it 1 free revive for single player grasslands arena only"*
+- **Gravestone revive in single player.** A slow fall, then a gravestone where you fell. The faint screen offers Respawn or Wake up in Pixel Town. Respawn makes you a ghost at the start of the map (can't hit or be hurt); stand by the gravestone for 3.5 s (a little timer counts down) within 50 s to get back up there with full health. Otherwise it crumbles and you wake in town. Read "standing close" as the player's own ghost walking back, since there's nobody else in single player. Not in Survival (fainting ends the run) or after the bomb button, and multiplayer is unchanged. *"When a player dies in single player they get a option to respawn only make it have a slow animation into a death and then a gravestone and players have 50 seconds to revive by standing close it for 3.5 sec anf it shows a little timer."*
+- **The Crafter and the Gatekeeper stand 2.5 times further apart** (5 → 13 tiles), and **the opening above them is 2.5 times wider** (4 → 10 tiles). Read "the gap above" as the opening in the upper floor right over that space; the street-to-upstairs height stays the same so you can still jump up. The Master Chest moved to the east side of the opening. **You start in that gap**, just left of the portal. *"Make the gap between crafter and portal guy bigger like 2.5x bigger and same with the gap above. Make player spawn in the gap."*
+- **Everything past Hell is set aside, not deleted.** The 11 later worlds leave the Gatekeeper's list, and the 73 items only they give leave the Crafter, the combination books, the furnaces, the shops and the quests. The game works out that list from where items come from. One switch (`Data.set_later_open(true)`) brings it all back. *"I think we should hold everything past hell aside for now ... all the items from those higher places can be put aside for now I'll let you deside how"*
+
+## 2026-11-04 (roomier maps and an icon for every item)
+- **The HUD and menus stay as they are.** Brenden first asked for a better layout, then said he meant the maps: *"i dont mean hud and menus keep them the same i mean the layout of the map and how close everything is it just has that clutter feel"*.
+- **Pixel Town is a little wider (64 → 80 tiles) so nobody stands on top of anyone.** On the street every villager is about four tiles from the next, and the four houses stand in the gaps between them instead of behind them. The order is the same, the sides still mirror, and the portal is still in the exact middle under the opening. Upstairs, the chests and the incubator have more room, the trading tables are further apart, and the five furnaces are four tiles apart instead of three. The basement's ninjas and robots are six tiles apart. This keeps the town closed in; it's wider, not taller, because the 2026-10 "it's too big" was about the old big map.
+- **Worlds have fewer, better-spaced resources.** About a quarter fewer trees, rocks and plants, with at least two empty tiles between any two (three beside a tree), none right where you arrive, and monsters start at least five tiles apart. In Survival, resources keep 40 px apart instead of 20.
+- **Every item has its own icon** (567 items, 279 used to share one). Read "models for every item" as "a picture of its own". Weapons, staffs, bows, armour, helmets, shields and rings are drawn by `scripts/item_icons.gd`: each gets its own blade, tip, guard and pommel (or helmet shape, shield shape and emblem, ring stone...), chosen from its name so it never changes. Upgrades keep their family's shape and gain marks: 2 a gem in the guard, 3 a gem in the pommel, 4 a rune, 5 a sparkle, U gold trim. Potions get bigger bottles as they get bigger. Jr pets are drawn smaller than grown-up ones.
+- *Brenden: "i need you to make the game look better wehile still having the pixel look i need models for every item ... dont make everything feel clutterd like it does now and have agents test that if possible"*
+
+## 2026-11-04 (extra storage costs gems)
+- **Banka's first backpack is free; each one after it costs gems,** unlocked in order (2, then 3, up to 6). Brenden: *"every storage after the first cost gems and gems cost reealy money"*.
+- **50 gems per backpack is a placeholder.** The PSG2 wiki gives no price, so Brenden sets it (`BACKPACK_GEMS` in `game_state.gd`).
+- **Old saves lose nothing:** a backpack that already holds items stays unlocked. Empty extra backpacks lock again.
+- **Real-money gems are not in yet.** They need a payment account only Brenden can open (see [[Monetization]]). Gems for 2,500 coins stay until he decides.
+
+## 2026-11-04 (who buys and who sells)
+- **The spiky-haired Merchant only buys your items.** Her shop's left side says "Nothing for sale here", and the right side lists everything in your bag with a sell price.
+- **The Plumber sells everything the Merchant used to,** on top of his tools: potions, Antidotes, Fatigue Potions, arrows, cannon balls, missiles, Wood Walls, the campfire, Combo Book II (1,500) and the Green Egg. Same prices. He doesn't buy.
+- The Merchant is a girl. Read "mario" as the Plumber (red cap, blue overalls); he keeps the name Plumber.
+- Hints now say Antidotes and Small Potions come from the Plumber.
+- This replaces the 2026-10-17 reading that the spiky-haired NPC sells stuff.
+- *Brenden: "spikey ahir girl buys things off you doesnt sell anything mario does"*
+
+## 2026-11-04
+- **The online server redeploys itself when its code changes.** Find Public Game showed "Unknown request." because the server on Render was still the 2026-10-27 morning version, from before public games were added: Render never redeployed it. A GitHub Action now calls Render's Deploy Hook on every server change, once the hook is saved as the `RENDER_DEPLOY_HOOK` secret. The game also says "The online server needs an update" instead of "Unknown request." *Brenden: "when i host a game and my friend clicks find game it only shows unkown request".*
 
 ## 2026-10-29 (portal area and world card maps)
 - **The Gatekeeper's portal opens in the exact middle of Pixel Town, right under the middle of the opening you jump up through,** so the opening and the portal line up. Before, the portal stood half a tile left of the opening's middle.
@@ -153,7 +214,7 @@ Newest first. Each entry gives the decision, why, and where it came from.
   - big damage numbers.
   
   *Brenden: "Redo the art style with a twist of cartoon ish and what's on the screen right now".* → PR #17
-- **The storage girl is named Banka**, and **the spiky-haired blond NPC is the Merchant** (he sells stuff). *Brenden's answers.* → PR #16
+- **The storage girl is named Banka**, and **the spiky-haired blond NPC is the Merchant** (he sells stuff). *Brenden's answers.* → PR #16 (changed 2026-11-04: she only buys, the Plumber sells)
 - **Keep the Gem Shop**: "I wanna make money from this too". See [[Monetization]].
 - **The day counter shows only in Survival Grasslands**, and the Daily Free Gift was removed. *"The day counter and rewards for days is only in survival grasslands but no one really cares for it".* → PR #15
 - **The HUD follows his screenshots:**

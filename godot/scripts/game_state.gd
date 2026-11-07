@@ -19,7 +19,11 @@ const STATUS_TIME := 10.0
 var inv: Array = []
 var equip := {}
 var sel := 0
-var coins := 0
+## Pixel Coins top out at 99,999, like the original (wiki: Items, max stack).
+const MAX_COINS := 99999
+var coins := 0:
+	set(v):
+		coins = clampi(v, 0, MAX_COINS)
 var gems := 0 # the rare currency, spent in the Gem Shop
 var hp := 5.0
 var mp := 2.0
@@ -124,7 +128,11 @@ func _no_rewind(saved: float) -> void:
 ## 5 x 6 slots, like the original's bag screen.
 const BACKPACKS := 6
 const BACKPACK_SLOTS := 30
+## Gems for each backpack after the first, which is free. Like the original,
+## the extra backpacks cost gems. The price is a placeholder for Brenden to set.
+const BACKPACK_GEMS := 50
 var storage: Array = [] # one Array of slots per backpack
+var backpacks_owned := 1 # how many of Banka's backpacks are unlocked, in order
 
 func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	look = character
@@ -139,6 +147,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 		var page := []
 		page.resize(BACKPACK_SLOTS)
 		storage.append(page)
+	backpacks_owned = 1
 	equip = {}
 	for s in EQUIP_SLOTS:
 		equip[s] = ""
@@ -158,7 +167,9 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	day = 1
 	best_survival_day = 0
 	world = "town"
-	add_item("sword_cast", 1, true)
+	# everyone starts with the Plunger, like PSG2 (wiki: "probably the first weapon
+	# you'll ever use"; Brenden, 2026-11-06)
+	add_item("plunger", 1, true)
 	add_item("wooden_axe", 1, true)
 	add_item("wooden_pick", 1, true)
 	add_item("small_potion", 3, true)
@@ -539,7 +550,9 @@ func harvest(soil: int) -> Array:
 	return loot
 
 # ---------------------------------------------------------------- chests
-func open_chest(kind: String) -> Array:
+## Uses one key and rolls the chest's loot. With to_bag the loot goes straight
+## into the bag; without, the caller sends it flying out of the chest.
+func open_chest(kind: String, to_bag: bool = true) -> Array:
 	var c: Dictionary = Data.CHESTS[kind]
 	if count(c.key) <= 0:
 		return []
@@ -549,7 +562,8 @@ func open_chest(kind: String) -> Array:
 	for i in c.rolls:
 		var l := Data.pick_loot(c.loot)
 		loot.append(l)
-		give(l[0], l[1])
+		if to_bag:
+			give(l[0], l[1])
 	return loot
 
 func today() -> int:
@@ -670,7 +684,7 @@ func current_goal() -> Dictionary:
 
 func next_quest(npc: String) -> Dictionary:
 	for q in Data.QUESTS:
-		if q.npc == npc and not q.id in quests_done:
+		if q.npc == npc and not q.id in quests_done and not Data.uses_set_aside(q.need.keys() + q.reward.keys()):
 			return q
 	if npc == "mira":
 		var b := Data.bounty_quest(today())
@@ -712,7 +726,7 @@ func is_night() -> bool:
 # ---------------------------------------------------------------- saving
 func save_game() -> void:
 	var data := {
-		"v": VERSION, "inv": inv, "storage": storage, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
+		"v": VERSION, "inv": inv, "storage": storage, "backpacks": backpacks_owned, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 		"friends": friend_names,
@@ -810,6 +824,12 @@ func load_game() -> bool:
 		var page: Array = saved_storage[b] if saved_storage[b] is Array else []
 		for k in mini(page.size(), BACKPACK_SLOTS):
 			storage[b][k] = _stack(page[k])
+	# a backpack that already holds things stays open, so nothing stored is lost
+	var owned = d.get("backpacks", 1)
+	backpacks_owned = clampi(int(owned) if (owned is int or owned is float) else 1, 1, BACKPACKS)
+	for b in BACKPACKS:
+		if storage[b].any(func(x): return x != null):
+			backpacks_owned = maxi(backpacks_owned, b + 1)
 	var eq: Dictionary = _dict(d, "equip")
 	for slot in EQUIP_SLOTS:
 		var id := str(eq.get(slot, ""))
@@ -912,11 +932,26 @@ func _move_stack(from: Array, i: int, to: Array) -> int:
 ## Puts items straight into Banka's storage (for rewards earned while you can't
 ## pick anything up). Returns how many didn't fit anywhere.
 func stash(id: String, n: int) -> int:
-	for b in storage:
+	for b in backpacks_owned:
 		if n <= 0:
 			break
-		n = _move_stack([{"id": id, "n": n}], 0, b)
+		n = _move_stack([{"id": id, "n": n}], 0, storage[b])
 	return n
+
+## Whether backpack b is unlocked. The first is free; the rest cost gems.
+func owns_backpack(b: int) -> bool:
+	return b < backpacks_owned
+
+## Buys the next locked backpack for BACKPACK_GEMS gems. Returns "" or why not.
+func buy_backpack() -> String:
+	if backpacks_owned >= BACKPACKS:
+		return "You have every backpack."
+	if gems < BACKPACK_GEMS:
+		return "You need %d gems for a new backpack." % BACKPACK_GEMS
+	gems -= BACKPACK_GEMS
+	backpacks_owned += 1
+	stats_changed.emit()
+	return ""
 
 ## How many of an item sit in Banka's storage.
 func in_storage(id: String) -> int:
@@ -929,6 +964,8 @@ func in_storage(id: String) -> int:
 
 ## Bag slot i into backpack b.
 func store(i: int, b: int) -> int:
+	if not owns_backpack(b):
+		return inv[i].n if inv[i] else 0
 	return _move_stack(inv, i, storage[b])
 
 ## Backpack b's slot k back into the bag.

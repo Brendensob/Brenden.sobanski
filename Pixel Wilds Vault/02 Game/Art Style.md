@@ -18,7 +18,18 @@ tags: [game, art]
   - a dark line on top with a bright rim under it;
   - **round scallops** hanging into the dirt, with a dark edge;
   - see [[#The ground and the map's walls (2026-10-27)]] for edges, corners and walls.
-- **Damage numbers:** size 10 with a 4 px outline. They pop in at 1.7× and squash back.
+- **Text (2026-11-06):** every word on screen is smooth, not pixelated: the round **Fredoka** font (OFL), in **white with a black outline**. Coloured text (names, damage numbers, warnings) keeps its colour with the same outline. Names and numbers in the world use a copy drawn 8× finer so the camera's zoom doesn't make them blocky. The old pixel fonts (Pixelify Sans, Silkscreen) are no longer used. *"make the words on the screen non pixelated and js smooth white letters with black outline"*
+
+![[smooth_text_2026-11-06.png]]
+
+- **Clean text (2026-11-06):** letters are placed at quarter pixels without hinting and are no longer snapped to the 480×270 grid (`snap_2d_vertices_to_pixel` off), so gaps between letters stay even and outlines sit on their letters. Outlines are a fifth of the letter size (`Art.outline_for`: 2 for most text). Dark coloured words are brightened to read on the black outline. The autotest checks every open window for overlapping writing.
+- **Crystals and ores (2026-11-06):** crystals are thin shards on a small rock, ores a shaded rock with shiny faceted nuggets. Ore rocks in the world have shaded faces, cracks and lit nuggets; ice and erbium rocks grow thin crystal shards (`Art.nugget`, `Art.shard`).
+- **Worn gear (2026-11-06):** armour and helmets on your character take the shapes of their icons (`ItemIcons.armor_parts` and `ItemIcons.helmet_kind` are shared), so no two look like the same piece in another colour.
+- **Held weapons (2026-11-06):** drawn from a smooth 4× copy of the icon at the weapon's own size.
+
+![[clean_text_gear_2026-11-06.png]]
+
+- **Damage numbers:** size 10 with a 2 px outline. They pop in at 1.7× and squash back.
 - **Death bursts:** round puffs with a dark rim and a highlight, shrinking away.
 - **Characters:** chibi (big head, two-dot eyes, stubby legs), drawn from text grids in `Art.LOOKS`.
 
@@ -27,6 +38,7 @@ tags: [game, art]
 ![[clean_bosses.png]]
 
 Brenden asked for "way cleaner", more cartoon-ish graphics with depth and colour (see [[2026-10-27 Cleaner cartoon look]]).
+- **Bosses are big, like PSG2** (2026-11-06): drawn twice as big as ordinary monsters' scale (the King and Queen are about four times your height). Rexy, Dark Rexy and the Hand are twice as big when they come as an arena's boss. Weapons have their own size in your hand (see Held weapons above).
 - **Big sprites are smoothed, not blown up.** Bosses, the big chicks and the big bag icons are enlarged with Scale2x/Scale3x (`Art.upscale()`), which rounds off the staircase edges. Big monsters are outlined *before* they're enlarged, so they keep a bold cartoon outline.
 - **Soft shadows** sit under the player, friends, villagers, walking monsters and drops.
 - **Glows:** portals breathe a soft glow in their colour; drops glow faintly; silver, gold, erbium, volcanic, ice and sandnite rocks twinkle in their own colour.
@@ -87,6 +99,17 @@ Brenden asked to *"remodel everything especially the walls around the map like a
   - a small shine sits up on the top left;
   - eyes and very dark or white details are left alone. With the cartoon rim on top, that's four tones, so they look round instead of flat.
 - `look_check()` saves sheets of every monster (`75_monsters`, close-up `78_common_monsters`), every villager (`76_villagers`) and the houses (`77_houses`).
+## Item icons (2026-11-04)
+
+![[item_icons_sheet.png]]
+
+Every one of the 567 items has its own icon, still on the 10 × 10 grid with the outline and cartoon finish. Brenden: *"i need models for every item"*.
+- Materials, food, books, keys, seeds, eggs and placeables use the templates in `Art.ICON_GRIDS`, now with no two alike (gems in their own colours, a small shard for the Small Evil Crystal, spotted eggs for the event eggs, a torch stand for the placeable Torch).
+- Potions grow with their size: vial, bottle, flask, jug.
+- Weapons, staffs, bows, cannons, ammo, armour, helmets, shields and rings are drawn by `scripts/item_icons.gd` from their name: blade length, tip (point, clip, fork, hook, round), width, curve, teeth, guard (bar, cross, crescent, disc, wings), pommel; helmet shape (dome, visor, crest, horns, wings, hats, hood, masks, animal heads); shield shape (heater, round, kite, tower, buckler) and emblem; ring stone (heart, drop, flame, skull, shield...). Themed ones have their own shapes: candy canes, lollipops, Christmas trees, carrots, ice pops, the ninja star, the twin blades.
+- **Upgrades keep the family's shape** and gain marks: 2 a gem in the guard, 3 a gem in the pommel, 4 a rune, 5 a sparkle, U gold trim and two sparkles.
+- Pets use their own sprite; Jr pets are drawn smaller.
+- `tools/icon_audit.gd` lists any items that share a picture (and `AUDIT_SHEET=file.png` saves a sheet of every icon). The autotest checks it too.
 
 ## Palette
 The theme colors for each world are in `Art.THEMES` (grass, dark, hell, ice, dream, modina, nightmare, forbidden, snow, mushroom, fruit, egg, tomb, ghost).

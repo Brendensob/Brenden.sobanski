@@ -49,6 +49,13 @@ var regen := {"hp": 0.0, "mp": 0.0, "st": 0.0, "poison": 0.0}
 var ring_t := {"ring_l": 0.0, "ring_r": 0.0}
 var msg_cd := 0.0
 var dead := false
+## Single player: after fainting you can come back as a ghost at the start of
+## the map and walk to your gravestone to get back up there (see grave.gd).
+## A ghost can move and jump but can't hit, pick up or be hit.
+var ghost := false
+## How long the fall into a faint takes in single player.
+const DEATH_ANIM := 1.6
+var death_tween: Tween
 var body_sprite: Sprite2D
 var held_sprite: Sprite2D
 var light: PointLight2D
@@ -87,11 +94,11 @@ func _ready() -> void:
 	light.position = Vector2(0, -10)
 	add_child(light)
 	name_label = Label.new()
-	name_label.add_theme_font_override("font", Art.font_body)
+	Art.world_text(name_label)
 	name_label.add_theme_font_size_override("font_size", 6)
 	name_label.add_theme_color_override("font_color", Color("ff3a3a"))
 	name_label.add_theme_color_override("font_outline_color", Color("1b1a24"))
-	name_label.add_theme_constant_override("outline_size", 2)
+	name_label.add_theme_constant_override("outline_size", Art.outline_for(6))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size = Vector2(80, 10)
 	name_label.position = Vector2(-40, -36)
@@ -102,17 +109,23 @@ func _ready() -> void:
 
 func _update_held() -> void:
 	var id := GS.held()
-	held_sprite.texture = Art.icon(id) if id != "" else null
+	held_sprite.texture = Art.held_tex(id) if id != "" else null
+	held_sprite.scale = Art.held_scale(id)
+	held_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 func held_type() -> String:
 	var id := GS.held()
 	return Data.ITEMS[id].type if id != "" else ""
 
 func _physics_process(delta: float) -> void:
-	if dead:
+	if dead and not ghost:
 		return
 	var dir := 0.0
-	if not level.main.input_blocked():
+	if ghost and not level.main.input_blocked():
+		dir = Input.get_axis("move_left", "move_right")
+		if Input.is_action_just_pressed("jump") and is_on_floor():
+			_jump()
+	elif not ghost and not level.main.input_blocked():
 		dir = Input.get_axis("move_left", "move_right")
 		if Input.is_action_just_pressed("jump"):
 			if is_on_floor():
@@ -134,7 +147,7 @@ func _physics_process(delta: float) -> void:
 			use_held(true)
 		elif (Input.is_action_pressed("attack") or GS.auto_hit) and cooldown <= 0 and held_type() in AUTO_TYPES:
 			use_held(false)
-	elif GS.auto_hit and cooldown <= 0 and held_type() in AUTO_TYPES:
+	elif not ghost and GS.auto_hit and cooldown <= 0 and held_type() in AUTO_TYPES:
 		# auto-hit keeps swinging while the bag is open (the bag doesn't pause it)
 		use_held(false)
 	if not is_on_floor():
@@ -166,6 +179,9 @@ func _tick(delta: float, dir: float) -> void:
 	msg_cd -= delta
 	cooldown -= delta
 	attack_buffer -= delta
+	if ghost:
+		_ghost_look(dir)
+		return
 	# statuses wear off
 	for k in GS.status.keys():
 		GS.status[k] -= delta
@@ -220,7 +236,7 @@ func _tick(delta: float, dir: float) -> void:
 	body_sprite.visible = not (invuln > 0 and flash <= 0 and int(anim * 20) % 2 == 0)
 	held_sprite.position = Vector2(facing * 5, -7)
 	held_sprite.flip_h = facing < 0
-	held_sprite.offset = Vector2(4 * facing, -5)
+	held_sprite.offset = Art.held_offset(held_sprite.texture, facing)
 	var ang: float = SWING_KEYS[0][1]
 	if swing > 0:
 		ang = swing_angle(1.0 - swing / swing_len)
@@ -236,6 +252,17 @@ func _tick(delta: float, dir: float) -> void:
 	var glow := 1.0 if GS.held() == "torch_weapon" else 0.35
 	var gloom := 1.0 if level.modulate_node.color.r < 0.9 else 0.0
 	light.energy = maxf(GS.darkness(), gloom) * glow
+
+## A ghost floats see-through and bobs a little; nothing else of the body runs.
+func _ghost_look(dir: float) -> void:
+	var frame := "jump" if not is_on_floor() else ("walk" if dir != 0 and int(anim * 8) % 2 == 1 else "stand")
+	cur_frame = frame
+	body_sprite.texture = Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""))
+	body_sprite.position.y = -body_sprite.texture.get_height() / 2.0 - 2.0 + sin(anim * 4.0) * 1.5
+	body_sprite.flip_h = facing < 0
+	body_sprite.rotation = 0.0
+	body_sprite.visible = true
+	held_sprite.visible = false
 
 func _jump() -> void:
 	velocity.y = JUMP
@@ -461,7 +488,7 @@ func _do_hit() -> void:
 	var mobs: Array = level.mobs_in_rect(r).filter(func(m): return not level.wall_between(chest, m.hit_rect().get_center()))
 	if mobs.size() > 0:
 		for m in mobs:
-			m.take_damage(GS.roll_attack(id), position.x, it.get("kb", false))
+			m.take_damage(GS.roll_attack(id), position.x, float(it.get("kb", 0.0)))
 		level.main.shake(1.5)
 		return
 	var n: Node = level.node_in_rect(r)
@@ -535,13 +562,70 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 	if GS.hp <= 0:
 		_die()
 
-func _die() -> void:
-	level.burst(position + Vector2(0, -8), Color("d8433a"), 16)
+func _die(on_purpose := false) -> void:
 	GS.hp = 0
 	dead = true
-	body_sprite.rotation = PI / 2 * facing
+	ghost = false
 	Sfx.play("die", 0.0)
-	level.main.player_died()
+	if Net.active or on_purpose:
+		level.burst(position + Vector2(0, -8), Color("d8433a"), 16)
+		body_sprite.rotation = PI / 2 * facing
+	else:
+		_slow_fall()
+	level.main.player_died(on_purpose)
+
+## Single player: a slow faint. You stagger back, keel over, lie still for a
+## moment and fade away; your gravestone rises where you fell (DEATH_ANIM).
+func _slow_fall() -> void:
+	velocity = Vector2.ZERO
+	held_sprite.visible = false
+	body_sprite.visible = true
+	level.burst(position + Vector2(0, -8), Color("d8433a"), 10)
+	if death_tween:
+		death_tween.kill()
+	death_tween = create_tween()
+	death_tween.tween_property(body_sprite, "rotation", -0.25 * facing, 0.25).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	death_tween.tween_property(body_sprite, "rotation", PI / 2 * facing, 0.75).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	death_tween.parallel().tween_property(body_sprite, "position:y", -4.0, 0.75)
+	death_tween.tween_interval(0.2)
+	death_tween.tween_property(body_sprite, "modulate", Color(0.6, 0.6, 0.7, 0.0), 0.4)
+	death_tween.tween_callback(func(): level.burst(position + Vector2(0, -6), Color("c8ccd8"), 12))
+
+## Back on your feet right here, at full health (the gravestone or the free revive).
+func revive_here() -> void:
+	if death_tween:
+		death_tween.kill()
+	dead = false
+	ghost = false
+	_reset_look()
+	GS.hp = GS.max_hp()
+	GS.st = GS.max_st()
+	GS.status.clear()
+	GS.stats_changed.emit()
+	invuln = 3.0
+	flash = 0.0
+	level.burst(position + Vector2(0, -8), Color("f2cf5b"), 18)
+
+## Up again as a ghost at `at` (the start of the map).
+func become_ghost(at: Vector2) -> void:
+	if death_tween:
+		death_tween.kill()
+	ghost = true
+	_reset_look()
+	modulate = Color(0.7, 0.9, 1.0, 0.55)
+	held_sprite.visible = false
+	position = at
+	velocity = Vector2.ZERO
+	GS.st = GS.max_st()
+	GS.status.clear()
+	GS.stats_changed.emit()
+
+func _reset_look() -> void:
+	modulate = Color.WHITE
+	body_sprite.modulate = Color.WHITE
+	body_sprite.rotation = 0
+	body_sprite.visible = true
+	held_sprite.visible = true
 
 func hit_rect() -> Rect2:
 	return Rect2(position.x - 5, position.y - 16, 10, 16)
@@ -552,7 +636,7 @@ func self_destruct() -> void:
 		return
 	level.burst(position + Vector2(0, -8), Color("3e424a"), 16)
 	level.main.shake(3.0)
-	_die()
+	_die(true)
 
 ## What the rest of the room needs to draw you.
 func net_state() -> Dictionary:
@@ -562,6 +646,10 @@ func net_state() -> Dictionary:
 
 ## In a room you get back up where the map starts instead of going home.
 func revive() -> void:
+	if death_tween:
+		death_tween.kill()
+	ghost = false
+	_reset_look()
 	dead = false
 	flip_t = 99.0
 	body_sprite.rotation = 0

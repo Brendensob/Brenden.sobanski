@@ -20,7 +20,7 @@ What Brenden's screenshots and recordings of the real game showed. The images th
   - gems sit right of the clock (`+` 💎 count in green-cyan);
   - no day label outside Survival;
   - no coin counter on the HUD.
-- **Town street, left to right:** a dark-haired girl, the Plumber (red cap) with "New stocked items!", the player, **Banka** (blonde pigtails tied with red, purple-pink dress), then **the spiky-haired blond seller** (grey shirt, dark pants). That's the Merchant.
+- **Town street, left to right:** a dark-haired girl, the Plumber (red cap) with "New stocked items!", the player, **Banka** (blonde pigtails tied with red, purple-pink dress), then **the spiky-haired blond seller** (grey shirt, dark pants). That's the Merchant. She buys your items; the Plumber is the one who sells (Brenden, 2026-11-04).
 - **Bag screen:**
   - **6 backpack tabs** across the top;
   - a 5 × 6 storage grid next to the 5 × 5 bag;

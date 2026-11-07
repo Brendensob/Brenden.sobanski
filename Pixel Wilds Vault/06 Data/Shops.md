@@ -10,19 +10,7 @@ tags: [data, generated]
 
 ## Merchant
 
-| Item | Price (Pixel Coins) |
-|---|---|
-| Combo Book II | 1500 |
-| Small Potion | 15 |
-| Small Mana Potion | 15 |
-| Antidote | 40 |
-| Fatigue Potion | 40 |
-| Arrow | 2 |
-| Crazy Cannon I Balls | 8 |
-| WaazooKaa I Missiles | 12 |
-| Wood Wall | 10 |
-| Campfire | 60 |
-| Monster Egg (Green) | 10000 |
+Sells nothing.
 
 Buys your items: yes
 
@@ -33,8 +21,20 @@ Buys your items: yes
 | Wooden Axe | 250 |
 | Wooden Pick | 250 |
 | Copper Ore | 250 |
+| Small Potion | 15 |
+| Small Mana Potion | 15 |
+| Antidote | 40 |
+| Fatigue Potion | 40 |
+| Arrow | 2 |
+| Crazy Cannon I Balls | 8 |
+| WaazooKaa I Missiles | 12 |
+| Wood Wall | 10 |
+| Campfire | 60 |
+| Combo Book II | 1500 |
+| Monster Egg (Pink) | 10000 |
+| Monster Egg (Green) | 20000 |
 
-Buys your items: yes
+Buys your items: no
 
 ## Brutus' Shop
 
@@ -43,6 +43,7 @@ Buys your items: yes
 | Wood | 5 |
 | Rock | 5 |
 | Branch | 5 |
+| Copper Ore | 250 |
 
 Buys your items: no
 

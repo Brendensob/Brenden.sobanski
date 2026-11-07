@@ -36,7 +36,7 @@ Added 2026-10-27 so a new player always knows what to do next. Brenden asked tha
 | 17 | Enter Hell | been there |
 
 ## Pacing, from the journey test (2026-11-07)
-`tests/journey_test.gd` plays a new character through this list: real fights, chopping and mining, quests, crafting and smelting (see [[Testing#Journey test]]). With the changes below, a run reached:
+`tests/journey_test.gd` plays a new character through this list: real fights, chopping and mining, quests, crafting and smelting (see [[Testing#Journey test]]). With this session's changes (and its own Jelly fix, later replaced by Brenden's Jelly 30% and returning Slimes from PR #41), a run reached:
 
 | Minute | Goal |
 |---|---|

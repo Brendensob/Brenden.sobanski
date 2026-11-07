@@ -2,6 +2,7 @@ extends Node
 ## Plays through the main features and saves screenshots.
 ## Run: godot --path . -- --autotest [--touch]   (screenshots go to user://shots)
 
+const MobS := preload("res://scripts/mob.gd")
 var main: Node
 var out := "user://shots"
 var fails := []
@@ -15,6 +16,75 @@ func shot(name: String) -> void:
 	await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [out, name])
 	print("shot ", name)
+	text_check(name)
+
+## Brenden, 2026-11-06: "fix all these little bugs where the writing looks weird
+## and double check to make sure there's nothing like that". Every screenshot
+## of an open window checks that no two pieces of writing in it overlap.
+var text_bad := {}
+func text_check(name: String) -> void:
+	if main == null or main.hud == null:
+		return
+	for k in main.hud.panels:
+		var pn: Control = main.hud.panels[k]
+		if not pn.is_visible_in_tree() or pn.modulate.a < 0.99 or pn.scale != Vector2.ONE:
+			continue
+		var boxes := []
+		_text_boxes(pn, boxes)
+		for i in boxes.size():
+			for j in range(i + 1, boxes.size()):
+				var a: Array = boxes[i]
+				var b: Array = boxes[j]
+				if a[0].grow(-1.0).intersects(b[0].grow(-1.0)):
+					var what := "%s/%s: '%s' and '%s'" % [name, k, a[1], b[1]]
+					if not text_bad.has(what):
+						text_bad[what] = true
+						check(false, "writing doesn't overlap (%s)" % what)
+
+## The rectangles the visible words of `n` and its children take on screen.
+func _text_boxes(n: Node, boxes: Array, clip := Rect2(-9999, -9999, 99999, 99999)) -> void:
+	if n is CanvasItem and not n.visible:
+		return
+	if n is ScrollContainer:
+		clip = clip.intersection(n.get_global_rect())
+	if n is Label and n.text.strip_edges() != "" and n.visible_ratio > 0.0 and not n.has_meta("logo"):
+		var r := _label_text_rect(n).intersection(clip)
+		if r.has_area():
+			boxes.append([r, n.text.left(24)])
+	elif n is Button and n.text != "":
+		var f: Font = n.get_theme_font("font")
+		var fs: int = n.get_theme_font_size("font_size")
+		var gr: Rect2 = n.get_global_rect()
+		var w := f.get_string_size(n.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		var h := f.get_height(fs)
+		var r := Rect2(gr.get_center() - Vector2(w, h) / 2.0, Vector2(w, h)).intersection(clip)
+		if r.has_area():
+			boxes.append([r, n.text.left(24)])
+	for c in n.get_children():
+		_text_boxes(c, boxes, clip)
+
+func _label_text_rect(l: Label) -> Rect2:
+	var f: Font = l.get_theme_font("font")
+	var fs: int = l.get_theme_font_size("font_size")
+	var gr := l.get_global_rect()
+	var lines := l.get_visible_line_count()
+	var h := f.get_height(fs) * lines + l.get_theme_constant("line_spacing") * maxi(lines - 1, 0)
+	var w := gr.size.x
+	if l.autowrap_mode == TextServer.AUTOWRAP_OFF:
+		w = 0.0
+		for line in l.text.split("\n"):
+			w = maxf(w, f.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	var x := gr.position.x
+	if l.horizontal_alignment == HORIZONTAL_ALIGNMENT_CENTER:
+		x += (gr.size.x - w) / 2.0
+	elif l.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT:
+		x += gr.size.x - w
+	var y := gr.position.y
+	if l.vertical_alignment == VERTICAL_ALIGNMENT_CENTER:
+		y += (gr.size.y - h) / 2.0
+	elif l.vertical_alignment == VERTICAL_ALIGNMENT_BOTTOM:
+		y += gr.size.y - h
+	return Rect2(Vector2(x, y), Vector2(w, h))
 
 func wait(t: float) -> void:
 	await get_tree().create_timer(t).timeout
@@ -155,6 +225,94 @@ func click(at: Vector2) -> void:
 		Input.parse_input_event(ev)
 		await get_tree().physics_frame
 		await get_tree().physics_frame
+
+## Drags with the mouse from one screen point to another, like a player would.
+func drag(a: Vector2, b: Vector2) -> void:
+	var k := Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+	var ev := InputEventMouseButton.new()
+	ev.button_index = MOUSE_BUTTON_LEFT
+	ev.pressed = true
+	ev.position = a * k
+	ev.global_position = a * k
+	Input.parse_input_event(ev)
+	await get_tree().physics_frame
+	for i in range(1, 9):
+		var m := InputEventMouseMotion.new()
+		m.button_mask = MOUSE_BUTTON_MASK_LEFT
+		m.position = a.lerp(b, i / 8.0) * k
+		m.global_position = m.position
+		m.relative = (b - a) * k / 8.0
+		Input.parse_input_event(m)
+		await get_tree().physics_frame
+	await shot_if("35_dragging")
+	var up := InputEventMouseButton.new()
+	up.button_index = MOUSE_BUTTON_LEFT
+	up.pressed = false
+	up.position = b * k
+	up.global_position = b * k
+	Input.parse_input_event(up)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+var want_shot := ""
+func shot_if(name: String) -> void:
+	if want_shot == name:
+		want_shot = ""
+		await shot(name)
+
+func hover(at: Vector2) -> void:
+	var k := Vector2(DisplayServer.window_get_size()) / get_viewport().get_visible_rect().size
+	var m := InputEventMouseMotion.new()
+	m.position = at * k
+	m.global_position = m.position
+	Input.parse_input_event(m)
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+
+## Hovering a slot shows the item's card; dragging moves items anywhere.
+func drag_check() -> void:
+	var hud: Node = main.hud
+	hud.close_panels()
+	var saved: Array = GS.inv.duplicate(true)
+	var saved_eq: Dictionary = GS.equip.duplicate()
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.inv[0] = {"id": "plunger", "n": 1}
+	GS.inv[1] = {"id": "small_potion", "n": 3}
+	GS.inv[7] = {"id": "wooden_helmet", "n": 1}
+	GS.inv[8] = {"id": "jelly", "n": 4}
+	GS.inv[9] = {"id": "jelly", "n": 5}
+	GS.equip.helmet = ""
+	GS.inventory_changed.emit()
+	await wait(0.2)
+	# the hotbar, with the bag closed
+	var h0: Button = hud.hotbar_slots[0]
+	var h3: Button = hud.hotbar_slots[3]
+	await hover(h0.get_global_rect().get_center())
+	await wait(0.2)
+	check(hud.hover_card != null and hud.hover_card.visible and hud.hover_card.get_node("Box").get_child(0).text == "Plunger", "hovering an item shows its card")
+	await shot("35_hover_card")
+	await drag(h0.get_global_rect().get_center(), h3.get_global_rect().get_center())
+	check(GS.inv[3] != null and GS.inv[3].id == "plunger" and GS.inv[0] == null, "dragging moves an item along the hotbar, bag closed")
+	hud.toggle_bag()
+	await wait(0.3)
+	var bs: Array = hud.bag_slots
+	await drag(bs[3].get_global_rect().get_center(), bs[12].get_global_rect().get_center())
+	check(GS.inv[12] != null and GS.inv[12].id == "plunger", "dragging moves an item around the bag")
+	await drag(bs[8].get_global_rect().get_center(), bs[9].get_global_rect().get_center())
+	check(GS.inv[9] != null and GS.inv[9].n == 9 and GS.inv[8] == null, "dropping jelly on jelly stacks them")
+	await drag(bs[7].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
+	check(GS.equip.helmet == "wooden_helmet" and GS.inv[7] == null, "dragging a helmet onto the helmet slot wears it")
+	await drag(hud.equip_buttons.helmet.get_global_rect().get_center(), bs[20].get_global_rect().get_center())
+	check(GS.equip.helmet == "" and GS.inv[20] != null and GS.inv[20].id == "wooden_helmet", "dragging it back puts it in that bag slot")
+	await drag(bs[1].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
+	check(GS.inv[1] != null and GS.inv[1].id == "small_potion" and GS.equip.helmet == "", "a potion can't be dropped on the helmet slot")
+	want_shot = "35_dragging"
+	await drag(bs[1].get_global_rect().get_center(), bs[17].get_global_rect().get_center())
+	hud.close_panels()
+	GS.inv = saved
+	GS.equip = saved_eq
+	GS.inventory_changed.emit()
 
 ## Lines up every monster from the later worlds for a picture.
 func new_monsters() -> void:
@@ -619,6 +777,11 @@ func jump_and_underground() -> void:
 	var gk := find_prop(func(n): return n.get("npc_id") == "keeper")
 	check(crafter != null and gk != null and is_equal_approx(mid - crafter.position.x, gk.position.x - mid) and crafter.position.x < mid,
 		"the Crafter stands left of the portal and the Gatekeeper right of it, the same distance away")
+	check(crafter != null and gk != null and is_equal_approx(gk.position.x - crafter.position.x, 13 * 16.0),
+		"the Crafter and the Gatekeeper stand 13 tiles apart (2.5 times the old 5)")
+	check(lvl.TOWN_OPENING[1] - lvl.TOWN_OPENING[0] == 10, "the opening above them is 10 tiles wide (2.5 times the old 4)")
+	var start: Vector2 = lvl.cell_pos(lvl.spawn_cell)
+	check(crafter != null and gk != null and start.x > crafter.position.x + 16 and start.x < gk.position.x - 16, "you start in the gap between the Crafter and the Gatekeeper")
 	main.hud.close_panels()
 	p.position = lvl.town_portal_pos() + Vector2(-18, 0)
 	await wait(0.8)
@@ -634,8 +797,30 @@ func jump_and_underground() -> void:
 		if GS.inv[i] and GS.inv[i].id == "rock":
 			rock_i = i
 	var rocks0 := GS.count("rock")
+	# the first backpack is free; every one after costs gems, in order
+	GS.backpacks_owned = 1
+	GS.gems = 0
+	check(GS.owns_backpack(0) and not GS.owns_backpack(1), "the first backpack is free and the second is locked")
 	main.hud.open_storage()
+	main.hud.storage_page = 1
+	main.hud._refresh_bag()
+	var unlock: Button = main.hud.page.find_child("UnlockPack", true, false)
+	check(unlock != null and unlock.disabled, "a locked backpack shows an Unlock button, greyed out without gems")
+	await shot("03g_locked_backpack")
+	main.hud._bag_click(rock_i)
+	check(GS.count("rock") == rocks0 and GS.storage[1].all(func(x): return x == null), "nothing goes into a locked backpack")
+	check(GS.buy_backpack() != "" and GS.backpacks_owned == 1, "a backpack can't be bought without %d gems" % GS.BACKPACK_GEMS)
+	GS.gems = GS.BACKPACK_GEMS * 2 + 3
+	main.hud._refresh_bag()
+	unlock = main.hud.page.find_child("UnlockPack", true, false)
+	unlock.pressed.emit()
+	check(GS.backpacks_owned == 2 and GS.gems == GS.BACKPACK_GEMS + 3, "Unlock spends %d gems and opens backpack 2" % GS.BACKPACK_GEMS)
+	main.hud.storage_page = 3
+	main.hud._refresh_bag()
+	check(main.hud.page.find_child("UnlockPack", true, false) == null, "backpacks unlock in order (4 waits for 3)")
+	check(GS.buy_backpack() == "" and GS.backpacks_owned == 3, "the next one costs gems too")
 	main.hud.storage_page = 2
+	main.hud._refresh_bag()
 	main.hud._bag_click(rock_i)
 	var in_pack := 0
 	for s0 in GS.storage[2]:
@@ -1008,6 +1193,17 @@ func gameplay_check() -> void:
 	f.store_string(JSON.stringify({"v": 3, "inv": [{"id": "rock", "n": 9}], "coins": 77, "name": "Tester", "look": "nurse"}))
 	f.close()
 	check(GS.load_game() and GS.count("rock") == 9 and GS.coins == 77 and GS.storage.size() == GS.BACKPACKS, "an old save without storage, gems or clock fields still loads")
+	check(GS.backpacks_owned == 1, "an old save starts with just the free backpack")
+	# a backpack that already holds things stays open in an old save
+	f = FileAccess.open(GS.slot_path(GS.slot), FileAccess.WRITE)
+	var packs := [[], [], [], [{"id": "rock", "n": 2}], [], []]
+	f.store_string(JSON.stringify({"v": 3, "inv": [], "storage": packs, "coins": 1, "look": "nurse"}))
+	f.close()
+	check(GS.load_game() and GS.backpacks_owned == 4 and GS.in_storage("rock") == 2, "an old save keeps every backpack that has items in it")
+	GS.storage[3][0] = null
+	GS.backpacks_owned = 2
+	GS.save_game()
+	check(GS.load_game() and GS.backpacks_owned == 2, "unlocked backpacks are saved")
 	GS.save_game()
 	# the HUD fits every window shape: nothing off screen, A and B and the arrows don't overlap
 	for size in [Vector2i(960, 540), Vector2i(1280, 540), Vector2i(720, 540), Vector2i(540, 720)]:
@@ -1279,6 +1475,16 @@ func _sheet(name: String, imgs: Array, k: int, cols: int) -> void:
 ## The ground's art: every world bakes its ground quickly, the map's edges are
 ## rock and the back walls are drawn; screenshots of the surface and the caves.
 func look_check() -> void:
+	# every item has its own icon: no two items share a picture
+	var seen := {}
+	var same := []
+	for id in Data.ITEMS:
+		var img: Image = Art.icon(id).get_image()
+		var key := "%s:%s" % [img.get_size(), img.get_data().hex_encode().sha256_text()]
+		if seen.has(key):
+			same.append("%s=%s" % [seen[key], id])
+		seen[key] = id
+	check(same.is_empty(), "all %d items have their own icon %s" % [Data.ITEMS.size(), same])
 	var slow := []
 	var empty := []
 	for w in Data.WORLDS:
@@ -1308,6 +1514,15 @@ func look_check() -> void:
 				main.camera.reset_smoothing()
 				await wait(0.5)
 				await shot("71_%s_cave" % w)
+			# a few spots along the surface, to judge how crowded the map feels
+			if w in ["grass_1", "grass_3", "dark_1", "ice_cavern", "hell_1"]:
+				for k in [1, 2, 3]:
+					var sx: int = lvl.W * k / 4
+					lvl.player.position = lvl.cell_pos(Vector2i(sx, lvl.surface[sx] - 1))
+					main.camera.position = lvl.player.position
+					main.camera.reset_smoothing()
+					await wait(0.4)
+					await shot("76_%s_surface_%d" % [w, k])
 	check(slow.is_empty(), "every world builds in under 3 s %s" % [slow])
 	art_sheets()
 	check(empty.is_empty(), "every world has baked ground with rock at its edges %s" % [empty])
@@ -1320,20 +1535,261 @@ func look_check() -> void:
 		main.camera.reset_smoothing()
 		await wait(0.5)
 		await shot(spot[0])
+	# the whole street, west to east, a screen at a time
+	for i in 4:
+		var sx: int = 8 + i * (town.W - 16) / 3
+		town.player.position = town.cell_pos(Vector2i(sx, town.TOWN_MID - 1))
+		main.camera.position = town.player.position
+		main.camera.reset_smoothing()
+		await wait(0.4)
+		await shot("75_town_street_%d" % i)
+	# nothing on the street stands on top of anything else
+	var xs := []
+	for n in town.props.get_children():
+		if (n.get_script() == town.NpcScript or n.get_script() == town.StationScript) and absf(n.position.y - town.cell_pos(Vector2i(0, town.TOWN_MID - 1)).y) < 4:
+			xs.append(n.position.x)
+	xs.sort()
+	var tight := 0
+	for i in range(1, xs.size()):
+		if xs[i] - xs[i - 1] < 32 and xs[i] > 12 * 16:
+			tight += 1
+	check(tight == 0, "the villagers on the street stand at least two tiles apart (%d too close)" % tight)
+
+## The Grasslands Arena brings one boss: Rexy, the Hand or the Jelly King.
+## The Jelly King leaps high and slams, sending jelly along the ground that
+## hurts unless you jump it.
+## Brenden's 2026-11-06 asks: potions from monsters, PSG2's money, and big bosses
+## and long weapons.
+func psg2_match_check() -> void:
+	for m in ["slime", "wisp", "mummy", "shell", "octopus", "dark_slime", "mantis", "zombie"]:
+		check(Data.MOBS[m].drops.any(func(e): return e[0] == "small_potion"), "the %s can drop a Small Potion" % Data.MOBS[m].name)
+	check(Data.WORLDS.grass_arena.boss_drops.any(func(e): return e[0] == "holy_banana"), "the Grasslands Arena boss can drop a Holy Banana")
+	var old := GS.coins
+	GS.coins = 250000
+	check(GS.coins == 99999, "Pixel Coins stop at 99,999")
+	GS.coins = -5
+	check(GS.coins == 0, "and never go below 0")
+	GS.coins = old
+	var price := func(shop: String, id: String) -> int:
+		for e in Data.SHOPS[shop].sells:
+			if e[0] == id:
+				return e[1]
+		return -1
+	check(price.call("tools", "pink_egg") == 10000 and price.call("tools", "green_egg") == 20000 and price.call("gruff", "copper_ore") == 250, "egg and ore prices are the wiki's")
+	check(Data.ITEMS.living_flame.sell == 1 and Data.ITEMS.gold_pick.sell == 50 and Data.ITEMS.short_blade.sell == 0, "sell prices are the wiki's")
+	check(Data.CHESTS.silver.loot.filter(func(e): return e[0] == "coin").map(func(e): return e[1]) == [1, 10, 11, 100, 111], "Silver Chests hold 1, 10, 11, 100 or 111 coins")
+	check(Art.held_size("long_lance") > Art.held_size("long_sword") and Art.held_size("long_sword") > Art.held_size("plunger") and Art.held_size("plunger") > Art.held_size("short_blade"), "a lance is drawn longer than a long sword, a long sword than the Plunger, the Plunger than the Gradius")
+	check(Data.ITEMS.volcan_axe.kb > Data.ITEMS.knights_blade.kb and Data.ITEMS.knights_blade.kb > Data.ITEMS.glow_blade_blue.kb and Data.ITEMS.long_lance.kb == 0.0, "an axe knocks harder than a sword, a sword harder than a Fluorescent, a lance not at all")
+	var feel := {}
+	var nw := 0
+	for wid in Data.ITEMS:
+		var wi: Dictionary = Data.ITEMS[wid]
+		if wi.type == "weapon" and wid != "fist":
+			nw += 1
+			feel["%s|%s|%s|%s" % [wi.kb, wi.size, wi.reach, wi.spd]] = true
+	check(feel.size() * 3 >= nw, "weapons differ in knockback, size, reach and speed (%d kinds among %d)" % [feel.size(), nw])
+	await goto("grass_1")
+	var lvl: Node = main.level
+	for e in lvl.entities.get_children():
+		if e is MobS:
+			e.queue_free()
+	await get_tree().process_frame
+	var p: Node2D = lvl.player
+	var keep = GS.inv[GS.sel]
+	GS.inv[GS.sel] = {"id": "long_sword", "n": 1}
+	GS.inventory_changed.emit()
+	p.facing = 1
+	var king: Node = lvl.spawn_mob_at("king", p.position + Vector2(70, 0))
+	var rexy: Node = lvl.spawn_mob_at("trex", p.position + Vector2(-60, 0), 1.0, 1.0, true)
+	var small: Node = lvl.spawn_mob_at("trex", p.position + Vector2(-130, 0))
+	for m in [king, rexy, small]:
+		m.set_physics_process(false)
+	check(rexy.size.y >= small.size.y * 2 - 1, "an arena's Rexy is twice as big as a normal one (%d vs %d)" % [rexy.size.y, small.size.y])
+	check(king.size.y >= 90, "the King is drawn big (%d px tall)" % king.size.y)
+	await wait(0.3)
+	await shot("33_big_bosses")
+	for m in [king, rexy, small]:
+		m.queue_free()
+	GS.inv[GS.sel] = keep
+	GS.inventory_changed.emit()
+	await chest_hit_check()
+
+## Chests have no window: hit one holding its key and the loot flies out.
+func chest_hit_check() -> void:
+	await goto("town")
+	var chest: Node = find_prop(func(n): return n.get("kind") == "chest_silver")
+	check(chest != null, "Pixel Town has a Silver Chest")
+	if chest == null:
+		return
+	var saved_bag: Array = GS.inv.duplicate(true)
+	var saved_sel := GS.sel
+	var saved_coins := GS.coins
+	var saved_gems := GS.gems
+	for i in GS.BAG:
+		GS.inv[i] = null
+	GS.add_item("silver_key", 2)
+	var keys := GS.count("silver_key")
+	var pickups := func() -> int:
+		return main.level.entities.get_children().filter(func(e): return e is PickupScript and not e.is_queued_for_deletion()).size()
+	await stand_by(chest)
+	var before: int = pickups.call()
+	chest.interact(main.level.player)
+	check(GS.count("silver_key") == keys and pickups.call() == before, "hitting a chest without holding its key doesn't open it")
+	for i in GS.BAG:
+		if GS.inv[i] != null and GS.inv[i].id == "silver_key":
+			GS.sel = i
+	chest.interact(main.level.player)
+	check(GS.count("silver_key") == keys - 1 and pickups.call() == before + 2 and not main.hud.any_open(), "hitting it with the key pops it open and two items fly out, no window")
+	await wait(0.2)
+	await shot("34_chest_burst")
+	# put the bag back as it was, so the loot doesn't crowd later checks
+	for e in main.level.entities.get_children():
+		if e is PickupScript:
+			e.queue_free()
+	GS.inv = saved_bag
+	GS.sel = saved_sel
+	GS.coins = saved_coins
+	GS.gems = saved_gems
+	GS.inventory_changed.emit()
+
+func jelly_king_check() -> void:
+	await goto("grass_arena")
+	var lvl: Node = main.level
+	check(int(lvl.def.get("bosses_pick", 0)) == 1 and lvl.def.bosses.map(func(b): return b[0]) == ["trex", "hand", "jelly_king"], "the Grasslands Arena picks one boss of three")
+	lvl.arena_time = 179.5
+	await wait(0.8)
+	var n := 0
+	for e in lvl.entities.get_children():
+		if e is MobS and e.arena_boss:
+			n += 1
+	check(n == 1, "only one boss comes to the Grasslands Arena (%d)" % n)
+	for e in lvl.entities.get_children():
+		if e is MobS:
+			e.queue_free()
+	await get_tree().process_frame
+	var p: Node2D = lvl.player
+	var king: Node = lvl.spawn_mob_at("jelly_king", p.position + Vector2(90, 0))
+	king.aggro_forced = true
+	king.arena_boss = true
+	main.hud.set_boss(king)
+	await wait(0.6)
+	await shot("31_jelly_king")
+	king.state = "crouch"
+	king.state_t = 0.4
+	await wait(0.2)
+	await shot("31b_jelly_king_crouch")
+	var top: float = king.position.y
+	var waves := 0
+	for f in 240:
+		await get_tree().physics_frame
+		top = minf(top, king.position.y)
+		if king.state == "rest":
+			break
+	for e in lvl.entities.get_children():
+		if e.get_script() == preload("res://scripts/slam_wave.gd"):
+			waves += 1
+	check(lvl.cell_pos(Vector2i(0, 17)).y - top > 80 and waves == 2, "the Jelly King leaps high (%d px) and slams, sending jelly both ways (%d)" % [lvl.cell_pos(Vector2i(0, 17)).y - top, waves])
+	await shot("31c_jelly_king_slam")
+	king.queue_free()
+	for e in lvl.entities.get_children():
+		if e.get_script() == preload("res://scripts/slam_wave.gd"):
+			e.queue_free()
+	await until_floor(p)
+	# a wave that reaches you on the ground hurts; jump it and it doesn't. Gear
+	# is taken off for this, or armor from earlier checks can soak the whole hit.
+	var worn: Dictionary = GS.equip.duplicate()
+	for slot in GS.equip:
+		GS.equip[slot] = ""
+	GS.hp = GS.max_hp()
+	p.invuln = 0.0
+	var W := preload("res://scripts/slam_wave.gd")
+	var w1: Node2D = W.new()
+	w1.setup(lvl, 1, 3)
+	w1.position = Vector2(p.position.x - 40, p.position.y)
+	lvl.entities.add_child(w1)
+	await wait(0.6)
+	check(GS.hp < GS.max_hp(), "the slam's jelly hurts you on the ground")
+	await wait(1.2)
+	await until_floor(p)
+	GS.hp = GS.max_hp()
+	p.invuln = 0.0
+	var w2: Node2D = W.new()
+	w2.setup(lvl, 1, 3)
+	w2.position = Vector2(p.position.x - 30, p.position.y)
+	lvl.entities.add_child(w2)
+	p._jump()
+	await wait(0.6)
+	check(GS.hp == GS.max_hp(), "jumping over it is safe")
+	p.invuln = 9999.0
+	GS.equip = worn
+	GS.stats_changed.emit()
 
 func menus_check() -> void:
 	await goto("grass_1")
 	main.level.player.invuln = 0.0
-	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
+	var pl: Node2D = main.level.player
+	pl.position = main.level.cell_pos(main.level.spawn_cell) + Vector2(40 * 16, 0)
+	for k in 30:
+		await get_tree().physics_frame
+	await until_floor(pl)
+	var fell_at: Vector2 = pl.position
+	# a slime may have bumped you on the way down, leaving you safe for a second
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(0.5)
+	check(pl.dead and not main.hud.panels.dead.visible and absf(pl.body_sprite.rotation) > 0.3, "fainting in single player is a slow fall, not instant")
+	await shot("60a_falling")
 	await wait(1.6)
 	var dp: Panel = main.hud.panels.dead
 	check(dp.visible, "fainting shows the faint screen")
+	var grave: Node = main.grave
+	check(is_instance_valid(grave) and grave.position.distance_to(fell_at) < 4, "a gravestone rises where you fainted")
 	await shot("60_fainted")
 	var wake: Button = dp.get_node("Wake")
+	var rev: Button = dp.get_node("Revive")
 	var wr := wake.get_global_rect()
 	var pr := dp.get_global_rect()
 	var tl: Label = dp.get_node("Text")
-	check(pr.encloses(wr) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr), "the faint screen's text and button fit inside it without overlapping")
+	check(rev.visible and pr.encloses(wr) and pr.encloses(rev.get_global_rect()) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr) and not rev.get_global_rect().intersects(wr),
+		"the faint screen's text and its Respawn and Wake up buttons fit inside it without overlapping")
+	# Respawn: a ghost at the start of the map, who walks back to the gravestone
+	rev.pressed.emit()
+	await wait(0.3)
+	check(not dp.visible and pl.ghost and pl.dead and pl.position.distance_to(main.level.cell_pos(main.level.spawn_cell)) < 20, "Respawn brings you back as a ghost at the start of the map")
+	var hp0 := GS.hp
+	pl.invuln = 0.0
+	pl.hurt(5, 0.0, pl.position.x - 5)
+	check(GS.hp == hp0, "a ghost can't be hurt")
+	await shot("60b_ghost")
+	pl.position = grave.position + Vector2(-10, -1)
+	await wait(1.5)
+	check(pl.ghost and grave.held > 1.0 and grave.label.text.is_valid_float(), "standing by the gravestone shows a little timer (%s)" % grave.label.text)
+	await shot("60c_grave_timer")
+	await wait(2.3)
+	check(not pl.dead and not pl.ghost and GS.hp == GS.max_hp() and pl.position.distance_to(fell_at) < 20 and not is_instance_valid(grave),
+		"3.5 seconds by the gravestone gets you back up there")
+	# faint again and let the gravestone crumble: Pixel Town
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.2)
+	check(main.hud.panels.dead.visible and is_instance_valid(main.grave), "fainting again gives a new gravestone")
+	rev.pressed.emit()
+	await wait(0.2)
+	main.grave.left = 0.2
+	await wait(0.8)
+	check(main.level.id == "town" and not main.level.player.dead, "after 50 seconds the gravestone crumbles and you wake up in Pixel Town")
+	# the Grasslands Arena: one free revive, right where you fall
+	await goto("grass_arena")
+	pl = main.level.player
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.2)
+	check(not pl.dead and GS.hp == GS.max_hp() and not main.hud.panels.dead.visible, "the Grasslands Arena gives one free revive")
+	await shot("61_free_revive")
+	pl.invuln = 0.0
+	pl.hurt(9999, 0.0, pl.position.x - 5)
+	await wait(2.4)
+	check(pl.dead and dp.visible and not rev.visible and not is_instance_valid(main.grave), "only one: the second faint in the arena sends you home")
 	wake.pressed.emit()
 	await wait(0.8)
 	check(not dp.visible and main.level.id == "town" and not main.level.player.dead, "Wake up takes you back to Pixel Town on your feet")
@@ -1410,19 +1866,26 @@ func systems_check() -> void:
 	GS.inventory_changed.emit()
 	# shops: buying takes the price, can't buy without the money, selling pays the item's price
 	GS.coins = 100
-	main.hud.open_shop("merchant")
+	main.hud.open_shop("tools")
 	await wait(0.1)
 	var buy := shop_button("Buy", "Small Potion")
-	check(buy != null and not buy.disabled, "the Merchant sells Small Potions")
+	check(buy != null and not buy.disabled, "the Plumber sells Small Potions")
+	await shot("14_plumber_shop")
 	buy.pressed.emit()
 	await wait(0.1)
 	check(GS.coins == 85 and GS.count("small_potion") == 1, "buying a Small Potion costs 15 coins (%d left)" % GS.coins)
 	GS.coins = 10
-	main.hud._refresh_shop("merchant")
+	main.hud._refresh_shop("tools")
 	await wait(0.1)
 	check(shop_button("Buy", "Small Potion").disabled, "with 10 coins you can't buy a 15-coin potion")
 	GS.add_item("iron_ore", 3)
-	main.hud._refresh_shop("merchant")
+	main.hud._refresh_shop("tools")
+	await wait(0.1)
+	check(shop_button("Sell", "Iron Ore") == null, "the Plumber doesn't buy your items")
+	main.hud.open_shop("merchant")
+	await wait(0.1)
+	check(shop_button("Buy", "Small Potion") == null and Data.SHOPS.merchant.sells.is_empty(), "the Merchant doesn't sell anything")
+	await shot("14b_merchant_shop")
 	await wait(0.1)
 	var sell := shop_button("Sell", "Iron Ore")
 	var coins0 := GS.coins
@@ -1664,6 +2127,7 @@ func check_character_unlocks() -> void:
 	check(GS.is_unlocked("chuchu") and GS.is_unlocked("cavemun"), "unlocks are kept on the device")
 	GS.new_game("pirate", "Arr")
 	check(GS.count("gilded_blade") == 1, "starting as the Pirate comes with its Golden Night")
+	check(GS.count("plunger") == 1 and GS.count("sword_cast") == 0, "everyone starts with the Plunger, like PSG2")
 	GS.delete_slot(1)
 	GS.reset_unlocks()
 	GS.slot = 0
@@ -1728,6 +2192,25 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	# everything past Hell is set aside for now
+	var shown := []
+	for c in main.hud.panels.map.find_child("Cards", true, false).get_children():
+		shown.append(c)
+	check(shown.size() == Data.WORLD_CARDS.size() - Data.LATER_WORLDS.size(), "the Gatekeeper only offers Grasslands to Hell (%d cards)" % shown.size())
+	main.hud._enter_world("tomb_of_makara")
+	await wait(0.3)
+	check(main.level.id == "town" and find_prop(func(n): return n.get_meta("gate", false)) == null, "a set-aside world can't be opened")
+	var aside_smith := Data.SMITH.filter(func(r): return Data.set_aside(r.out)).size()
+	check(Data.set_aside("forbidden_bar") and Data.set_aside("modina_ring") and not Data.set_aside("hell_armor") and not Data.set_aside("jelly") and aside_smith > 0,
+		"items only the later worlds give are set aside (%d items, %d Crafter recipes)" % [Data.SET_ASIDE.size(), aside_smith])
+	var q_aside := false
+	for npc in Data.NPCS:
+		var q: Dictionary = GS.next_quest(npc)
+		if not q.is_empty() and Data.uses_set_aside(q.need.keys() + q.reward.keys()):
+			q_aside = true
+	check(not q_aside, "no villager asks for or gives a set-aside item")
+	# the rest of the test still plays the set-aside worlds, so they keep working
+	Data.set_later_open(true)
 	if OS.has_environment("AT_LOOK"): # set AT_LOOK=1 to run only the ground art checks
 		await look_check()
 		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
@@ -1761,6 +2244,20 @@ func run() -> void:
 	var p: Node2D = lvl.player
 	var jumpie := find_prop(func(n): return n.get("npc_id") == "jumpie")
 	check(jumpie != null, "Jumpie is in Grasslands 1")
+	# more slimes in the Grasslands, and they come back over time
+	var slimes := func(): return lvl.entities.get_children().filter(func(e): return e is MobS and not e.dead and e.id == "slime").size()
+	var s0: int = slimes.call()
+	check(s0 >= 12 and lvl.respawn_cap == s0, "Grasslands 1 starts with plenty of slimes (%d)" % s0)
+	var gone := 0
+	for e in lvl.entities.get_children():
+		if e is MobS and e.id == "slime" and gone < 3:
+			e.queue_free()
+			gone += 1
+	await get_tree().process_frame
+	lvl.respawn_t = 99.0
+	await wait(0.1)
+	check(slimes.call() == s0 - 2, "a new slime appears after a while when some are gone (%d of %d)" % [slimes.call(), s0])
+	check(Data.MOBS.slime.drops.any(func(d): return d[0] == "jelly" and d[1] == 0.3), "slimes drop Jelly 30% of the time")
 	var coins_before := GS.coins
 	GS.add_item("jelly", 10)
 	GS.complete_quest(GS.next_quest("jumpie"))
@@ -1972,6 +2469,16 @@ func run() -> void:
 	for r1 in Data.SMITH:
 		tabs[main.hud._crafter_tab(r1.out)] = true
 	check(tabs.keys().size() == 5 and tabs.has("ring"), "the Crafter has weapons, helmets, armor, shields and rings %s" % [tabs.keys()])
+	# make room: the leftover smelting ore and coal, then spare materials, so a
+	# lucky run of drops earlier can't leave the bag too full for these checks
+	GS.remove_item("copper_ore", GS.count("copper_ore"))
+	GS.remove_item("coal", GS.count("coal"))
+	for i in range(GS.BAG - 1, -1, -1):
+		if GS.inv.count(null) >= 6:
+			break
+		if GS.inv[i] != null and Data.ITEMS[GS.inv[i].id].type == "material":
+			GS.inv[i] = null
+	GS.inventory_changed.emit()
 	var made := []
 	for id in ["hell_armor", "hell_armor_2", "hell_armor_3", "hell_armor_4"]:
 		for r1 in Data.SMITH:
@@ -2028,6 +2535,9 @@ func run() -> void:
 		await wait(1.6)
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
+	await jelly_king_check()
+	await psg2_match_check()
+	await drag_check()
 	await new_monsters()
 	await psg2_complete()
 	await gems_and_characters()
@@ -2048,7 +2558,8 @@ func run() -> void:
 	await shot("40_survival_night")
 	main.level.player.invuln = 0.0
 	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
-	await wait(1.5)
+	await wait(2.4)
+	check(not main.hud.panels.dead.get_node("Revive").visible, "no gravestone in Survival: fainting ends the run")
 	check(GS.count("silver_key") >= 1, "dying on day 7 of Survival gives a Silver Key")
 	await shot("41_fainted")
 	main.respawn()

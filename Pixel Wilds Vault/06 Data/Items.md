@@ -76,10 +76,10 @@ tags: [data, generated]
 
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
-| Wooden Axe | `wooden_axe` | 0 | dmg 1, spd 0.5, reach 16, kb false, tier 1 | Used to chop trees. Tier 1. |
-| Copper Axe | `copper_axe` | 25 | dmg 2, spd 0.5, reach 16, kb false, tier 2 | Used to chop trees. Tier 2. |
-| Iron Axe | `iron_axe` | 25 | dmg 3, spd 0.5, reach 16, kb false, tier 3 | Used to chop trees. Tier 3. |
-| Gold Axe | `gold_axe` | 25 | dmg 4, spd 0.5, reach 16, kb false, tier 4 | Used to chop trees. Tier 4. |
+| Wooden Axe | `wooden_axe` | 0 | dmg 1, spd 0.5, reach 16, kb 0, tier 1 | Used to chop trees. Tier 1. |
+| Copper Axe | `copper_axe` | 25 | dmg 2, spd 0.5, reach 16, kb 0, tier 2 | Used to chop trees. Tier 2. |
+| Iron Axe | `iron_axe` | 25 | dmg 3, spd 0.5, reach 16, kb 0, tier 3 | Used to chop trees. Tier 3. |
+| Gold Axe | `gold_axe` | 25 | dmg 4, spd 0.5, reach 16, kb 0, tier 4 | Used to chop trees. Tier 4. |
 
 ## Book (9)
 
@@ -300,7 +300,7 @@ tags: [data, generated]
 | Blue Wood | `blue_wood` | 15 |  | Wood from blue trees. Needs a gold axe. |
 | Apple | `apple` | 15 |  | Looks delicious, but it's for crafting. |
 | Evil Apple | `evil_apple` | 300 |  | Don't eat it. |
-| Fira | `living_flame` | 60 |  | A living flame. Smelted from fire crystals. |
+| Fira | `living_flame` | 1 |  | A living flame. Smelted from fire crystals. |
 | Copper Ore | `copper_ore` | 3 |  | Smelt 5 with 1 coal for a copper bar. |
 | Iron Ore | `iron_ore` | 5 |  | Smelt 5 with 1 coal for an iron bar. |
 | Silver Ore | `silver_ore` | 8 |  | Smelt 5 with 1 coal for a silver bar. |
@@ -389,11 +389,11 @@ tags: [data, generated]
 
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
-| Wooden Pick | `wooden_pick` | 0 | dmg 1, spd 0.5, reach 16, kb false, tier 1 | Used to mine rocks and ores. Tier 1. |
-| Copper Pickaxe | `copper_pick` | 25 | dmg 2, spd 0.5, reach 16, kb false, tier 2 | Used to mine rocks and ores. Tier 2. |
-| Iron Pickaxe | `iron_pick` | 25 | dmg 3, spd 0.5, reach 16, kb false, tier 3 | Used to mine rocks and ores. Tier 3. |
-| Gold Pickaxe | `gold_pick` | 25 | dmg 4, spd 0.5, reach 16, kb false, tier 4 | Used to mine rocks and ores. Tier 4. |
-| Erbium Pickaxe | `erbium_pick` | 25 | dmg 4, spd 0.5, reach 16, kb false, tier 5 | Used to mine rocks and ores. Tier 5. |
+| Wooden Pick | `wooden_pick` | 0 | dmg 1, spd 0.5, reach 16, kb 0, tier 1 | Used to mine rocks and ores. Tier 1. |
+| Copper Pickaxe | `copper_pick` | 25 | dmg 2, spd 0.5, reach 16, kb 0, tier 2 | Used to mine rocks and ores. Tier 2. |
+| Iron Pickaxe | `iron_pick` | 25 | dmg 3, spd 0.5, reach 16, kb 0, tier 3 | Used to mine rocks and ores. Tier 3. |
+| Gold Pickaxe | `gold_pick` | 50 | dmg 4, spd 0.5, reach 16, kb 0, tier 4 | Used to mine rocks and ores. Tier 4. |
+| Erbium Pickaxe | `erbium_pick` | 50 | dmg 4, spd 0.5, reach 16, kb 0, tier 5 | Used to mine rocks and ores. Tier 5. |
 
 ## Place (6)
 
@@ -552,146 +552,146 @@ tags: [data, generated]
 
 | Item | id | Sell | Stats | Description |
 |---|---|---|---|---|
-| Fist | `fist` | 0 | dmg 1, spd 0.5, reach 14, kb false |  |
-| Sword Cast | `sword_cast` | 10 | dmg 4, spd 0.5, reach 16, kb true | A short practice blade. |
-| Copper Sword Cast | `copper_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
-| Iron Sword Cast | `iron_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword, and of the Hell Sword. |
-| Gold Sword Cast | `gold_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb true | Part of the Combo Sword. |
-| Torch | `torch_weapon` | 1 | dmg 5, spd 1, reach 22, kb true | Long reach, slow swing. |
-| Wood King | `timber_club` | 15 | dmg 5, spd 0.75, reach 18, kb true | A heavy wooden club. |
-| Gradius | `short_blade` | 20 | dmg 5, spd 0.45, reach 16, kb true | Small but quick. Slimes sometimes drop it. Used to craft Golden Night. |
-| Golden Night | `gilded_blade` | 30 | dmg 6, spd 0.5, reach 18, kb true | A short blade with a gold finish. |
-| Blue Night | `azure_blade` | 45 | dmg 9, spd 0.55, reach 20, kb true | A blue steel blade. |
-| Fire Brand | `fire_brand` | 45 | dmg 13, spd 0.55, reach 20, kb true | Warm to hold. |
-| Purple Mist | `violet_edge` | 60 | dmg 19, spd 0.55, reach 20, kb true | A purple-glinting sword. |
-| Plunger | `plunger` | 10 | dmg 4, spd 0.4, reach 16, kb true | Wielded only by the master poopers. |
-| Unlawful | `unlawful` | 45 | dmg 13, spd 0.55, reach 18, kb true | A plunger made into something worse. |
-| Knights Mantle | `knights_blade` | 70 | dmg 15, spd 0.6, reach 22, kb true | A proper knight's sword. |
-| Kings Mace | `kings_mace` | 120 | dmg 27, spd 0.55, reach 22, kb true | Heavy and royal. |
-| Excalibur | `excalibur` | 120 | dmg 23, spd 0.9, reach 24, kb true | Slow, but long and strong. |
-| Poison Ivy | `poison_ivy` | 160 | dmg 31, spd 0.6, reach 22, kb true | A thorny green blade. |
-| Holy Knight | `holy_knight` | 200 | dmg 34, spd 0.5, reach 22, kb true | Shines with holy light. |
-| Fires Devil | `hellfire_blade` | 220 | dmg 38, spd 0.6, reach 24, kb true | Burns everything it touches. |
-| Combo Sword | `combo_sword` | 80 | dmg 14, spd 0.65, reach 18, kb true | Three casts forged into one. |
-| Moon Blade | `moon_blade` | 150 | dmg 17, spd 0.65, reach 22, kb true | A crescent-shaped blade. |
-| Moon Blade II | `moon_blade_2` | 300 | dmg 34, spd 0.65, reach 22, kb true | Sharper under moonlight. |
-| Moon Blade III | `moon_blade_3` | 600 | dmg 73, spd 0.65, reach 24, kb true | Brighter than the moon. |
-| Blue Fluorescent | `glow_blade_blue` | 150 | dmg 19, spd 0.5, reach 22, kb true | Emits a glowing blue light. |
-| Red Fluorescent | `glow_blade_red` | 150 | dmg 19, spd 0.5, reach 22, kb true | Emits a glowing red light. |
-| Green Fluorescent | `glow_blade_green` | 170 | dmg 21, spd 0.5, reach 22, kb true | Emits a glowing green light. |
-| Pink Fluorescent | `glow_blade_pink` | 170 | dmg 21, spd 0.5, reach 22, kb true | Emits a glowing pink light. |
-| Long Sword | `long_sword` | 150 | dmg 10, spd 0.65, reach 28, kb true | Long reach. |
-| Golden Long Sword | `golden_long_sword` | 300 | dmg 17, spd 0.6, reach 28, kb true | Long reach, golden edge. |
-| Pole Axe | `pole_axe` | 25 | dmg 15, spd 1, reach 26, kb true, axe 2 | A slow, heavy axe on a pole. Also chops trees. |
-| Sky Pole Axe | `sky_pole_axe` | 60 | dmg 28, spd 1, reach 26, kb true, axe 3 | The next Pole Axe. Also chops trees. |
-| Volcan Axe | `volcan_axe` | 300 | dmg 86, spd 1, reach 22, kb true, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
-| Twin Sun | `twin_sun` | 300 | dmg 14, spd 0.55, reach 22, kb true | Two suns on one hilt. |
-| Devil Spike | `devil_spike` | 500 | dmg 45, spd 0.9, reach 26, kb true | A wicked spiked weapon. |
-| Hell Sword | `hell_sword` | 1500 | dmg 105, spd 0.55, reach 26, kb true | Forged from evil itself. |
-| Wall Hammer | `wall_hammer` | 0 | dmg 9, spd 0.55, reach 30, kb true | Used to destroy massive walls..? A Survival Grasslands reward. |
-| Tsurugi | `tsurugi` | 0 | dmg 33, spd 0.55, reach 22, kb true | The Ninja's sword. The ninjas under Pixel Town can sharpen it. |
-| Tsurugi II | `tsurugi_2` | 0 | dmg 67, spd 0.55, reach 22, kb true | Sharpened by Nini. |
-| Tsurugi III | `tsurugi_3` | 0 | dmg 128, spd 0.55, reach 24, kb true | Sharpened by Nana. |
-| Tsurugi IV | `tsurugi_4` | 0 | dmg 178, spd 0.55, reach 24, kb true | Sharpened by Nina. |
-| Modina | `modina_1` | 300 | dmg 32, spd 0.6, reach 24, kb false | One of Modina's four swords. |
-| Modina II | `modina_2` | 600 | dmg 58, spd 0.6, reach 24, kb false | One of Modina's four swords. |
-| Modina III | `modina_3` | 1200 | dmg 85, spd 0.6, reach 24, kb false | One of Modina's four swords. |
-| Modina IV | `modina_4` | 2400 | dmg 124, spd 0.6, reach 26, kb false | One of Modina's four swords. |
-| Long Lance | `long_lance` | 400 | dmg 52, spd 0.7, reach 32, kb false | Golden Slugs carry these around. |
-| Long Lance II | `long_lance_2` | 800 | dmg 69, spd 0.6, reach 32, kb false | A longer, sharper lance. |
-| Long Lance III | `long_lance_3` | 1600 | dmg 110, spd 0.55, reach 34, kb false | The best of the lances. |
-| Hell Spike | `hell_spike` | 2000 | dmg 119, spd 0.5, reach 24, kb false, pick 4 | Fast, no knockback, and it mines like a gold pickaxe. |
-| Hell Spike II | `hell_spike_2` | 4000 | dmg 139, spd 0.5, reach 24, kb false, pick 5 | Mines volcanic rock too. |
-| Hell Spike III | `hell_spike_3` | 8000 | dmg 159, spd 0.5, reach 24, kb false, pick 5 | The last Hell Spike. |
-| Hazard Wipe | `hazard_wipe` | 1500 | dmg 110, spd 0.65, reach 26, kb true | Modina sometimes drops it. |
-| Nightmare Long Sword | `nightmare_long_sword` | 2500 | dmg 128, spd 0.6, reach 30, kb true | Long reach, nightmare edge. |
-| Nightmare Blade | `nightmare_blade` | 3000 | dmg 136, spd 0.55, reach 26, kb true | Doom guards it in Nightmare Valley. |
-| Nightmare Blade II | `nightmare_blade_2` | 6000 | dmg 167, spd 0.55, reach 26, kb true | Sharpened with Dark Hearts. |
-| Nightmare Blade III | `nightmare_blade_3` | 12000 | dmg 196, spd 0.55, reach 28, kb true | The darkest blade. |
-| Santa Blade | `santa_blade` | 5000 | dmg 191, spd 0.65, reach 26, kb true | Evil Santa's blade. |
-| Yellow Fluorescent | `yellow_fluorescent` | 300 | dmg 33, spd 0.5, reach 22, kb true | The strongest Fluorescent. |
-| Sapphire Long Sword | `sapphire_long_sword` | 600 | dmg 26, spd 0.55, reach 28, kb true | Long reach, sapphire edge. |
-| Blood Long Sword | `blood_long_sword` | 1200 | dmg 52, spd 0.5, reach 28, kb true | Long reach, blood-red edge. |
-| Refined Combo Sword | `refined_combo_sword` | 300 | dmg 33, spd 0.65, reach 18, kb true | The Combo Sword, refined. |
-| Ice Sword | `ice_sword` | 600 | dmg 45, spd 0.65, reach 16, kb true | Short, but cold. |
-| Ice Devil Sword | `ice_devil_sword` | 3000 | dmg 115, spd 0.5, reach 22, kb true | A frozen devil's blade. |
-| Heavy Ice Devil Sword | `heavy_ice_devil_sword` | 6000 | dmg 225, spd 0.9, reach 26, kb true | Slow and enormous. |
-| Heavy Ice Devil Sword II | `heavy_ice_devil_sword_2` | 12000 | dmg 266, spd 0.9, reach 26, kb true | Slower, bigger, colder. |
-| Volcan Sword | `volcan_sword` | 1500 | dmg 53, spd 0.65, reach 22, kb true | A blade forged in lava. |
-| Volcan LongSword | `volcan_longsword` | 3000 | dmg 98, spd 0.6, reach 28, kb true | The Volcan Sword, longer. |
-| Volcan LongSword U | `volcan_longsword_u` | 6000 | dmg 98, spd 0.55, reach 28, kb true | Rewritten by Combo Book U: faster. |
-| Nightmare Long Sword U | `nightmare_long_sword_u` | 6000 | dmg 125, spd 0.55, reach 30, kb true | Rewritten by Combo Book U: faster. |
-| Hell Sword II | `hell_sword_2` | 3000 | dmg 116, spd 0.55, reach 26, kb true | The Hell Sword, sharpened with a Dark Stone. |
-| Hell Sword U | `hell_sword_u` | 6000 | dmg 116, spd 0.5, reach 26, kb true | Rewritten by Combo Book U: faster. |
-| Evil Axe | `evil_axe` | 4000 | dmg 200, spd 1, reach 24, kb true, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
-| Evil Axe II | `evil_axe_2` | 8000 | dmg 215, spd 1, reach 24, kb true, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
-| Evil Axe U | `evil_axe_u` | 12000 | dmg 218, spd 1, reach 24, kb true, axe 4 | Rewritten by Combo Book U. Also chops trees. |
-| Hell Pole Axe | `hell_pole_axe` | 600 | dmg 67, spd 1, reach 26, kb true, axe 4 | The next Sky Pole Axe. Also chops trees. |
-| Rainbow Sword | `rainbow_sword` | 6000 | dmg 145, spd 0.5, reach 24, kb true | Every color at once. |
-| Rainbow Sword U | `rainbow_sword_u` | 12000 | dmg 151, spd 0.5, reach 24, kb true | Rewritten by Combo Book U. |
-| Twin Sun II | `twin_sun_2` | 600 | dmg 30, spd 0.55, reach 22, kb true | Two brighter suns. |
-| Twin Sun III | `twin_sun_3` | 1200 | dmg 65, spd 0.55, reach 22, kb true | Two blazing suns. |
-| Twin Sun IV | `twin_sun_4` | 4000 | dmg 160, spd 0.55, reach 24, kb true | Two suns at full strength. |
-| Twin Sun U | `twin_sun_u` | 8000 | dmg 160, spd 0.5, reach 24, kb true | Rewritten by Combo Book U: faster. |
-| Devil Spike II | `devil_spike_2` | 1500 | dmg 90, spd 0.8, reach 26, kb true | A wickeder spike. |
-| Devil Spike III | `devil_spike_3` | 5000 | dmg 200, spd 0.7, reach 26, kb true | The wickedest spike. |
-| Devil Spike U | `devil_spike_u` | 9000 | dmg 200, spd 0.65, reach 26, kb true | Rewritten by Combo Book U: faster. |
-| Modina U | `modina_u` | 5000 | dmg 124, spd 0.55, reach 26, kb false | Rewritten by Combo Book U: faster. |
-| Rolva | `rolva` | 300 | dmg 37, spd 0.5, reach 18, kb true | Short reach, quick hits. Hands sometimes drop it. |
-| Devilween | `devilween` | 100 | dmg 175, spd 0.5, reach 24, kb false | One of the best weapons there is. |
-| Nightmare Blade IV | `nightmare_blade_4` | 20000 | dmg 204, spd 0.55, reach 28, kb true | Darker still, with Makara's bones in it. |
-| Moon Blade IV | `moon_blade_4` | 1200 | dmg 109, spd 0.65, reach 24, kb true | Mid Autumn Edition. |
-| Moon Blade V | `moon_blade_5` | 2400 | dmg 121, spd 0.65, reach 24, kb true | Mid Autumn Edition. |
-| Dark Moon Blade | `dark_moon_blade` | 5000 | dmg 135, spd 0.6, reach 24, kb true | A moon blade with a Forbidden Stone in it. |
-| Dark Moon Blade U | `dark_moon_blade_u` | 9000 | dmg 135, spd 0.55, reach 24, kb true | Rewritten by Combo Book U: faster. |
-| Moonclipse | `moonclipse` | 300 | dmg 23, spd 0.65, reach 22, kb true | Mid Autumn Edition. |
-| Moonclipse II | `moonclipse_2` | 600 | dmg 40, spd 0.65, reach 22, kb true | Mid Autumn Edition. |
-| Moonclipse III | `moonclipse_3` | 1200 | dmg 83, spd 0.65, reach 24, kb true | Mid Autumn Edition. |
-| Moonclipse IV | `moonclipse_4` | 2400 | dmg 115, spd 0.65, reach 24, kb true | Mid Autumn Edition. |
-| Moonclipse V | `moonclipse_5` | 4800 | dmg 122, spd 0.65, reach 24, kb true | Mid Autumn Edition. |
-| Candy Stick (Red) | `candy_stick_red` | 300 | dmg 38, spd 0.55, reach 22, kb true | Merry Christmas! |
-| Candy Stick (Green) | `candy_stick_green` | 300 | dmg 38, spd 0.55, reach 22, kb true | Merry Christmas! |
-| Giant Candy | `giant_candy` | 3000 | dmg 123, spd 0.55, reach 26, kb false | Three candies in one. |
-| Giant Snow Ball | `giant_snow_ball` | 200 | dmg 16, spd 0.7, reach 20, kb true | Merry Christmas! |
-| Firecracker Blade | `firecracker_blade` | 200 | dmg 17, spd 0.6, reach 22, kb true | Goes off with a bang. |
-| Firecracker Blade II | `firecracker_blade_2` | 2000 | dmg 83, spd 0.55, reach 22, kb true | A bigger bang. |
-| Ninja Star | `ninja_star` | 400 | dmg 29, spd 0.55, reach 16, kb true | A star-shaped blade. |
-| Tsurugi V | `tsurugi_5` | 0 | dmg 188, spd 0.55, reach 24, kb true | Sharpened by the Ninja Master. |
-| Chocolate Sword | `chocolate_sword` | 2000 | dmg 105, spd 0.55, reach 22, kb true | Don't eat it. |
-| Red Dream Sword | `red_dream_sword` | 3000 | dmg 120, spd 0.65, reach 24, kb true | Evil Santa sometimes drops it. |
-| Blade of Emperor | `blade_of_emperor` | 5000 | dmg 135, spd 0.65, reach 26, kb false | Makara sometimes drops it. |
-| Evil Shadow Blade | `evil_shadow_blade` | 6000 | dmg 172, spd 0.75, reach 26, kb true | Slow and heavy. |
-| Evil Shadow Blade U | `evil_shadow_blade_u` | 9000 | dmg 172, spd 0.7, reach 26, kb true | Rewritten by Combo Book U: faster. |
-| Red moon Soul Blade | `red_moon_soul_blade` | 6000 | dmg 160, spd 0.7, reach 26, kb true | A red moon's soul. |
-| Red moon Soul Blade U | `red_moon_soul_blade_u` | 9000 | dmg 160, spd 0.65, reach 26, kb true | Rewritten by Combo Book U: faster. |
-| Frost Moon Blade | `frost_moon_blade` | 6000 | dmg 149, spd 0.65, reach 24, kb true | A frozen moon. |
-| Frost Moon Blade U | `frost_moon_blade_u` | 9000 | dmg 149, spd 0.6, reach 24, kb true | Rewritten by Combo Book U: faster. |
-| Shadow Moon Blade | `shadow_moon_blade` | 6000 | dmg 137, spd 0.6, reach 24, kb true | A moon in shadow. |
-| Shadow Moon Blade U | `shadow_moon_blade_u` | 9000 | dmg 137, spd 0.55, reach 24, kb true | Rewritten by Combo Book U: faster. |
-| Blood Moon Soul Blade | `blood_moon_soul_blade` | 6000 | dmg 125, spd 0.55, reach 24, kb true | A blood moon's soul. |
-| Blood Moon Soul Blade U | `blood_moon_soul_blade_u` | 9000 | dmg 125, spd 0.5, reach 24, kb true | Rewritten by Combo Book U: faster. |
-| Pumpkin Saber A | `pumpkin_saber_a` | 300 | dmg 25, spd 0.7, reach 22, kb true | Happy Halloween! |
-| Pumpkin Saber B | `pumpkin_saber_b` | 600 | dmg 50, spd 0.7, reach 22, kb true | Happy Halloween! |
-| Pumpkin Saber C | `pumpkin_saber_c` | 1200 | dmg 75, spd 0.7, reach 24, kb true | Happy Halloween! |
-| Pumpkin Saber | `pumpkin_saber` | 4000 | dmg 150, spd 0.7, reach 24, kb true | Happy Halloween! |
-| Christmas Tree | `christmas_tree` | 300 | dmg 21, spd 0.55, reach 22, kb true | Merry Christmas! |
-| Christmas Tree II | `christmas_tree_2` | 600 | dmg 42, spd 0.55, reach 22, kb true | Merry Christmas! |
-| Christmas Tree III | `christmas_tree_3` | 1200 | dmg 73, spd 0.55, reach 24, kb true | Merry Christmas! |
-| Christmas Tree IV | `christmas_tree_4` | 3000 | dmg 124, spd 0.55, reach 24, kb true | Merry Christmas! |
-| Ultimate Tree | `ultimate_tree` | 2000 | dmg 66, spd 0.65, reach 24, kb true | A Christmas Tree, made ultimate. |
-| Dragon Blade | `dragon_blade` | 3000 | dmg 77, spd 0.6, reach 26, kb true | A blade on a Dragon Handle. |
-| Dragon Blade II | `dragon_blade_2` | 6000 | dmg 123, spd 0.6, reach 26, kb true | A sharper Dragon Blade. |
-| Dragon Blade III | `dragon_blade_3` | 12000 | dmg 212, spd 0.6, reach 28, kb true | The Dragon Blade, with Makara's treasure in it. |
-| King Carrot | `king_carrot` | 400 | dmg 34, spd 0.6, reach 22, kb true | Happy Easter! |
-| Crazy Carrot | `crazy_carrot` | 1200 | dmg 68, spd 0.55, reach 22, kb true | Happy Easter! |
-| Popstick | `popstick` | 500 | dmg 55, spd 0.5, reach 20, kb true | A popsicle on a stick. |
-| Chocolate Pops | `chocolate_pops` | 1000 | dmg 76, spd 0.5, reach 20, kb true | A chocolate popsicle. |
-| Red Bean Pops | `red_bean_pops` | 2000 | dmg 99, spd 0.5, reach 20, kb true | A red bean popsicle. |
-| Rocket Pops | `rocket_pops` | 3000 | dmg 123, spd 0.5, reach 20, kb true | A rocket popsicle. |
-| Rainbow Pops | `rainbow_pops` | 4000 | dmg 131, spd 0.5, reach 20, kb true | A rainbow popsicle. |
-| Sun Extractor | `sun_extractor` | 2000 | dmg 82, spd 0.5, reach 22, kb true | Pulls the heat out of the sun. |
-| Moon Knifes | `moon_knifes` | 5000 | dmg 148, spd 0.55, reach 22, kb true | Two moon-shaped knives. |
-| Moon Edge | `moon_edge` | 5000 | dmg 140, spd 0.5, reach 22, kb true | The edge of the moon. |
-| Ultimate Santa Blade | `ultimate_santa_blade` | 15000 | dmg 241, spd 0.65, reach 26, kb true | Evil Santa's blade, made ultimate. |
-| Ultimate Candy | `ultimate_candy` | 10000 | dmg 186, spd 0.65, reach 26, kb true | A Giant Candy, made ultimate. |
+| Fist | `fist` | 0 | dmg 1, spd 0.5, reach 14, kb 0, size 1 |  |
+| Sword Cast | `sword_cast` | 10 | dmg 4, spd 0.5, reach 16, kb 1.1, size 1 | A short practice blade. |
+| Copper Sword Cast | `copper_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb 1.1, size 1 | Part of the Combo Sword. |
+| Iron Sword Cast | `iron_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb 1.1, size 1 | Part of the Combo Sword, and of the Hell Sword. |
+| Gold Sword Cast | `gold_sword_cast` | 20 | dmg 4, spd 0.5, reach 16, kb 1.1, size 1 | Part of the Combo Sword. |
+| Torch | `torch_weapon` | 1 | dmg 5, spd 1, reach 22, kb 2.5, size 1.6 | Long reach, slow swing. |
+| Wood King | `timber_club` | 15 | dmg 5, spd 0.75, reach 18, kb 2, size 1.3 | A heavy wooden club. |
+| Gradius | `short_blade` | 0 | dmg 5, spd 0.45, reach 16, kb 1, size 0.9 | Small but quick. Slimes sometimes drop it. Used to craft Golden Night. |
+| Golden Night | `gilded_blade` | 30 | dmg 6, spd 0.5, reach 18, kb 1.15, size 1.15 | A short blade with a gold finish. |
+| Blue Night | `azure_blade` | 45 | dmg 9, spd 0.55, reach 20, kb 1.3, size 1.3 | A blue steel blade. |
+| Fire Brand | `fire_brand` | 45 | dmg 13, spd 0.55, reach 20, kb 1.3, size 1.3 | Warm to hold. |
+| Purple Mist | `violet_edge` | 60 | dmg 19, spd 0.55, reach 20, kb 1, size 1.2 | A purple-glinting sword. |
+| Plunger | `plunger` | 10 | dmg 4, spd 0.4, reach 16, kb 1, size 1 | Wielded only by the master poopers. |
+| Unlawful | `unlawful` | 45 | dmg 13, spd 0.55, reach 18, kb 1.25, size 1.15 | A plunger made into something worse. |
+| Knights Mantle | `knights_blade` | 70 | dmg 15, spd 0.6, reach 22, kb 1.45, size 1.45 | A proper knight's sword. |
+| Kings Mace | `kings_mace` | 120 | dmg 27, spd 0.55, reach 22, kb 1.8, size 1.6 | Heavy and royal. |
+| Excalibur | `excalibur` | 120 | dmg 23, spd 0.9, reach 24, kb 2, size 1.6 | Slow, but long and strong. |
+| Poison Ivy | `poison_ivy` | 160 | dmg 31, spd 0.6, reach 22, kb 1.45, size 1.45 | A thorny green blade. |
+| Holy Knight | `holy_knight` | 200 | dmg 34, spd 0.5, reach 22, kb 1.3, size 1.45 | Shines with holy light. |
+| Fires Devil | `hellfire_blade` | 220 | dmg 38, spd 0.6, reach 24, kb 1.5, size 1.6 | Burns everything it touches. |
+| Combo Sword | `combo_sword` | 80 | dmg 14, spd 0.65, reach 18, kb 1.4, size 1.15 | Three casts forged into one. |
+| Moon Blade | `moon_blade` | 150 | dmg 17, spd 0.65, reach 22, kb 1.55, size 1.45 | A crescent-shaped blade. |
+| Moon Blade II | `moon_blade_2` | 300 | dmg 34, spd 0.65, reach 22, kb 1.6, size 1.45 | Sharper under moonlight. |
+| Moon Blade III | `moon_blade_3` | 600 | dmg 73, spd 0.65, reach 24, kb 1.7, size 1.6 | Brighter than the moon. |
+| Blue Fluorescent | `glow_blade_blue` | 150 | dmg 19, spd 0.5, reach 22, kb 1, size 1.35 | Emits a glowing blue light. |
+| Red Fluorescent | `glow_blade_red` | 150 | dmg 19, spd 0.5, reach 22, kb 1, size 1.35 | Emits a glowing red light. |
+| Green Fluorescent | `glow_blade_green` | 170 | dmg 21, spd 0.5, reach 22, kb 1, size 1.35 | Emits a glowing green light. |
+| Pink Fluorescent | `glow_blade_pink` | 170 | dmg 21, spd 0.5, reach 22, kb 1, size 1.35 | Emits a glowing pink light. |
+| Long Sword | `long_sword` | 150 | dmg 10, spd 0.65, reach 28, kb 1.7, size 1.9 | Long reach. |
+| Golden Long Sword | `golden_long_sword` | 300 | dmg 17, spd 0.6, reach 28, kb 1.65, size 1.9 | Long reach, golden edge. |
+| Pole Axe | `pole_axe` | 25 | dmg 15, spd 1, reach 26, kb 2.5, size 1.9, axe 2 | A slow, heavy axe on a pole. Also chops trees. |
+| Sky Pole Axe | `sky_pole_axe` | 60 | dmg 28, spd 1, reach 26, kb 2.5, size 1.9, axe 3 | The next Pole Axe. Also chops trees. |
+| Volcan Axe | `volcan_axe` | 300 | dmg 86, spd 1, reach 22, kb 2.5, size 1.6, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
+| Twin Sun | `twin_sun` | 300 | dmg 14, spd 0.55, reach 22, kb 1.35, size 1.45 | Two suns on one hilt. |
+| Devil Spike | `devil_spike` | 500 | dmg 45, spd 0.9, reach 26, kb 2.5, size 1.9 | A wicked spiked weapon. |
+| Hell Sword | `hell_sword` | 1500 | dmg 105, spd 0.55, reach 26, kb 1.5, size 1.75 | Forged from evil itself. |
+| Wall Hammer | `wall_hammer` | 0 | dmg 9, spd 0.55, reach 30, kb 2.05, size 2.2 | Used to destroy massive walls..? A Survival Grasslands reward. |
+| Tsurugi | `tsurugi` | 0 | dmg 33, spd 0.55, reach 22, kb 1.35, size 1.45 | The Ninja's sword. The ninjas under Pixel Town can sharpen it. |
+| Tsurugi II | `tsurugi_2` | 0 | dmg 67, spd 0.55, reach 22, kb 1.4, size 1.45 | Sharpened by Nini. |
+| Tsurugi III | `tsurugi_3` | 0 | dmg 128, spd 0.55, reach 24, kb 1.55, size 1.6 | Sharpened by Nana. |
+| Tsurugi IV | `tsurugi_4` | 0 | dmg 178, spd 0.55, reach 24, kb 1.6, size 1.6 | Sharpened by Nina. |
+| Modina | `modina_1` | 300 | dmg 32, spd 0.6, reach 24, kb 0, size 1.6 | One of Modina's four swords. |
+| Modina II | `modina_2` | 600 | dmg 58, spd 0.6, reach 24, kb 0, size 1.6 | One of Modina's four swords. |
+| Modina III | `modina_3` | 1200 | dmg 85, spd 0.6, reach 24, kb 0, size 1.6 | One of Modina's four swords. |
+| Modina IV | `modina_4` | 2400 | dmg 124, spd 0.6, reach 26, kb 0, size 1.75 | One of Modina's four swords. |
+| Long Lance | `long_lance` | 400 | dmg 52, spd 0.7, reach 32, kb 0, size 2.2 | Golden Slugs carry these around. |
+| Long Lance II | `long_lance_2` | 800 | dmg 69, spd 0.6, reach 32, kb 0, size 2.2 | A longer, sharper lance. |
+| Long Lance III | `long_lance_3` | 1600 | dmg 110, spd 0.55, reach 34, kb 0, size 2.35 | The best of the lances. |
+| Hell Spike | `hell_spike` | 2000 | dmg 119, spd 0.5, reach 24, kb 0, size 1.75, pick 4 | Fast, no knockback, and it mines like a gold pickaxe. |
+| Hell Spike II | `hell_spike_2` | 4000 | dmg 139, spd 0.5, reach 24, kb 0, size 1.75, pick 5 | Mines volcanic rock too. |
+| Hell Spike III | `hell_spike_3` | 8000 | dmg 159, spd 0.5, reach 24, kb 0, size 1.75, pick 5 | The last Hell Spike. |
+| Hazard Wipe | `hazard_wipe` | 1500 | dmg 110, spd 0.65, reach 26, kb 1.65, size 1.75 | Modina sometimes drops it. |
+| Nightmare Long Sword | `nightmare_long_sword` | 2500 | dmg 128, spd 0.6, reach 30, kb 1.7, size 2.05 | Long reach, nightmare edge. |
+| Nightmare Blade | `nightmare_blade` | 3000 | dmg 136, spd 0.55, reach 26, kb 1.5, size 1.75 | Doom guards it in Nightmare Valley. |
+| Nightmare Blade II | `nightmare_blade_2` | 6000 | dmg 167, spd 0.55, reach 26, kb 1.55, size 1.75 | Sharpened with Dark Hearts. |
+| Nightmare Blade III | `nightmare_blade_3` | 12000 | dmg 196, spd 0.55, reach 28, kb 1.65, size 1.9 | The darkest blade. |
+| Santa Blade | `santa_blade` | 5000 | dmg 191, spd 0.65, reach 26, kb 1.65, size 1.75 | Evil Santa's blade. |
+| Yellow Fluorescent | `yellow_fluorescent` | 300 | dmg 33, spd 0.5, reach 22, kb 1, size 1.35 | The strongest Fluorescent. |
+| Sapphire Long Sword | `sapphire_long_sword` | 600 | dmg 26, spd 0.55, reach 28, kb 1.55, size 1.9 | Long reach, sapphire edge. |
+| Blood Long Sword | `blood_long_sword` | 1200 | dmg 52, spd 0.5, reach 28, kb 1.45, size 1.9 | Long reach, blood-red edge. |
+| Refined Combo Sword | `refined_combo_sword` | 300 | dmg 33, spd 0.65, reach 18, kb 1.4, size 1.15 | The Combo Sword, refined. |
+| Ice Sword | `ice_sword` | 600 | dmg 45, spd 0.65, reach 16, kb 1.35, size 1 | Short, but cold. |
+| Ice Devil Sword | `ice_devil_sword` | 3000 | dmg 115, spd 0.5, reach 22, kb 1.3, size 1.45 | A frozen devil's blade. |
+| Heavy Ice Devil Sword | `heavy_ice_devil_sword` | 6000 | dmg 225, spd 0.9, reach 26, kb 2.5, size 1.9 | Slow and enormous. |
+| Heavy Ice Devil Sword II | `heavy_ice_devil_sword_2` | 12000 | dmg 266, spd 0.9, reach 26, kb 2.5, size 1.9 | Slower, bigger, colder. |
+| Volcan Sword | `volcan_sword` | 1500 | dmg 53, spd 0.65, reach 22, kb 1.55, size 1.45 | A blade forged in lava. |
+| Volcan LongSword | `volcan_longsword` | 3000 | dmg 98, spd 0.6, reach 28, kb 1.65, size 1.9 | The Volcan Sword, longer. |
+| Volcan LongSword U | `volcan_longsword_u` | 6000 | dmg 98, spd 0.55, reach 28, kb 1.7, size 1.9 | Rewritten by Combo Book U: faster. |
+| Nightmare Long Sword U | `nightmare_long_sword_u` | 6000 | dmg 125, spd 0.55, reach 30, kb 1.75, size 2.05 | Rewritten by Combo Book U: faster. |
+| Hell Sword II | `hell_sword_2` | 3000 | dmg 116, spd 0.55, reach 26, kb 1.55, size 1.75 | The Hell Sword, sharpened with a Dark Stone. |
+| Hell Sword U | `hell_sword_u` | 6000 | dmg 116, spd 0.5, reach 26, kb 1.55, size 1.75 | Rewritten by Combo Book U: faster. |
+| Evil Axe | `evil_axe` | 4000 | dmg 200, spd 1, reach 24, kb 2.5, size 1.75, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
+| Evil Axe II | `evil_axe_2` | 8000 | dmg 215, spd 1, reach 24, kb 2.5, size 1.75, axe 4 | Slow, with strong knockback. Also chops trees, blue ones too. |
+| Evil Axe U | `evil_axe_u` | 12000 | dmg 218, spd 1, reach 24, kb 2.5, size 1.75, axe 4 | Rewritten by Combo Book U. Also chops trees. |
+| Hell Pole Axe | `hell_pole_axe` | 600 | dmg 67, spd 1, reach 26, kb 2.5, size 1.9, axe 4 | The next Sky Pole Axe. Also chops trees. |
+| Rainbow Sword | `rainbow_sword` | 6000 | dmg 145, spd 0.5, reach 24, kb 1.35, size 1.6 | Every color at once. |
+| Rainbow Sword U | `rainbow_sword_u` | 12000 | dmg 151, spd 0.5, reach 24, kb 1.5, size 1.6 | Rewritten by Combo Book U. |
+| Twin Sun II | `twin_sun_2` | 600 | dmg 30, spd 0.55, reach 22, kb 1.4, size 1.45 | Two brighter suns. |
+| Twin Sun III | `twin_sun_3` | 1200 | dmg 65, spd 0.55, reach 22, kb 1.45, size 1.45 | Two blazing suns. |
+| Twin Sun IV | `twin_sun_4` | 4000 | dmg 160, spd 0.55, reach 24, kb 1.6, size 1.6 | Two suns at full strength. |
+| Twin Sun U | `twin_sun_u` | 8000 | dmg 160, spd 0.5, reach 24, kb 1.5, size 1.6 | Rewritten by Combo Book U: faster. |
+| Devil Spike II | `devil_spike_2` | 1500 | dmg 90, spd 0.8, reach 26, kb 2.4, size 1.9 | A wickeder spike. |
+| Devil Spike III | `devil_spike_3` | 5000 | dmg 200, spd 0.7, reach 26, kb 2.3, size 1.9 | The wickedest spike. |
+| Devil Spike U | `devil_spike_u` | 9000 | dmg 200, spd 0.65, reach 26, kb 2.25, size 1.9 | Rewritten by Combo Book U: faster. |
+| Modina U | `modina_u` | 5000 | dmg 124, spd 0.55, reach 26, kb 0, size 1.75 | Rewritten by Combo Book U: faster. |
+| Rolva | `rolva` | 300 | dmg 37, spd 0.5, reach 18, kb 1, size 1.05 | Short reach, quick hits. Hands sometimes drop it. |
+| Devilween | `devilween` | 100 | dmg 175, spd 0.5, reach 24, kb 0, size 1.6 | One of the best weapons there is. |
+| Nightmare Blade IV | `nightmare_blade_4` | 20000 | dmg 204, spd 0.55, reach 28, kb 1.7, size 1.9 | Darker still, with Makara's bones in it. |
+| Moon Blade IV | `moon_blade_4` | 1200 | dmg 109, spd 0.65, reach 24, kb 1.75, size 1.6 | Mid Autumn Edition. |
+| Moon Blade V | `moon_blade_5` | 2400 | dmg 121, spd 0.65, reach 24, kb 1.8, size 1.6 | Mid Autumn Edition. |
+| Dark Moon Blade | `dark_moon_blade` | 5000 | dmg 135, spd 0.6, reach 24, kb 1.5, size 1.6 | A moon blade with a Forbidden Stone in it. |
+| Dark Moon Blade U | `dark_moon_blade_u` | 9000 | dmg 135, spd 0.55, reach 24, kb 1.6, size 1.6 | Rewritten by Combo Book U: faster. |
+| Moonclipse | `moonclipse` | 300 | dmg 23, spd 0.65, reach 22, kb 1.55, size 1.45 | Mid Autumn Edition. |
+| Moonclipse II | `moonclipse_2` | 600 | dmg 40, spd 0.65, reach 22, kb 1.6, size 1.45 | Mid Autumn Edition. |
+| Moonclipse III | `moonclipse_3` | 1200 | dmg 83, spd 0.65, reach 24, kb 1.7, size 1.6 | Mid Autumn Edition. |
+| Moonclipse IV | `moonclipse_4` | 2400 | dmg 115, spd 0.65, reach 24, kb 1.75, size 1.6 | Mid Autumn Edition. |
+| Moonclipse V | `moonclipse_5` | 4800 | dmg 122, spd 0.65, reach 24, kb 1.8, size 1.6 | Mid Autumn Edition. |
+| Candy Stick (Red) | `candy_stick_red` | 300 | dmg 38, spd 0.55, reach 22, kb 1.05, size 1.35 | Merry Christmas! |
+| Candy Stick (Green) | `candy_stick_green` | 300 | dmg 38, spd 0.55, reach 22, kb 1.05, size 1.35 | Merry Christmas! |
+| Giant Candy | `giant_candy` | 3000 | dmg 123, spd 0.55, reach 26, kb 0, size 1.9 | Three candies in one. |
+| Giant Snow Ball | `giant_snow_ball` | 200 | dmg 16, spd 0.7, reach 20, kb 2, size 1.45 | Merry Christmas! |
+| Firecracker Blade | `firecracker_blade` | 200 | dmg 17, spd 0.6, reach 22, kb 1.45, size 1.45 | Goes off with a bang. |
+| Firecracker Blade II | `firecracker_blade_2` | 2000 | dmg 83, spd 0.55, reach 22, kb 1.4, size 1.45 | A bigger bang. |
+| Ninja Star | `ninja_star` | 400 | dmg 29, spd 0.55, reach 16, kb 1, size 0.9 | A star-shaped blade. |
+| Tsurugi V | `tsurugi_5` | 0 | dmg 188, spd 0.55, reach 24, kb 1.65, size 1.6 | Sharpened by the Ninja Master. |
+| Chocolate Sword | `chocolate_sword` | 2000 | dmg 105, spd 0.55, reach 22, kb 1.35, size 1.45 | Don't eat it. |
+| Red Dream Sword | `red_dream_sword` | 3000 | dmg 120, spd 0.65, reach 24, kb 1.6, size 1.6 | Evil Santa sometimes drops it. |
+| Blade of Emperor | `blade_of_emperor` | 5000 | dmg 135, spd 0.65, reach 26, kb 0, size 1.75 | Makara sometimes drops it. |
+| Evil Shadow Blade | `evil_shadow_blade` | 6000 | dmg 172, spd 0.75, reach 26, kb 2.25, size 1.9 | Slow and heavy. |
+| Evil Shadow Blade U | `evil_shadow_blade_u` | 9000 | dmg 172, spd 0.7, reach 26, kb 2.35, size 1.9 | Rewritten by Combo Book U: faster. |
+| Red moon Soul Blade | `red_moon_soul_blade` | 6000 | dmg 160, spd 0.7, reach 26, kb 1.75, size 1.75 | A red moon's soul. |
+| Red moon Soul Blade U | `red_moon_soul_blade_u` | 9000 | dmg 160, spd 0.65, reach 26, kb 1.8, size 1.75 | Rewritten by Combo Book U: faster. |
+| Frost Moon Blade | `frost_moon_blade` | 6000 | dmg 149, spd 0.65, reach 24, kb 1.6, size 1.6 | A frozen moon. |
+| Frost Moon Blade U | `frost_moon_blade_u` | 9000 | dmg 149, spd 0.6, reach 24, kb 1.65, size 1.6 | Rewritten by Combo Book U: faster. |
+| Shadow Moon Blade | `shadow_moon_blade` | 6000 | dmg 137, spd 0.6, reach 24, kb 1.5, size 1.6 | A moon in shadow. |
+| Shadow Moon Blade U | `shadow_moon_blade_u` | 9000 | dmg 137, spd 0.55, reach 24, kb 1.6, size 1.6 | Rewritten by Combo Book U: faster. |
+| Blood Moon Soul Blade | `blood_moon_soul_blade` | 6000 | dmg 125, spd 0.55, reach 24, kb 1.45, size 1.6 | A blood moon's soul. |
+| Blood Moon Soul Blade U | `blood_moon_soul_blade_u` | 9000 | dmg 125, spd 0.5, reach 24, kb 1.5, size 1.6 | Rewritten by Combo Book U: faster. |
+| Pumpkin Saber A | `pumpkin_saber_a` | 300 | dmg 25, spd 0.7, reach 22, kb 1.6, size 1.45 | Happy Halloween! |
+| Pumpkin Saber B | `pumpkin_saber_b` | 600 | dmg 50, spd 0.7, reach 22, kb 1.6, size 1.45 | Happy Halloween! |
+| Pumpkin Saber C | `pumpkin_saber_c` | 1200 | dmg 75, spd 0.7, reach 24, kb 1.65, size 1.6 | Happy Halloween! |
+| Pumpkin Saber | `pumpkin_saber` | 4000 | dmg 150, spd 0.7, reach 24, kb 1.65, size 1.6 | Happy Halloween! |
+| Christmas Tree | `christmas_tree` | 300 | dmg 21, spd 0.55, reach 22, kb 1.35, size 1.45 | Merry Christmas! |
+| Christmas Tree II | `christmas_tree_2` | 600 | dmg 42, spd 0.55, reach 22, kb 1.4, size 1.45 | Merry Christmas! |
+| Christmas Tree III | `christmas_tree_3` | 1200 | dmg 73, spd 0.55, reach 24, kb 1.55, size 1.6 | Merry Christmas! |
+| Christmas Tree IV | `christmas_tree_4` | 3000 | dmg 124, spd 0.55, reach 24, kb 1.6, size 1.6 | Merry Christmas! |
+| Ultimate Tree | `ultimate_tree` | 2000 | dmg 66, spd 0.65, reach 24, kb 1.6, size 1.6 | A Christmas Tree, made ultimate. |
+| Dragon Blade | `dragon_blade` | 3000 | dmg 77, spd 0.6, reach 26, kb 1.55, size 1.75 | A blade on a Dragon Handle. |
+| Dragon Blade II | `dragon_blade_2` | 6000 | dmg 123, spd 0.6, reach 26, kb 1.6, size 1.75 | A sharper Dragon Blade. |
+| Dragon Blade III | `dragon_blade_3` | 12000 | dmg 212, spd 0.6, reach 28, kb 1.75, size 1.9 | The Dragon Blade, with Makara's treasure in it. |
+| King Carrot | `king_carrot` | 400 | dmg 34, spd 0.6, reach 22, kb 1.45, size 1.45 | Happy Easter! |
+| Crazy Carrot | `crazy_carrot` | 1200 | dmg 68, spd 0.55, reach 22, kb 1.35, size 1.45 | Happy Easter! |
+| Popstick | `popstick` | 500 | dmg 55, spd 0.5, reach 20, kb 1, size 1.2 | A popsicle on a stick. |
+| Chocolate Pops | `chocolate_pops` | 1000 | dmg 76, spd 0.5, reach 20, kb 1, size 1.2 | A chocolate popsicle. |
+| Red Bean Pops | `red_bean_pops` | 2000 | dmg 99, spd 0.5, reach 20, kb 1, size 1.2 | A red bean popsicle. |
+| Rocket Pops | `rocket_pops` | 3000 | dmg 123, spd 0.5, reach 20, kb 1, size 1.2 | A rocket popsicle. |
+| Rainbow Pops | `rainbow_pops` | 4000 | dmg 131, spd 0.5, reach 20, kb 1, size 1.2 | A rainbow popsicle. |
+| Sun Extractor | `sun_extractor` | 2000 | dmg 82, spd 0.5, reach 22, kb 1.3, size 1.45 | Pulls the heat out of the sun. |
+| Moon Knifes | `moon_knifes` | 5000 | dmg 148, spd 0.55, reach 22, kb 1.05, size 1.35 | Two moon-shaped knives. |
+| Moon Edge | `moon_edge` | 5000 | dmg 140, spd 0.5, reach 22, kb 1, size 1.35 | The edge of the moon. |
+| Ultimate Santa Blade | `ultimate_santa_blade` | 15000 | dmg 241, spd 0.65, reach 26, kb 1.65, size 1.75 | Evil Santa's blade, made ultimate. |
+| Ultimate Candy | `ultimate_candy` | 10000 | dmg 186, spd 0.65, reach 26, kb 1.65, size 1.75 | A Giant Candy, made ultimate. |
 
