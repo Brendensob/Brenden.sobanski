@@ -29,4 +29,17 @@ tags: [session]
 - Data audit: 0 hard errors.
 - Progression audit: 0 softlocked.
 
-**Next:** Brenden plays the Grasslands and says if it feels right. Then the multiplayer portals he asked for next (one at a time, with a 20-second countdown).
+**Then Brenden asked:** "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"
+
+![[portal_countdown.png]]
+
+- **Portals in a room take one player at a time.** The others see a message and a countdown ("Everyone goes to Grasslands 1 in 20"), and get the portal on their town street too.
+- **After 20 seconds** whoever hasn't gone through is taken along. Leaving works the same way.
+- **During the countdown** another portal says "Someone's in the current portal".
+- **Two-player test:**
+  - the host goes alone and the friend is taken after the countdown;
+  - the friend goes first on their own copy, a second portal is refused, and the host joins after the countdown;
+  - the friend goes home alone and the host follows.
+  - 0 failures on both sides.
+
+**Next:** Brenden plays the Grasslands and says if it feels right. 

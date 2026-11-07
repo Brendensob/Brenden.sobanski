@@ -106,6 +106,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
+| Portals one at a time in rooms | ✅ | 2026-11-07: only you go in; a 20-second countdown takes the rest; "Someone's in the current portal"; two-player tested both ways and for leaving |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |
 | Town walls in a room | ✅ | A wall anyone in the room opened is open for everyone. The unlock is saved for the breaker. Two-player tested (rock wall, Torch wall, rebuild, leave) |
 

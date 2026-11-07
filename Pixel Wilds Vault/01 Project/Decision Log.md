@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (portals one at a time in rooms)
+- **A portal takes only the player who goes in.** The rest follow through the portal, or are taken along after 20 seconds. Leaving works the same way. *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"*
+- **While someone is going through, other portals say "Someone's in the current portal"** and don't open, so the room never splits between two worlds.
+- **The host still runs the shared map.** A guest who goes first plays a copy of the same map (the same seed) for up to 20 seconds, until the host arrives; then the copy is swapped for the host's map and the guest keeps their spot.
+- Before, any portal or Gatekeeper pick moved the whole room at once.
+
 ## 2026-11-07 (houses, villagers, monsters, and the Grasslands progression)
 - **Houses, villagers and monsters were redrawn like the ground** (see [[Art Style]]):
   - cartoon cottages for the houses;
