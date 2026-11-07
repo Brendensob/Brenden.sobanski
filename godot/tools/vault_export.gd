@@ -279,7 +279,7 @@ func _pets() -> void:
 
 func _index() -> void:
 	var body := "Every number in the game, exported from `scripts/data.gd`.\n\n"
-	for n in ["Items", "Monsters", "World Data", "Combinations", "Crafter Recipes", "Smelting", "Resources", "Shops", "Chests and Seeds", "Quests", "Character Data", "Pets"]:
+	for n in ["Items", "Monsters", "World Data", "Combinations", "Crafter Recipes", "Smelting", "Resources", "Shops", "Chests and Seeds", "Quests", "Character Data", "Pets", "Drop Tables"]:
 		body += "- [[%s]]\n" % n
 	body += "\nWhich numbers are real and which are estimates: [[Numbers and Estimates]].\n"
 	_write("Game Data", "Game Data", body)

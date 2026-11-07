@@ -68,4 +68,14 @@ tags: [session]
   - autotest: the bar is small and at the top, the screen darkens, the countdown shows, the are-you-sure has Yes and No, the ghost text appears, and everything clears when you're back up;
   - two-player test: the friend faints, the host sees the gravestone, stands by it and revives them, then walks off and gets a marker pointing back.
 
-**Next:** Brenden plays the Grasslands and says if it feels right. 
+**Then Brenden asked:** "get rid of ghost thing and make gems purchasable with real money and make a drop table for every mob in the game that i can see so ik what to test n stuff", and then "make it so you cant completly remove dmg from mobs with high def its just a 50 50 chance for them to hit you for 1-2"
+
+![[drop_tables.png]]
+
+- **No ghost.** On your own the gravestone counts 10 seconds, then Pixel Town. In a room friends still revive you.
+- **Gem packs for real money** in the Gem Shop, paid through Stripe. They switch on once `STRIPE_SECRET_KEY` is set on Render (see [[Monetization]]). Prices are placeholders ([[Open Questions]]).
+- **Drop Tables:** Menu → Drop Tables shows every monster with its picture, where it lives, each drop's chance and amount, coins, arena loot and things you break. The same list is in [[Drop Tables]].
+- **Defense:** a fully blocked hit still does 1–2 half the time.
+- **Tests:** server tests (19, with a fake Stripe), autotest (gem packs box, Drop Tables page, no ghost, the defense chip over 400 rolls), data audit 0 hard errors, progression audit 0 softlocked.
+
+**Next:** Brenden plays the Grasslands and says if it feels right, sets prices for the gem packs and opens a Stripe account. 

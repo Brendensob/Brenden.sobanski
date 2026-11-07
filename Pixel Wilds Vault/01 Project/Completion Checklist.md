@@ -46,14 +46,14 @@ The living list of every system and how finished it is. It's updated after each 
 | No hits through walls | ✅ | Swings and pets check for walls |
 | Bows, cannons and ammo | ✅ | One ammo per shot; stops when empty |
 | Staffs and mana | ✅ | Healing staffs don't waste mana at full health |
-| Defense and 0-damage blocks | ✅ | |
+| Defense and blocks | ✅ | 2026-11-07: a fully blocked hit still does 1–2 half the time (400-roll autotest) |
 | Status effects (poison, fatigue, slow, cold) and cures | ✅ | The Antidote cure and Jade Ring immunity are tested |
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
 | Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
-| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player (2026-11-05): slow fall, gravestone, Respawn as a ghost and stand by the stone 3.5 s within 50 s; one free revive in the Grasslands Arena. Autotest covers all of it |
+| Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player: slow fall and a gravestone that counts 10 s to Pixel Town (ghost removed 2026-11-07); one free revive in the Grasslands Arena. Autotest covers all of it |
 | Fights are winnable on the normal path | ✅ | `fight_test.gd`: two monsters at once, Grasslands 1 to Darklands 2 with the gear you'd have; Rexy, UFOs and Darklands Worms one at a time (2026-10-27) |
 | Hell with mid gear | 🟠 | The fight test's Hell 1 row still loses with Chainmail and Kings Mace: Hell needs Hell-tier gear |
 
@@ -75,6 +75,8 @@ The living list of every system and how finished it is. It's updated after each 
 | Buying (and not without the money) | ✅ | |
 | Selling at the item's price | ✅ | |
 | Gem Shop and gems for coins | ✅ | |
+| Gem packs for real money (Stripe) | 🟡 | 2026-11-07: server routes and claim tested with a fake Stripe; the shop shows the packs or why not. Needs `STRIPE_SECRET_KEY` on Render and a real test purchase |
+| Drop Tables page | ✅ | 2026-11-07: Menu → Drop Tables lists every monster, arena loot and things you break; also `06 Data/Drop Tables.md` (autotest) |
 | Miner's Survival Token shop | ✅ | |
 | Every shop item | ✅ | All 45 items in all shops and the Gem Shop, bought for exactly their price |
 | Device-clock cheating (furnaces, daily chests) | ✅ | Steady in-game clock, server time when online, no rewinding a save. Offline, a clock moved forward *while the game is closed* still counts once (see [[Known Issues]]) |

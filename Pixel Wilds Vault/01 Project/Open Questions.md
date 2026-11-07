@@ -8,6 +8,7 @@ Things only Brenden can answer. Claude asks these when they matter and moves the
 - [ ] **Backpack price:** 50 gems each is a placeholder. What should backpacks 2 to 6 cost?
 - [ ] **Real-money gems:** open a payment account (Stripe or PayPal) so gems can be sold? Keep gems for coins until then?
 - [ ] **Money:** sell the game itself, sell gems for real money through Steam, or both? What price?
+- [ ] **Gem pack prices:** 100 gems $0.99, 550 $4.99, 1,200 $9.99, 2,500 $19.99 are placeholders. What should they be? And who opens the Stripe account (it needs an adult)?
 - [ ] Are the **friend, chat and emote buttons** visible in single player in the real game, or only online? (Ours always show.)
 - [ ] Does the Plumber sell exactly our list (tools, potions, ammo, walls, campfire, Combo Book II, Green Egg) in the real game? Brenden answered who sells and who buys on 2026-11-04.
 - [ ] In the recording, a **red-haired girl** says "Do you need a hammer?". Which of our villagers is she, or is she one we don't have yet?

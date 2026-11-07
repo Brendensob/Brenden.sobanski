@@ -14,7 +14,8 @@ tags: [game, economy]
 | Characters | 100, 300, 800 or 2,000 (the original's tiers) |
 | Combination Scrolls, Magic Seeds | estimates |
 | Each of Banka's backpacks after the first | 50 (placeholder) |
-| 1 gem | 2,500 Pixel Coins (in place of real-money packs) |
+| Gem packs for real money | 100 gems $0.99, 550 $4.99, 1,200 $9.99, 2,500 $19.99 (placeholders) |
+| 1 gem | 2,500 Pixel Coins |
 
 **Where gems come from:**
 - bosses (1–2, rarely);
@@ -36,4 +37,13 @@ tags: [game, economy]
 
 Prices the wiki doesn't give (potions, ammo, walls, Campfire) are our estimates.
 
-Plans for real money are in [[Monetization]].
+## Gem packs for real money (2026-11-07)
+*Brenden: "make gems purchasable with real money"*
+- The Gem Shop lists the packs at the top. **Buy** opens a Stripe checkout page in the browser.
+- When the payment goes through, the gems arrive in the game within about 15 seconds (the game asks the server every 15 s while a payment is open).
+- You need your online name first (Multiplayer on the main menu), so the server knows who paid.
+- Until Stripe is switched on, the shop says "Gem packs for real money aren't set up yet."
+
+How it works and how to switch it on: [[Online Server]] and [[Monetization]].
+
+![[gem_shop_packs.png]]

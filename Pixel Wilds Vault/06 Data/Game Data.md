@@ -20,5 +20,6 @@ Every number in the game, exported from `scripts/data.gd`.
 - [[Quests]]
 - [[Character Data]]
 - [[Pets]]
+- [[Drop Tables]]
 
 Which numbers are real and which are estimates: [[Numbers and Estimates]].

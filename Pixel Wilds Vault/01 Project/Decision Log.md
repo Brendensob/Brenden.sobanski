@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (no ghost, gem packs, drop tables, defense chip)
+- **The ghost is gone.** *Brenden: "get rid of ghost thing"*. On your own the gravestone counts 10 s and you wake in Pixel Town; in a room friends still revive you at your gravestone (50 s).
+- **Gems for real money** through Stripe Checkout. *Brenden: "make gems purchasable with real money"*. Stripe works on the web build and needs only a small check on our server; Steam or app-store purchases would need those stores. Prices (100/550/1,200/2,500 gems for $0.99/$4.99/$9.99/$19.99) are placeholders. Needs `STRIPE_SECRET_KEY` on Render, and the Stripe account needs an adult. See [[Monetization]].
+- **Drop Tables page** in the Menu and in `06 Data/Drop Tables.md`. *Brenden: "make a drop table for every mob in the game that i can see so ik what to test n stuff"*
+- **Defense can't block everything.** When defense soaks a whole hit, it's a coin flip whether you still take 1–2. *Brenden: "make it so you cant completly remove dmg from mobs with high def its just a 50 50 chance for them to hit you for 1-2"*
+
 ## 2026-11-07 (fainting bar, gravestones in rooms, off-screen markers)
 - **This is "the death thing".** *Brenden: "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
 - **No big faint menu.** A small bar under the sky clock shows the countdown to Pixel Town and the buttons. Going home while a gravestone stands asks "Are you sure? You can still get revived." The tip shows once you're back in Pixel Town.
