@@ -1737,11 +1737,15 @@ func menus_check() -> void:
 	pl.invuln = 0.0
 	pl.hurt(9999, 0.0, pl.position.x - 5)
 	await wait(0.5)
-	check(pl.dead and not main.hud.panels.dead.visible and absf(pl.body_sprite.rotation) > 0.3, "fainting in single player is a slow fall, not instant")
+	check(pl.dead and not main.hud.dead_bar.visible and absf(pl.body_sprite.rotation) > 0.3, "fainting in single player is a slow fall, not instant")
 	await shot("60a_falling")
 	await wait(1.6)
-	var dp: Panel = main.hud.panels.dead
-	check(dp.visible, "fainting shows the faint screen")
+	var dp: Panel = main.hud.dead_bar
+	check(dp.visible, "fainting shows the faint bar")
+	var vs := get_viewport().get_visible_rect().size
+	check(dp.get_global_rect().position.y < 70 and dp.size.y <= 70 and dp.size.x < vs.x * 0.75, "the faint bar is small and at the top, not a menu in your face (%s)" % dp.get_global_rect())
+	check(main.dead_tint.visible, "the screen is a little darker while you're fainted")
+	check((dp.get_node("Text") as Label).text.contains("Back to Pixel Town in"), "the bar counts down to Pixel Town (%s)" % (dp.get_node("Text") as Label).text)
 	var grave: Node = main.grave
 	check(is_instance_valid(grave) and grave.position.distance_to(fell_at) < 4, "a gravestone rises where you fainted")
 	await shot("60_fainted")
@@ -1752,10 +1756,20 @@ func menus_check() -> void:
 	var tl: Label = dp.get_node("Text")
 	check(rev.visible and pr.encloses(wr) and pr.encloses(rev.get_global_rect()) and pr.encloses(tl.get_global_rect()) and not tl.get_global_rect().intersects(wr) and not rev.get_global_rect().intersects(wr),
 		"the faint screen's text and its Respawn and Wake up buttons fit inside it without overlapping")
+	# going home while you could still be revived asks first
+	wake.pressed.emit()
+	await wait(0.2)
+	var gu: Panel = main.hud.panels.give_up
+	check(gu.visible and (gu.get_node("Text") as Label).text.contains("revived"), "Go to Pixel Town asks if you're sure: you can still get revived")
+	await shot("60d_give_up")
+	gu.get_node("No").pressed.emit()
+	await wait(0.2)
+	check(not gu.visible and pl.dead and dp.visible, "No keeps you by your gravestone")
 	# Respawn: a ghost at the start of the map, who walks back to the gravestone
 	rev.pressed.emit()
 	await wait(0.3)
-	check(not dp.visible and pl.ghost and pl.dead and pl.position.distance_to(main.level.cell_pos(main.level.spawn_cell)) < 20, "Respawn brings you back as a ghost at the start of the map")
+	check(dp.visible and not rev.visible and (dp.get_node("Text") as Label).text.contains("Walk back"), "as a ghost the bar says walk back to your gravestone")
+	check(pl.ghost and pl.dead and pl.position.distance_to(main.level.cell_pos(main.level.spawn_cell)) < 20, "Respawn brings you back as a ghost at the start of the map")
 	var hp0 := GS.hp
 	pl.invuln = 0.0
 	pl.hurt(5, 0.0, pl.position.x - 5)
@@ -1768,11 +1782,13 @@ func menus_check() -> void:
 	await wait(2.3)
 	check(not pl.dead and not pl.ghost and GS.hp == GS.max_hp() and pl.position.distance_to(fell_at) < 20 and not is_instance_valid(grave),
 		"3.5 seconds by the gravestone gets you back up there")
+	await wait(0.1)
+	check(not dp.visible and not main.dead_tint.visible, "back up: the bar goes and the screen is bright again")
 	# faint again and let the gravestone crumble: Pixel Town
 	pl.invuln = 0.0
 	pl.hurt(9999, 0.0, pl.position.x - 5)
 	await wait(2.2)
-	check(main.hud.panels.dead.visible and is_instance_valid(main.grave), "fainting again gives a new gravestone")
+	check(main.hud.dead_bar.visible and is_instance_valid(main.grave), "fainting again gives a new gravestone")
 	rev.pressed.emit()
 	await wait(0.2)
 	main.grave.left = 0.2
@@ -1784,7 +1800,7 @@ func menus_check() -> void:
 	pl.invuln = 0.0
 	pl.hurt(9999, 0.0, pl.position.x - 5)
 	await wait(2.2)
-	check(not pl.dead and GS.hp == GS.max_hp() and not main.hud.panels.dead.visible, "the Grasslands Arena gives one free revive")
+	check(not pl.dead and GS.hp == GS.max_hp() and not main.hud.dead_bar.visible, "the Grasslands Arena gives one free revive")
 	await shot("61_free_revive")
 	pl.invuln = 0.0
 	pl.hurt(9999, 0.0, pl.position.x - 5)
@@ -1792,7 +1808,7 @@ func menus_check() -> void:
 	check(pl.dead and dp.visible and not rev.visible and not is_instance_valid(main.grave), "only one: the second faint in the arena sends you home")
 	wake.pressed.emit()
 	await wait(0.8)
-	check(not dp.visible and main.level.id == "town" and not main.level.player.dead, "Wake up takes you back to Pixel Town on your feet")
+	check(not dp.visible and main.level.id == "town" and not main.level.player.dead, "with no gravestone, Go to Pixel Town takes you straight home on your feet")
 	# Multiplayer: whose name it is, that it's yours, and the four buttons
 	GS.online_token = "test-token"
 	GS.save_game()
@@ -2421,7 +2437,7 @@ func run() -> void:
 	main.level.player.invuln = 0.0
 	main.level.player.self_destruct()
 	await wait(1.4)
-	check(main.hud.panels.dead.visible, "the bomb makes you faint")
+	check(main.hud.dead_bar.visible, "the bomb makes you faint")
 	main.respawn()
 	await wait(0.4)
 	await shot("09c_town")
@@ -2559,7 +2575,7 @@ func run() -> void:
 	main.level.player.invuln = 0.0
 	main.level.player.hurt(9999, 0.0, main.level.player.position.x - 5)
 	await wait(2.4)
-	check(not main.hud.panels.dead.get_node("Revive").visible, "no gravestone in Survival: fainting ends the run")
+	check(not main.hud.dead_bar.get_node("Revive").visible, "no gravestone in Survival: fainting ends the run")
 	check(GS.count("silver_key") >= 1, "dying on day 7 of Survival gives a Silver Key")
 	await shot("41_fainted")
 	main.respawn()

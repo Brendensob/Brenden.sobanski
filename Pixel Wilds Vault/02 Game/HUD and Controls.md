@@ -19,6 +19,8 @@ Laid out like Brenden's PSG2 screenshots.
 - **Day counter:** only in Survival Grasslands.
 - **Right side:** backpack (bag), compass (menu), bomb (back to town).
 - **Bottom:** grey ◀ ▶ bottom left (90 × 34 each); red **A** above green **B** bottom right (68 × 34 each), with the little round **AUTO** switch above A.
+- **Fainted:** a small bar under the sky clock with the countdown to Pixel Town and its buttons, and a slightly darker screen (see [[Combat]]).
+- **Friends off screen:** a little coloured square with an arrow at the screen's edge (see [[Multiplayer]]).
 - **Low health:** under 25%, the health bar's border pulses red.
 - **Ready notices:** "Your Copper Bar is ready in the furnace", "…has hatched", "…is ripe", shown wherever you are.
 - Your name shows in red over your head. Pickups read "Wood obtained" under the clock.

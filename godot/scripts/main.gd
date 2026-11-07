@@ -14,6 +14,7 @@ var title_mode := true
 var title_t := 0.0
 var dark_layer: CanvasLayer
 var dark_rect: ColorRect
+var dead_tint: ColorRect
 var dark := 0.0 # how dark the screen edges are right now (eases toward the target)
 
 func _ready() -> void:
@@ -37,6 +38,13 @@ func _ready() -> void:
 	mat.shader = load("res://shaders/cave_dark.gdshader")
 	dark_rect.material = mat
 	dark_layer.add_child(dark_rect)
+	# the screen is a little darker for you while you're fainted
+	dead_tint = ColorRect.new()
+	dead_tint.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dead_tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dead_tint.color = Color(0.04, 0.02, 0.08, 0.38)
+	dead_tint.visible = false
+	dark_layer.add_child(dead_tint)
 	Net.main = self
 	Net.chat_received.connect(func(from: String, text: String): hud.add_chat(from, text))
 	Net.emote_received.connect(func(peer: int, e: String):
@@ -260,12 +268,15 @@ func player_died(on_purpose := false) -> void:
 		pl.revive_here()
 		hud.toast("Free revive! The Grasslands Arena gives you one.", "good")
 		return
-	# everywhere else in single player (not Survival, which ends when you faint,
-	# and not the free-revive arena once it's used) your gravestone rises
-	var can_grave: bool = solo and lvl.kind in ["explore", "arena"] and not lvl.def.get("free_revive", false)
-	var text := "You'll wake up in Pixel Town with everything still in your bag."
-	if can_grave:
-		text = "Respawn as a ghost at the start of this map, then stand by your gravestone for 3.5 seconds to get back up there. You have 50 seconds."
+	# everywhere else (not Survival, which ends when you faint, not the bomb,
+	# and not the free-revive arena once it's used) your gravestone rises. In a
+	# room, friends revive you by standing by it (Brenden, 2026-11-07)
+	var can_grave: bool = not on_purpose and lvl.kind in ["explore", "arena"] and not (solo and lvl.def.get("free_revive", false))
+	var text := "You'll wake up in Pixel Town with everything in your bag."
+	if can_grave and solo:
+		text = "Respawn as a ghost and stand by your gravestone for 3.5 s to get back up."
+	elif can_grave:
+		text = "A friend can revive you by standing by your gravestone for 3.5 s."
 	if level.kind == "survival" and not Net.active: # keys are single player only, like the original
 		var d: int = level.s_day
 		var key := ""
@@ -284,9 +295,7 @@ func player_died(on_purpose := false) -> void:
 			else:
 				text += " Your bag and storage were full, so the %s was lost." % Data.ITEMS[key].name
 	var tip := faint_tip()
-	if tip != "":
-		text += "\n\nTip: " + tip
-	if solo:
+	if can_grave or solo:
 		await get_tree().create_timer(PlayerScript.DEATH_ANIM).timeout
 		if level != lvl or not is_instance_valid(pl) or not pl.dead or pl.ghost:
 			return
@@ -304,6 +313,8 @@ func player_died(on_purpose := false) -> void:
 	if level == null or level != lvl or not is_instance_valid(level.player) or not level.player.dead or level.player.ghost:
 		return
 	hud.show_dead(text, can_grave and is_instance_valid(grave))
+	if tip != "":
+		hud.toast("Tip: " + tip, "")
 
 ## "Respawn" on the faint screen: back as a ghost at the start of the map, to
 ## walk to your gravestone (or home, if it has crumbled meanwhile).
@@ -338,11 +349,28 @@ func respawn() -> void:
 	GS.st = GS.max_st()
 	GS.status.clear()
 	hud.close_panels()
+	hud.hide_dead()
 	if Net.active:
-		level.player.revive()
-		GS.stats_changed.emit()
+		if level.kind == "town":
+			level.player.revive()
+			GS.stats_changed.emit()
+			return
+		# back to your own Pixel Town: only you, the room isn't pulled along
+		Net.go("town", true)
 		return
 	change_level("town")
+
+## A friend stood by your gravestone long enough: back up where you fell.
+func revived_by(who: String) -> void:
+	if level == null or not is_instance_valid(level.player) or not level.player.dead:
+		return
+	if is_instance_valid(grave):
+		grave.queue_free()
+	grave = null
+	level.player.revive_here()
+	hud.hide_dead()
+	hud.toast("%s revived you!" % who, "good")
+	Sfx.play("heal", 0.0)
 
 func shake(amount: float) -> void:
 	shake_amt = maxf(shake_amt, amount)

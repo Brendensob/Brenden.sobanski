@@ -534,6 +534,14 @@ func _build_hud() -> void:
 	bomb_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	bomb_btn.position = Vector2(-29, 96)
 	hud_root.add_child(bomb_btn)
+	# friends off the screen: a little square at the edge, pointing their way
+	markers = Control.new()
+	markers.name = "Markers"
+	markers.set_anchors_preset(Control.PRESET_FULL_RECT)
+	markers.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	markers.draw.connect(_draw_markers)
+	hud_root.add_child(markers)
+	hud_root.move_child(markers, 0)
 	boss_box = Control.new()
 	boss_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	boss_box.position = Vector2(-90, 46)
@@ -666,6 +674,20 @@ func _process(_d: float) -> void:
 	var lvl: Node = main.level if main else null
 	if lvl == null:
 		return
+	var down: bool = is_instance_valid(lvl.player) and lvl.player.dead and not main.on_title()
+	main.dead_tint.visible = down
+	if dead_bar.visible:
+		if not down:
+			hide_dead()
+		else:
+			if not is_instance_valid(main.grave) and not any_open():
+				dead_left -= _d
+				if dead_left <= 0.0:
+					hide_dead()
+					main.respawn()
+					return
+			_refresh_dead()
+	markers.queue_redraw()
 	var town: bool = lvl.kind == "town"
 	chat_btn.visible = Net.active
 	status_label.position.y = 168 if emote_panel.visible else 92
@@ -1779,20 +1801,37 @@ func _build_panels() -> void:
 	bno.custom_minimum_size = Vector2(100, 26)
 	bc.add_child(_at(bno, Vector2(150, 96)))
 
-	var dead := _panel("dead", Vector2(260, 110), "You fainted", false)
-	var dtext := _wrap("", 240)
+	# fainting: a small bar at the top, not a menu in your face (Brenden,
+	# 2026-11-07): what's happening, the time left before you go back to Pixel
+	# Town, and the buttons. The world keeps going behind it.
+	dead_bar = _panel("dead", Vector2(300, 52), "You fainted", false)
+	panels.erase("dead")
+	dead_bar.modulate.a = 0.95
+	var dtext := _wrap("", 284, C_INK, 8)
 	dtext.name = "Text"
-	dtext.position = Vector2(10, 26)
-	dead.add_child(dtext)
-	var wake := _button("Wake up in Pixel Town", func(): main.respawn(), true)
+	dtext.position = Vector2(8, 20)
+	dead_bar.add_child(dtext)
+	var wake := _button("Go to Pixel Town", func(): _wake_pressed(), true)
 	wake.name = "Wake"
-	wake.position = Vector2(10, 78)
-	dead.add_child(wake)
+	dead_bar.add_child(wake)
 	# single player: come back as a ghost and get up again at your gravestone
-	var rev := _button("Respawn", func(): main.ghost_respawn(), true)
+	var rev := _button("Respawn as a ghost", func(): main.ghost_respawn(), true)
 	rev.name = "Revive"
 	rev.visible = false
-	dead.add_child(rev)
+	dead_bar.add_child(rev)
+	# asks first when you could still be revived
+	var gu := _panel("give_up", Vector2(230, 96), "", false)
+	var gq := _wrap("Go back to Pixel Town? Are you sure? You can still get revived.", 210, C_INK, 9)
+	gq.name = "Text"
+	gu.add_child(_at(gq, Vector2(10, 12)))
+	var gy := _menu_button("Yes", func(): close_panels(); main.respawn())
+	gy.name = "Yes"
+	gy.custom_minimum_size = Vector2(80, 26)
+	gu.add_child(_at(gy, Vector2(22, 60)))
+	var gn := _menu_button("No", func(): close_panels())
+	gn.name = "No"
+	gn.custom_minimum_size = Vector2(80, 26)
+	gu.add_child(_at(gn, Vector2(128, 60)))
 
 	# the main menu: title, three character slots, creating a character, play mode
 	var t := Control.new()
@@ -2269,40 +2308,127 @@ func _start_from_menu() -> void:
 	else:
 		main.start_game(true)
 
-func show_dead(text: String, grave := false) -> void:
-	if Net.active:
-		text = "Your friends can keep going. Get back up at the start of this map."
-	var dp: Panel = panels.dead
-	dp.get_node("Revive").visible = grave
-	var wake: Button = dp.get_node("Wake")
-	var tl: Label = dp.get_node("Text")
-	wake.text = "Get back up" if Net.active else "Wake up in Pixel Town"
-	tl.text = text
-	tl.size = Vector2(240, 0)
-	open_panel("dead")
-	_layout_dead.call_deferred()
+## Off-screen markers (Brenden, 2026-11-07): every other player in the room
+## who's on your map but off your screen gets a small square in their own
+## colour at the edge of the screen, with an arrow pointing their way and the
+## first letters of their name. Grey with a cross while they're fainted.
+var markers: Control
+const MARK := 9.0
 
-## Fits the faint screen to its text (a tip can make it longer), with the
-## button centred underneath. Runs a frame later, once the text has wrapped.
+func marker_color(pname: String) -> Color:
+	return Color.from_hsv(float(hash(pname.to_lower()) % 360) / 360.0, 0.65, 0.95)
+
+## The screen point of each off-screen friend's marker: [peer, point, arrow direction].
+func marker_points() -> Array:
+	var out := []
+	var lvl: Node = main.level if main else null
+	if lvl == null or main.on_title():
+		return out
+	var vr: Rect2 = get_viewport().get_visible_rect()
+	var xf: Transform2D = get_viewport().get_canvas_transform()
+	var inner := vr.grow(-14.0)
+	for peer in lvl.puppets:
+		var pp: Node2D = lvl.puppets[peer]
+		if not is_instance_valid(pp):
+			continue
+		var sp: Vector2 = xf * (pp.position + Vector2(0, -10))
+		if vr.grow(-4.0).has_point(sp):
+			continue
+		var c := inner.get_center()
+		var d := sp - c
+		if d.length() < 0.01:
+			continue
+		# where the line from the middle of the screen to them leaves the inner box
+		var t := INF
+		if d.x != 0:
+			t = minf(t, ((inner.end.x if d.x > 0 else inner.position.x) - c.x) / d.x)
+		if d.y != 0:
+			t = minf(t, ((inner.end.y if d.y > 0 else inner.position.y) - c.y) / d.y)
+		out.append([peer, c + d * t, d.normalized()])
+	return out
+
+func _draw_markers() -> void:
+	var lvl: Node = main.level if main else null
+	for m in marker_points():
+		var pp: Node = lvl.puppets[m[0]]
+		var pname: String = pp.name_label.text if pp.get("name_label") else "?"
+		var col := Color("8a8a96") if pp.dead else marker_color(pname)
+		var at: Vector2 = m[1]
+		var dir: Vector2 = m[2]
+		# the arrow, just outside the square, pointing at them
+		var tip := at + dir * (MARK * 0.5 + 6)
+		var side := dir.orthogonal() * 3.5
+		var base := at + dir * (MARK * 0.5 + 1.5)
+		markers.draw_colored_polygon(PackedVector2Array([tip, base + side, base - side]), C_WHITE)
+		markers.draw_polyline(PackedVector2Array([tip, base + side, base - side, tip]), Art.OUTLINE, 1.0)
+		var r := Rect2(at - Vector2(MARK, MARK) * 0.5, Vector2(MARK, MARK))
+		markers.draw_rect(r.grow(1), Art.OUTLINE)
+		markers.draw_rect(r, col)
+		if pp.dead:
+			markers.draw_line(r.position + Vector2(2, 2), r.end - Vector2(2, 2), Art.OUTLINE, 1.0)
+			markers.draw_line(Vector2(r.end.x - 2, r.position.y + 2), Vector2(r.position.x + 2, r.end.y - 2), Art.OUTLINE, 1.0)
+		var f: Font = Art.font_body
+		var label := pname.left(3)
+		var w := f.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6).x
+		var ly := r.end.y + 7 if at.y < 40 else r.position.y - 2
+		markers.draw_string_outline(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, 2, Art.OUTLINE)
+		markers.draw_string(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 6, C_WHITE)
+
+## Shows the faint bar. grave: single player's gravestone, so Respawn as a
+## ghost is offered. The bar counts down to Pixel Town by itself (the
+## gravestone's time, or DEAD_WAIT without one) and goes when you're back up.
+const DEAD_WAIT := 10.0
+var dead_bar: Panel
+var dead_text := ""
+var dead_left := 0.0
+
+func show_dead(text: String, grave := false) -> void:
+	dead_text = text
+	dead_left = DEAD_WAIT
+	dead_bar.get_node("Revive").visible = grave and not Net.active
+	dead_bar.visible = true
+	_refresh_dead()
+	_layout_dead()
+
+func hide_dead() -> void:
+	dead_bar.visible = false
+	if panels.give_up.visible:
+		close_panels()
+
+## While a gravestone stands you can still be revived, so going home asks first.
+func _wake_pressed() -> void:
+	if is_instance_valid(main.grave):
+		open_panel("give_up")
+	else:
+		main.respawn()
+
+func _refresh_dead() -> void:
+	var secs: float = main.grave.left if is_instance_valid(main.grave) else dead_left
+	var line := dead_text
+	if main.level and main.level.player and main.level.player.ghost:
+		line = "Walk back to your gravestone and stand by it."
+		dead_bar.get_node("Revive").visible = false
+	dead_bar.get_node("Text").text = "%s Back to Pixel Town in %d." % [line, ceili(secs)]
+
+## The text on top, the buttons in a row under it; the bar sits just under
+## the sky clock, in the middle.
 func _layout_dead() -> void:
-	var dp: Panel = panels.dead
-	var wake: Button = dp.get_node("Wake")
-	var tl: Label = dp.get_node("Text")
-	var h := maxf(tl.size.y, tl.get_line_count() * tl.get_line_height())
+	var tl: Label = dead_bar.get_node("Text")
+	var wake: Button = dead_bar.get_node("Wake")
+	var rev: Button = dead_bar.get_node("Revive")
+	var h := maxf(tl.get_combined_minimum_size().y, tl.get_line_count() * tl.get_line_height())
+	var y := roundf(tl.position.y + h + 3)
 	wake.size = wake.get_combined_minimum_size()
-	var y := roundf(tl.position.y + h + 8)
-	var rev: Button = dp.get_node("Revive")
+	rev.size = rev.get_combined_minimum_size()
+	var w := wake.size.x + (rev.size.x + 6 if rev.visible else 0.0)
+	var x := roundf((dead_bar.size.x - w) / 2)
 	if rev.visible:
-		# Respawn on top, Wake up in Pixel Town under it, the same width
-		rev.size = rev.get_combined_minimum_size()
-		var bw := maxf(rev.size.x, wake.size.x)
-		rev.size.x = bw
-		wake.size.x = bw
-		rev.position = Vector2(roundf((dp.size.x - bw) / 2), y)
-		y += rev.size.y + 6
-	wake.position = Vector2(roundf((dp.size.x - wake.size.x) / 2), y)
-	dp.size.y = wake.position.y + wake.size.y + 10
-	_place("dead")
+		rev.position = Vector2(x, y)
+		x += rev.size.x + 6
+	wake.position = Vector2(x, y)
+	dead_bar.size.y = y + wake.size.y + 6
+	var vs: Vector2 = get_viewport().get_visible_rect().size
+	dead_bar.position = Vector2(roundf((vs.x - dead_bar.size.x) / 2), 40)
 
 func open_info(title: String, text: String) -> void:
 	panels.info.get_node("Title").text = title

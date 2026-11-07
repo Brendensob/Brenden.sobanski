@@ -55,4 +55,17 @@ tags: [session]
   - leaving with the countdown and the busy portal still work.
   - 0 failures.
 
+**Then Brenden explained the death thing:** "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"
+
+![[faint_bar.png]]
+![[offscreen_marker.png]]
+
+- **Faint bar:** a small bar at the top replaces the faint menu, with a countdown to Pixel Town, Respawn as a ghost (single player) and Go to Pixel Town. Going home asks "Are you sure? You can still get revived." while your gravestone stands.
+- **Darker screen** while you're fainted.
+- **Gravestones in rooms:** friends stand by yours for 3.5 s to revive you, and giving up takes only you home.
+- **Off-screen markers:** a coloured square with an arrow at the screen's edge for each friend off screen, grey with a cross if they're down.
+- **Tests:**
+  - autotest: the bar is small and at the top, the screen darkens, the countdown shows, the are-you-sure has Yes and No, the ghost text appears, and everything clears when you're back up;
+  - two-player test: the friend faints, the host sees the gravestone, stands by it and revives them, then walks off and gets a marker pointing back.
+
 **Next:** Brenden plays the Grasslands and says if it feels right. 

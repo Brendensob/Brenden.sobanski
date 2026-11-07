@@ -116,6 +116,22 @@ func run_host() -> void:
 		lvl.drop("rock", 2, lvl.player.position + Vector2(0, -8), false, true)
 		check(await until(func(): return GS.count("rock") >= 2, 5.0), "the host picked up the shared drop")
 		lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away again so the slime picks the friend
+	# the friend faints: a gravestone stands in their place, and standing by it revives them
+	check(await until(func(): return is_instance_valid(pp) and pp.dead, 90.0), "the friend fainted")
+	check(pp.stone.visible and not pp.body.visible, "a gravestone stands where the friend fell")
+	await shot("net_host_grave")
+	lvl.player.position = pp.position + Vector2(8, 0)
+	check(await until(func(): return pp.revive_held > 1.0, 5.0), "standing by it fills the revive bar")
+	check(await until(func(): return not pp.dead, 15.0), "3.5 seconds by the friend's gravestone revives them")
+	# far away from the friend: a marker at the edge of the screen points at them
+	lvl.player.position = lvl.cell_pos(Vector2i(mini(lvl.W - 6, int(pp.position.x / 16) + 40), lvl.surface[mini(lvl.W - 6, int(pp.position.x / 16) + 40)] - 1))
+	main.camera.position = lvl.player.position
+	main.camera.reset_smoothing()
+	await wait(0.6)
+	var marks: Array = main.hud.marker_points()
+	check(marks.size() == 1 and marks[0][0] == pp.peer and (marks[0][2] as Vector2).x < 0, "a marker at the screen's edge points left at the friend off screen (%s)" % [marks])
+	await shot("net_host_marker")
+	lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1))
 	check(await until(func(): return chat_log.has("hello from friend"), 90.0), "the friend's chat message arrived")
 	var em: Node = pp.get_node_or_null("Emote") if is_instance_valid(pp) else null
 	check(em != null and em.texture == Art.emote("heart"), "the friend's heart emote shows over their head")
@@ -239,6 +255,14 @@ func run_client() -> void:
 	check(await until(func(): return GS.count("rock") >= 2, 25.0), "got the same drop the host picked up right next to the friend")
 	var hp0: float = GS.hp
 	check(await until(func(): return GS.hp < hp0, 20.0), "the host's slime hurt the friend")
+	# faint: a small bar at the top, a darker screen, and a friend can revive you
+	lvl.player.invuln = 0.0
+	lvl.player.hurt(9999, 0.0, lvl.player.position.x - 5)
+	check(await until(func(): return main.hud.dead_bar.visible, 5.0), "fainting in a room shows the small bar")
+	check(main.dead_tint.visible and (main.hud.dead_bar.get_node("Text") as Label).text.contains("friend can revive"), "the screen darkens and the bar says a friend can revive you (%s)" % (main.hud.dead_bar.get_node("Text") as Label).text)
+	await shot("net_client_fainted")
+	check(await until(func(): return not lvl.player.dead, 40.0), "the host stood by the gravestone and revived the friend")
+	check(not main.hud.dead_bar.visible and not main.dead_tint.visible and lvl.id == "grass_1", "back up where they fell, still in Grasslands 1")
 	await shot("net_client_grass1")
 	check(main.hud.chat_btn.visible and main.hud.chat_btn.size.y <= 14, "the Chat.. box shows under the bars")
 	GS.hp = GS.max_hp()

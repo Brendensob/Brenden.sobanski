@@ -5,10 +5,18 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (fainting bar, gravestones in rooms, off-screen markers)
+- **This is "the death thing".** *Brenden: "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
+- **No big faint menu.** A small bar under the sky clock shows the countdown to Pixel Town and the buttons. Going home while a gravestone stands asks "Are you sure? You can still get revived." Tips show as a message.
+- **The screen darkens a little** while you're fainted, ghost included.
+- **Gravestones in rooms:** friends see yours in your place and revive you by standing by it for 3.5 s (the same time as a ghost in single player). Giving up, or the stone crumbling after 50 s, takes only you home.
+- **Off-screen markers** for friends: a coloured square with an arrow at the edge of the screen, grey with a cross if they're fainted.
+- The single-player ghost and the Grasslands Arena's free revive (2026-11-05) are unchanged.
+
 ## 2026-11-07 (shared drops; portals don't pull you in)
 - **Shared drops:** picking up a drop from a normal monster or a broken tree, rock, ore, plant or pot gives the same drop to every player right next to you (within 1.5 tiles). Boss drops (arena bosses, boss monsters) aren't shared. *Brenden: "make it so mulitplew players can pick up the samne drop when standing by it this doesnt include bosses but it includes breakable loot and normal mobs but only if the players are right next to eachother. fix the death thing to what i told you to do before. and dont make every player go to the portal players can stay in town if they want. but make them leave if in the portal and someone leaves"*
 - **Going into a world no longer pulls anyone in.** Players can stay in town. The 20-second countdown is only for **leaving**: when someone leaves a world, everyone else in that world follows after 20 seconds.
-- **"Fix the death thing to what I told you to do before":** the only earlier instruction in the notes is "Make the menu when death fixed" (the faint screen layout, fixed 2026-10-27). It checks out at computer, wide-phone and tall-phone shapes. **Asked Brenden what he means** (see [[Open Questions]]).
+- **"Fix the death thing to what I told you to do before":** the only earlier instruction in the notes is "Make the menu when death fixed" (the faint screen layout, fixed 2026-10-27). It checks out at computer, wide-phone and tall-phone shapes. Brenden answered with the next message (see the entry above).
 
 ## 2026-11-07 (portals one at a time in rooms)
 - **A portal takes only the player who goes in.** The rest follow through the portal, or are taken along after 20 seconds. Leaving works the same way. *(Changed the same day: entering no longer pulls anyone in; see above.)* *Brenden: "when i put a portal down people can go in 1 at a time and it wont take everyone same with leaving put a 20 secv timer and then  it takes everyoine back if there not back alr and if someones in a portal then it says someones in the current portal"*

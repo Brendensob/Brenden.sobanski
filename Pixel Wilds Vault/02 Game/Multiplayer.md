@@ -26,6 +26,11 @@ tags: [game, multiplayer]
   ![[portal_busy.png]]
 
   - **How it works:** the host runs the shared map. A guest who goes somewhere the host isn't gets their own copy of the same map (the room keeps one seed per world). When the host comes, everyone there shares the host's map and keeps their spot. Kills made on a copy aren't shared.
+- **Off-screen markers** (since 2026-11-07): a friend on your map but off your screen shows as a small square in their own colour at the edge of the screen, with an arrow pointing their way and the first letters of their name. Grey with a cross while they're fainted, so you can find their gravestone. (This is usually called an off-screen indicator.)
+
+  ![[offscreen_marker.png]]
+
+- **Fainting in a room:** your gravestone stands in your place for everyone, and a friend standing by it for 3.5 s revives you (see [[Combat#Fainting (single player, 2026-11-05)]]).
 - **Shared drops** (since 2026-11-07): when you pick up a drop from a normal monster or something you broke (trees, rocks, ores, plants, pots), every player standing **right next to you** (within 1.5 tiles) gets the same drop too. Boss drops aren't shared. The host checks who is close.
 - **Town walls in a room:** each player has their own Pixel Town, built from their own unlocks. In a room, a wall (rock wall, Trading Center wall, stone wall to the basement) is open if **anyone in the room** has opened it, so everyone sees the same town. Breaking a wall opens it on everyone's screen at once. The unlock is saved only for the player who broke it. Others get their own wall back when they leave the room. (A design decision: PSG2's behaviour here isn't documented.)
 - **Chat:** the Chat.. box under the bars, or press T.

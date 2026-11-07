@@ -71,17 +71,19 @@ The bare starter kit is too weak for two bosses at once; the goal card sends you
 
 ## Fainting (single player, 2026-11-05)
 - **A slow fall:** you stagger, keel over, lie still a moment and fade. Your **gravestone** rises where you fell.
-- The faint screen offers **Respawn** and **Wake up in Pixel Town**.
+- **No menu in your face** (since 2026-11-07): a small bar at the top, under the sky clock, says what to do and counts down to Pixel Town ("Back to Pixel Town in 42"), with **Respawn as a ghost** and **Go to Pixel Town**. While your gravestone stands, Go to Pixel Town asks first: "Are you sure? You can still get revived." The world keeps going behind the bar, and **your screen is a little darker** until you're back up. Without a gravestone (Survival, the bomb, the arena after its free revive) the bar counts 10 seconds and then takes you home. Tips show as a message instead.
 - **Respawn** brings you back as a see-through **ghost** at the start of the map. A ghost can walk and jump but can't hit, pick things up or be hurt.
 - The gravestone shows how long it has left (**50 seconds**). Stand by it for **3.5 seconds** and a little timer and bar count down over it; then you get back up right there with full health and 3 seconds of safety.
 - After 50 seconds it crumbles and you wake up in Pixel Town (nothing is lost, as before).
 - **Grasslands Arena:** one free revive instead: the first faint gets you straight back up on the spot. The second sends you home.
 - No gravestone in **Survival** (fainting ends the run and gives its keys), or after the bomb button (you meant to go home).
-- **Multiplayer** is unchanged: you get back up at the start of the map.
+- **Multiplayer** (since 2026-11-07): your gravestone rises too, and everyone in the room sees it in your place. A friend who stands by it for **3.5 seconds** (a bar fills over it) gets you back up right there. There's no ghost in a room. Going to Pixel Town (or the stone crumbling after 50 seconds) takes **only you** home; the room isn't pulled along.
+- *Brenden (2026-11-07): "make a gravestone for the dead player dont put a giant menu in his face just put it at the top the timer to despawn and go back to pixel town with a are you sure. you can get revived warning. but when playerds dead darken screen slightly for them and also have one of those things that show where players are when off the screen and the direction with a little square on the edge of youre screen for it. i forgot wehat its called check and make sure you do everything right. and publish right after"*
 - *Brenden: "When a player dies in single player they get a option to respawn only make it have a slow animation into a death and then a gravestone and players have 50 seconds to revive by standing close it for 3.5 sec and it shows a little timer"*
 
 ![[gravestone_timer.png]]
+![[faint_bar.png]]
 
-Code: `scripts/grave.gd`, `_slow_fall`, `become_ghost` and `revive_here` in player.gd, `player_died` and `ghost_respawn` in main.gd.
+Code: `scripts/grave.gd`, `show_dead` and the faint bar in hud.gd, the gravestone and revive bar in remote_player.gd, `_slow_fall`, `become_ghost` and `revive_here` in player.gd, `player_died` and `ghost_respawn` in main.gd.
 
 Code: `GS.roll_attack` and the damage formula in game_state.gd, `take_damage`, `can_knock` and `_hit_fx` in mob.gd, `_do_hit` and the tap buffer in player.gd, numbers in fx.gd.

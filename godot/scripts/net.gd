@@ -232,16 +232,41 @@ func load_world(world_id: String, seed: int, state: Dictionary) -> void:
 	main.net_load_world(world_id, seed, state)
 
 ## You go through a portal (or pick a world at the Gatekeeper) in a room.
-func go(target: String) -> void:
+## alone: just you, with no countdown for the others (going home after fainting).
+func go(target: String, alone := false) -> void:
 	if is_host():
-		_want_trip(1, target)
+		_want_trip(1, target, alone)
 	else:
-		want_trip.rpc_id(1, target)
+		want_trip.rpc_id(1, target, alone)
 
 @rpc("any_peer", "reliable")
-func want_trip(target: String) -> void:
+func want_trip(target: String, alone := false) -> void:
 	if is_host():
-		_want_trip(multiplayer.get_remote_sender_id(), target)
+		_want_trip(multiplayer.get_remote_sender_id(), target, alone)
+
+## You stood by a fainted friend's gravestone long enough: they get back up.
+func revive_friend(peer: int) -> void:
+	if is_host():
+		_revive(1, peer)
+	else:
+		ask_revive.rpc_id(1, peer)
+
+@rpc("any_peer", "reliable")
+func ask_revive(peer: int) -> void:
+	if is_host():
+		_revive(multiplayer.get_remote_sender_id(), peer)
+
+func _revive(by: int, peer: int) -> void:
+	var who: String = GS.player_name if by == 1 else players.get(by, {}).get("name", "A friend")
+	if peer == 1:
+		revived(who)
+	elif players.has(peer):
+		revived.rpc_id(peer, who)
+
+@rpc("authority", "reliable")
+func revived(who: String) -> void:
+	if main:
+		main.revived_by(who)
 
 ## Where a player is: the host's own map, or what a guest last said.
 func world_of(peer: int) -> String:
@@ -252,8 +277,11 @@ func world_of(peer: int) -> String:
 ## Going into a world takes only you; nobody else is pulled in, so friends can
 ## stay in town. Leaving a world (home, or on to another) takes you now and,
 ## after TRIP_TIME seconds, everyone still in that world.
-func _want_trip(peer: int, target: String) -> void:
+func _want_trip(peer: int, target: String, alone := false) -> void:
 	if not Data.WORLDS.has(target):
+		return
+	if alone:
+		_move(peer, target)
 		return
 	var from := world_of(peer)
 	if not trip.is_empty():
