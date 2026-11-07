@@ -34,6 +34,8 @@ The map picture is drawn like a little screenshot of the world (since 2026-10-29
 Every world is walled in by mossy stone at its left and right edges; cave worlds have bedrock at the bottom. Each world's cave back wall is themed (see [[Art Style]]).
 
 - **Exploration:** Grasslands 1–3, Darklands 1–2, Hell 1–2, Ice Cavern, Modina Ruins, Nightmare Valley, Forbidden City, Snow Valley. Deeper levels are reached through a purple portal hidden underground.
+- **Monsters come back** in exploration worlds (since 2026-11-07): every 15 seconds, while fewer than 90% of the world's monsters are left, one of its monsters appears on open ground at least 22 tiles from you, out of sight. You can keep farming without leaving and coming back.
+- **Grasslands 1** has 40 monsters (was 34), mostly Slimes (Slime 10, Fira 3, Mummy 2, Shelly 2; was Slime 6). Near the way in, on the surface, only Slimes and Firas are placed, so a new player meets the easy ones first. **Grasslands 2** has Slime 8 (was 5).
 - **Arenas:** monsters keep coming, and the boss arrives after 3 minutes.
 - **Survival Grasslands:**
   - the only place the **day counter** shows;

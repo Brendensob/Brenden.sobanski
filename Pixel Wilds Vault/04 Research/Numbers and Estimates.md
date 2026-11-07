@@ -24,3 +24,13 @@ All game numbers live in `godot/scripts/data.gd`.
 - Gem Shop prices for seeds and scrolls, and **2,500 coins per gem**.
 - The Wall Hammer coming from **night 10**.
 - Boss gem drops (1–2, rarely).
+
+## Pacing changes from the journey test (2026-11-07)
+| Number | Was | Now | Why |
+|---|---|---|---|
+| Health coming back out of a fight | 1 per 12 s after 8 s | 1 per 4 s after 6 s | new players fainted on their first trips |
+| Jelly from a Slime (when it drops, 20% from the wiki) | 1 | 1–2 | the wiki gives the chance, not the amount; 50 Jellies took about 3 hours |
+| Grasslands 1 monsters | 34; Slime weight 6 | 40; Slime weight 10 | more Slimes for Jellies |
+| Grasslands 2 Slime weight | 5 | 8 | the same |
+| Monsters coming back in exploration worlds | never | 1 every 15 s, up to 90% of the start | farming without leaving |
+

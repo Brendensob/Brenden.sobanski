@@ -12,7 +12,7 @@ Added 2026-10-27 so a new player always knows what to do next. Brenden asked tha
 - **Tap it** for how to do it (where to go, who to hit, what to combine).
 - When a goal is done, "Goal done! Next: …" shows under the clock.
 - It hides while the emote panel or a boss bar is up.
-- Older saves skip the early goals: the card shows the first goal *after* the last one you've done.
+- The card shows the **first goal not done yet** (since 2026-11-07). Before that it showed the first goal after the last one done, so doing a later goal early hid an earlier one for good. That made "Bring Miffie 10 Iron Bars" show while Miffie still wanted 50 Jellies, since her quests come in order.
 - After the list, it follows **Miffie's next quest**.
 
 | # | Goal | Done when |
@@ -22,10 +22,10 @@ Added 2026-10-27 so a new player always knows what to do next. Brenden asked tha
 | 3 | Make Wooden Armor | you wear any armor |
 | 4 | Give Brutus a Wood Wall | his quest (opens Survival) |
 | 5 | Bring the furnace GateKeeper a Pretzel | his quest (opens the furnaces) |
-| 6 | Bring Miffie 50 Jellies | her quest 2 |
-| 7 | Bring Miffie 10 Copper Bars | her quest 3 (Golden Night) |
-| 8 | Make a Copper Pickaxe | a tier 2 pickaxe in the bag |
-| 9 | Find the portal to Grasslands 2 | been there |
+| 6 | Make a Copper Pickaxe | a tier 2 pickaxe in the bag |
+| 7 | Find the portal to Grasslands 2 | been there |
+| 8 | Bring Miffie 50 Jellies | her quest 2 |
+| 9 | Bring Miffie 10 Copper Bars | her quest 3 (Golden Night) |
 | 10 | Reach Grasslands 3 | been there |
 | 11 | Bring Miffie 10 Iron Bars | her quest 4 (Blue Night) |
 | 12 | Clear the Grassland Arena | beat its boss |
@@ -34,6 +34,23 @@ Added 2026-10-27 so a new player always knows what to do next. Brenden asked tha
 | 15 | Reach Darklands 2 | been there |
 | 16 | Clear the Darklands Arena | beat its bosses |
 | 17 | Enter Hell | been there |
+
+## Pacing, from the journey test (2026-11-07)
+`tests/journey_test.gd` plays a new character through this list: real fights, chopping and mining, quests, crafting and smelting (see [[Testing#Journey test]]). With the changes below, a run reached:
+
+| Minute | Goal |
+|---|---|
+| 10 | Visit the Grasslands, 10 Jellies, Wood Wall |
+| 22 | Pretzel (furnaces open) |
+| 33 | Wooden Armor |
+| 44 | Copper Pickaxe |
+| 54 | Grasslands 2 |
+| 98 | 50 Jellies |
+| 108 | 10 Copper Bars (Golden Night) |
+| 112 | Grasslands 3 |
+| 151 | 10 Iron Bars (Blue Night) |
+
+Real players walk and look around more than the bot, so expect longer. Before the changes the first two trips ended in fainting within 3 minutes, the first 10 Jellies took 34–50 minutes, and the bot got stuck on the goal card's "10 Iron Bars" for over two hours.
 
 ## Danger on the world cards
 ![[world_danger.png]]

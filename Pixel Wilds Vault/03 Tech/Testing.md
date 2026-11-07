@@ -33,6 +33,21 @@ cd godot
 - It also checks that no world on the normal path says **Deadly** on its card with that gear.
 - Ends with `FIGHTTEST DONE, 0 failures` and a table. It takes about 20 minutes; `FIGHT_ONLY=grass_1,dark_1` picks worlds, `FIGHT_MOB=ufo` one monster, `FIGHT_TRIALS=n` the tries, `PACK=1` or `PACK=3` the pack size. Run a few at once with different `FIGHT_ONLY` to go faster.
 
+## Journey test
+```
+cd godot
+<godot> --headless --path . --fixed-fps 60 -- --journeytest
+```
+- A bot plays a **brand-new character through the goal card**:
+  - it picks a world from the goal, clears it with real fights, real swings at trees and rocks, and real drops;
+  - after Jellies it goes for Slimes, after bars for ore;
+  - at most 10 minutes per trip; with a full bag it throws away junk.
+- **In town** it hands in quests, combines (Wood Wall, Pretzel, boards, potions), crafts upgrades at the Crafter, smelts in the furnaces (counted in game time), stores the rest with Banka and wears what's better.
+- **Walking** between things is counted at walking speed instead of played out, so real players take longer.
+- It prints every goal and upgrade with the minute it happened, time spent fighting, harvesting, walking and in town, faints, and the longest stretch with nothing new.
+- It checks that every goal up to "Clear the Grassland Arena" is reached.
+- `JOURNEY_MINUTES=n` sets the most game time (240). 150 game minutes take about 50 minutes to run.
+
 ## Server checks
 `python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 

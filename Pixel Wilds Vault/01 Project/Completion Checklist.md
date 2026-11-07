@@ -114,6 +114,8 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | HUD, menus and panels like PSG2 | ✅ | 2026-10-27: rounded cartoon boxes, pop-in, dimmed backdrop, tap outside to close, message bubbles that count up |
 | Depth and cartoon finish | ✅ | 2026-10-27: shadows, portal/drop/ore glows, smooth big sprites, clouds and hazy far mountains. Checked in the autotest screenshots |
+| Houses, villagers and monsters art | ✅ | 2026-11-07: cartoon cottages, faces with a proper mouth and blush, four-tone shading and a shine on every monster; art sheets in `look_check()` |
+| Grasslands pacing (journey test) | ✅ | 2026-11-07: a bot reaches Grasslands 2 at 54 min, Golden Night at 108, Blue Night at 151, one faint; `tests/journey_test.gd` |
 | Ground, map walls and backdrops | ✅ | 2026-10-27 remodel: tiles that look at their neighbours, stone map walls, themed back walls, plank ledges, spiked deadly walls, depth shading, new mountains and tree line. Every world checked by `look_check()` (builds under 3 s, stone at the edges) and its screenshots |
 | Damage numbers and death puffs | ✅ | |
 | Low-health warning | ✅ | The health bar's border pulses red under 25% |

@@ -10,6 +10,7 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Knockback:** a knockback weapon throws a monster back about a tile (≈16 px: KNOCK_SPEED 160, slowing by 800/s). Heavy monsters and bosses don't move. Monsters barely push you (KNOCKBACK 60). Changed 2026-10-24: the old 7 px nudge made the Grasslands too hard for a starter (see [[Decision Log]]).
 - **Starter sword:** the Sword Cast hits for 2–5 (attack 4, was 3 before 2026-10-27).
 - **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
+- **Health comes back** on its own: 1 every 4 seconds once you've gone 6 seconds without being hurt (1 every 12 s after 8 s before 2026-11-07). Ours, not the wiki's.
 - **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.
 - **Potions:** Small Potion heals 5, Potion 12, Medium 25, Big 60 (raised 2026-10-27; these were always our estimates).
 - **Flying monsters tumble longer:** a knockback hit leaves a flying monster knocked about for 1 s instead of 0.4 s, since it has nothing to land on.

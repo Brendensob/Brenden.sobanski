@@ -5,6 +5,22 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-07 (houses, villagers, monsters, and the Grasslands progression)
+- **Houses, villagers and monsters were redrawn like the ground** (see [[Art Style]]):
+  - cartoon cottages for the houses;
+  - a proper small mouth instead of the orange "beak" on every face, with blush and a hair shine;
+  - four-tone shading and a shine on every monster. *Brenden: "now do the same for houses villagers and monsters test out the progression make sure players can actually develop good at grasslands while having fun and progress to better areas"*
+- **The progression was playtested by a bot** that plays a new character through the goal card ([[Testing#Journey test]]). What it found and what changed:
+  - **New players fainted on their first two trips** (in under 3 minutes). Fix: health comes back 1 every 4 s after 6 s out of a fight (was 1 every 12 s after 8 s), and Grasslands 1 only places Slimes and Firas near the way in.
+  - **The goal card hid goals.** Doing a later goal early (the Copper Pickaxe) hid "50 Jellies" for good, and the card asked for "10 Iron Bars", which Miffie can't take before her Jelly and Copper quests. Fix: the card shows the first goal not done.
+  - **50 Jellies was a 3-hour grind.** Fixes:
+    - more Slimes (Grasslands 1: 40 monsters, Slime weight 10; Grasslands 2: Slime weight 8);
+    - a Jelly drop gives 1–2 (the wiki only gives the 20% chance);
+    - the goal card now puts the Copper Pickaxe and Grasslands 2 before the 50 Jellies, so Jellies pile up while you explore.
+  - **Worlds emptied out.** Monsters now come back in exploration worlds, 1 every 15 s, out of sight, up to 90% of the start.
+- **No wiki number changed:** monster health and damage, the 20% Jelly chance, quest amounts.
+- After the changes the bot reached Grasslands 2 at 54 minutes, Golden Night at 108 and Blue Night at 151, with one faint (two Rexys and a Dark Rexy in Grasslands 3).
+
 ## 2026-10-29 (portal area and world card maps)
 - **The Gatekeeper's portal opens in the exact middle of Pixel Town, right under the middle of the opening you jump up through,** so the opening and the portal line up. Before, the portal stood half a tile left of the opening's middle.
 - **The Crafter stands just left of the portal and the Gatekeeper just right of it,** each at the edge of the opening, the same distance away. The Crafter used to be at the east end of the street. The Plumber, Banka and the Merchant each moved one tile east, the sign one tile west, and the four houses now mirror around the middle.
