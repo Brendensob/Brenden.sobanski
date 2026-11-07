@@ -30,6 +30,9 @@ import socketserver
 import struct
 import threading
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 NAME_RE = re.compile(r"^[A-Za-z0-9_]{3,16}$")
@@ -55,6 +58,99 @@ def save():
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(db, f)
     os.replace(tmp, data_path)
+
+
+# ---------------------------------------------------------------- gems for real money
+# Gem packs are paid through Stripe Checkout: the game asks for a pack, this
+# server makes a Stripe checkout page and the game opens it in the browser.
+# When the game checks back, this server asks Stripe whether that checkout was
+# paid, gives the gems once and marks the payment "credited" on Stripe itself,
+# so a payment can never give gems twice, even if this server restarts and
+# forgets. Only STRIPE_SECRET_KEY is needed (set it on Render); without it the
+# Gem Shop says purchases aren't set up. Prices are placeholders (US cents).
+GEM_PACKS = {
+    "gems_100": {"gems": 100, "cents": 99},
+    "gems_550": {"gems": 550, "cents": 499},
+    "gems_1200": {"gems": 1200, "cents": 999},
+    "gems_2500": {"gems": 2500, "cents": 1999},
+}
+STRIPE_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+PUBLIC_URL = os.environ.get("RENDER_EXTERNAL_URL", "https://pixel-wilds-brendensob.onrender.com").rstrip("/")
+
+
+def stripe_api(method, path, form=None):
+    """One call to Stripe's API. Tests replace this."""
+    data = urllib.parse.urlencode(form).encode() if form else None
+    req = urllib.request.Request("https://api.stripe.com" + path, data=data, method=method)
+    req.add_header("Authorization", "Bearer " + STRIPE_KEY)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        try:
+            return json.loads(e.read())
+        except ValueError:
+            return {"error": {"message": str(e)}}
+    except OSError as e:
+        return {"error": {"message": str(e)}}
+
+
+def gems_buy(key, pack):
+    p = GEM_PACKS.get(pack)
+    if p is None:
+        return {"ok": False, "error": "That gem pack doesn't exist."}
+    if not STRIPE_KEY:
+        return {"ok": False, "error": "Buying gems isn't set up yet."}
+    s = stripe_api("POST", "/v1/checkout/sessions", {
+        "mode": "payment",
+        "success_url": PUBLIC_URL + "/paid",
+        "cancel_url": PUBLIC_URL + "/paid?cancel=1",
+        "client_reference_id": key,
+        "line_items[0][quantity]": "1",
+        "line_items[0][price_data][currency]": "usd",
+        "line_items[0][price_data][unit_amount]": str(p["cents"]),
+        "line_items[0][price_data][product_data][name]": "%d Gems for Pixel Wilds" % p["gems"],
+        "metadata[player]": key,
+        "metadata[pack]": pack,
+        "payment_intent_data[metadata][player]": key,
+        "payment_intent_data[metadata][pack]": pack,
+    })
+    if "url" not in s or "id" not in s:
+        return {"ok": False, "error": "Couldn't start the payment. Try again in a bit."}
+    return {"ok": True, "url": s["url"], "session": s["id"]}
+
+
+def gems_claim(key, sessions):
+    """Gems for this player's paid checkouts that haven't given gems yet.
+    done: checkouts the game can forget (credited, or never going to be paid)."""
+    gems = 0
+    done = []
+    for sid in [str(x) for x in sessions][:10]:
+        if not re.match(r"^cs_[A-Za-z0-9_]+$", sid):
+            done.append(sid)
+            continue
+        s = stripe_api("GET", "/v1/checkout/sessions/%s?expand[]=payment_intent" % sid)
+        meta = s.get("metadata") or {}
+        if "error" in s or meta.get("player") != key:
+            done.append(sid)
+            continue
+        if s.get("status") == "expired":
+            done.append(sid)
+            continue
+        if s.get("payment_status") != "paid":
+            continue  # still paying (or never will: it expires after a day)
+        pi = s.get("payment_intent") or {}
+        if not isinstance(pi, dict) or not pi.get("id"):
+            continue
+        if (pi.get("metadata") or {}).get("credited"):
+            done.append(sid)
+            continue
+        r = stripe_api("POST", "/v1/payment_intents/%s" % pi["id"], {"metadata[credited]": "1"})
+        if "error" in r:
+            continue
+        gems += GEM_PACKS.get(meta.get("pack", ""), {}).get("gems", 0)
+        done.append(sid)
+    return {"ok": True, "gems": gems, "done": done}
 
 
 def by_token(token):
@@ -149,6 +245,14 @@ def handle(path, body, ip):
         return {"ok": True,
                 "friends": [friend_view(f, players[f]) for f in me["friends"] if f in players and mutual(key, f)],
                 "requests": [players[r]["name"] for r in me["requests"] if r in players]}
+    if path == "/gems/packs":
+        return {"ok": True, "enabled": bool(STRIPE_KEY),
+                "packs": [{"id": k, "gems": v["gems"], "cents": v["cents"]} for k, v in GEM_PACKS.items()]}
+    if path == "/gems/buy":
+        return gems_buy(key, str(body.get("pack", "")))
+    if path == "/gems/claim":
+        s = body.get("sessions", [])
+        return gems_claim(key, s if isinstance(s, list) else [])
     if path == "/rooms":
         # public rooms anyone can join (friends' rooms show in the friends list)
         out = []
@@ -470,6 +574,16 @@ class Handler(BaseHTTPRequestHandler):
             sock = self.connection
             sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             relay_session(WSConn(sock, self.rfile), sock.settimeout)
+            return
+        # after paying for gems, Stripe sends the browser back here
+        if self.path.split("?")[0] == "/paid":
+            data = (b"Payment cancelled. Nothing was charged." if "cancel" in self.path
+                    else b"Thank you! Go back to Pixel Wilds: your gems arrive in a few seconds.")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
             return
         # anything else: a plain "I'm up" page (web hosts check this)
         data = b"Pixel Wilds online server is running."

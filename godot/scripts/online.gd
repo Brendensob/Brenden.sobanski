@@ -112,6 +112,42 @@ func release(token: String) -> void:
 		await call_api("/release", {"token": token})
 
 ## Rooms anyone can join ("Find Public Game"): [{name, players, full}].
+## Gems for real money (see the server): the packs, a checkout page for one,
+## and the gems for checkouts that have been paid.
+func gem_packs() -> Dictionary:
+	return await call_api("/gems/packs", {"token": GS.online_token})
+
+func buy_gems(pack: String) -> Dictionary:
+	return await call_api("/gems/buy", {"token": GS.online_token, "pack": pack}, 20.0)
+
+var _claiming := false
+var _claim_t := 0.0
+## Asks the server about open checkouts every 15 seconds; paid ones turn into gems.
+func _claim_tick(delta: float) -> void:
+	if GS.gem_checkouts.is_empty() or GS.online_token == "" or _claiming:
+		return
+	_claim_t -= delta
+	if _claim_t > 0:
+		return
+	_claim_t = 15.0
+	claim_gems()
+
+func claim_gems() -> void:
+	_claiming = true
+	var r := await call_api("/gems/claim", {"token": GS.online_token, "sessions": GS.gem_checkouts}, 20.0)
+	_claiming = false
+	if not r.get("ok", false):
+		return
+	var n := int(r.get("gems", 0))
+	for sid in r.get("done", []):
+		GS.gem_checkouts.erase(sid)
+	if n > 0:
+		GS.add_item("gem", n, true)
+		GS.stats_changed.emit()
+		GS.message.emit("+%d gems. Thank you!" % n, "good")
+		Sfx.play("coin", 0.0)
+	GS.save_game()
+
 func public_rooms() -> Dictionary:
 	return await call_api("/rooms", {"token": GS.online_token})
 
@@ -129,6 +165,7 @@ func remove_friend(pname: String) -> Dictionary:
 
 ## Every 30 seconds while playing: "I'm online", and whether you're hosting a room.
 func _process(delta: float) -> void:
+	_claim_tick(delta)
 	if GS.online_token == "" or Net.main == null or Net.main.on_title():
 		return
 	_presence_t -= delta

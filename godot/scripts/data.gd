@@ -1449,6 +1449,39 @@ func set_later_open(on: bool) -> void:
 	_find_set_aside()
 	_bounty.clear()
 
+## Every monster's drops, for the Drop Tables page and the vault: one entry per
+## monster that lives in an open world, with where it's found. In an arena a
+## normal monster drops the arena's own loot instead (arena_loot), and a boss
+## adds the arena's boss loot to its own.
+func drop_table() -> Array:
+	var where := {}
+	for w in WORLDS:
+		if not world_open(w):
+			continue
+		for m in WORLDS[w].get("mobs", []):
+			if not where.has(m[0]):
+				where[m[0]] = []
+			where[m[0]].append(WORLDS[w].name)
+		for b in WORLDS[w].get("bosses", []):
+			var bid: String = b if b is String else b[0]
+			if not where.has(bid):
+				where[bid] = []
+			where[bid].append(WORLDS[w].name + " (boss)")
+	var out := []
+	for id in MOBS:
+		if where.has(id) and not MOBS[id].get("invulnerable", false):
+			out.append({"id": id, "name": MOBS[id].name, "look": MOBS[id].look, "where": where[id], "drops": MOBS[id].drops,
+				"coins": MOBS[id].get("coins", []), "boss": MOBS[id].get("boss", false)})
+	return out
+
+## The arenas' own loot: what their normal monsters drop, and the bosses' extra.
+func arena_loot() -> Array:
+	var out := []
+	for w in WORLDS:
+		if WORLDS[w].kind == "arena" and world_open(w):
+			out.append({"world": WORLDS[w].name, "mobs": WORLDS[w].get("mob_drops", []), "boss": WORLDS[w].get("boss_drops", [])})
+	return out
+
 ## Whether the Gatekeeper offers this world right now.
 func world_open(w: String) -> bool:
 	return later_open or not w in LATER_WORLDS

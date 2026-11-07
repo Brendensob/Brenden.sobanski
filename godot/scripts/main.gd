@@ -273,10 +273,8 @@ func player_died(on_purpose := false) -> void:
 	# and not the free-revive arena once it's used) your gravestone rises. In a
 	# room, friends revive you by standing by it (Brenden, 2026-11-07)
 	var can_grave: bool = not on_purpose and lvl.kind in ["explore", "arena"] and not (solo and lvl.def.get("free_revive", false))
-	var text := "You'll wake up in Pixel Town with everything in your bag."
-	if can_grave and solo:
-		text = "Respawn as a ghost and stand by your gravestone for 3.5 s to get back up."
-	elif can_grave:
+	var text := "Nothing is lost."
+	if can_grave and not solo:
 		text = "A friend can revive you by standing by your gravestone for 3.5 s."
 	if level.kind == "survival" and not Net.active: # keys are single player only, like the original
 		var d: int = level.s_day
@@ -298,7 +296,7 @@ func player_died(on_purpose := false) -> void:
 	var tip := faint_tip()
 	if can_grave or solo:
 		await get_tree().create_timer(PlayerScript.DEATH_ANIM).timeout
-		if level != lvl or not is_instance_valid(pl) or not pl.dead or pl.ghost:
+		if level != lvl or not is_instance_valid(pl) or not pl.dead:
 			return
 		if can_grave:
 			if is_instance_valid(grave):
@@ -306,27 +304,18 @@ func player_died(on_purpose := false) -> void:
 			grave = GraveScript.new()
 			grave.setup(lvl)
 			grave.position = Vector2(pl.position.x, pl.position.y)
+			if solo:
+				grave.left = hud.DEAD_WAIT # nobody can revive you on your own
 			lvl.entities.add_child(grave)
 		await get_tree().create_timer(0.4).timeout
 	else:
 		await get_tree().create_timer(1.0).timeout
 	# already back up (woken early or moved to another map): no faint screen
-	if level == null or level != lvl or not is_instance_valid(level.player) or not level.player.dead or level.player.ghost:
+	if level == null or level != lvl or not is_instance_valid(level.player) or not level.player.dead:
 		return
 	hud.show_dead(text, can_grave and is_instance_valid(grave))
 	# the tip shows once you're back in Pixel Town, not behind the bar
 	wake_tip = tip
-
-## "Respawn" on the faint screen: back as a ghost at the start of the map, to
-## walk to your gravestone (or home, if it has crumbled meanwhile).
-func ghost_respawn() -> void:
-	hud.close_panels()
-	if not is_instance_valid(grave) or not level.player.dead:
-		respawn()
-		return
-	level.player.become_ghost(level.cell_pos(level.spawn_cell))
-	camera.reset_smoothing()
-	hud.toast("Walk back to your gravestone and stand by it!", "warn")
 
 ## One tip for after fainting: the first thing that would help most.
 func faint_tip() -> String:

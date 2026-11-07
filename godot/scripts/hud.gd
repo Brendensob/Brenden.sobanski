@@ -1749,7 +1749,7 @@ func _build_panels() -> void:
 	itext.position = Vector2(10, 26)
 	info.add_child(itext)
 
-	var pz := _panel("pause", Vector2(260, 236), "Menu", false)
+	var pz := _panel("pause", Vector2(260, 258), "Menu", false)
 	var pv := VBoxContainer.new()
 	pv.position = Vector2(20, 28)
 	pv.custom_minimum_size = Vector2(220, 0)
@@ -1757,6 +1757,7 @@ func _build_panels() -> void:
 	pz.add_child(pv)
 	pv.add_child(_button("Resume", func(): close_panels()))
 	pv.add_child(_button("Save and leave game", func(): open_panel("leave")))
+	pv.add_child(_button("Drop Tables", func(): open_drops()))
 	pv.add_child(_button("Friends", func(): open_friends()))
 	for kind in ["Sound", "Music"]:
 		var vb := _button(volume_text(kind), func(): pass)
@@ -1768,6 +1769,10 @@ func _build_panels() -> void:
 	room_box = VBoxContainer.new()
 	room_box.add_theme_constant_override("separation", 2)
 	pv.add_child(room_box)
+
+	# every monster's drops, to know what to look for (Brenden, 2026-11-07)
+	var dt := _panel("drops", Vector2(320, 240), "Drop Tables")
+	_scroll(dt, Vector2(8, 26), Vector2(306, 208)).get_parent().name = "Scroll"
 
 	# the original asks first: "Save and Leave Game?" Yes / No
 	var lv := _panel("leave", Vector2(220, 96), "", false)
@@ -1818,12 +1823,6 @@ func _build_panels() -> void:
 	wake.name = "Wake"
 	wake.add_theme_font_size_override("font_size", 7)
 	dead_bar.add_child(wake)
-	# single player: come back as a ghost and get up again at your gravestone
-	var rev := _button("Respawn as a ghost", func(): main.ghost_respawn(), true)
-	rev.name = "Revive"
-	rev.add_theme_font_size_override("font_size", 7)
-	rev.visible = false
-	dead_bar.add_child(rev)
 	# asks first when you could still be revived
 	var gu := _panel("give_up", Vector2(230, 96), "", false)
 	var gq := _wrap("Go back to Pixel Town? Are you sure? You can still get revived.", 210, C_INK, 9)
@@ -2313,6 +2312,74 @@ func _start_from_menu() -> void:
 	else:
 		main.start_game(true)
 
+## The Drop Tables page: every monster in the worlds you can go to, where it
+## lives and what it drops (chance and amount), then the arenas' own loot and
+## what trees, rocks, ores, plants and pots give.
+func open_drops() -> void:
+	var list: VBoxContainer = panels.drops.get_node("Scroll/List")
+	_clear(list)
+	list.add_child(_wrap("Chance each time it's beaten. In an arena, normal monsters drop the arena's loot instead (see the end).", 290, C_MUTED, 7))
+	for e in Data.drop_table():
+		var head := HBoxContainer.new()
+		head.add_theme_constant_override("separation", 5)
+		var pic := TextureRect.new()
+		pic.texture = Art.mob_tex(e.look, false)
+		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		pic.custom_minimum_size = Vector2(22, 18)
+		head.add_child(pic)
+		var name_l := _label(e.name + ("  (boss)" if e.boss else ""), 9, C_GOOD if e.boss else C_INK, true)
+		head.add_child(name_l)
+		list.add_child(head)
+		list.add_child(_wrap("Found in " + ", ".join(e.where), 290, C_MUTED, 7))
+		var rows: Array = e.drops.duplicate()
+		if not e.coins.is_empty():
+			rows.append(["coin", 1.0, e.coins[0], e.coins[1]])
+		list.add_child(_drop_rows(rows))
+	for a in Data.arena_loot():
+		list.add_child(_label(a.world, 9, C_INK, true))
+		list.add_child(_wrap("Normal monsters here drop:", 290, C_MUTED, 7))
+		list.add_child(_drop_rows(a.mobs))
+		list.add_child(_wrap("The boss also drops:", 290, C_MUTED, 7))
+		list.add_child(_drop_rows(a.boss))
+	list.add_child(_label("Things you break", 9, C_INK, true))
+	for k in Data.NODES:
+		var nd: Dictionary = Data.NODES[k]
+		if nd.get("drops", []).is_empty() or nd.get("wall", false):
+			continue
+		list.add_child(_wrap(k.replace("_", " ").capitalize(), 290, C_MUTED, 7))
+		list.add_child(_drop_rows(nd.drops))
+	open_panel("drops")
+
+## Little chips: an item's icon, its name, the chance and how many.
+func _drop_rows(rows: Array) -> Control:
+	var flow := HFlowContainer.new()
+	flow.custom_minimum_size = Vector2(290, 0)
+	flow.add_theme_constant_override("h_separation", 6)
+	flow.add_theme_constant_override("v_separation", 1)
+	if rows.is_empty():
+		flow.add_child(_label("Nothing", 7, C_MUTED))
+	for d in rows:
+		var chip := HBoxContainer.new()
+		chip.add_theme_constant_override("separation", 2)
+		var ic := TextureRect.new()
+		ic.texture = Art.icon(d[0]) if Data.ITEMS.has(d[0]) else null
+		ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ic.custom_minimum_size = Vector2(10, 10)
+		chip.add_child(ic)
+		var nm: String = "Pixel Coins" if d[0] == "coin" else Data.ITEMS[d[0]].name
+		var amt := "" if int(d[2]) == 1 and int(d[3]) == 1 else (" x%d" % d[2] if d[2] == d[3] else " x%d-%d" % [d[2], d[3]])
+		chip.add_child(_label("%s %s%s" % [nm, _pct(float(d[1])), amt], 7))
+		flow.add_child(chip)
+	return flow
+
+static func _pct(p: float) -> String:
+	var v := p * 100.0
+	if absf(v - roundf(v)) < 0.001:
+		return "%d%%" % int(roundf(v))
+	return ("%.1f%%" % v) if v >= 1.0 else ("%.2f%%" % v)
+
 ## Off-screen markers (Brenden, 2026-11-07): every other player in the room
 ## who's on your map but off your screen gets a small square in their own
 ## colour at the edge of the screen, with an arrow pointing their way and the
@@ -2379,18 +2446,16 @@ func _draw_markers() -> void:
 		markers.draw_string_outline(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, 3, Art.OUTLINE)
 		markers.draw_string(f, Vector2(at.x - w / 2, ly), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, C_WHITE)
 
-## Shows the faint bar. grave: single player's gravestone, so Respawn as a
-## ghost is offered. The bar counts down to Pixel Town by itself (the
+## Shows the faint bar. It counts down to Pixel Town by itself (your
 ## gravestone's time, or DEAD_WAIT without one) and goes when you're back up.
 const DEAD_WAIT := 10.0
 var dead_bar: Panel
 var dead_text := ""
 var dead_left := 0.0
 
-func show_dead(text: String, grave := false) -> void:
+func show_dead(text: String, _grave := false) -> void:
 	dead_text = text
 	dead_left = DEAD_WAIT
-	dead_bar.get_node("Revive").visible = grave and not Net.active
 	dead_bar.visible = true
 	_refresh_dead()
 	_layout_dead()
@@ -2400,37 +2465,28 @@ func hide_dead() -> void:
 	if panels.give_up.visible:
 		close_panels()
 
-## While a gravestone stands you can still be revived, so going home asks first.
+## In a room, while your gravestone stands a friend can still revive you, so
+## going home asks first.
 func _wake_pressed() -> void:
-	if is_instance_valid(main.grave):
+	if Net.active and is_instance_valid(main.grave):
 		open_panel("give_up")
 	else:
 		main.respawn()
 
 func _refresh_dead() -> void:
 	var secs: float = main.grave.left if is_instance_valid(main.grave) else dead_left
-	var line := dead_text
-	if main.level and main.level.player and main.level.player.ghost:
-		line = "Walk back to your gravestone and stand by it."
-		dead_bar.get_node("Revive").visible = false
-	dead_bar.get_node("Text").text = "You fainted. %s Pixel Town in %d." % [line, ceili(secs)]
+	var line := (dead_text + " ") if dead_text != "" else ""
+	dead_bar.get_node("Text").text = "You fainted. %sPixel Town in %d." % [line, ceili(secs)]
 
 ## The text on top, the buttons in a row under it; the bar sits just under
 ## the sky clock, in the middle.
 func _layout_dead() -> void:
 	var tl: Label = dead_bar.get_node("Text")
 	var wake: Button = dead_bar.get_node("Wake")
-	var rev: Button = dead_bar.get_node("Revive")
 	var h := maxf(tl.get_combined_minimum_size().y, tl.get_line_count() * tl.get_line_height())
 	var y := roundf(tl.position.y + h + 2)
 	wake.size = wake.get_combined_minimum_size()
-	rev.size = rev.get_combined_minimum_size()
-	var w := wake.size.x + (rev.size.x + 6 if rev.visible else 0.0)
-	var x := roundf((dead_bar.size.x - w) / 2)
-	if rev.visible:
-		rev.position = Vector2(x, y)
-		x += rev.size.x + 6
-	wake.position = Vector2(x, y)
+	wake.position = Vector2(roundf((dead_bar.size.x - wake.size.x) / 2), y)
 	dead_bar.size.y = y + wake.size.y + 4
 	var vs: Vector2 = get_viewport().get_visible_rect().size
 	dead_bar.position = Vector2(roundf((vs.x - dead_bar.size.x) / 2), 36)
@@ -2494,6 +2550,43 @@ func _drop_extra(id: String, n: int) -> void:
 		main.level.drop(id, n, main.level.player.position, true)
 		toast("Your bag is full: %s dropped at your feet." % Data.ITEMS[id].name, "warn")
 
+## The real-money gem packs, from the online server. Buying opens Stripe's
+## checkout in the browser; the gems arrive by themselves once it's paid.
+func _fill_gem_packs(box: VBoxContainer) -> void:
+	if GS.online_token == "":
+		box.add_child(_wrap("To buy gem packs, claim your name online first (Multiplayer on the main menu), so the gems can find you.", 190, C_MUTED, 8))
+		return
+	box.add_child(_wrap("Looking for gem packs...", 190, C_MUTED, 8))
+	var r := await Online.gem_packs()
+	if not is_instance_valid(box):
+		return
+	_clear(box)
+	if not r.get("ok", false):
+		box.add_child(_wrap(r.get("error", "Can't reach the online server."), 190, C_BAD, 8))
+		return
+	if not r.get("enabled", false):
+		box.add_child(_wrap("Gem packs for real money aren't set up yet.", 190, C_MUTED, 8))
+		return
+	for p in r.get("packs", []):
+		var pack: String = p.id
+		var price := "$%d.%02d" % [int(p.cents) / 100, int(p.cents) % 100]
+		var row := _row("gem", "%d Gems  %s" % [int(p.gems), price], "Buy", true, func(): _buy_pack(pack))
+		row.name = pack
+		box.add_child(row)
+	if not GS.gem_checkouts.is_empty():
+		box.add_child(_wrap("Waiting for a payment to finish...", 190, C_MUTED, 8))
+
+func _buy_pack(pack: String) -> void:
+	toast("Opening the checkout...")
+	var r := await Online.buy_gems(pack)
+	if not r.get("ok", false):
+		toast(r.get("error", "Couldn't start the payment."), "warn")
+		return
+	GS.gem_checkouts.append(r.session)
+	GS.save_game()
+	OS.shell_open(r.url)
+	toast("Finish paying in your browser. Your gems arrive here by themselves.", "good")
+
 func open_shop(npc_id: String) -> void:
 	open_panel("shop")
 	_refresh_shop(npc_id)
@@ -2534,9 +2627,15 @@ func _refresh_shop(npc_id: String) -> void:
 			toast(("%s x%d obtained" % [Data.ITEMS[id].name, qty]) if qty > 1 else "%s obtained" % Data.ITEMS[id].name)
 			_refresh_shop(npc_id)))
 	if shop.has("buy_gems"):
-		# gems for Pixel Coins, in place of the original's real-money gem packs
+		# gem packs for real money (Brenden, 2026-11-07), then gems for Pixel Coins
+		sell.add_child(_wrap("You have %d gems." % GS.count("gem"), 190, C_MUTED))
+		var packs := VBoxContainer.new()
+		packs.name = "Packs"
+		packs.add_theme_constant_override("separation", 2)
+		sell.add_child(packs)
+		_fill_gem_packs(packs)
 		var gp: int = shop.buy_gems
-		sell.add_child(_wrap("You have %d gems. Buy gems with Pixel Coins:" % GS.gems, 190, C_MUTED))
+		sell.add_child(_wrap("Or buy gems with Pixel Coins:", 190, C_MUTED))
 		for n in [1, 5, 20]:
 			var cost: int = gp * n
 			sell.add_child(_row("gem", "%d Gem%s  %dc" % [n, "" if n == 1 else "s", cost], "Buy", GS.coins >= cost, func():

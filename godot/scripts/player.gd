@@ -49,10 +49,6 @@ var regen := {"hp": 0.0, "mp": 0.0, "st": 0.0, "poison": 0.0}
 var ring_t := {"ring_l": 0.0, "ring_r": 0.0}
 var msg_cd := 0.0
 var dead := false
-## Single player: after fainting you can come back as a ghost at the start of
-## the map and walk to your gravestone to get back up there (see grave.gd).
-## A ghost can move and jump but can't hit, pick up or be hit.
-var ghost := false
 ## How long the fall into a faint takes in single player.
 const DEATH_ANIM := 1.6
 var death_tween: Tween
@@ -118,14 +114,10 @@ func held_type() -> String:
 	return Data.ITEMS[id].type if id != "" else ""
 
 func _physics_process(delta: float) -> void:
-	if dead and not ghost:
+	if dead:
 		return
 	var dir := 0.0
-	if ghost and not level.main.input_blocked():
-		dir = Input.get_axis("move_left", "move_right")
-		if Input.is_action_just_pressed("jump") and is_on_floor():
-			_jump()
-	elif not ghost and not level.main.input_blocked():
+	if not level.main.input_blocked():
 		dir = Input.get_axis("move_left", "move_right")
 		if Input.is_action_just_pressed("jump"):
 			if is_on_floor():
@@ -147,7 +139,7 @@ func _physics_process(delta: float) -> void:
 			use_held(true)
 		elif (Input.is_action_pressed("attack") or GS.auto_hit) and cooldown <= 0 and held_type() in AUTO_TYPES:
 			use_held(false)
-	elif not ghost and GS.auto_hit and cooldown <= 0 and held_type() in AUTO_TYPES:
+	elif GS.auto_hit and cooldown <= 0 and held_type() in AUTO_TYPES:
 		# auto-hit keeps swinging while the bag is open (the bag doesn't pause it)
 		use_held(false)
 	if not is_on_floor():
@@ -179,9 +171,6 @@ func _tick(delta: float, dir: float) -> void:
 	msg_cd -= delta
 	cooldown -= delta
 	attack_buffer -= delta
-	if ghost:
-		_ghost_look(dir)
-		return
 	# statuses wear off
 	for k in GS.status.keys():
 		GS.status[k] -= delta
@@ -252,17 +241,6 @@ func _tick(delta: float, dir: float) -> void:
 	var glow := 1.0 if GS.held() == "torch_weapon" else 0.35
 	var gloom := 1.0 if level.modulate_node.color.r < 0.9 else 0.0
 	light.energy = maxf(GS.darkness(), gloom) * glow
-
-## A ghost floats see-through and bobs a little; nothing else of the body runs.
-func _ghost_look(dir: float) -> void:
-	var frame := "jump" if not is_on_floor() else ("walk" if dir != 0 and int(anim * 8) % 2 == 1 else "stand")
-	cur_frame = frame
-	body_sprite.texture = Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""))
-	body_sprite.position.y = -body_sprite.texture.get_height() / 2.0 - 2.0 + sin(anim * 4.0) * 1.5
-	body_sprite.flip_h = facing < 0
-	body_sprite.rotation = 0.0
-	body_sprite.visible = true
-	held_sprite.visible = false
 
 func _jump() -> void:
 	velocity.y = JUMP
@@ -565,7 +543,6 @@ func hurt(dmg: int, crit_chance: float, from_x: float, status := []) -> void:
 func _die(on_purpose := false) -> void:
 	GS.hp = 0
 	dead = true
-	ghost = false
 	Sfx.play("die", 0.0)
 	if Net.active or on_purpose:
 		level.burst(position + Vector2(0, -8), Color("d8433a"), 16)
@@ -596,7 +573,6 @@ func revive_here() -> void:
 	if death_tween:
 		death_tween.kill()
 	dead = false
-	ghost = false
 	_reset_look()
 	GS.hp = GS.max_hp()
 	GS.st = GS.max_st()
@@ -605,20 +581,6 @@ func revive_here() -> void:
 	invuln = 3.0
 	flash = 0.0
 	level.burst(position + Vector2(0, -8), Color("f2cf5b"), 18)
-
-## Up again as a ghost at `at` (the start of the map).
-func become_ghost(at: Vector2) -> void:
-	if death_tween:
-		death_tween.kill()
-	ghost = true
-	_reset_look()
-	modulate = Color(0.7, 0.9, 1.0, 0.55)
-	held_sprite.visible = false
-	position = at
-	velocity = Vector2.ZERO
-	GS.st = GS.max_st()
-	GS.status.clear()
-	GS.stats_changed.emit()
 
 func _reset_look() -> void:
 	modulate = Color.WHITE
@@ -648,7 +610,6 @@ func net_state() -> Dictionary:
 func revive() -> void:
 	if death_tween:
 		death_tween.kill()
-	ghost = false
 	_reset_look()
 	dead = false
 	flip_t = 99.0
