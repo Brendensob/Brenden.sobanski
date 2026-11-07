@@ -58,13 +58,15 @@ var regrow_timer := 20.0
 const RESPAWN_EVERY := 15.0
 
 ## seed and net_state come from the room host when you're a guest in a room.
-func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}) -> void:
+## solo: in a room, a copy of the map that runs on your own game, until the
+## room's host comes through the portal too (see Net trips).
+func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}, solo := false) -> void:
 	id = world_id
 	def = Data.WORLDS[id]
 	kind = def.kind
 	main = main_node
 	th = Art.theme(def.theme)
-	netted = Net.active and kind != "town"
+	netted = Net.active and kind != "town" and not solo
 	rng.seed = seed if seed >= 0 else randi()
 	seed_used = rng.seed
 	match kind:

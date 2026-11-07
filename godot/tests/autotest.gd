@@ -1615,7 +1615,7 @@ func guidance_check() -> void:
 	hud.close_panels()
 	# a later goal done early doesn't hide an earlier one: the card shows the first one not done
 	GS.quests_done.append("mira_3")
-	check(GS.current_goal().text == "Visit the Grasslands", "the card shows the first goal not done (%s)" % GS.current_goal().text)
+	check(GS.current_goal().text == "Bring Miffie 10 Jellies", "the card shows the first goal not done (%s)" % GS.current_goal().text)
 	GS.quests_done.erase("mira_3")
 	GS.take_all({"jelly": 3})
 	GS.flags.erase("been_grass_1")

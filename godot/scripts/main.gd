@@ -98,18 +98,27 @@ func quit_to_title() -> void:
 	hud.open_panel("title")
 
 func change_level(id: String) -> void:
-	if Net.is_client():
-		# guests ask the room host; the whole room moves together
-		Net.request_level.rpc_id(1, id)
+	if Net.active:
+		# in a room, a portal takes only you; the rest follow within 20 seconds
+		Net.go(id)
 		return
+	enter_level(id)
+
+## Loads a map for you alone. seed and solo come from a room's portal trip.
+func enter_level(id: String, seed: int = -1, solo := false) -> void:
 	GS.world = id
 	GS.flags["been_" + id] = true
-	_load_level(id, false)
+	_load_level(id, false, seed, {}, solo)
 	hud.set_boss(null)
 	hud.toast(Data.WORLDS[id].name, "big")
 	GS.save_game()
-	if Net.is_host():
-		Net.send_world()
+
+## Someone in the room went through a portal: say so, and in town open the
+## same portal on your street so you can follow before the countdown ends.
+func trip_started(target: String, who: String) -> void:
+	hud.toast("%s went into the portal to %s. Everyone follows in %d seconds." % [who, Data.WORLDS[target].name, int(Net.TRIP_TIME)], "good")
+	if level and level.kind == "town" and target != "town":
+		level.open_town_portal(target)
 
 # ---------------------------------------------------------------- rooms
 ## Opens your room on the online server's relay: every player is the host of
@@ -140,7 +149,13 @@ func net_load_world(world_id: String, seed: int, state: Dictionary) -> void:
 	GS.flags["been_" + world_id] = true
 	if was_title:
 		hud.close_panels()
+	# already here on your own copy (you went through first): stay where you are
+	var keep: Variant = level.player.position if level and level.id == world_id and level.player and not was_title else null
 	_load_level(world_id, false, seed, state)
+	if keep != null:
+		level.player.position = keep
+		camera.position = keep
+		camera.reset_smoothing()
 	hud.set_boss(null)
 	hud.toast(Data.WORLDS[world_id].name, "big")
 	GS.save_game()
@@ -167,12 +182,12 @@ func reload_level() -> void:
 	level.player.position = pos
 	camera.position = pos
 
-func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {}) -> void:
+func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {}, solo := false) -> void:
 	if level:
 		level.queue_free()
 		remove_child(level)
 	level = LevelScript.new()
-	level.setup(id, self, seed, state)
+	level.setup(id, self, seed, state, solo)
 	add_child(level)
 	move_child(level, 0)
 	var size: Vector2 = level.world_size()

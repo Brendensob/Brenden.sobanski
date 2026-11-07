@@ -96,7 +96,10 @@ func run_host() -> void:
 	await wait(0.5)
 	await shot("net_host_town")
 	main.change_level("grass_1")
-	check(await until(func(): return main.level.puppets.size() == 1, 20.0), "the friend followed the host to Grasslands 1")
+	check(main.level.id == "grass_1" and Net.trip_to == "grass_1", "the host went through the portal to Grasslands 1")
+	await wait(3.0)
+	check(main.level.puppets.is_empty(), "the portal took only the host: the friend wasn't pulled along at once")
+	check(await until(func(): return main.level.puppets.size() == 1, 30.0), "after the countdown the friend was taken along to Grasslands 1")
 	var lvl: Node = main.level
 	lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away so the slime picks the friend
 	lvl.player.invuln = 9999.0
@@ -113,11 +116,11 @@ func run_host() -> void:
 		if n is PlacedScript:
 			placed += 1
 	check(placed == 1, "the friend's wall was built in the host's world")
-	check(await until(func(): return main.level.id == "grass_2", 20.0), "the friend's portal request moved the whole room")
+	check(await until(func(): return main.level.id == "grass_2", 35.0), "the friend went through to Grasslands 2 and the host was taken along after the countdown")
 	await wait(1.0)
 	await shot("net_host_grass2")
 	# trading at the Trading Center
-	check(await until(func(): return main.level.id == "town", 30.0), "the room went back to Pixel Town")
+	check(await until(func(): return main.level.id == "town", 35.0), "the friend went home and the host followed after the countdown")
 	await wait(0.5)
 	check(rock_wall() == null, "back in town, the rebuilt town keeps the wall the friend opened")
 	GS.add_item("wood", 5)
@@ -206,7 +209,10 @@ func run_client() -> void:
 		rw.hit(5)
 		await wait(0.1)
 	check(GS.flags.get("rock_wall", false) and rock_wall() == null, "the friend broke their rock wall")
-	check(await until(func(): return main.level.id == "grass_1", 30.0), "followed the host to Grasslands 1")
+	check(await until(func(): return Net.trip_to == "grass_1", 30.0), "the friend is told the host went through the portal")
+	check(main.level.id == "town" and main.hud.info_label.text.begins_with("Everyone goes to Grasslands 1"), "the friend stays in town and sees the countdown (%s)" % main.hud.info_label.text)
+	await shot("net_client_countdown")
+	check(await until(func(): return main.level.id == "grass_1", 30.0), "taken to Grasslands 1 when the countdown ran out")
 	var lvl: Node = main.level
 	await wait(1.0)
 	var nodes := 0
@@ -253,12 +259,17 @@ func run_client() -> void:
 	main.hud._send_chat()
 	await wait(1.0)
 	main.change_level("grass_2")
-	check(await until(func(): return main.level.id == "grass_2", 20.0), "the room moved to Grasslands 2")
+	check(await until(func(): return main.level.id == "grass_2", 10.0) and not main.level.netted, "the portal took the friend first, onto their own copy of Grasslands 2")
+	main.change_level("grass_3")
+	await wait(1.5)
+	check(Net.last_notice.contains("current portal") and main.level.id == "grass_2", "another portal says someone's in the current portal (%s)" % Net.last_notice)
+	await shot("net_client_portal_busy")
+	check(await until(func(): return main.level.id == "grass_2" and main.level.netted, 35.0), "the host came through after the countdown and the map is shared again")
 	await wait(1.0)
 	await shot("net_client_grass2")
 	# back to town, burn the wall with a torch, and go to the Trading Center
 	main.change_level("town")
-	check(await until(func(): return main.level.id == "town", 20.0), "the room went back to Pixel Town")
+	check(await until(func(): return main.level.id == "town", 10.0), "the friend went home on their own")
 	await wait(0.5)
 	lvl = main.level
 	var wall: Node = null
