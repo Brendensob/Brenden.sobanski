@@ -1613,9 +1613,9 @@ func guidance_check() -> void:
 	check(hud.panels.info.visible and "Slimes" in hud.panels.info.get_node("Text").text, "tapping the goal card says how")
 	await shot("01f_goal_card")
 	hud.close_panels()
-	# older saves skip the early goals: the first goal after the last one done
+	# a later goal done early doesn't hide an earlier one: the card shows the first one not done
 	GS.quests_done.append("mira_3")
-	check(GS.current_goal().text == "Make a Copper Pickaxe", "goals before the last one done are skipped (%s)" % GS.current_goal().text)
+	check(GS.current_goal().text == "Visit the Grasslands", "the card shows the first goal not done (%s)" % GS.current_goal().text)
 	GS.quests_done.erase("mira_3")
 	GS.take_all({"jelly": 3})
 	GS.flags.erase("been_grass_1")

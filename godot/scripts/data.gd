@@ -1162,7 +1162,7 @@ func _ready() -> void:
 
 func _build_mobs() -> void:
 	# Grasslands. Slime drops are from the wiki (about 20% each, 5.5% blade).
-	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.2, 1, 1], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
+	_mob("slime", "Slime", "slime_pink", [13, 13], 1, "walk", [["bone", 0.2, 1, 1], ["jelly", 0.2, 1, 2], ["scarab", 0.2, 1, 1], ["snowball", 0.2, 1, 1], ["short_blade", 0.055, 1, 1], ["herb", 0.1, 1, 1]], {"speed": 30, "hop": true})
 	_mob("wisp", "Fira", "wisp", [15, 15], 1, "fly", [["blue_moon", 0.12, 1, 1], ["crystal", 0.1, 1, 1], ["fire_crystal", 0.05, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_armor", 0.02, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 40})
 	_mob("mummy", "Mummy", "mummy", [45, 45], 3, "charge", [["bone", 0.25, 1, 1], ["blue_moon", 0.1, 1, 1], ["dark_crystal", 0.04, 1, 1], ["monster_hide", 0.15, 1, 1], ["wooden_helmet", 0.02, 1, 1]], {"speed": 30, "charge_wait": 3.0})
 	_mob("shell", "Shelly", "shell", [50, 50], 2, "accel", [["bone", 0.2, 1, 1], ["monster_shell", 0.25, 1, 1], ["monster_scale", 0.25, 1, 1], ["monster_horn", 0.1, 1, 1]], {"speed": 32})
@@ -1434,14 +1434,14 @@ const GOALS := [
 		"help": "Open your bag, put Wood and Rock in the combination slots and press Combine. Brutus (red hair) gives you the Survival Book and opens Survival Grasslands."},
 	{"text": "Bring the furnace GateKeeper a Pretzel", "done": {"quest": "warden_1"},
 		"help": "Combine a Honey Bug and an Herb (Combo Book I in your bag). Honey Bugs come from pots, Herbs from yellow and pink plants. The GateKeeper with the green face guards the furnace room."},
-	{"text": "Bring Miffie 50 Jellies", "done": {"quest": "mira_2"}, "count": ["jelly", 50],
-		"help": "More Slimes! Miffie gives you Combo Book II for these."},
-	{"text": "Bring Miffie 10 Copper Bars", "done": {"quest": "mira_3"}, "count": ["copper_bar", 10],
-		"help": "Mine copper rocks (orange) for Copper Ore, then smelt it in a furnace in the furnace room. Miffie gives you Golden Night, a better sword."},
 	{"text": "Make a Copper Pickaxe", "done": {"tier": ["pick", 2]},
 		"help": "The Crafter makes it from 5 Copper Bars and your Wooden Pick. You need it to mine iron and silver."},
 	{"text": "Find the portal to Grasslands 2", "done": {"flag": "been_grass_2"},
 		"help": "A purple portal is hidden deep underground on the right side of Grasslands 1. Dig down with your pickaxe."},
+	{"text": "Bring Miffie 50 Jellies", "done": {"quest": "mira_2"}, "count": ["jelly", 50],
+		"help": "More Slimes! Miffie gives you Combo Book II for these."},
+	{"text": "Bring Miffie 10 Copper Bars", "done": {"quest": "mira_3"}, "count": ["copper_bar", 10],
+		"help": "Mine copper rocks (orange) for Copper Ore, then smelt it in a furnace in the furnace room. Miffie gives you Golden Night, a better sword."},
 	{"text": "Reach Grasslands 3", "done": {"flag": "been_grass_3"},
 		"help": "Grasslands 2 has its own purple portal deep underground on the right. Octopuses hit hard: wear armor and carry potions."},
 	{"text": "Bring Miffie 10 Iron Bars", "done": {"quest": "mira_4"}, "count": ["iron_bar", 10],
