@@ -93,7 +93,8 @@ func _process(delta: float) -> void:
 	var look: String = st.get("look", "man_in_suit")
 	if not Art.LOOKS.has(look):
 		look = "man_in_suit"
-	body.texture = Art.character(look, st.get("frame", "stand"), 1, st.get("helmet", ""), st.get("armor", ""))
+	var frame: String = st.get("frame", "stand")
+	body.texture = Art.character(look, frame, 1, st.get("helmet", ""), st.get("armor", ""), held.texture != null and not dead)
 	body.position.y = -body.texture.get_height() / 2.0
 	body.flip_h = facing < 0
 	flip_t += delta
@@ -104,7 +105,7 @@ func _process(delta: float) -> void:
 	body.visible = not dead
 	stone.visible = dead
 	_revive_tick(delta)
-	held.position = Vector2(facing * 5, -7)
+	held.position = Vector2(facing * 5, -7 + Art.frame_sink(frame))
 	held.offset = Art.held_offset(held.texture, facing)
 	held.flip_h = facing < 0
 	var ang: float = Player.SWING_KEYS[0][1]

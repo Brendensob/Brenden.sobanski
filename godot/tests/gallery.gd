@@ -50,6 +50,64 @@ func _ready() -> void:
 			s.position = Vector2(24 + i * 46, 240)
 			s.rotation = -0.6
 			bg.add_child(s)
+	elif page == "chars":
+		# every character, villager and person-shaped monster
+		var looks: Array = Art.LOOKS.keys()
+		for i in looks.size():
+			_tex(bg, Art.character(looks[i]), Vector2(6 + (i % 15) * 31.5, 4 + (i / 15) * 52), 2)
+		# the frames of one character, then worn gear
+		var fx := 6.0
+		for f in Art.FRAMES:
+			_tex(bg, Art.character("man_in_suit", f), Vector2(fx, 162), 2)
+			fx += 30
+		for f in Art.FRAMES:
+			_tex(bg, Art.character("nurse", f, 1, "iron_helmet", "iron_armor"), Vector2(fx, 162), 2)
+			fx += 30
+		for i in looks.size():
+			_tex(bg, Art.character(looks[i]), Vector2(6 + i * 10.7, 244), 1)
+	elif page == "mobs":
+		var seen := {}
+		var mx := 4.0
+		var my := 4.0
+		var row_h := 0.0
+		for id in Data.MOBS:
+			var l: String = Data.MOBS[id].look
+			if seen.has(l):
+				continue
+			seen[l] = true
+			var t: Texture2D = Art.mob_tex(l, false)
+			if t.get_width() > 40:
+				continue
+			if mx + t.get_width() > 476:
+				mx = 4
+				my += row_h + 3
+				row_h = 0
+			_tex(bg, t, Vector2(mx, my), 1)
+			mx += t.get_width() + 3
+			row_h = maxf(row_h, t.get_height())
+	elif page == "props":
+		var px := 4.0
+		for k in ["tree", "rock", "bush", "stone", "copper", "iron", "gold"]:
+			var t: Texture2D = Art.node_tex(k, Art.theme("grass"))
+			_tex(bg, t, Vector2(px, 100 - t.get_height() * 2), 2)
+			px += t.get_width() * 2 + 6
+		px = 4.0
+		for id in ["wood", "rock", "jelly", "apple", "short_blade", "wood_helmet", "iron_armor", "health_potion", "torch", "gem", "pet_trex", "pirate", "combo_book", "key", "copper_bar", "iron_ore"]:
+			if Data.ITEMS.has(id):
+				_tex(bg, Art.icon(id), Vector2(px, 120), 2)
+				px += 28
+		px = 4.0
+		for k in ["chest", "campfire", "furnace", "sign", "table"]:
+			var t2: Texture2D = Art.prop_tex(k)
+			if t2:
+				_tex(bg, t2, Vector2(px, 160), 2)
+				px += t2.get_width() * 2 + 6
+	elif page == "char_big":
+		var pick := ["man_in_suit", "nurse", "cavemun", "pirate", "the_spi", "soldier", "ninja", "iron_bot", "q_bun"]
+		for i in pick.size():
+			_tex(bg, Art.character(pick[i]), Vector2(6 + i * 52, 6), 3)
+			_tex(bg, Art.character(pick[i], "walk"), Vector2(6 + i * 52, 90), 3)
+			_tex(bg, Art.character(pick[i], "jump", 1, "gold_helmet", "gold_armor"), Vector2(6 + i * 52, 174), 3)
 	await get_tree().process_frame
 	await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png("%s/gallery_%s.png" % [out, page])
