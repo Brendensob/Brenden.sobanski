@@ -213,17 +213,19 @@ func _tick(delta: float, dir: float) -> void:
 		if not swing_hit and swing <= swing_len * (1.0 - SWING_HIT_AT):
 			swing_hit = true
 			_do_hit()
-	var frame := "stand"
+	# breathing while standing, a four-step walk, and a rise and a fall in the air
+	var frame := "stand" if int(anim * 1.7) % 2 == 0 else "idle"
 	if not is_on_floor():
-		frame = "jump"
-	elif dir != 0 and int(anim * 8) % 2 == 1:
-		frame = "walk"
+		frame = "jump" if velocity.y < 0 else "fall"
+	elif dir != 0:
+		frame = "walk%d" % (int(anim * 10) % 4)
 	cur_frame = frame
-	body_sprite.texture = Art.character_flash(GS.look) if flash > 0 else Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""))
+	var holding: bool = held_sprite.texture != null and held_sprite.visible
+	body_sprite.texture = Art.character_flash(GS.look) if flash > 0 else Art.character(GS.look, frame, 1, GS.equip.get("helmet", ""), GS.equip.get("armor", ""), holding)
 	body_sprite.position.y = -body_sprite.texture.get_height() / 2.0
 	body_sprite.flip_h = facing < 0
 	body_sprite.visible = not (invuln > 0 and flash <= 0 and int(anim * 20) % 2 == 0)
-	held_sprite.position = Vector2(facing * 5, -7)
+	held_sprite.position = Vector2(facing * 5, -7 + Art.frame_sink(frame))
 	held_sprite.flip_h = facing < 0
 	held_sprite.offset = Art.held_offset(held_sprite.texture, facing)
 	var ang: float = SWING_KEYS[0][1]

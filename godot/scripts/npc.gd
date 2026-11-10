@@ -20,6 +20,7 @@ func _ready() -> void:
 	Art.add_shadow(self, 10)
 	sprite = Sprite2D.new()
 	sprite.texture = Art.character(data.look)
+	t = randf() * 3.0 # so the whole town doesn't breathe in step
 	sprite.position = Vector2(0, -sprite.texture.get_height() / 2.0)
 	add_child(sprite)
 	name_label = _label(data.name, Vector2(-30, -36), Color.WHITE, Art.font_world)
@@ -48,7 +49,9 @@ func _label(text: String, pos: Vector2, c: Color, f: Font) -> Label:
 
 func _process(delta: float) -> void:
 	t += delta
-	sprite.position.y = -9 - (1 if int(t * 2) % 2 == 0 else 0)
+	# breathing: the head and body sink a pixel while the feet stay put
+	sprite.texture = Art.character(data.look, "stand" if int(t * 1.7) % 2 == 0 else "idle")
+	sprite.position.y = -10
 	var q: Dictionary = GS.next_quest(npc_id)
 	if not q.is_empty():
 		badge.text = "?" if GS.quest_ready(q) else "!"

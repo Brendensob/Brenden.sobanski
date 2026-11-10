@@ -18,130 +18,209 @@ const PAL := {
 	"a": "9aa2ad", "A": "c8ced6", "d": "5c616b", "D": "3e424a",
 	"i": "b8c4d6", "I": "e3ebf5", "u": "3b5dc9", "U": "6b8ff0", "p": "7b4fb8", "P": "a77ee0",
 	"c": "4fb6d0", "C": "a6e6f2", "m": "e06a9a", "z": "8fb07a", "Z": "5e7a52",
+	"W": "c4c2d8", "K": "4e4c6c", "B": "a82a36",
 }
 
 # ---------------------------------------------------------------- characters
-# Chibi people: a big head with two dot eyes, a small body and stubby legs.
-# Channels: h/H hair, s/S skin, e eyes, c/C clothes, v collar, t tie or trim,
-# j lower body (skirt or belt), q legs, f shoes. Missing channels fall back.
+# Chibi people on a 12-wide grid: a big head (9 rows), a small body (5) and
+# legs (3), lit from the top left. Every colour is a short ramp: the base, a
+# shadow shifted toward blue-violet and a highlight shifted toward yellow
+# (see shade()), instead of plain darker and lighter copies.
+# Channels: h hair (^ its shine, H its shadow), s skin (5 shine, S shadow),
+# e eyes (w their glint), + blush, m mouth, c clothes (L lit, C shadow),
+# v collar, t tie or trim, 1 2 sleeves (lit, shaded), 3 4 hands, j belt or
+# skirt, q legs, f shoes; J Q F are their shadows. Missing channels fall back.
 const PAD := 4 # empty rows above the head for hats
-const HAIR := {
+const HEADS := {
 	"short": [
 		"...hhhhhh...",
-		"..hhhhhhhhh.",
-		".hhhhhhhhhhh",
-		".hhhhsssshhh",
-		".hhhsbbsbbs.",
-		".hhssweswes.",
-		".hhssweswes.",
-		"..hs+ssmms+.",
-		"...SSsssSS..",
+		"..h^^hhhhh..",
+		".h^hhhhhhhH.",
+		".hhhhhhhhhH.",
+		".Hhhhsshsss.",
+		".Hhssweswes.",
+		".Hhsseesees.",
+		"..Hs+ssmss+.",
+		"...SsssssS..",
 	],
 	"bald": [
 		"...ssssss...",
-		"..sssssssss.",
-		".sssssssssss",
-		".ssssssssss.",
-		".Ssssbbsbbs.",
+		"..s55sssss..",
+		".s5sssssssS.",
+		".sssssssssS.",
+		".Ssssssssss.",
 		".Ssssweswes.",
-		".Ssssweswes.",
-		"..Ss+smms+..",
-		"...SSsssSS..",
+		".Sssseesees.",
+		"..Ss+ssmss+.",
+		"...SsssssS..",
+	],
+	# a cloth hood with only the eyes showing (x is the skin in the slit)
+	"hood": [
+		"...hhhhhh...",
+		"..h^^hhhhh..",
+		".h^hhhhhhhH.",
+		".hhhhhhhhhH.",
+		".HhhhhhhhhH.",
+		".Hhxxwexwex.",
+		".Hhxxeexeex.",
+		"..HhhhhhhhH.",
+		"...HhhhhhH..",
+	],
+	# a metal head with a dark visor and two lit eyes
+	"robot": [
+		"..ssssssss..",
+		".s55sssssSS.",
+		".s5ssssssSS.",
+		".sssssssssS.",
+		".sskkkkkkkk.",
+		".sskkeekeek.",
+		".sskkkkkkkk.",
+		".sssssssssS.",
+		"..SSSSSSSS..",
 	],
 }
-const BODY := [
-	"...cvtvcc...",
-	"..cccCtCcc..",
-	"..sccCtCcs..",
-	"...cccccc...",
-	"...jjjjjj...",
-]
-const LEGS := {
-	"stand": ["...qq..qq...", "...qq..qq...", "...ff..ff..."],
-	"walk": ["..qq....qq..", "..qq....qq..", "..ff....ff.."],
-	"jump": ["...qq..qq...", "..ff....ff..", "............"],
+const BODIES := {
+	"stand": ["...LcvtvC...", "..1ccctcC2..", "..1ccctcC2..", "..3cccccC4..", "...jjjjjJ..."],
+	"stride": ["...LcvtvC...", "..1ccctcC2..", ".1.ccctcC.2.", ".3.cccccC.4.", "...jjjjjJ..."],
+	"up": [".3.LcvtvC.4.", "..1ccctcC2..", "...ccctcC...", "...cccccC...", "...jjjjjJ..."],
 }
-# over: extra pixels drawn on top, as [x, y, rows] with y counted from the top
-# of the hat space (the head starts at y = PAD).
-const LOOKS := {
+const LEGS := {
+	"stand": ["...qq..qQ...", "...qq..qQ...", "...fff.ffF.."],
+	"step_a": ["...qq..qQ...", "..qq....qQ..", ".ff.....ffF."],
+	"pass": ["....qqQ.....", "....qqQ.....", "....fffF...."],
+	"step_b": ["...qQ..qq...", "..qQ....qq..", ".fF.....fff."],
+	"tuck": ["...qq..qQ...", "..ff....fF..", "............"],
+	"fall": ["...qq..qQ...", "...qq..qQ...", "...ff..fF..."],
+}
+## Each frame: the arms, the legs, and how far the head and body sink (the
+## bob of a step or a breath) while the feet stay on the ground.
+const FRAME_DEF := {
+	"stand": ["stand", "stand", 0], "idle": ["stand", "stand", 1],
+	"walk0": ["stride", "step_a", 1], "walk1": ["stand", "pass", 0],
+	"walk2": ["stand", "step_b", 1], "walk3": ["stride", "pass", 0],
+	"jump": ["up", "tuck", 0], "fall": ["up", "fall", 0],
+	"walk": ["stride", "step_a", 1],
+}
+const FRAMES := ["stand", "idle", "walk0", "walk1", "walk2", "walk3", "jump", "fall"]
+# over: head extras (hair, hats, glasses) as [x, y, rows], y counted from the
+# top of the hat space (the head starts at y = PAD, the eyes are at y = 9).
+# wear: clothing details on the body, hidden when armour is worn.
+const _NINJA_OVER := [[1, 7, ["rrrrrrrrrr"]], [0, 8, ["Rr"]], [0, 9, [".R"]]]
+const _BOT_OVER := [[5, 1, [".a.", ".A."]], [5, 3, ["aAa"]], [2, 5, ["k"]], [2, 6, ["k"]]]
+const _BOT_WEAR := [[5, 14, ["tt"]], [5, 15, ["tt"]], [3, 16, ["CCCCCC"]]]
+const _BUN_EARS := [[3, 0, [".s...s..", "sps.sps.", "sps.sps.", "sps.sps.", "sss.sss."]]]
+var LOOKS := {
 	# playable characters
-	"man_in_suit": {"h": "2a2230", "H": "1b1a24", "c": "2e3242", "C": "1e2030", "v": "f2efe6", "t": "d8433a", "q": "2e3242", "f": "1b1a24"},
-	"nurse": {"h": "a0663a", "H": "6e4426", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "f2efe6", "t": "f2efe6", "j": "f2efe6", "q": "f2c29a", "f": "f2efe6",
-		"over": [[3, 1, [".wwwww.", "wwwrwww", "wwrrrww", ".wwrww."]]]},
-	"cavemun": {"h": "6a4220", "H": "4a2e14", "s": "e2a070", "S": "b87a4e", "c": "ea8a33", "C": "8a4a1a", "v": "e2a070", "t": "ea8a33", "j": "ea8a33", "q": "e2a070", "f": "8a5a32",
-		"over": [[1, 2, ["..h..h..h...", ".hhhhhhhhhh."]]]},
-	"pirate": {"h": "1b1a24", "H": "1b1a24", "c": "f2efe6", "C": "d8433a", "v": "f2efe6", "t": "d8433a", "q": "2e3242", "f": "6e4426",
-		"over": [[1, 3, ["..rrrrrr....", ".rrRrrrrrr..", "rrrrrrrrrrr."]], [0, 6, ["rr"]], [0, 7, [".r"]], [3, 8, ["kkkkkkk"]], [8, 9, ["kk"]], [8, 10, ["kk"]]]},
-	"the_spi": {"h": "1b1a24", "H": "3a3a48", "c": "1b1a24", "C": "2e3242", "v": "f2efe6", "t": "1b1a24", "q": "1b1a24", "f": "1b1a24",
-		"over": [[4, 9, ["kkkkkkk", ".kk.kk."]]]},
-	"bad_man": {"h": "2a2a30", "H": "1b1a24", "s": "3a3a44", "S": "2a2a30", "c": "4a4a5a", "C": "2a2a30", "v": "4a4a5a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
-		"over": [[4, 9, ["wwewwew", "wwewwew"]]]},
-	"school_girl": {"h": "1b1a24", "H": "2a2230", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "1b1a24"},
-	"soldier": {"h": "5a3a20", "H": "3a2614", "c": "6a8a4a", "C": "4a6a2a", "v": "6a8a4a", "t": "4a6a2a", "j": "3a2a22", "q": "4a6a2a", "f": "3a2a22",
-		"over": [[2, 2, ["..ZZZZZZ..", ".ZzZZZZZZZ.", "ZZZZZzZZZZZ", "ZZZZZZZZZZZ", "zzzzzzzzzzz"]]]},
-	"chuchu": {"h": "f08ac8", "H": "c05a98", "long": true, "c": "f06aa0", "C": "c84a80", "v": "f2efe6", "t": "f2efe6", "j": "f06aa0", "q": "f2c29a", "f": "f2efe6",
-		"over": [[1, 1, [".hh......hh.", "hhHh....hHhh", ".hh......hh."]]]},
-	"drone": {"h": "5c616b", "H": "3e424a", "s": "a8b0bc", "S": "7a8290", "e": "4fd0f0", "c": "7a8290", "C": "5c616b", "v": "a8b0bc", "t": "4fd0f0", "q": "5c616b", "f": "3e424a", "hair": "bald",
-		"over": [[6, 0, ["A", "a", "a"]], [4, 3, ["aaaaa"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
-	"dark_knight": {"h": "3a2a5a", "H": "2a1e40", "s": "4a3a6a", "S": "2a1e40", "e": "d8433a", "c": "4a3a6a", "C": "2a1e40", "v": "7b4fb8", "t": "7b4fb8", "j": "2a1e40", "q": "2a1e40", "f": "1b1a24", "hair": "bald",
-		"over": [[3, 0, [".rr.", "rRr.", "rr..", "PPPPPPPP"]], [2, 8, ["PPPPPPPPPP"]], [4, 9, ["kkekkek", "kkekkek"]], [8, 11, ["kkk"]]]},
-	"ninja": {"h": "1b1a24", "H": "1b1a24", "s": "1b1a24", "S": "1b1a24", "m": "1b1a24", "c": "1b1a24", "C": "1b1a24", "v": "1b1a24", "t": "d8433a", "j": "d8433a", "q": "1b1a24", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
-		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
-	"ninja_npc": {"h": "2a2a48", "H": "2a2a48", "s": "2a2a48", "S": "2a2a48", "m": "2a2a48", "c": "2a2a48", "C": "2a2a48", "v": "2a2a48", "t": "d8433a", "j": "d8433a", "q": "2a2a48", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
-		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
-	"ninja_npc2": {"h": "5a1e2a", "H": "5a1e2a", "s": "5a1e2a", "S": "5a1e2a", "m": "5a1e2a", "c": "5a1e2a", "C": "5a1e2a", "v": "5a1e2a", "t": "f2cf5b", "j": "f2cf5b", "q": "5a1e2a", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
-		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
-	"ninja_npc3": {"h": "3a2a5a", "H": "3a2a5a", "s": "3a2a5a", "S": "3a2a5a", "m": "3a2a5a", "c": "3a2a5a", "C": "3a2a5a", "v": "3a2a5a", "t": "f06aa0", "j": "f06aa0", "q": "3a2a5a", "f": "1b1a24", "x": "f2c29a", "hair": "bald",
-		"over": [[4, 9, ["xwexwex", "xwexwex"]], [1, 7, ["rrrrrrrrrr"]], [0, 8, ["rr"]], [0, 9, [".r"]]]},
-	"robot_npc": {"h": "5c616b", "H": "5c616b", "s": "a8b0bc", "S": "5c616b", "e": "4fd0f0", "m": "5c616b", "c": "a8b0bc", "C": "5c616b", "v": "a8b0bc", "t": "4fd0f0", "q": "5c616b", "f": "3e424a", "hair": "bald",
-		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
-	"robot_npc2": {"h": "c99a2e", "H": "c99a2e", "s": "f2cf5b", "S": "c99a2e", "e": "d8433a", "m": "c99a2e", "c": "f2cf5b", "C": "c99a2e", "v": "f2cf5b", "t": "d8433a", "q": "c99a2e", "f": "3e424a", "hair": "bald",
-		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
-	"robot_npc3": {"h": "2e8a7a", "H": "2e8a7a", "s": "5cc8b0", "S": "2e8a7a", "e": "f2efe6", "m": "2e8a7a", "c": "5cc8b0", "C": "2e8a7a", "v": "5cc8b0", "t": "f2cf5b", "q": "2e8a7a", "f": "3e424a", "hair": "bald",
-		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
-	"iron_bot": {"h": "2c4596", "H": "2c4596", "s": "6b8ff0", "S": "2c4596", "e": "f2cf5b", "m": "2c4596", "c": "6b8ff0", "C": "2c4596", "v": "6b8ff0", "t": "f2a33a", "q": "2c4596", "f": "3e424a", "hair": "bald",
-		"over": [[4, 9, ["kkekkek", "kkekkek"]], [5, 2, [".aa.", "aAAa"]], [2, 12, ["S"]], [9, 12, ["S"]]]},
-	"backstreet_boy": {"h": "f2cf5b", "H": "c99a2e", "c": "f2efe6", "C": "c8c0b0", "v": "f2efe6", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "f2efe6",
-		"over": [[2, 1, ["..hhhhhhh..", ".hhHhhhHhhh", "hhh......hh"]]]},
-	"sailor_moons": {"h": "f2cf5b", "H": "c99a2e", "long": true, "c": "f2efe6", "C": "d8d0c0", "v": "3b5dc9", "t": "d8433a", "j": "3b5dc9", "q": "f2c29a", "f": "d8433a",
-		"over": [[0, 2, ["hh........hh", "hHh......hHh", "hh........hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [0, 11, ["hh"]], [10, 9, ["hh"]], [10, 10, ["hh"]], [10, 11, ["hh"]]]},
+	"man_in_suit": {"h": "3a2a3e", "c": "34405e", "v": "f4f1ea", "t": "e0453c", "j": "2a2f48", "q": "34405e", "f": "1f1c2c",
+		"wear": [[4, 14, ["CvtvC"]], [5, 15, ["Ct"]]]},
+	"nurse": {"h": "b06a3c", "long": true, "c": "f4f1ea", "v": "f4f1ea", "t": "f4f1ea", "j": "f4f1ea", "q": "f6c5a0", "f": "f4f1ea",
+		"over": [[3, 1, [".wwwwww.", "wwwrrwww", "wwrrrrww", ".WWWWWW."]]],
+		"wear": [[6, 14, ["r"]], [3, 17, ["wwwwwW"]]]},
+	"cavemun": {"h": "7a4a22", "s": "e0a070", "c": "f09030", "v": "e0a070", "t": "f09030", "j": "f09030", "sl": "e0a070", "q": "e0a070", "f": "c07848",
+		"over": [[1, 2, ["..h..h.h.h..", ".hhh^hhhhhh."]], [1, 8, ["h"]], [10, 7, ["H"]]],
+		"wear": [[3, 13, ["s"]], [3, 14, ["ss"]], [6, 15, ["O"]], [4, 16, ["O"]], [3, 18, ["c.c.c."]]]},
+	"pirate": {"h": "2a2233", "c": "f4f1ea", "v": "f4f1ea", "t": "f4f1ea", "j": "8a5a32", "q": "34405e", "f": "6e4426",
+		"over": [[1, 3, ["..rrrrrr...", ".rRRrrrrrr.", "rrrrrrrrrrD"]], [0, 6, ["rD"]], [0, 7, [".r"]], [3, 8, ["kkkkkkkk"]], [8, 9, ["kk"]], [8, 10, ["kk"]]],
+		"wear": [[3, 14, ["rrrrrr"]], [3, 16, ["rrrrrr"]], [6, 17, ["y"]]]},
+	"the_spi": {"h": "2a2233", "c": "2c2a3a", "v": "f4f1ea", "t": "2c2a3a", "j": "2c2a3a", "q": "2c2a3a", "f": "1f1c2c",
+		"over": [[4, 9, ["kkkkkkk", ".kK.kK."]]],
+		"wear": [[4, 14, ["CvkvC"]], [6, 15, ["k"]]]},
+	"bad_man": {"h": "3e3e4c", "s": "4a4a5a", "m": "3e3e4c", "e": "f4f1ea", "w": "f4f1ea", "c": "5a5a6e", "v": "5a5a6e", "t": "3e3e4c", "j": "3e3e4c", "q": "3e3e4c", "f": "2a2a36", "head": "bald",
+		"over": [[4, 8, ["kk..kk"]]]},
+	"school_girl": {"h": "2a2233", "long": true, "c": "f4f1ea", "v": "3f66d0", "t": "e0453c", "j": "3f66d0", "q": "f6c5a0", "f": "2a2233",
+		"over": [[1, 7, ["r"]]],
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jJjJjJJ"]]]},
+	"soldier": {"h": "6a4424", "c": "6f9450", "v": "6f9450", "t": "6f9450", "j": "4a3426", "q": "587a3c", "f": "4a3426",
+		"over": [[1, 2, ["..zzzzzz...", ".zzZzzzzzz.", "zzzzzzZzzzz", "zzZzzzzzzzZ", "ZZZZZZZZZZZ"]]],
+		"wear": [[4, 14, ["C"]], [7, 15, ["C"]], [6, 17, ["y"]]]},
+	"chuchu": {"h": "f58ac8", "long": true, "c": "f470a8", "v": "f4f1ea", "t": "f4f1ea", "j": "f470a8", "q": "f6c5a0", "f": "f4f1ea",
+		"over": [[0, 1, [".hh......hh.", "h^hh....h^hH", "hhhh....hhhH", ".HH......HH."]]],
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jjjjjJJ"]]]},
+	"drone": {"s": "aab4c4", "e": "5fe0ff", "c": "8894a6", "v": "aab4c4", "t": "5fe0ff", "j": "5c6676", "q": "6c7686", "f": "444c5a", "head": "robot",
+		"over": [[6, 0, ["r", "a", "a", "a"]], [2, 5, ["k"]], [2, 6, ["k"]]],
+		"wear": [[5, 14, ["tt"]], [3, 16, ["CCCCCC"]]]},
+	"dark_knight": {"s": "5c4a8a", "e": "ff5a4a", "c": "5c4a8a", "v": "9a6ae0", "t": "9a6ae0", "j": "3a2c5c", "q": "443468", "f": "2a2040", "head": "robot",
+		"over": [[4, 0, [".rr.", "rRr.", "rr..", "r..."]], [1, 7, ["PPPPPPPPPP"]], [1, 11, ["pppppppppp"]]],
+		"wear": [[5, 14, ["tt"]], [3, 16, ["CttttC"]]]},
+	"ninja": {"h": "2c2a3a", "x": "f6c5a0", "c": "2c2a3a", "v": "2c2a3a", "t": "e0453c", "j": "e0453c", "q": "2c2a3a", "f": "1f1c2c", "head": "hood", "gl": "2c2a3a",
+		"over": _NINJA_OVER, "wear": [[4, 14, ["C..C"]], [5, 15, ["CC"]]]},
+	"ninja_npc": {"h": "34407a", "x": "f6c5a0", "c": "34407a", "v": "34407a", "t": "e0453c", "j": "e0453c", "q": "34407a", "f": "1f1c2c", "head": "hood", "gl": "34407a",
+		"over": _NINJA_OVER, "wear": [[4, 14, ["C..C"]], [5, 15, ["CC"]]]},
+	"ninja_npc2": {"h": "8a2c3a", "x": "f6c5a0", "c": "8a2c3a", "v": "8a2c3a", "t": "f4cf5a", "j": "f4cf5a", "q": "8a2c3a", "f": "1f1c2c", "head": "hood", "gl": "8a2c3a", "r": "f4cf5a", "R": "c99a2e",
+		"over": _NINJA_OVER, "wear": [[4, 14, ["C..C"]], [5, 15, ["CC"]]]},
+	"ninja_npc3": {"h": "5a3c8a", "x": "f6c5a0", "c": "5a3c8a", "v": "5a3c8a", "t": "f470a8", "j": "f470a8", "q": "5a3c8a", "f": "1f1c2c", "head": "hood", "gl": "5a3c8a", "r": "f470a8", "R": "c84a80",
+		"over": _NINJA_OVER, "wear": [[4, 14, ["C..C"]], [5, 15, ["CC"]]]},
+	"robot_npc": {"s": "aab4c4", "e": "5fe0ff", "c": "aab4c4", "v": "aab4c4", "t": "5fe0ff", "j": "5c6676", "q": "6c7686", "f": "444c5a", "head": "robot", "over": _BOT_OVER, "wear": _BOT_WEAR},
+	"robot_npc2": {"s": "f4cf5a", "e": "ff5a4a", "c": "f4cf5a", "v": "f4cf5a", "t": "ff5a4a", "j": "b07a20", "q": "c99a2e", "f": "444c5a", "head": "robot", "over": _BOT_OVER, "wear": _BOT_WEAR},
+	"robot_npc3": {"s": "5cd0b4", "e": "f4f1ea", "c": "5cd0b4", "v": "5cd0b4", "t": "f4cf5a", "j": "2a8474", "q": "2e9a86", "f": "444c5a", "head": "robot", "over": _BOT_OVER, "wear": _BOT_WEAR},
+	"iron_bot": {"s": "6b8ff0", "e": "f4cf5a", "c": "6b8ff0", "v": "6b8ff0", "t": "f4a33a", "j": "2c4596", "q": "3f5cc0", "f": "444c5a", "head": "robot", "over": _BOT_OVER, "wear": _BOT_WEAR},
+	"backstreet_boy": {"h": "f4cf5a", "c": "f4f1ea", "v": "f4f1ea", "t": "f4f1ea", "j": "3f66d0", "q": "3f66d0", "f": "f4f1ea",
+		"over": [[2, 2, ["..hh^^hhh..", ".h^^hhhhhhh", "hhhhhhhhhHH"]], [9, 5, ["hhH"]]],
+		"wear": [[5, 14, ["u"]], [5, 15, ["uu"]]]},
+	"sailor_moons": {"h": "f4cf5a", "c": "f4f1ea", "v": "3f66d0", "t": "e0453c", "j": "3f66d0", "q": "f6c5a0", "f": "e0453c",
+		"over": [[0, 2, [".h........h.", "h^h......h^H", ".h........H."]], [0, 5, ["h"]], [0, 6, ["h"]], [0, 7, ["hh"]], [0, 8, ["hH"]], [0, 9, ["hH"]], [0, 10, ["h"]], [0, 11, ["h"]], [0, 12, ["H"]],
+			[11, 5, ["h"]], [11, 6, ["h"]], [11, 7, ["H"]], [11, 8, ["H"]], [11, 9, ["H"]], [11, 10, ["H"]], [6, 5, ["y"]]],
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jJjJjJJ"]]]},
 	# the buns: bunny ears over a furry head
-	"q_bun": {"p": "f5a0b8", "h": "f2efe6", "H": "d8d0c0", "s": "f2efe6", "S": "d8d0c0", "e": "1b1a24", "c": "f08ac8", "C": "c05a98", "v": "f2efe6", "t": "f08ac8", "q": "f2efe6", "f": "f08ac8", "hair": "bald",
-		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 10, ["pp"]]]},
-	"mad_bun": {"h": "8a8f99", "H": "5c616b", "s": "a8b0bc", "S": "8a8f99", "e": "d8433a", "c": "2a2a30", "C": "1b1a24", "v": "d8433a", "t": "2a2a30", "q": "2a2a30", "f": "1b1a24", "hair": "bald",
-		"over": [[3, 0, [".hH..hH.", ".hr..hr.", ".hr..hr.", ".hH..hH."]], [4, 8, ["kk..kk"]]]},
-	"nerd_bun": {"p": "f5a0b8", "h": "c8865a", "H": "8a5a32", "s": "e2b08a", "S": "c8865a", "e": "1b1a24", "c": "3b5dc9", "C": "2c4596", "v": "f2efe6", "t": "f2cf5b", "q": "4a4a5a", "f": "3a2a22", "hair": "bald",
-		"over": [[3, 0, [".hH..hH.", ".hp..hp.", ".hp..hp.", ".hH..hH."]], [5, 9, ["kkkkkk"]]]},
+	"q_bun": {"p": "f5a0b8", "s": "f8f4ec", "m": "f5a0b8", "c": "f58ac8", "v": "f4f1ea", "t": "f58ac8", "j": "f58ac8", "q": "f8f4ec", "f": "f58ac8", "head": "bald",
+		"over": _BUN_EARS},
+	"mad_bun": {"p": "e0453c", "s": "aab4c4", "e": "e0453c", "m": "5c6676", "c": "34344a", "v": "e0453c", "t": "34344a", "j": "2a2a3a", "q": "34344a", "f": "1f1c2c", "head": "bald",
+		"over": _BUN_EARS + [[4, 8, ["kk..kk"]]]},
+	"nerd_bun": {"p": "f5a0b8", "s": "e6b48c", "m": "a86a4a", "c": "3f66d0", "v": "f4f1ea", "t": "f4cf5a", "j": "34407a", "q": "5a5a6e", "f": "4a3426", "head": "bald",
+		"over": _BUN_EARS + [[3, 9, ["kkIikIik"]], [4, 10, ["kiikiik"]]]},
 	# villagers
-	"keeper": {"h": "3a2a5a", "H": "2a1e40", "c": "7b4fb8", "C": "5a3a8a", "q": "3a2a5a", "f": "1b1a24", "s": "e8b48a", "t": "f2cf5b",
-		"over": [[2, 1, ["...PPPP...", "..PPyPPP..", ".PPPPPPPP."]]]},
-	"gruff": {"h": "8a3a12", "H": "5a2208", "c": "6e5a3e", "C": "4a3e2a", "q": "4a3a2a", "f": "2a2230", "s": "f2c07a", "j": "3a2a22", "long": true,
-		"over": [[0, 0, ["..hhhhhhhh..", ".hhhhhhhhhh.", "hhhhhhhhhhhh", "hhhhhhhhhhhh"]], [0, 8, ["hh"]], [0, 9, ["hh"]], [0, 10, ["hh"]], [10, 7, ["hh"]]]},
-	"mira": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "e8c040", "C": "c8a020", "t": "e8c040", "v": "e8c040", "j": "c8a020", "q": "f2c07a", "f": "3a2a22"},
-	"banka": {"h": "f2d84a", "H": "d0a830", "s": "f2c07a", "long": true, "c": "d06ad0", "C": "a84aa8", "t": "d06ad0", "v": "d06ad0", "j": "a84aa8", "q": "f2c07a", "f": "3a2a22",
-		"over": [[0, 4, ["h", "h", "h", "h"]], [11, 4, ["h", "h", "h", "h"]]]},
-	"warden": {"h": "1b1a24", "H": "1b1a24", "s": "2e9a52", "S": "1e7a3e", "b": "1b1a24", "c": "3a4a3a", "C": "2a3a2a", "q": "3a3a48", "f": "1b1a24", "hair": "bald",
-		"over": [[1, 2, ["..kkkkkkkk.", ".kkkkkkkkkk", "kkkkkkkkkkk"]], [4, 8, ["kkkkkkk"]]]},
-	"smith": {"h": "3a2a22", "H": "2a1e18", "c": "7a5a3a", "C": "5a4028", "q": "4a3428", "f": "2a2230", "s": "c88a5a", "v": "a07a55", "t": "a07a55"},
-	"merchant": {"h": "f2d84a", "H": "d0a830", "s": "f2c07a", "c": "b8b4a8", "C": "8a8478", "v": "8a8478", "t": "b8b4a8", "j": "3a3a44", "q": "3a3a44", "f": "2a2230",
-		"over": [[0, 0, ["h..h...h..h.", "hh.hh.hhh.hh", ".hhhhhhhhhh.", "hhhhHhhhHhhh", "hhhhhhhhhhhh"]], [0, 5, ["h"]], [0, 7, ["h"]], [11, 5, ["h"]]]},
-	"tools": {"h": "4a2a1a", "H": "3a2010", "cap": "d8433a", "capH": "a82a22", "c": "d8433a", "C": "a82a22", "v": "3b5dc9", "t": "3b5dc9", "j": "3b5dc9", "q": "3b5dc9", "f": "6e4426", "s": "f2c29a",
-		"over": [[7, 11, ["kkkk"]]]},
-	"miner": {"h": "f2cf5b", "H": "c99a2e", "c": "6e5a3e", "C": "4a3e2a", "q": "4a4a5a", "f": "2a2230"},
-	"trader": {"h": "6a4220", "H": "4a2e14", "cap": "4f9a44", "capH": "2e7a2a", "c": "f2cf5b", "C": "c99a2e", "t": "4f9a44", "q": "4a3a2a", "f": "2a2230"},
-	"jumpie": {"h": "1b1a24", "H": "2a2a36", "s": "f2c07a", "long": true, "c": "5cbf3f", "C": "3e8a2e", "t": "f2efe6", "j": "4f9a44", "q": "f2c07a", "f": "3a2a22",
-		"over": [[8, 3, ["rr", "r."]]]},
+	"keeper": {"h": "4a3478", "c": "8a5ad0", "v": "f4cf5a", "t": "f4cf5a", "j": "5a3c8a", "q": "4a3478", "f": "2a2040", "s": "f0bc90",
+		"over": [[1, 0, ["....PP.....", "...PPpp....", "..PPpppp...", ".PPyppppp..", "pppppppppp."]]],
+		"wear": [[3, 17, ["yyyyyy"]]]},
+	"gruff": {"h": "c04a1c", "c": "7a6644", "v": "7a6644", "t": "7a6644", "j": "4a3426", "q": "5a4632", "f": "2a2233", "s": "f4c080", "sl": "f4c080",
+		"over": [[0, 1, ["..hhh^hhh...", ".hh^^hhhhhh.", "hh^hhhhhhhhh", "hhhhhhhhhhhH"]], [0, 5, ["h"]], [0, 6, ["hh"]], [0, 7, ["hh"]], [0, 8, ["hhh"]], [0, 9, ["hH"]], [0, 10, ["hH"]], [0, 11, ["HH"]],
+			[4, 10, [".hhhhhh", "hhhhhhh"]], [5, 12, ["HHHH"]]]},
+	"mira": {"h": "2a2233", "s": "f4c080", "long": true, "c": "f0c840", "v": "f0c840", "t": "f0c840", "j": "f0c840", "q": "f4c080", "f": "4a3426",
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jjjjjJJ"]]]},
+	"banka": {"h": "f6dc50", "s": "f4c080", "c": "d870d8", "v": "d870d8", "t": "d870d8", "j": "d870d8", "q": "f4c080", "f": "4a3426",
+		"over": [[0, 6, ["r"]], [0, 7, ["hh"]], [0, 8, ["hH"]], [0, 9, ["hH"]], [0, 10, [".H"]], [11, 6, ["r"]], [10, 7, ["hh"]], [10, 8, [".H"]], [10, 9, [".H"]]],
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jjjjjJJ"]]]},
+	"warden": {"h": "2a2a36", "s": "3aaa5c", "m": "1e6a3a", "c": "4a5e4a", "v": "4a5e4a", "t": "4a5e4a", "j": "2a2a36", "q": "3e3e52", "f": "1f1c2c", "head": "bald",
+		"over": [[1, 2, ["..kkkkkkk..", ".kkKkkkkkk.", "kkkkkkkkkkk", "DDDDDDDDDDD"]]],
+		"wear": [[6, 17, ["a"]]]},
+	"smith": {"h": "4a3426", "c": "8a6642", "v": "c8a070", "t": "8a6642", "j": "5a4028", "q": "5a4632", "f": "2a2233", "s": "d09060",
+		"over": [[4, 11, ["hhhhhh"]], [5, 12, ["HHHH"]]],
+		"wear": [[4, 14, ["llll"]], [4, 15, ["llll"]], [4, 16, ["lllN"]]]},
+	"merchant": {"h": "f6dc50", "s": "f4c080", "c": "c0bcb0", "v": "c0bcb0", "t": "c0bcb0", "j": "3e3e52", "q": "3e3e52", "f": "2a2233",
+		"over": [[0, 0, ["..h...h..h..", "h.hh.hhh.hh.", "hhh^hhhhhhhh", ".h^^hhhhhhhH", "hhhhhhhhhhhH"]], [0, 5, ["h"]], [11, 5, ["H"]], [0, 7, ["h"]]]},
+	"tools": {"h": "5a321e", "c": "e0453c", "v": "e0453c", "t": "3f66d0", "j": "3f66d0", "q": "3f66d0", "f": "6e4426",
+		"over": [[1, 3, ["..rrrrrr...", ".rRRrwwrrr.", "rrrrrrrrrrr", "DDDDDDDrrrrr"]], [6, 11, ["bbbbb"]]],
+		"wear": [[4, 14, ["u..u"]], [3, 15, ["uuuuuU"]], [3, 16, ["uyuuyU"]]]},
+	"miner": {"h": "f4cf5a", "c": "7a6644", "v": "7a6644", "t": "7a6644", "j": "4a3426", "q": "5a5a6e", "f": "2a2233",
+		"over": [[1, 2, ["...yyyyy...", "..yyyyywwy.", ".yyyyyywwyY", "YYYYYYYYYYY"]]],
+		"wear": [[4, 14, ["N..N"]], [4, 15, ["N..N"]]]},
+	"trader": {"h": "7a4a22", "c": "f4cf5a", "v": "f4f1ea", "t": "4f9a44", "j": "4a3426", "q": "5a4632", "f": "2a2233",
+		"over": [[1, 3, ["..gggggg...", ".ggGggggggg", "gggggggggGG", "ZZZZZZZggggg"]]]},
+	"jumpie": {"h": "2a2233", "s": "f4c080", "long": true, "c": "5cc040", "v": "f4f1ea", "t": "5cc040", "j": "5cc040", "q": "f4c080", "f": "4a3426",
+		"over": [[8, 3, ["rr", "rR"]]],
+		"wear": [[3, 17, ["jjjjjJ"]], [2, 18, ["jjjjjJJ"]]]},
 	# monsters that are drawn as people
-	"zombie": {"h": "3a3a2a", "H": "2a2a1e", "s": "8fb07a", "S": "5e7a52", "c": "6e5a3e", "C": "4a3e2a", "q": "3e4a5a", "f": "2a2230", "e": "d8433a"},
-	"wizard": {"h": "3b5dc9", "H": "2c4596", "s": "e8c8a8", "S": "c8a888", "c": "3b5dc9", "C": "6b8ff0", "q": "3b5dc9", "f": "2c4596", "e": "f2cf5b"},
-	"lich": {"h": "3a2a5a", "H": "2a1e44", "s": "e8e8f0", "S": "b8b8c8", "c": "5a2a8a", "C": "3a1a5a", "q": "3a1a5a", "f": "2a1e44", "e": "8affc8", "m": "2a1e44"},
-	"grinch": {"h": "4a8a2a", "H": "2e6a1a", "s": "6ac83a", "S": "4a9a2a", "c": "d8433a", "C": "f2efe6", "q": "4a8a2a", "f": "2e6a1a", "e": "f2cf5b", "m": "2e6a1a"},
-	"modina": {"h": "1b1a24", "H": "1b1a24", "long": true, "s": "ea8a33", "S": "b85e1c", "c": "c8a060", "C": "8a6a3a", "v": "d8433a", "t": "d8433a", "q": "c8a060", "f": "6e4426", "e": "1b1a24", "m": "8a1e1a"},
-	"modina_2": {"h": "e3ebf5", "H": "a8b0bc", "long": true, "s": "6b8ff0", "S": "2c4596", "c": "3b5dc9", "C": "2c4596", "v": "f2cf5b", "t": "f2cf5b", "q": "3b5dc9", "f": "1e2a6a", "e": "1b1a24", "m": "1e2a6a"},
-	"evil_santa": {"h": "f2efe6", "H": "c8c0b0", "s": "f2c29a", "S": "c8a080", "c": "c8202a", "C": "f2efe6", "v": "f2efe6", "t": "1b1a24", "q": "c8202a", "f": "1b1a24", "e": "d8433a", "m": "f2efe6"},
-	"vampire": {"h": "2a1e30", "H": "1b1a24", "s": "c8b8e8", "S": "a898c8", "c": "6a2a8a", "C": "3a1a5a", "v": "d8433a", "t": "f2efe6", "q": "2a1e30", "f": "1b1a24", "e": "d8433a", "m": "d8433a",
-		"over": [[0, 6, ["kk........kk", "kkk......kkk", ".kk......kk."]]]},
-	"mummy": {"h": "e8e0c8", "H": "b8b098", "s": "e8e0c8", "S": "b8b098", "c": "e8e0c8", "C": "b8b098", "q": "e8e0c8", "f": "b8b098", "e": "d8433a"},
+	"zombie": {"h": "3e3e2a", "s": "94b87c", "m": "4a6a42", "c": "7a6644", "j": "5a4632", "q": "465468", "f": "2a2233", "e": "e0453c", "w": "f4cf5a",
+		"wear": [[4, 15, ["C"]], [7, 14, ["C"]], [6, 16, ["s"]]]},
+	"wizard": {"h": "e8e4f0", "s": "f0c8a4", "c": "3f66d0", "v": "f4cf5a", "t": "3f66d0", "j": "f4cf5a", "q": "3f66d0", "f": "2c4596",
+		"over": [[0, 0, ["......uu....", ".....uuU....", "....uyuU....", "...uuuuUU...", "..uuuuuuUU..", "UUUUUUUUUUUU"]], [4, 11, ["hhhhhh"]], [5, 12, ["hhhh"]], [5, 13, [".HH."]]],
+		"wear": [[3, 18, ["cccccC"]], [3, 19, ["cccccC"]]]},
+	"lich": {"h": "4a3478", "s": "ecebf4", "c": "6a34a0", "v": "8affc8", "t": "6a34a0", "j": "4a2470", "q": "4a2470", "f": "2a2040", "e": "8affc8", "w": "f4f1ea", "m": "4a3478", "head": "bald",
+		"over": [[0, 2, ["...hhhhhh...", "..h^hhhhhhh.", ".hhhhhhhhhhH", ".hhh......hH", ".hh........H", ".hh.........", ".hh........."]]],
+		"wear": [[3, 18, ["cccccC"]], [3, 19, ["cccccC"]]]},
+	"grinch": {"h": "58a030", "s": "74d040", "c": "e0453c", "v": "f4f1ea", "t": "e0453c", "j": "f4f1ea", "q": "58a030", "f": "2e6a1a", "e": "f4cf5a", "w": "f4f1ea", "m": "2e6a1a", "head": "bald",
+		"over": [[1, 1, ["......rrw..", "....rrrr...", "..rrRrrrr..", ".rrrrrrrrr.", "wwwwwwwwwww"]]]},
+	"modina": {"h": "2a2233", "long": true, "s": "f09040", "c": "d0a868", "v": "e0453c", "t": "e0453c", "j": "8a6a3a", "q": "d0a868", "f": "6e4426", "m": "8a1e1a",
+		"over": [[4, 8, ["kk..kk"]], [5, 3, ["yyy"]], [6, 4, ["r"]]]},
+	"modina_2": {"h": "e6eef8", "long": true, "s": "6b8ff0", "c": "3f66d0", "v": "f4cf5a", "t": "f4cf5a", "j": "2c4596", "q": "3f66d0", "f": "1e2a6a", "m": "1e2a6a",
+		"over": [[4, 8, ["kk..kk"]], [5, 3, ["yyy"]], [6, 4, ["c"]]]},
+	"evil_santa": {"h": "f4f1ea", "s": "f6c5a0", "c": "d02830", "v": "f4f1ea", "t": "f4f1ea", "j": "2a2233", "q": "d02830", "f": "2a2233", "e": "e0453c",
+		"over": [[4, 8, ["kk..kk"]], [3, 11, ["wwwwwww"]], [4, 12, ["wwwwww"]], [5, 13, ["WWWW"]]],
+		"wear": [[6, 17, ["y"]]]},
+	"vampire": {"h": "2a2233", "s": "d0c0f0", "c": "2a2233", "v": "f4f1ea", "t": "e0453c", "j": "2a2233", "q": "2a2233", "f": "1f1c2c", "e": "e0453c", "m": "e0453c",
+		"over": [[5, 3, ["h"]], [5, 4, ["hh"]], [1, 11, ["r"]], [10, 11, ["r"]], [8, 12, ["w"]]],
+		"wear": [[1, 12, ["P", "P", "P", "P", "P", "P", "P"]], [10, 12, ["p", "p", "p", "p", "p", "p", "p"]], [4, 14, ["CvtvC"]]]},
+	"mummy": {"h": "ece4cc", "s": "ece4cc", "c": "ece4cc", "v": "ece4cc", "t": "ece4cc", "j": "ece4cc", "q": "ece4cc", "f": "c0b8a0", "e": "e0453c", "w": "f4cf5a", "m": "ece4cc", "head": "bald"},
 }
 # Character hats show the matching character's headwear when worn.
 const HAT_LOOKS := {"pirate_hat": "pirate", "soldier_helmet": "soldier", "spy_mask": "the_spi", "chuu_hat": "chuchu",
@@ -209,23 +288,7 @@ func grid_image(rows: Array, map: Dictionary = {}, scale: int = 1) -> Image:
 	return img
 
 func outline(src: Image, color: Color = OUTLINE) -> Image:
-	src = cartoon(src)
-	var w := src.get_width() + 2
-	var h := src.get_height() + 2
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	img.blit_rect(src, Rect2i(0, 0, src.get_width(), src.get_height()), Vector2i(1, 1))
-	var out := img.duplicate()
-	for y in h:
-		for x in w:
-			if img.get_pixel(x, y).a > 0.5:
-				continue
-			for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-				var px2: int = x + d.x
-				var py2: int = y + d.y
-				if px2 >= 0 and py2 >= 0 and px2 < w and py2 < h and img.get_pixel(px2, py2).a > 0.5:
-					out.set_pixel(x, y, color)
-					break
-	return out
+	return ink(cartoon(src), color)
 
 ## The cartoon finish every outlined sprite gets: colours a bit brighter and
 ## punchier, a light rim along the top and left edges and a shadow along the
@@ -243,13 +306,13 @@ func cartoon(src: Image) -> Image:
 				continue # leave eyes and dark details crisp
 			c = Color.from_hsv(c.h, minf(c.s * 1.15, 1.0), minf(c.v * 1.05, 1.0), c.a)
 			if _clear(src, x, y - 1):
-				c = c.lightened(0.22)
+				c = shade(c, 0.55)
 			elif _clear(src, x, y + 1):
-				c = c.darkened(0.22)
+				c = shade(c, -0.8)
 			elif _clear(src, x - 1, y):
-				c = c.lightened(0.1)
+				c = shade(c, 0.25)
 			elif _clear(src, x + 1, y):
-				c = c.darkened(0.12)
+				c = shade(c, -0.45)
 			img.set_pixel(x, y, c)
 	return img
 
@@ -299,11 +362,11 @@ func volume(src: Image) -> Image:
 				continue
 			var t := float(y - top[x]) / span
 			if t < 0.28:
-				c = c.lightened(0.1)
+				c = shade(c, 0.25)
 			elif t > 0.66:
-				c = c.darkened(0.14)
+				c = shade(c, -0.5)
 			if right[y] - left[y] >= 5 and x >= right[y] - 1 and x > left[y] + 2:
-				c = c.darkened(0.06)
+				c = shade(c, -0.25)
 			img.set_pixel(x, y, c)
 	# the shine
 	var bw := hi.x - lo.x
@@ -643,14 +706,84 @@ func eyes(img: Image, x1: int, x2: int, y: int, size: int = 1, c: Color = OUTLIN
 	rect(img, x2, y, size, size + 1, c)
 
 # ---------------------------------------------------------------- characters
-## A person sprite. helmet and armor are item ids, drawn over the character.
-func character(look: String, frame: String = "stand", scale: int = 1, helmet: String = "", armor: String = "") -> Texture2D:
-	return cached("char_%s_%s_%d_%s_%s" % [look, frame, scale, helmet, armor], func():
-		return to_tex(outline(volume(_char_img(look, frame, scale, helmet, armor)))))
+## One step along a colour's ramp: t below 0 is shadow, above 0 is light.
+## Shadows drift toward blue-violet and gain colour, lights drift toward
+## yellow and lose a little, the way pixel artists build ramps by hand, so
+## shading never turns grey or muddy.
+func shade(c: Color, t: float) -> Color:
+	if c.a <= 0.0 or t == 0.0:
+		return c
+	var k := absf(t)
+	var h := c.h
+	var s := c.s
+	var v := c.v
+	if t < 0.0:
+		if s < 0.1:
+			h = 0.7
+			s = minf(s + 0.1 * k, 1.0)
+		else:
+			var d := fposmod(0.72 - h + 0.5, 1.0) - 0.5
+			h = fposmod(h + signf(d) * minf(absf(d), 0.05 * k), 1.0)
+			s = minf(s + 0.1 * k, 1.0)
+		v *= maxf(0.0, 1.0 - 0.26 * k)
+	else:
+		if v < 0.3:
+			# dark things (black hair, suits) catch a cool sheen
+			h = 0.66 if s < 0.1 else h
+			s = clampf(s + 0.08 * k, 0.0, 1.0)
+			v = v + 0.2 * k
+		else:
+			if s >= 0.1:
+				var d2 := fposmod(0.13 - h + 0.5, 1.0) - 0.5
+				h = fposmod(h + signf(d2) * minf(absf(d2), 0.035 * k), 1.0)
+			s *= maxf(0.0, 1.0 - 0.3 * k)
+			v = v + (1.0 - v) * minf(0.45 * k, 1.0)
+	return Color.from_hsv(h, s, clampf(v, 0.0, 1.0), c.a)
+
+## A coloured outline: each outline pixel is a very dark, hue-shifted copy of
+## the colour it touches, so red things get a dark red edge and skin a warm
+## brown one. Edges under and to the right of the sprite stay darkest.
+func ink(src: Image, dark: Color = OUTLINE) -> Image:
+	var w := src.get_width() + 2
+	var h := src.get_height() + 2
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.blit_rect(src, Rect2i(0, 0, src.get_width(), src.get_height()), Vector2i(1, 1))
+	var out := img.duplicate()
+	for y in h:
+		for x in w:
+			if img.get_pixel(x, y).a > 0.5:
+				continue
+			# down and right first: an outline pixel above or left of the sprite takes the lighter tint
+			var found := false
+			var tint := dark
+			var lit := false
+			for d: Vector2i in [Vector2i(0, 1), Vector2i(1, 0), Vector2i(0, -1), Vector2i(-1, 0)]:
+				var q := Vector2i(x, y) + d
+				if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h:
+					continue
+				var n := img.get_pixel(q.x, q.y)
+				if n.a > 0.5:
+					if not found:
+						tint = n
+						lit = d.x > 0 or d.y > 0
+					found = true
+			if found:
+				out.set_pixel(x, y, dark.lerp(shade(tint, -2.2), 0.6 if lit else 0.35))
+	return out
+
+## A person sprite. helmet and armor are item ids, drawn over the character;
+## hold stretches the front arm out to grip whatever is in the hand.
+func character(look: String, frame: String = "stand", scale: int = 1, helmet: String = "", armor: String = "", hold: bool = false) -> Texture2D:
+	return cached("char_%s_%s_%d_%s_%s_%s" % [look, frame, scale, helmet, armor, hold], func():
+		# bigger copies keep their square pixels, outline included
+		var img := ink(_char_img(look, frame, 1, helmet, armor, hold))
+		if scale > 1:
+			img.resize(img.get_width() * scale, img.get_height() * scale, Image.INTERPOLATE_NEAREST)
+		return to_tex(img))
 
 func character_flash(look: String) -> Texture2D:
 	return cached("charflash_" + look, func():
-		return to_tex(flash_image(outline(_char_img(look, "stand", 1)))))
+		return to_tex(flash_image(ink(_char_img(look, "stand", 1)))))
 
 func _char_map(look: String, armor: String) -> Dictionary:
 	var d: Dictionary = LOOKS.get(look, LOOKS.man_in_suit)
@@ -658,82 +791,101 @@ func _char_map(look: String, armor: String) -> Dictionary:
 	for k in d:
 		if d[k] is String:
 			map[k] = d[k]
-	if not map.has("e"): map.e = "1b1a24"
-	if not map.has("m"): map.m = "b8403a"
-	# blush on the cheeks of people, not on masks, robots, mummies or zombies
-	var skin := col(map.get("s", PAL.s))
-	var human := skin.h < 0.13 and skin.s > 0.2 and skin.v > 0.45 and not col(map.m).is_equal_approx(skin)
-	map["+"] = skin.lerp(Color("ff7a8a"), 0.4) if human else skin
-	if not map.has("b"): map.b = "4a2a1a"
+	if not map.has("s"): map.s = "f6c5a0"
+	if not map.has("h"): map.h = "3a2a3e"
+	if not map.has("c"): map.c = "5a5a6e"
+	if not map.has("q"): map.q = "3e3e52"
+	if not map.has("f"): map.f = "2a2233"
+	if not map.has("e"): map.e = "241c2e"
 	if not map.has("w"): map.w = "ffffff"
-	if not map.has("t"): map.t = map.get("c", "4a4a5a")
-	if not map.has("v"): map.v = map.get("c", "4a4a5a")
-	if not map.has("j"): map.j = map.get("q", "3a3a52")
+	if not map.has("t"): map.t = map.c
+	if not map.has("v"): map.v = map.c
+	if not map.has("j"): map.j = map.q
+	var sleeve = map.get("sl", map.c)
+	var own_sleeve: bool = map.has("sl")
 	if armor != "":
 		var mc := material_colors(armor)
 		map.c = mc.X
 		map.C = mc.x
 		map.v = mc.X
 		map.t = mc.x
+		sleeve = mc.X
+		own_sleeve = false
 		# armour (not robes) comes with matching leg guards
 		if not ItemIcons.armor_parts(ItemIcons.split_tier(armor)[0]).robe:
 			map.q = mc.x
 			map.j = mc.x
+	# the ramps: a shadow and a highlight for every base colour
+	for p in [["h", "H", "^"], ["s", "S", "5"], ["c", "C", "L"], ["q", "Q", ""], ["f", "F", ""], ["j", "J", ""]]:
+		var base := col(map[p[0]])
+		if not map.has(p[1]):
+			map[p[1]] = shade(base, -1.0)
+		if p[2] != "" and not map.has(p[2]):
+			map[p[2]] = shade(base, 1.0)
+	map["1"] = col(sleeve)
+	map["2"] = shade(col(sleeve), -1.0) if own_sleeve else col(map.C)
+	var hand := col(map.get("gl", map.s))
+	map["3"] = hand
+	map["4"] = shade(hand, -1.0)
+	var skin := col(map.s)
+	if not map.has("m"): map.m = shade(skin, -1.8)
+	# blush on the cheeks of people, not on masks, robots, mummies or zombies
+	var human := skin.h < 0.13 and skin.s > 0.2 and skin.v > 0.45
+	map["+"] = skin.lerp(Color("ff6a7a"), 0.45) if human else skin
 	return map
+
+## How many pixels the head, body and hands sit lower in this frame.
+func frame_sink(frame: String) -> int:
+	return FRAME_DEF.get(frame, FRAME_DEF.stand)[2]
 
 func _overlay(img: Image, parts: Array, map: Dictionary) -> void:
 	for o in parts:
 		var g := grid_image(o[2], map)
 		img.blend_rect(g, Rect2i(0, 0, g.get_width(), g.get_height()), Vector2i(o[0], o[1]))
 
-func _char_img(look: String, frame: String, scale: int, helmet: String = "", armor: String = "") -> Image:
+func _char_img(look: String, frame: String, scale: int, helmet: String = "", armor: String = "", hold: bool = false) -> Image:
 	var d: Dictionary = LOOKS.get(look, LOOKS.man_in_suit)
 	var map := _char_map(look, armor)
-	var base := grid_image(HAIR[d.get("hair", "short")] + BODY + LEGS[frame], map)
-	# a shine on the hair
-	var hc := col(map.get("h", "3a2a22"))
-	for p in [Vector2i(4, 1), Vector2i(5, 1), Vector2i(3, 2)]:
-		if base.get_pixel(p.x, p.y).is_equal_approx(hc):
-			base.set_pixel(p.x, p.y, hc.lightened(0.3))
+	var fd: Array = FRAME_DEF.get(frame, FRAME_DEF.stand)
+	var body: Array = BODIES[fd[0]].duplicate()
+	if hold:
+		# the front arm reaches forward, its hand where the held item's grip is
+		for r in 4:
+			body[r] = String(body[r]).substr(0, 9) + "..."
+		body[1] = String(body[1]).substr(0, 9) + "24."
+	var hgt: int = PAD + 17
+	# the head and body, with everything worn on them
+	var up := blank(12, hgt)
+	var base := grid_image(HEADS[d.get("head", "short")] + body, map)
+	up.blit_rect(base, Rect2i(0, 0, 12, 14), Vector2i(0, PAD))
 	if d.get("long", false):
-		for y in range(6, 11):
+		# long hair down the back, behind the arm
+		for y in range(PAD + 7, PAD + 12):
 			for x in [1, 2]:
-				if base.get_pixel(x, y).a < 0.5 and (x == 1 or y < 9):
-					base.set_pixel(x, y, col(map.h))
+				if up.get_pixel(x, y).a < 0.5 and (x == 1 or y < PAD + 10):
+					up.set_pixel(x, y, col(map.H if x == 1 or y > PAD + 8 else map.h))
 	if look == "mummy":
-		var clean := base.duplicate()
-		for y in range(0, base.get_height(), 3):
-			rect(base, 0, y, base.get_width(), 1, Color("b8b098"))
-		for y in base.get_height():
-			for x in base.get_width():
-				if clean.get_pixel(x, y).a < 0.5:
-					base.set_pixel(x, y, Color(0, 0, 0, 0))
-		px(base, 6, 5, Color("d8433a"))
-		px(base, 9, 5, Color("d8433a"))
-	var img := blank(base.get_width(), base.get_height() + PAD)
-	img.blit_rect(base, Rect2i(0, 0, base.get_width(), base.get_height()), Vector2i(0, PAD))
-	_overlay(img, d.get("over", []), map)
-	match look:
-		"wizard":
-			var c := Color("2c4596")
-			for i in 5:
-				rect(img, 6 - (i + 1) / 2, i, 1 + i, 1, c)
-			rect(img, 0, 4, 12, 2, c)
-			px(img, 6, 1, Color("f2cf5b"))
-		"miner":
-			rect(img, 2, 3, 9, 3, Color("f2cf5b"))
-			rect(img, 8, 4, 2, 2, Color("f2efe6"))
-		"merchant", "tools", "trader":
-			rect(img, 1, 3, 10, 3, col(map.get("cap", map.h)))
-			rect(img, 7, 5, 5, 1, col(map.get("capH", map.H)))
-		"warden":
-			rect(img, 2, 3, 9, 2, Color("2a2a2a"))
-			px(img, 1, 10, Color("a8a8b0"))
-			px(img, 10, 10, Color("a8a8b0"))
+		for y in range(PAD + 1, PAD + 14, 3):
+			for x in 12:
+				if up.get_pixel(x, y).a > 0.5 and not (y == PAD + 5 or y == PAD + 6):
+					up.set_pixel(x, y, shade(col(map.s), -1.0))
+	_overlay(up, d.get("over", []), map)
 	if armor != "":
-		_draw_armor(img, armor)
+		_draw_armor(up, armor)
+	else:
+		_overlay(up, d.get("wear", []), map)
 	if helmet != "":
-		_draw_helmet(img, helmet)
+		_draw_helmet(up, helmet)
+	# the legs stay on the ground; the rest sinks a pixel on a step or a breath
+	var img := blank(12, hgt)
+	var legs := grid_image(LEGS[fd[1]], map)
+	if look == "mummy":
+		for x in 12:
+			if legs.get_pixel(x, 1).a > 0.5:
+				legs.set_pixel(x, 1, shade(col(map.s), -1.0))
+	img.blit_rect(legs, Rect2i(0, 0, 12, 3), Vector2i(0, PAD + 14))
+	var dy: int = fd[2]
+	img.blend_rect(up, Rect2i(0, 0, 12, hgt - dy), Vector2i(0, dy))
 	if scale > 1:
 		img = upscale(img, scale)
 	return img
@@ -1416,6 +1568,10 @@ func boss_char(look: String, alt: bool) -> Image:
 			rect(img, q.call(9), q.call(36), q.call(20), q.call(12), Color("f2efe6"))
 	return img
 
+func _person_mob(look: String, alt: bool, flash: bool) -> Image:
+	var img := ink(_char_img(look, "walk0" if alt else "walk2", 1))
+	return flash_image(img) if flash else img
+
 func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
 	if k > 1:
 		# a boss drawn k times bigger, smoothly enlarged so it doesn't look blown up
@@ -1436,7 +1592,7 @@ func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
 			"fireball": img = blob(Color("ea6a33"), 10, 9, alt)
 			"goldball": img = blob(Color("f2cf5b"), 10, 9, alt)
 			"wisp": img = flame_img(Color("ea8a33"), alt)
-			"mummy", "zombie", "wizard": img = _char_img(look, "walk" if alt else "stand", 1)
+			"mummy", "zombie", "wizard": return to_tex(_person_mob(look, alt, flash))
 			"shell": img = bug_img(18, 12, Color("5aa0a8"), Color("3e6a70"), alt, true)
 			"mantis": img = bug_img(16, 11, Color("3b6fd9"), Color("2c4596"), alt)
 			"octopus": img = octo_img(Color("8a4ac8"), alt)
@@ -1471,7 +1627,7 @@ func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
 			"ji_ji": img = lion_img(Color("5cbf3f"), Color("d8433a"), alt)
 			"he_he": img = lion_img(Color("f2a33a"), Color("d8433a"), alt)
 			"raven": img = bird_img(Color("2a2a3a"), alt)
-			"grinch", "lich": img = _char_img(look, "walk" if alt else "stand", 1)
+			"grinch", "lich": return to_tex(_person_mob(look, alt, flash))
 			"snow_turtle": img = turtle_img(Color("a6c8e0"), Color("e3f2f8"), alt)
 			"fairy": img = wings_img(16, 14, Color("f0a8e8"), Color("f2efe6"), alt, Color("8affc8"))
 			"mango", "cherry", "pineapple", "strawberry": img = fruit_img(look, alt)
@@ -1505,7 +1661,7 @@ func mob_tex(look: String, alt: bool, flash := false, k := 1) -> Texture2D:
 			# Tomb of Makara
 			"sand_mantis": img = bug_img(18, 12, Color("e8a0a8"), Color("b06a7a"), alt)
 			"tombstone": img = tombstone_img(alt)
-			"vampire": img = _char_img(look, "walk" if alt else "stand", 1)
+			"vampire": return to_tex(_person_mob(look, alt, flash))
 			"makara": img = makara_img(alt)
 			# pets
 			"grrr": img = trex_img(Color("8a4ac8"), Color("c8a0e8"), alt)
@@ -1833,7 +1989,7 @@ func icon(id: String) -> Texture2D:
 		var it: Dictionary = Data.ITEMS.get(id, {})
 		if it.get("type", "") == "character":
 			var full: Image = _char_img(it.look, "stand", 1)
-			return to_tex(outline(full.get_region(Rect2i(0, 1, full.get_width(), 16))))
+			return to_tex(ink(full.get_region(Rect2i(0, 1, full.get_width(), 16))))
 		if it.get("type", "") == "pet":
 			var img: Image = mob_tex(pet_look(id), false).get_image().duplicate()
 			# a Jr pet is drawn a little smaller than the grown-up one
@@ -2085,17 +2241,47 @@ func node_tex(kind: String, th: Dictionary) -> Texture2D:
 		var ore := {"copper": "e8864a", "iron": "8ab0d8", "silver": "e3ebf5", "gold": "f2cf5b", "erbium_rock": "e04a7a", "ice_rock": "a6e6f2", "volcanic_rock": "ff5a2a", "sandnite_rock": "f2e0a0"}
 		match kind:
 			"tree", "blue_tree":
-				img = blank(18, 46)
-				var trunk := Color("6e4426") if kind == "tree" else Color("3b5dc9")
+				# a bushy crown built from leaf clumps (lit on the top left, shaded
+				# underneath) on a trunk with bark, a knot and flared roots
+				img = blank(26, 48)
+				var trunk := Color("7a4a26") if kind == "tree" else Color("3b5dc9")
 				if th.name == "dark" and kind == "tree": trunk = Color("4a3e4a")
 				if th.name == "ice": trunk = Color("6a8aa8")
-				rect(img, 7, 10, 4, 36, trunk)
-				rect(img, 7, 10, 1, 36, trunk.lightened(0.2))
+				rect(img, 11, 18, 4, 30, trunk)
+				rect(img, 11, 18, 1, 30, shade(trunk, 0.7))
+				rect(img, 14, 18, 1, 30, shade(trunk, -0.8))
+				rect(img, 10, 45, 6, 3, trunk)
+				px(img, 9, 47, trunk)
+				px(img, 16, 47, shade(trunk, -0.8))
+				rect(img, 11, 18, 4, 4, shade(trunk, -1.2)) # the crown's shadow
+				for b in [[12, 27], [13, 34], [12, 40]]:
+					px(img, b[0], b[1], shade(trunk, -1.0))
+					px(img, b[0], b[1] + 1, shade(trunk, -1.0))
+				px(img, 13, 30, shade(trunk, 0.6))
 				var leaf := Color("3e9a3a") if kind == "tree" else Color("7b4fb8")
 				if th.name == "dark" and kind == "tree": leaf = Color("5a4a7a")
 				if th.name == "ice": leaf = Color("e3f2f8")
-				ellipse(img, 9, 7, 8, 7, leaf)
-				ellipse(img, 7, 5, 3, 2, leaf.lightened(0.3))
+				var deep := shade(leaf, -1.2)
+				var lit := shade(leaf, 0.6)
+				ellipse(img, 13, 13, 12, 8, deep)
+				ellipse(img, 6, 15, 5, 4, deep)
+				ellipse(img, 20, 15, 5, 4, deep)
+				ellipse(img, 12, 10, 10, 7, leaf)
+				ellipse(img, 19, 11, 6, 5, leaf)
+				ellipse(img, 6, 12, 5, 4, leaf)
+				ellipse(img, 13, 5, 6, 4, leaf)
+				ellipse(img, 8, 8, 4, 3, lit)
+				ellipse(img, 13, 4, 4, 2, lit)
+				ellipse(img, 18, 9, 3, 2, lit)
+				for q in [[6, 6], [11, 3], [17, 8]]:
+					px(img, q[0], q[1], shade(leaf, 1.3))
+					px(img, q[0] + 1, q[1], shade(leaf, 1.3))
+				# leafy dents along the underside
+				for q in [[4, 17], [9, 20], [14, 20], [18, 19], [22, 17]]:
+					px(img, q[0], q[1], leaf)
+				for q in [[10, 14], [15, 13], [20, 13], [5, 13]]:
+					px(img, q[0], q[1], deep)
+					px(img, q[0] + 1, q[1] + 1, deep)
 			"plant_yellow", "plant_pink":
 				img = blank(14, 14)
 				var bulb := Color("f2cf5b") if kind == "plant_yellow" else Color("d84a7a")
