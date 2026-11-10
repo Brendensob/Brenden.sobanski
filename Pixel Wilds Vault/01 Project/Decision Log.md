@@ -5,6 +5,18 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-10 (every character redrawn)
+*Brenden: "go study on whaqt works well for looks while keeping it pixelated i think all charecters should be redone and test everything out to make it works good"*
+- **Studied first.** What pixel artists teach (Brandon James Greer, AdamCYounis, Slynyrd's Pixelblog, the Innkeep "eight ways" article, Pixnote): one light direction, short colour ramps that shift hue, few colours per part, a face that pops, outlines tinted by what they touch, a strong silhouette, and a walk that bobs. The list is in [[Art Style#What we learned about pixel art (2026-11-10)]].
+- **All 44 people redrawn** on the same 12-wide grid, so hitboxes, hats, armour and the hand position didn't move: the 18 playable characters, the villagers, and the monsters shaped like people.
+- **Shading is drawn by hand now** for people. The automatic rim and shine made small sprites noisy, so characters skip them.
+- **Shadows shift toward blue-violet and lights toward yellow** everywhere (monsters, items, rocks, houses), instead of plain darker and lighter.
+- **Outlines take the colour they touch** (very dark red around red, dark brown around skin), still dark enough to read on a phone.
+- **Still pixelated:** big character pictures in menus are plain enlarged pixels now, not smoothed.
+- **Movement:** a four-step walk with a bob, breathing while standing, a rise and a fall in the air, and the front arm reaching out to hold the item in your hand.
+- **Trees** have a bushy crown and bark instead of a green ball on a stick.
+- **Left alone:** the HUD and menus (Brenden, 2026-11-04), boss sizes, and held weapons.
+
 ## 2026-11-07 (no ghost, gem packs, drop tables, defense chip)
 - **The ghost is gone.** *Brenden: "get rid of ghost thing"*. On your own the gravestone counts 10 s and you wake in Pixel Town; in a room friends still revive you at your gravestone (50 s).
 - **Gems for real money** through Stripe Checkout. *Brenden: "make gems purchasable with real money"*. Stripe works on the web build and needs only a small check on our server; Steam or app-store purchases would need those stores. Prices (100/550/1,200/2,500 gems for $0.99/$4.99/$9.99/$19.99) are placeholders. Needs `STRIPE_SECRET_KEY` on Render, and the Stripe account needs an adult. See [[Monetization]].

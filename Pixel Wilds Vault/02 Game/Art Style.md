@@ -8,11 +8,12 @@ tags: [game, art]
 ![[cartoon_worlds.png]]
 
 ## The rules the code applies
-- **Outline:** every sprite gets a 1 px dark outline (`#1b1a24`).
+- **Outline:** every sprite gets a 1 px dark outline, tinted by the colour it touches (2026-11-10; it was flat `#1b1a24`).
 - **Cartoon finish** (`Art.cartoon()`, run inside `outline()`):
   - colors get 15% more saturation and 5% more brightness;
-  - top edges get a light rim (+22%), bottom edges a shadow (−22%);
-  - left edges are lighter (+10%) and right edges darker (−12%);
+  - top edges get a light rim, bottom edges a shadow;
+  - left edges are lighter and right edges darker;
+  - lights and shadows shift hue (2026-11-10), they aren't just lighter and darker;
   - very dark pixels (eyes, details) are left alone.
 - **Grass:**
   - a dark line on top with a bright rim under it;
@@ -31,7 +32,41 @@ tags: [game, art]
 
 - **Damage numbers:** size 10 with a 2 px outline. They pop in at 1.7× and squash back.
 - **Death bursts:** round puffs with a dark rim and a highlight, shrinking away.
-- **Characters:** chibi (big head, two-dot eyes, stubby legs), drawn from text grids in `Art.LOOKS`.
+- **Characters:** chibi, redrawn 2026-11-10. See [[#Characters (2026-11-10)]].
+
+## Characters (2026-11-10)
+
+![[characters_redrawn_2026-11-10.png]]
+
+*Brenden: "go study on whaqt works well for looks while keeping it pixelated i think all charecters should be redone"*
+- **Same size as before** (12 wide: a 9-row head, a 5-row body, 3 rows of legs, 4 spare rows on top for hats), so hitboxes, helmets and armour still fit.
+- **Face:** big 2 × 2 eyes with a white glint, a small mouth, blush on people. The head is centred over the body.
+- **Shading by hand,** lit from the top left: a shine on the hair, a lit shoulder, the right arm and leg in shadow. Characters skip the automatic rim and shine (`cartoon()` and `volume()`), which were noisy at this size.
+- **Each has its own details:** the suit's lapels and tie, the Pirate's striped shirt and eyepatch, Cavemun's spotted pelt, Banka's pigtails with red ties, the Plumber's moustache and overalls, the Miner's hard hat with a lamp, robots with a visor and lit eyes, ninjas in hoods.
+- **Frames:** `stand`, `idle` (breathing: head and body sink a pixel, feet stay put), `walk0`–`walk3` (stride, pass, stride, pass, with a bob), `jump` (legs tucked) and `fall`. Holding an item stretches the front arm out to its grip.
+
+![[character_frames_2026-11-10.png]]
+
+- **Big pictures** (create screen, bag) are the same pixels enlarged, not smoothed.
+- In code: `Art.HEADS`, `Art.BODIES`, `Art.LEGS`, `Art.FRAME_DEF` and `Art.LOOKS` (each look: colours, `head`, `over` for hair and hats, `wear` for clothes, hidden under armour).
+
+## What we learned about pixel art (2026-11-10)
+From Brandon James Greer and AdamCYounis on YouTube, Slynyrd's Pixelblog, the Innkeep "eight ways to improve your pixel art characters" article and Pixnote:
+
+| Lesson | What the game does |
+|---|---|
+| Shift the hue along a ramp: shadows cooler, lights warmer | `Art.shade()`: shadows drift to blue-violet and gain colour, lights drift to yellow. Used by every sprite's finish |
+| One light direction, no "pillow" shading | Top left for everything |
+| Two or three colours per part, 6 to 12 per character | Base, shadow and highlight for hair, skin, clothes, legs and shoes |
+| Make the face pop | The brightest part, with the darkest eyes |
+| Tint the outline, never pure black | `Art.ink()`: each outline pixel is a very dark copy of the colour it touches |
+| A clear silhouette | Hats, hair, ears and capes change the outline |
+| A walk needs contact and passing poses and a 1-pixel bob | Four frames at 10 a second |
+| Don't mix pixel sizes | Enlarged characters keep square pixels |
+
+![[tree_before_after_2026-11-10.png]]
+
+- **Trees (2026-11-10):** a crown of leaf clumps, lit on the top left and shaded underneath, on a trunk with bark and roots.
 
 ## Cleaner cartoon look (2026-10-27)
 

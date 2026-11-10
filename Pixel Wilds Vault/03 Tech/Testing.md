@@ -59,6 +59,13 @@ cd godot
 ## Server checks
 `python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 
+## Art sheets
+```
+cd godot
+GALLERY=chars xvfb-run -a <godot> --rendering-driver opengl3 --path . --resolution 1920x1080 -- --gallery
+```
+Saves `shots/gallery_<page>.png`. Pages: `chars` (every person, the frames, worn gear), `char_big`, `mobs`, `props`, `gear`, `ores`.
+
 ## Icon audit
 ```
 cd godot
