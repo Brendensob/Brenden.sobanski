@@ -3,6 +3,7 @@ extends Node
 ## Run: godot --path . -- --autotest [--touch]   (screenshots go to user://shots)
 
 const MobS := preload("res://scripts/mob.gd")
+const ResS := preload("res://scripts/res_node.gd")
 var main: Node
 var out := "user://shots"
 var fails := []
@@ -99,6 +100,25 @@ func check(ok: bool, what: String) -> void:
 	print(("PASS " if ok else "FAIL ") + what)
 	if not ok:
 		fails.append(what)
+
+## Trees, rocks, ores, plants and pots in the level (not the breakable walls).
+func res_count() -> int:
+	var n := 0
+	for p in main.level.props.get_children():
+		if p is ResS and not p.def.get("wall", false):
+			n += 1
+	return n
+
+## A screenshot a little way into the world, on the surface, where resources stand.
+func shot_resources(name: String) -> void:
+	var lvl: Node = main.level
+	var x := int(lvl.W * 0.3)
+	lvl.player.position = lvl.cell_pos(Vector2i(x, lvl.surface[x] - 1))
+	lvl.player.velocity = Vector2.ZERO
+	await wait(0.4)
+	main.camera.position = lvl.player.position
+	main.camera.reset_smoothing()
+	await shot(name)
 
 func goto(world: String) -> void:
 	main.hud.close_panels()
@@ -2568,6 +2588,12 @@ func run() -> void:
 		await goto(w)
 		check(main.level.count_mobs() > 10, "%s has monsters (%d)" % [w, main.level.count_mobs()])
 		await shot("20_" + w)
+		# Brenden, 2026-11-11: "make there be more rec sources in the areas"
+		var nres := res_count()
+		print("RESOURCES %s: %d over %d columns" % [w, nres, main.level.W])
+		check(nres >= int(main.level.W * 0.6), "%s has plenty of trees, rocks and ores (%d)" % [w, nres])
+		if w in ["grass_2", "dark_1", "snow_valley"]:
+			await shot_resources("20r_" + w)
 	for w in ["grass_arena", "dark_arena", "hell_arena", "dream_arena", "ghost_arena", "mushroom_valley", "fruit_loop", "eggcellence"]:
 		await goto(w)
 		main.level.arena_time = 179.0

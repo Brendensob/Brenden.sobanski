@@ -12,6 +12,13 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Every slot that holds an item takes drags:** combine slots I to III and the scroll slot, and "You give" in a trade.
 - **Kept:** tapping an item to see its card and Use, Equip, Read, Become and Hold; tapping a stack at Banka to send it across; tapping items on the combine page. These are quick, not "move" buttons.
 
+## 2026-11-11 (more resources in the worlds)
+*Brenden: "make there be more rec sources in the areas"*
+- **Read as:** more trees, rocks, ores and plants in every world.
+- **About twice as many:** 0.8 per column in explore worlds (136 in a normal world, was 71); Survival starts with 100 (was 70). See [[Worlds#Resources and spacing]].
+- **Still not cluttered:** one empty tile between any two and two beside a tree (was two and three), and none where you arrive. This partly undoes the 2026-11-04 spacing, because Brenden now asks for more; monsters stay spread out as before.
+- The world mix (which ores and trees each world has) didn't change.
+
 ## 2026-11-11 (every item obtainable)
 *Brenden: "make sure every item is obtainable"*
 - **The 3 items with no source now have one**, using the proposals that were waiting in [[Open Questions]]. His ask counts as the yes.
