@@ -758,6 +758,10 @@ var RECIPES := [
 	{"in": ["wood_board", "nail"], "out": "wooden_spikes", "rate": 90, "book": "survival"},
 	{"in": ["wood", "rock"], "out": "wood_wall", "rate": 90, "book": "survival"},
 	{"in": ["wood_board", "rock"], "out": "work_station", "rate": 90, "book": "survival"},
+	# our own: the wiki says the Survival Book makes Stone Walls but lists no recipe (Brenden, 2026-11-11: "make sure every item is obtainable")
+	{"in": ["wood_wall", "rock"], "out": "stone_wall", "rate": 90, "book": "survival"},
+	# our own: the Torch Stand isn't in PSG2; it's made from the Torch
+	{"in": ["torch_weapon", "wood"], "out": "torch", "rate": 90, "book": "survival"},
 	{"in": ["copper_ore", "crystal"], "out": "iron_ore", "rate": -25, "book": "survival"},
 	{"in": ["wood", "fire_crystal", "coal"], "out": "torch_weapon", "rate": 15, "book": "survival"},
 	{"in": ["muscle_fire_ring_2", "em_stone", "sailor_moons"], "out": "muscle_fire_ring_3", "rate": -65, "book": "survival"},
@@ -1861,7 +1865,9 @@ var CHESTS := {
 		["ultimate_santa_blade", 1, 1, 0.2], ["ultimate_candy", 1, 1, 0.2], ["devilween", 1, 1, 0.1], ["ninja_star", 1, 1], ["christmas_tree", 1, 1],
 		["candy_stick_red", 1, 1], ["candy_stick_green", 1, 1], ["candy_staff", 1, 1], ["snow_maker", 1, 1], ["giant_snow_ball", 1, 1], ["king_carrot", 1, 1],
 		["pumpkin_saber_a", 1, 1], ["popstick", 1, 1], ["snowman_hat", 1, 1], ["topaz_stone", 1, 1], ["mooncake", 1, 3], ["missing_page", 1, 1, 0.3],
-		["combo_book_z", 1, 1, 0.2], ["backstreet_boy", 1, 1], ["sailor_moons", 1, 1]]},
+		["combo_book_z", 1, 1, 0.2], ["backstreet_boy", 1, 1], ["sailor_moons", 1, 1],
+		# the wiki's Master Chest list has "Long Swords" and the Blood Long Sword Shield
+		["blood_long_sword", 1, 1, 0.5], ["blood_long_sword_shield", 1, 1, 0.5]]},
 }
 var REWARD_CHEST := "silver" # chests found inside worlds use the silver loot table
 

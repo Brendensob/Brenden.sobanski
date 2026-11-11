@@ -9,8 +9,14 @@ The Gatekeeper's menu is a row of **world cards**, in the order of Brenden's scr
 
 The map picture is drawn like a little screenshot of the world (since 2026-10-29): its sky, clouds, mountains and hills, grassy ground with dark edges, darker caves, trees and ores, and a small purple portal where you arrive. Big worlds show their start, arenas and Survival their middle. In code: `level.gd` → `preview_image()`.
 
-## Spacing (2026-11-04)
-Explore worlds place about 0.42 resources per column (0.55 before), with at least two empty tiles between any two and three beside a tree, and none within a few tiles of where you arrive. Monsters start at least five tiles apart. In Survival, resources keep 40 px apart. *Brenden: "how close everything is it just has that clutter feel"*
+## Resources and spacing
+Since 2026-11-11 explore worlds place about **0.8 resources per column**: 136 trees, rocks, ores, plants and pots in a 170-wide world (71 before), 120 in the Tomb of Makara. There is at least one empty tile between any two and two beside a tree, and none within a few tiles of where you arrive. Survival starts with 100 (70 before) and they keep 28 px apart (40 before). Harvested ones still grow back. *Brenden: "make there be more rec sources in the areas"*
+
+The autotest prints the count for every world and fails if one has fewer than 0.6 per column.
+
+![[2026-11-11-more-resources-grass_2.png]]
+
+Before that (2026-11-04) it was 0.42 per column with two empty tiles between, because *Brenden: "how close everything is it just has that clutter feel"*. Monsters still start at least five tiles apart.
 
 ## Set aside for now (2026-11-05)
 Everything past Hell is **set aside**, not deleted, so Grasslands to Hell can be perfected first. The Gatekeeper shows only cards 1 to 7. The 73 items only the later worlds give are hidden from the Crafter, the combination books, the furnaces, the shops, Miffie's Bounty Quest and the other quests. The game works out that list itself from where every item comes from, so it stays right when the data changes. Old saves keep any of those items they already have. To bring it all back, turn on `Data.set_later_open(true)` (or empty `Data.LATER_WORLDS`). The list is in [[World Data#Set aside for now]]. *Brenden: "hold everything past hell aside for now it takes a lot to get to that point anyway and I just want that perfected first"*

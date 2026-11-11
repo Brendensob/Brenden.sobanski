@@ -204,6 +204,9 @@ func _obtainable() -> void:
 			missing.append("%s (%s, %s)" % [id, D.ITEMS[id].name, D.ITEMS[id].type])
 	notes.append("OBTAINABLE: %d of %d items can be got by playing" % [D.ITEMS.size() - missing.size(), D.ITEMS.size()])
 	notes.append("UNOBTAINABLE (%d): %s" % [missing.size(), ", ".join(missing)])
+	# Brenden, 2026-11-11: "make sure every item is obtainable"
+	for m in missing:
+		errors.append("UNOBTAINABLE: " + m)
 
 func _uses() -> void:
 	var used := {}

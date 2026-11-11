@@ -719,16 +719,18 @@ func _populate_explore() -> void:
 		var cc: Vector2i = deep.pop_back()
 		add_station("reward_chest", 0, cc)
 		used[cc] = 4
-	# resources, with room to breathe: at least two empty tiles between any two,
-	# three next to a tree (its crown is wide), and none right where you arrive
-	var n_nodes := int(W * 0.42)
+	# resources: about one every 1.25 columns (0.42 before; Brenden 2026-11-11:
+	# "make there be more rec sources in the areas"), still one empty tile
+	# between any two, two next to a tree (its crown is wide), and none right
+	# where you arrive
+	var n_nodes := int(W * 0.8)
 	for c in cells:
 		if n_nodes <= 0:
 			break
 		if absi(c.x - spawn_cell.x) < 4 and absi(c.y - spawn_cell.y) < 3:
 			continue
 		var pick: Array = _weighted(def.nodes)
-		var gap := 4 if String(pick[0]).contains("tree") else 3
+		var gap := 3 if String(pick[0]).contains("tree") else 2
 		if _crowded(used, c, gap):
 			continue
 		add_node(pick[0], c)
@@ -815,7 +817,7 @@ func _populate_survival() -> void:
 	add_portal(Vector2i(W / 2 - 6, 16), "town", "Leave", Color("5cbf3f"))
 	s_day = 1
 	GS.clock = 0.0
-	for i in 70:
+	for i in 100:
 		_survival_resource()
 
 func _survival_resource() -> void:
@@ -826,7 +828,7 @@ func _survival_resource() -> void:
 		var c := Vector2i(x, surface[x] - 1)
 		var busy := false
 		for n in props.get_children():
-			if absf(n.position.x - cell_pos(c).x) < 40:
+			if absf(n.position.x - cell_pos(c).x) < 28:
 				busy = true
 				break
 		if busy:

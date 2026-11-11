@@ -315,6 +315,8 @@ Opens with: Master Key · picks 1 times from:
 | Combo Book Z | 1 | 20% |
 | Backstreet Boy | 1 | 100% |
 | Sailor Moons | 1 | 100% |
+| Blood Long Sword | 1 | 50% |
+| Blood Long Sword Shield | 1 | 50% |
 
 ## Magic Seeds (Green) (magic soil harvest)
 
