@@ -327,8 +327,35 @@ func drag_check() -> void:
 	check(GS.equip.helmet == "" and GS.inv[20] != null and GS.inv[20].id == "wooden_helmet", "dragging it back puts it in that bag slot")
 	await drag(bs[1].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
 	check(GS.inv[1] != null and GS.inv[1].id == "small_potion" and GS.equip.helmet == "", "a potion can't be dropped on the helmet slot")
+	# no Move button: moving is dragging only
+	hud._bag_click(1)
+	var has_move := false
+	for k in hud.info_box.get_children():
+		for c in k.get_children() if k is HBoxContainer else []:
+			if c is Button and c.text == "Move":
+				has_move = true
+	check(not has_move, "the bag has no Move button")
+	# the trash takes whatever is dragged onto it
+	var trash: Button = hud.panels.bag.get_node("Trash")
+	await drag(bs[1].get_global_rect().get_center(), trash.get_global_rect().get_center())
+	check(GS.inv[1] == null, "dragging potions onto the trash throws them away")
+	await drag(bs[20].get_global_rect().get_center(), hud.equip_buttons.helmet.get_global_rect().get_center())
+	await drag(hud.equip_buttons.helmet.get_global_rect().get_center(), trash.get_global_rect().get_center())
+	check(GS.equip.helmet == "", "worn gear can be dragged straight onto the trash")
+	# the combine slots take drags too
+	hud.bag_tab = "combine"
+	hud.combo = [-1, -1, -1]
+	hud._refresh_bag()
+	await wait(0.2)
+	await drag(bs[9].get_global_rect().get_center(), hud.page.get_node("C1").get_global_rect().get_center())
+	check(hud.combo[1] == 9, "dragging jelly onto combine slot II puts it there")
+	await drag(hud.page.get_node("C1").get_global_rect().get_center(), bs[4].get_global_rect().get_center())
+	check(hud.combo[1] == -1 and GS.inv[9] != null, "dragging it back to the bag takes it out of the slot")
+	hud.bag_tab = "character"
+	hud._refresh_bag()
+	await wait(0.1)
 	want_shot = "35_dragging"
-	await drag(bs[1].get_global_rect().get_center(), bs[17].get_global_rect().get_center())
+	await drag(bs[9].get_global_rect().get_center(), trash.get_global_rect().get_center())
 	hud.close_panels()
 	GS.inv = saved
 	GS.equip = saved_eq

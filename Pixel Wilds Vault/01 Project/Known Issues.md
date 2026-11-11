@@ -19,3 +19,4 @@ tags: [project, issues]
 - **The hosted server can fall behind the game** unless the `RENDER_DEPLOY_HOOK` secret is set (see [[Online Server]]). Public games need the server from 2026-10-27 afternoon or later.
 - **The free online server sleeps.** After 15 minutes with nobody online, the first player waits about a minute for it to wake. Its saved names can be wiped on a restart; games put themselves back automatically (see [[Online Server]]).
 - **Our emotes are our own drawings**, not the original's, to avoid copying its art.
+- **The autotest's Tomb of Makara check can fail once in a while** ("0 deadly tiles"): seen once on 2026-11-11 and it passed on the next run. The tomb layout probably comes out without deadly walls on some runs. Not looked into yet.

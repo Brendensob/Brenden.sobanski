@@ -13,6 +13,13 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **A fainted player gets back up when the host changes**, because their gravestone lived on the old host's game. Simpler and kinder than sending them home.
 - **The live server must be redeployed** for the hand-over; the deploy workflow does this when its secret is set.
 
+## 2026-11-11 (moving items is dragging)
+*Brenden: "when moving a item to your trash just let the player drag it and get rid of the move button make everything movable dragging"*
+- **The Move button is gone.** Items move only by dragging.
+- **The trash takes drags** from the bag, hotbar, gear slots and Banka's backpack. The item still drops on the ground in front of you, as the old trash did. Tapping the trash explains it.
+- **Every slot that holds an item takes drags:** combine slots I to III and the scroll slot, and "You give" in a trade.
+- **Kept:** tapping an item to see its card and Use, Equip, Read, Become and Hold; tapping a stack at Banka to send it across; tapping items on the combine page. These are quick, not "move" buttons.
+
 ## 2026-11-11 (more resources in the worlds)
 *Brenden: "make there be more rec sources in the areas"*
 - **Read as:** more trees, rocks, ores and plants in every world.
