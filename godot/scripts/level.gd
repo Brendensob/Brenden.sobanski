@@ -65,7 +65,9 @@ var regrow_timer := 20.0
 ## seed and net_state come from the room host when you're a guest in a room.
 ## solo: in a room, a copy of the map that runs on your own game, until the
 ## room's host comes through the portal too (see Net trips).
-func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}, solo := false) -> void:
+## takeover: the room's host left, and this game carries on the map from
+## net_state as it was (same monsters, trees and drops), now running it itself.
+func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Dictionary = {}, solo := false, takeover := false) -> void:
 	id = world_id
 	def = Data.WORLDS[id]
 	kind = def.kind
@@ -93,6 +95,8 @@ func setup(world_id: String, main_node: Node, seed: int = -1, net_state: Diction
 	add_child(modulate_node)
 	if netted and Net.is_client():
 		_apply_net_state(net_state)
+	elif takeover:
+		_take_over(net_state)
 	else:
 		match kind:
 			"town": _populate_town()
@@ -1244,6 +1248,28 @@ func _apply_net_state(st: Dictionary) -> void:
 	for d in st.get("pickups", []):
 		add_pickup_from(d)
 	apply_tick_state(st.get("tick", {}))
+
+## The map as it was on the host's game, now run here: its monsters think for
+## themselves again, and the arena or Survival goes on where it was.
+func _take_over(st: Dictionary) -> void:
+	_apply_net_state(st)
+	for e in entities.get_children():
+		if e is MobScript:
+			e.puppet = false
+	var ts: Dictionary = st.get("tick", {})
+	arena_time = ts.get("arena_time", arena_time)
+	bosses_spawned = ts.get("bosses", bosses_spawned)
+	arena_done = ts.get("done", arena_done)
+	s_day = ts.get("s_day", s_day)
+	s_night = ts.get("s_night", s_night)
+	if kind == "explore":
+		# slimes keep coming back where the map first had them
+		var rs: Array = def.get("respawn", [])
+		if rs.size() == 2:
+			for e in entities.get_children():
+				if e is MobScript and e.id == rs[0]:
+					respawn_cap += 1
+					respawn_cells.append(Vector2i(int(e.position.x / T), int((e.position.y - 1.0) / T)))
 
 func add_node_from(d: Array) -> void:
 	if net_objs.has(int(d[0])):

@@ -62,6 +62,7 @@ Pixel Wilds is a Godot 4.3 game that plays like **Pixel Survival Game 2 (PSG2)**
 - [[2026-11-06 Hover cards and dragging items]]
 - [[2026-11-06 Clean text, ores and distinct gear]]
 - [[2026-11-10 Every character redrawn]]
+- [[2026-11-11 Instant revive and host hand-over]]
 
 ## Yours
 - [[My Notes/Welcome|My Notes]]: Brenden's own notes, synced up so Claude can read them

@@ -30,7 +30,16 @@ tags: [game, multiplayer]
 
   ![[offscreen_marker.png]]
 
-- **Fainting in a room:** your gravestone stands in your place for everyone, and a friend standing by it for 3.5 s revives you (see [[Combat#Fainting (single player, 2026-11-05)]]).
+- **Fainting in a room:** your gravestone stands in your place for everyone, and a friend who touches it revives you **right away** (since 2026-11-11) (see [[Combat#Fainting (single player, 2026-11-05)]]).
+- **When the host leaves, the game goes on** (since 2026-11-11). *Brenden: "make sure when someone leaves as the host it doesn't end the game and just passes it down"*
+  - The room passes to the player who **joined first**. They see "The host left. You're the host now, and the game goes on." Everyone else sees "The host left. Trio1 is the host now." (with the new host's name).
+  - **Nobody is sent to the title screen or moved.** Each player stays on the map they were on, where they stood, with the same monsters, trees and drops. The new host's game now runs that map.
+  - The others get back into the new host's room by themselves within a couple of seconds, friends or not (the online server lets in everyone who was in the room for a minute). Whoever is on the new host's map shares it again; anyone elsewhere keeps their own copy.
+  - A public room stays public. A player who was fainted gets back up, since their gravestone was on the old host's game.
+  - If the new host's room can't be reached for about 20 seconds, you keep playing in a room of your own.
+
+  ![[host_passed_on.png]]
+
 - **Shared drops** (since 2026-11-07): when you pick up a drop from a normal monster or something you broke (trees, rocks, ores, plants, pots), every player standing **right next to you** (within 1.5 tiles) gets the same drop too. Boss drops aren't shared. The host checks who is close.
 - **Town walls in a room:** each player has their own Pixel Town, built from their own unlocks. In a room, a wall (rock wall, Trading Center wall, stone wall to the basement) is open if **anyone in the room** has opened it, so everyone sees the same town. Breaking a wall opens it on everyone's screen at once. The unlock is saved only for the player who broke it. Others get their own wall back when they leave the room. (A design decision: PSG2's behaviour here isn't documented.)
 - **Chat:** the Chat.. box under the bars, or press T.

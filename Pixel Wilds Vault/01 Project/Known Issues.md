@@ -15,6 +15,7 @@ tags: [project, issues]
 - **Everything past Hell is set aside** (2026-11-05), not finished or deleted: the later worlds and their 73 items are hidden until Grasslands to Hell are perfected (see [[Worlds#Set aside for now (2026-11-05)]]). The data and progression audits still check the whole game, set-aside parts included.
 - **Most drop rates are estimates.** Nobody has published them. See [[Numbers and Estimates]].
 - **The player blinks right after entering a map.** That's on purpose: a short safe time. In screenshots it can look like the player is missing.
+- **Passing the room on when the host leaves needs the live server redeployed** (2026-11-11). Until then the room still closes when the host leaves.
 - **The hosted server can fall behind the game** unless the `RENDER_DEPLOY_HOOK` secret is set (see [[Online Server]]). Public games need the server from 2026-10-27 afternoon or later.
 - **The free online server sleeps.** After 15 minutes with nobody online, the first player waits about a minute for it to wake. Its saved names can be wiped on a restart; games put themselves back automatically (see [[Online Server]]).
 - **Our emotes are our own drawings**, not the original's, to avoid copying its art.

@@ -7,6 +7,7 @@ tags: [tech, server]
 - claims names;
 - keeps friends lists (saved to `names.json`);
 - relays room traffic, so players never see each other's IP.
+- when a room's host leaves, passes the room to the guest who joined first and lets the others into the new host's room for a minute, friends or not (since 2026-11-11). **The live server needs a redeploy for this.**
 
 ## How games reach it
 | What | Where |

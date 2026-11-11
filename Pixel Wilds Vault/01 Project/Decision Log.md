@@ -5,6 +5,14 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-11 (instant revive, the host passes the room on)
+*Brenden: "When someone dies make sure it's able to rez them right away. ... make sure when someone leaves as the host it doesn't end the game and just passes it down"*
+- **Touching a friend's gravestone revives them right away.** No more standing by it for 3.5 seconds, and it works from the moment they fall.
+- **When the host leaves, the room passes to the player who joined first.** Nobody goes to the title screen: every player stays on their map, where they stood, and the new host's game takes over that map as it was (same monsters, trees, drops, arena or Survival progress). The others get back into the new host's room by themselves. Why the first to join: it's predictable, and it's what the online server already knows.
+- **Everyone who was in the room may rejoin the new host for a minute, friends or not.** Rooms are friends-only, and the guests might not be friends with each other.
+- **A fainted player gets back up when the host changes**, because their gravestone lived on the old host's game. Simpler and kinder than sending them home.
+- **The live server must be redeployed** for the hand-over; the deploy workflow does this when its secret is set.
+
 ## 2026-11-11 (moving items is dragging)
 *Brenden: "when moving a item to your trash just let the player drag it and get rid of the move button make everything movable dragging"*
 - **The Move button is gone.** Items move only by dragging.

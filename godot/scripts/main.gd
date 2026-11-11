@@ -103,6 +103,7 @@ func start_game(from_save: bool, character: String = "man_in_suit", pname: Strin
 
 func quit_to_title() -> void:
 	GS.save_game()
+	Net.rejoin_to = ""
 	if Net.active:
 		Net.leave()
 	hud.menu_step = "slots"
@@ -198,18 +199,51 @@ func net_host_left() -> void:
 	hud.open_panel("title")
 	hud.toast("The room was closed.", "warn")
 
+## The room's host left, and the game goes on (Brenden, 2026-11-11: "when
+## someone leaves as the host it doesn't end the game and just passes it
+## down"). The map you're on keeps going as it was, now run by your own game:
+## you're the new host, or you're on your own for the moment it takes to get
+## back into the new host's room. Puppets of the others go until they're back.
+## A fainted player gets back up, since their gravestone was on the old host's map.
+func take_over_level() -> void:
+	if level == null or title_mode:
+		return
+	for pid in level.puppets.keys():
+		level.remove_puppet(pid)
+	var was_dead: bool = level.player.dead
+	if was_dead:
+		if is_instance_valid(grave):
+			grave.queue_free()
+		grave = null
+		wake_tip = ""
+		hud.hide_dead()
+		GS.hp = GS.max_hp()
+	if level.kind == "town":
+		if was_dead:
+			level.player.revive_here()
+		return
+	var pos: Vector2 = level.player.position
+	var facing: int = level.player.facing
+	var st: Dictionary = level.net_state()
+	_load_level(level.id, false, level.seed_used, st, false, true)
+	level.player.position = pos
+	level.player.facing = facing
+	camera.position = pos
+	camera.reset_smoothing()
+	GS.stats_changed.emit()
+
 func reload_level() -> void:
 	var pos: Vector2 = level.player.position
 	_load_level(GS.world, false)
 	level.player.position = pos
 	camera.position = pos
 
-func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {}, solo := false) -> void:
+func _load_level(id: String, demo: bool, seed: int = -1, state: Dictionary = {}, solo := false, takeover := false) -> void:
 	if level:
 		level.queue_free()
 		remove_child(level)
 	level = LevelScript.new()
-	level.setup(id, self, seed, state, solo)
+	level.setup(id, self, seed, state, solo, takeover)
 	add_child(level)
 	move_child(level, 0)
 	var size: Vector2 = level.world_size()
@@ -275,7 +309,7 @@ func player_died(on_purpose := false) -> void:
 	var can_grave: bool = not on_purpose and lvl.kind in ["explore", "arena"] and not (solo and lvl.def.get("free_revive", false))
 	var text := "Nothing is lost."
 	if can_grave and not solo:
-		text = "A friend can revive you by standing by your gravestone for 3.5 s."
+		text = "A friend can revive you right away by touching your gravestone."
 	if level.kind == "survival" and not Net.active: # keys are single player only, like the original
 		var d: int = level.s_day
 		var key := ""

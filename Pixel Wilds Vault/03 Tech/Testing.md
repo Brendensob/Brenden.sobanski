@@ -22,7 +22,10 @@ xvfb-run -a <godot> --path . --resolution 960x540 -- --autotest --touch
 
 Both copies talk to `http://127.0.0.1:24566` by default (the real game uses the hosted server), and rooms go through the WebSocket relay, the same path phones use.
 
-It checks joining, following through portals, drops, chat, **emotes**, walls, trading and leaving.
+It checks joining, following through portals, drops, chat, **emotes**, walls, trading and leaving. Since 2026-11-11 it also checks the touch revive, and at the end the host leaves while both are in Grasslands 1: the friend must become the host on the same map.
+
+### Three-player test (the host leaving)
+Start the server, then three copies a moment apart: `-- --nettest trio0`, `trio1`, `trio2`. Trio0 hosts, both others follow into Grasslands 1, and Trio0 leaves. Trio1 (who joined first) must become the host without leaving the map, and Trio2 must get back into Trio1's room and share the map. Each ends with `NETTEST trioN DONE, 0 failures`.
 
 ## Fight test
 ```
@@ -57,7 +60,7 @@ cd godot
 - Wooden, stone and copper gear must win 3 times in 4; the bare starter kit is only printed. `ARENA_TRIALS=n` sets the tries (8), `ARENA_KITS=wood,stone` picks kits. About 4 minutes. Ends with `ARENATEST DONE, 0 failures`. Results are in [[Combat#Grasslands Arena boss test]].
 
 ## Server checks
-`python3 server/test_server.py`: names, friends, the raw relay, a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
+`python3 server/test_server.py`: names, friends, the raw relay, the room passing to the first guest when the host leaves (and letting the others in), a room over the WebSocket relay (including a split message and a big map), the browser's CORS check, and restoring names after a wipe.
 
 ## Art sheets
 ```
