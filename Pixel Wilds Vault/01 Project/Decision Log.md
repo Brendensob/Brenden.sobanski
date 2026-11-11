@@ -12,6 +12,15 @@ Newest first. Each entry gives the decision, why, and where it came from.
 - **Every slot that holds an item takes drags:** combine slots I to III and the scroll slot, and "You give" in a trade.
 - **Kept:** tapping an item to see its card and Use, Equip, Read, Become and Hold; tapping a stack at Banka to send it across; tapping items on the combine page. These are quick, not "move" buttons.
 
+## 2026-11-11 (every item obtainable)
+*Brenden: "make sure every item is obtainable"*
+- **The 3 items with no source now have one**, using the proposals that were waiting in [[Open Questions]]. His ask counts as the yes.
+  - **Blood Long Sword:** in the Master Chest, as one of the wiki's "Long Swords" there. The Blood Long Sword Shield, which the wiki names in the Master Chest, joined it.
+  - **Stone Wall:** a Survival Book combination, **Wood Wall + Rock** (90%). The proposal was Rock + Rock + Wood Wall, but the same stack can't go in two slots, so one Rock is used.
+  - **Torch Stand:** kept, and made from **Torch + Wood** (90%) with the Survival Book. It isn't in PSG2; it's ours.
+- **The data audit now fails** if any item has no source, so this can't slip back.
+- **Past Hell stays set aside** unless Brenden says otherwise: its 73 items come back when those worlds open (asked him 2026-11-11).
+
 ## 2026-11-10 (every character redrawn)
 *Brenden: "go study on whaqt works well for looks while keeping it pixelated i think all charecters should be redone and test everything out to make it works good"*
 - **Studied first.** What pixel artists teach (Brandon James Greer, AdamCYounis, Slynyrd's Pixelblog, the Innkeep "eight ways" article, Pixnote): one light direction, short colour ramps that shift hue, few colours per part, a face that pops, outlines tinted by what they touch, a strong silhouette, and a walk that bobs. The list is in [[Art Style#What we learned about pixel art (2026-11-10)]].

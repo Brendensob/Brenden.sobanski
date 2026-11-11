@@ -28,6 +28,7 @@ All game numbers live in `godot/scripts/data.gd`.
 - **Character stats** (taken from the 2.o game, see [[Known Issues]]).
 - Gem Shop prices for seeds and scrolls, and **2,500 coins per gem**.
 - The Wall Hammer coming from **night 10**.
+- **Item sources the wiki doesn't give** (2026-11-11): Blood Long Sword and Blood Long Sword Shield in the Master Chest at half weight; Stone Wall and Torch Stand recipes at 90%.
 - Boss gem drops (1–2, rarely).
 
 ## Pacing changes from the journey test (2026-11-07)
