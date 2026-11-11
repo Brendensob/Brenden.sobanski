@@ -20,7 +20,7 @@ The living list of every system and how finished it is. It's updated after each 
 |---|---|---|
 | Every id in every table points to something real | ✅ | `data_audit.gd`: 0 broken references |
 | No softlocks under the real gates | ✅ | `progression_audit.gd`: tool tiers, furnace gate, Survival access, the 3 town walls, books and scrolls, and stamina gates all enforced. 0 softlocked items; the deepest chains take 7 rounds |
-| Every item can be obtained by playing | 🔒 | 564 of 567. **Blood Long Sword, Stone Wall, Torch Stand**: researched in the wiki's own page source on 2026-10-24, still no source. Proposals are waiting for Brenden's OK (see [[Open Questions]]) |
+| Every item can be obtained by playing | ✅ | 567 of 567 (2026-11-11). `data_audit.gd` now fails on any item with no source. The 73 items only found past Hell wait with those worlds (set aside) |
 | Every material has a use | ✅ | 3 are only for selling (Snowball, Fortune Nugget, Eggency) |
 | Every monster spawns somewhere | ✅ | 70 of 70 |
 | No shop money loops | ✅ | Every shop price is above the sell price |
@@ -159,7 +159,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Quests and NPC dialogue | A | All 75 |
 | Pets and character progression | A | Hatching, pet effects, switching with confirmation |
 | Survival mechanics and stamina | A | Nights, tokens, keys, stamina gates for the Tomb and Snow Valley |
-| Town building and storage | A / E | Banka's storage, walls, Wood Wall and campfire. Stone Wall and Torch Stand are blocked (E) |
+| Town building and storage | A / E | Banka's storage, walls, Wood Wall and campfire. Stone Wall (Wood Wall + Rock) and Torch Stand (Torch + Wood) come from the Survival Book since 2026-11-11 |
 | Multiplayer sync | A | Two-player test: world, pickups, monsters, walls, trading, chat, emotes, server time |
 | Saving, loading, recovery | A | Backups, damaged and old saves, interrupted timers |
 | Death, respawn, item recovery | A | Nothing is lost on fainting; gravestone revive in single player (2026-11-05) |
@@ -240,7 +240,7 @@ The living list of every system and how finished it is. It's updated after each 
 - whether a scroll is used up on an unknown combination;
 - PSG2's offline timer behaviour;
 - which night gives the Wall Hammer;
-- sources for the Blood Long Sword, Stone Wall and Torch Stand.
+- sources for the Blood Long Sword, Stone Wall and Torch Stand (our guesses since 2026-11-11).
 
 **8. Temporary assets and dependencies:** none. All art, sound and music are made in code, and the fonts are under the OFL (Fredoka since 2026-11-06). The online server address is `https://pixel-wilds-brendensob.onrender.com` (set 2026-10-27); live since 2026-10-27.
 

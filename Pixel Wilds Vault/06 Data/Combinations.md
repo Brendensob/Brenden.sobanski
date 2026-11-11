@@ -8,7 +8,7 @@ tags: [data, generated]
 
 Combining in the bag. The book in your bag adds +50%, a Combination Scroll +35%.
 
-## Survival Book (11)
+## Survival Book (13)
 
 | Makes | From | Base chance |
 |---|---|---|
@@ -17,6 +17,8 @@ Combining in the bag. The book in your bag adds +50%, a Combination Scroll +35%.
 | Wooden Spikes | Wood Board + Nail | 90% |
 | Wood Wall | Wood + Rock | 90% |
 | Work Station | Wood Board + Rock | 90% |
+| Stone Wall | Wood Wall + Rock | 90% |
+| Torch Stand | Torch + Wood | 90% |
 | Iron Ore | Copper Ore + Crystal | -25% |
 | Torch | Wood + Fire Crystal + Coal | 15% |
 | Ring of Muscle Fire III | Ring of Muscle Fire II + Em Stone + Sailor Moons | -65% |
