@@ -35,7 +35,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Using each item type | ✅ | All 22 usable types are tested (coin and gem are currencies, not bag items) |
 | Equipment: 6 slots and stat sums | ✅ | Helmet test, and the earlier ring tests |
 | Banka's storage (6 × 30) | ✅ | First backpack free, the rest cost gems (tested) |
-| Drag-and-drop, stack splitting, sorting | ⛔ | Tap to move works. PSG2 is tap-based too, so this is optional |
+| Drag-and-drop, stack splitting, sorting | 🟡 | Drag-and-drop everywhere (bag, hotbar, gear, Banka, trash, combine slots, trade), and the Move button is gone (2026-11-11). No split or sort yet |
 | Item tooltips and descriptions | 🟡 | Every item has a description and stats line |
 | Item rarity colours | ⛔ | PSG2 has none that we know of |
 
@@ -138,7 +138,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Touch button sizes | ✅ | 2026-10-27: ◀ ▶ 90 × 34, A and B 68 × 34 again, as before the cartoon pass; checked by the autotest |
 | Clean text | ✅ | 2026-11-06: no snapping of letters to the low-res grid, thinner outlines, dark words brightened. Every autotest screenshot of an open window checks that no writing overlaps |
 | Weapon feel and worn gear looks | ✅ | 2026-11-06: knockback strength and hand size per weapon; worn armour and helmets shaped like their icons; thin crystals and detailed ores. Autotest checks the order of sizes and strengths and that weapons differ |
-| Item hover card and drag-and-drop | ✅ | 2026-11-06: hover pops the icon and shows a card; drag between hotbar, bag, gear and Banka's backpacks. Autotest drags with a real mouse |
+| Item hover card and drag-and-drop | ✅ | 2026-11-06: hover pops the icon and shows a card; drag between hotbar, bag, gear and Banka's backpacks. 2026-11-11: drag to the trash, the combine slots and the trade offer; no Move button. Autotest drags with a real mouse |
 | Auto-hit button | ✅ | 2026-10-27: round AUTO button above A (and Q). Tested: lights up, swings with the bag open, the bag doesn't pause, stays on through A and item switches, turns off, pauses again when off, saved |
 
 ## Phase 2 review: every system, A to E
@@ -151,7 +151,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Movement and combat feedback | A | Jumps, knockback, hit stun, numbers, low-health pulse |
 | Monster behaviour and bosses | B / E | Six movement types work, and every arena boss arrives. Bosses have no attack patterns of their own: PSG2's aren't documented. Bosses drawn twice as big (2026-11-06) |
 | Mining, chopping, resources | A | Tool tiers and hits |
-| Inventory, equipment, item management | A / D | Everything works by tapping. No drag-and-drop, split or sort (PSG2 is tap-based) |
+| Inventory, equipment, item management | A / D | Items move by dragging (trash, gear, combine and trade too); taps show info and Use/Equip. No split or sort |
 | Crafting, combining, smelting | A | Every recipe tested |
 | Shops, currencies, merchants | A | Every shop item tested. The Plumber sells, the Merchant only buys (2026-11-04). Prices, chest coins and the 99,999 cap from the wiki (2026-11-06) |
 | Chests, keys, loot, rare drops | A / E | Works; most drop chances are estimates (unpublished). Since 2026-11-06 you hit a chest with its key and the loot shoots out (no window), tested by the autotest |
@@ -224,7 +224,7 @@ The living list of every system and how finished it is. It's updated after each 
 
 **6. Still incomplete:**
 - bosses' own attack patterns;
-- drag-and-drop, sort and split;
+- sort and split;
 - the collection book and stat icons (from the recording);
 - the rainbow cape cosmetics;
 - the 3 items waiting for approval;

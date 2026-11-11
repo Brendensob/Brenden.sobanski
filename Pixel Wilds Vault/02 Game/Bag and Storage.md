@@ -16,8 +16,17 @@ tags: [game, bag, storage]
 ## Hovering and dragging items (2026-11-06)
 - **Hover** over any item (hotbar, bag, gear, backpack): its icon pops up and brightens with a soft tick, and a dark card beside it shows the name, its attack or stats or healing, what it does, and its sell price.
 - **Drag** any item to move it, any time, even with the bag closed (along the hotbar). Drop it on another slot to swap, on the same item to stack, on the matching gear slot to wear it, from a gear slot back to a bag slot to take it off, and in and out of Banka's open backpack. A drop where it doesn't fit leaves it where it was. The slot it lands in bounces.
-- On a phone, dragging works with a finger too; tapping still works as before (and the **Move** button stays).
+- On a phone, dragging works with a finger too. Tapping an item still shows its card and its Use, Equip, Read, Become and Hold buttons.
 - *"When hovering over items make it satisfying and show info and you can drag to move them anytime"*
+
+## Moving is dragging only (2026-11-11)
+- The **Move** button is gone. To move an item, drag it.
+- **Trash:** drag an item onto the trash can (from the bag, the hotbar, a gear slot or Banka's backpack) and it drops on the ground in front of you. Tapping the trash says how.
+- **Combining:** drag items from the bag onto slots I, II and III, or a Combination Scroll onto the scroll slot. Drag an item out of a slot back to the bag to take it out. Tapping still works too.
+- **Trading:** drag items from your bag onto "You give", and drag them back off to take them out.
+- *"when moving a item to your trash just let the player drag it and get rid of the move button make everything movable dragging"*
+
+![[drag_to_trash_2026-11-11.png]]
 
 ![[hover_card_2026-11-06.png]]
 

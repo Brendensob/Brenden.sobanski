@@ -35,7 +35,6 @@ var panels := {}
 var bag_slots: Array = []
 var equip_buttons := {}
 var bag_sel := -1
-var move_from := -1
 var hover_slot: Button = null # the slot under the mouse
 var hover_card: PanelContainer # the item's name and info, shown while hovering
 var drag_src: Button = null # the slot an item is being dragged from
@@ -1019,7 +1018,6 @@ func open_panel(key: String) -> void:
 	match key:
 		"bag":
 			bag_sel = -1
-			move_from = -1
 			_refresh_bag()
 		"map": _refresh_map()
 		"title": _refresh_title()
@@ -1114,7 +1112,9 @@ func _build_bag() -> void:
 		_draggable(b, "equip", slot)
 		p.add_child(b)
 		equip_buttons[slot] = b
-	var trash := _button("", func(): _trash_selected())
+	var trash := _button("", func(): toast("Drag an item onto the trash to throw it away.", "warn"))
+	trash.set_meta("drag", {"where": "trash", "at": 0})
+	trash.set_drag_forwarding(func(_p: Vector2): return null, func(_p: Vector2, data): return _can_drop(trash, data), func(_p: Vector2, data): _drop_on(trash, data))
 	trash.icon = Art.ui_icon("trash", 2)
 	trash.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	trash.position = Vector2(0, 200)
@@ -1170,13 +1170,6 @@ func _tabs() -> Array:
 	return [["character", ""], ["combine", ""], ["menu", ""]]
 
 func _bag_click(i: int) -> void:
-	if move_from >= 0:
-		if move_from != i:
-			GS.swap(move_from, i)
-		move_from = -1
-		bag_sel = i if GS.inv[i] else -1
-		_refresh_bag()
-		return
 	# at Banka, tapping an item puts it in the open backpack
 	if bag_mode == "storage":
 		if not GS.owns_backpack(storage_page):
@@ -1196,20 +1189,31 @@ func _bag_click(i: int) -> void:
 	bag_sel = -1 if bag_sel == i or GS.inv[i] == null else i
 	_refresh_bag()
 
-func _trash_selected() -> void:
-	if bag_sel < 0 or GS.inv[bag_sel] == null:
-		toast("Pick an item to throw away first.", "warn")
+## Throws away whatever was dragged onto the trash: it drops on the ground in
+## front of you (Brenden, 2026-11-11: "when moving a item to your trash just let
+## the player drag it and get rid of the move button").
+func _trash_drop(data: Dictionary) -> void:
+	var d = _slot_item(data.where, data.at)
+	if d == null:
 		return
-	var d = GS.inv[bag_sel]
-	GS.inv[bag_sel] = null
-	main.drop_from_player(d.id, d.n)
+	match data.where:
+		"bag": GS.inv[data.at] = null
+		"store": GS.storage[storage_page][data.at] = null
+		"equip":
+			GS.equip[data.at] = ""
+			GS.clamp_stats()
+			if data.at == "pet" and main.level:
+				main.level.spawn_pet()
+	if main.level:
+		main.drop_from_player(d.id, d.n)
 	bag_sel = -1
+	Sfx.play("drop", 0.0)
 	GS.inventory_changed.emit()
 
 func _refresh_bag() -> void:
 	for i in GS.BAG:
 		_fill_slot(bag_slots[i], GS.inv[i])
-		_select_style(bag_slots[i], i == bag_sel or i == move_from or (bag_mode == "bag" and bag_tab == "combine" and i in combo))
+		_select_style(bag_slots[i], i == bag_sel or (bag_mode == "bag" and bag_tab == "combine" and i in combo))
 	for slot in GS.EQUIP_SLOTS:
 		var id: String = GS.equip[slot]
 		_fill_slot(equip_buttons[slot], {"id": id, "n": 1} if id != "" else null, Art.equip_ghost(slot))
@@ -1323,7 +1327,7 @@ func _page_character() -> void:
 	for i in lines.size():
 		page.add_child(_at(_label(lines[i][0], 9), Vector2(64, 38 + i * 11)))
 		page.add_child(_at(_label(lines[i][1], 9, C_EMBER, true), Vector2(130, 38 + i * 11)))
-	page.add_child(_at(_wrap("Equip gear by tapping it in your bag, then Equip. Tap a slot on the left to take it off.", 200, C_MUTED, 8), Vector2(6, 124)))
+	page.add_child(_at(_wrap("Drag gear onto a slot on the left to wear it, or tap it, then Equip. Drag it back to take it off. Drag an item onto the trash to throw it away.", 200, C_MUTED, 8), Vector2(6, 124)))
 
 func _page_combine() -> void:
 	for i in 3:
@@ -1331,7 +1335,7 @@ func _page_combine() -> void:
 			combo[i] = -1
 	var pv := GS.preview_combo(combo, use_scroll)
 	var title := "Combine"
-	var sub := "Tap items in your bag"
+	var sub := "Tap or drag items from your bag"
 	if pv.ready and pv.known:
 		title = Data.ITEMS[pv.recipe.out].name
 		sub = "Success: %d%%" % pv.chance
@@ -1370,6 +1374,7 @@ func _page_combine() -> void:
 			return
 		use_scroll = not use_scroll
 		_refresh_bag())
+	_draggable(sc, "scroll", 0)
 	page.add_child(sc)
 	# slots I, II and III; the green one is where the next item goes
 	for i in 3:
@@ -1382,6 +1387,7 @@ func _page_combine() -> void:
 			combo_target = ci
 			_refresh_bag())
 		_fill_slot(b, GS.inv[combo[i]] if combo[i] >= 0 else null)
+		_draggable(b, "combo", i)
 		if combo[i] < 0 and i == combo_target:
 			b.add_theme_stylebox_override("normal", _style("green", 1))
 			b.add_theme_stylebox_override("hover", _style("green", 1))
@@ -1554,15 +1560,12 @@ func _refresh_info() -> void:
 		d.max_lines_visible = 4
 		info_box.add_child(d)
 		return
-	if move_from >= 0:
-		info_box.add_child(_wrap("Tap a slot to move the item there.", 156, C_MUTED))
-		return
 	if bag_sel < 0 or GS.inv[bag_sel] == null:
-		var hint := "Tap an item to see what it does."
+		var hint := "Tap an item to see what it does. Drag it to move it."
 		if bag_mode == "craft":
 			hint = "Pick something to craft. The Crafter never fails."
 		elif bag_mode == "storage":
-			hint = "Tap a stack to move it between your bag and the open backpack."
+			hint = "Tap or drag a stack to move it between your bag and the open backpack."
 		info_box.add_child(_wrap(hint, 156, C_MUTED))
 		return
 	var s = GS.inv[bag_sel]
@@ -1598,7 +1601,6 @@ func _refresh_info() -> void:
 			GS.swap(bag_sel, GS.sel)
 			bag_sel = GS.sel
 			_refresh_bag()))
-	row.add_child(_small_button("Move", func(): move_from = bag_sel; _refresh_bag()))
 
 func _small_button(text: String, cb: Callable) -> Button:
 	var b := _button(text, cb)
@@ -3229,9 +3231,10 @@ func _build_trade() -> void:
 		var b := _slot(28)
 		var idx := i
 		b.pressed.connect(func(): _trade_toggle(idx))
+		_draggable(b, "tbag", idx)
 		grid.add_child(b)
 		trade_bag.append(b)
-	t.add_child(_at(_wrap("Tap items in your bag to offer them.", 145, C_MUTED, 8), Vector2(10, 176)))
+	t.add_child(_at(_wrap("Tap or drag items from your bag to offer them.", 145, C_MUTED, 8), Vector2(10, 176)))
 	t.add_child(_at(_heading("You give", 9), Vector2(166, 24)))
 	var mine := HBoxContainer.new()
 	mine.name = "Mine"
@@ -3305,6 +3308,7 @@ func _refresh_trade() -> void:
 			b.pressed.connect(func(): _trade_toggle(slot_i))
 		else:
 			_fill_slot(b, null)
+		_draggable(b, "offer", k)
 		mine.add_child(b)
 	var crow: HBoxContainer = t.get_node("Coins")
 	_clear(crow)
@@ -3429,8 +3433,10 @@ func _hide_hover_card() -> void:
 		hover_card.visible = false
 
 ## Lets an item be dragged out of slot b and other items be dropped onto it.
-## where: "bag" (the bag and hotbar, by index), "equip" (by gear slot) or
-## "store" (the open backpack at Banka, by index).
+## where: "bag" (the bag and hotbar, by index), "equip" (by gear slot),
+## "store" (the open backpack at Banka, by index), "combo" (combine slots I-III),
+## "scroll" (the combine page's scroll slot), "tbag" (your bag in the trade
+## window) or "offer" (what you give in a trade). The trash takes drops too.
 func _draggable(b: Button, where: String, at) -> void:
 	b.set_meta("drag", {"where": where, "at": at})
 	b.set_drag_forwarding(func(_p: Vector2): return _drag_from(b), func(_p: Vector2, data): return _can_drop(b, data), func(_p: Vector2, data): _drop_on(b, data))
@@ -3440,6 +3446,11 @@ func _slot_item(where: String, at):
 		"bag": return GS.inv[at]
 		"equip": return {"id": GS.equip[at], "n": 1} if GS.equip[at] != "" else null
 		"store": return GS.storage[storage_page][at] if GS.owns_backpack(storage_page) else null
+		"combo": return GS.inv[combo[at]] if combo[at] >= 0 else null
+		"tbag": return GS.inv[at]
+		"offer":
+			var offer := Net.my_offer()
+			return {"id": offer[at][0], "n": offer[at][1]} if at < offer.size() else null
 	return null
 
 func _drag_from(b: Button):
@@ -3467,6 +3478,17 @@ func _can_drop(b: Button, data) -> bool:
 	if not (data is Dictionary and data.get("slot_drag", false)):
 		return false
 	var dst: Dictionary = b.get_meta("drag")
+	match dst.where:
+		"trash": return data.where in ["bag", "store", "equip"]
+		"combo": return data.where in ["bag", "combo"]
+		"scroll": return data.where == "bag" and data.id == "combination_scroll"
+		"offer": return data.where == "tbag"
+		"tbag": return data.where == "offer"
+	if data.where in ["tbag", "offer", "scroll"]:
+		return false
+	if data.where == "combo":
+		# taking an item out of a combine slot: drop it back on the bag
+		return dst.where == "bag"
 	if dst.where == "store" and not GS.owns_backpack(storage_page):
 		return false
 	if dst.where == "equip":
@@ -3481,6 +3503,12 @@ func _drop_on(b: Button, data) -> void:
 	var dst: Dictionary = b.get_meta("drag")
 	_end_drag()
 	if dst.where == data.where and dst.at == data.at:
+		return
+	if dst.where == "trash":
+		_trash_drop(data)
+		return
+	if dst.where in ["combo", "scroll", "offer", "tbag"] or data.where == "combo":
+		_drop_special(b, dst, data)
 		return
 	if dst.where == "equip":
 		var is_pet: bool = Data.ITEMS[data.id].type == "pet"
@@ -3526,7 +3554,41 @@ func _drop_on(b: Button, data) -> void:
 			c[dst.at] = s
 		GS.inventory_changed.emit()
 	bag_sel = dst.at if dst.where == "bag" and GS.inv[dst.at] != null else -1
-	move_from = -1
+	Sfx.play("drop", 0.0)
+	_pop(b)
+	if panels.has("bag") and panels.bag.visible:
+		_refresh_bag()
+
+## Drops on the combine page and the trade window: these slots point at bag
+## items instead of holding their own.
+func _drop_special(b: Button, dst: Dictionary, data: Dictionary) -> void:
+	match dst.where:
+		"combo":
+			if data.where == "bag":
+				var was := combo.find(data.at)
+				if was >= 0:
+					combo[was] = combo[dst.at]
+				combo[dst.at] = data.at
+			else:
+				var t: int = combo[dst.at]
+				combo[dst.at] = combo[data.at]
+				combo[data.at] = t
+			for k in 3:
+				if combo[k] < 0:
+					combo_target = k
+					break
+		"scroll":
+			use_scroll = true
+		"offer":
+			if not data.at in Net.trade_mine:
+				_trade_toggle(data.at)
+		"tbag":
+			if data.at < Net.trade_mine.size():
+				_trade_toggle(Net.trade_mine[data.at])
+		_:
+			# a combine slot dragged back onto the bag empties it
+			combo[data.at] = -1
+			combo_target = data.at
 	Sfx.play("drop", 0.0)
 	_pop(b)
 	if panels.has("bag") and panels.bag.visible:

@@ -5,6 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-11 (moving items is dragging)
+*Brenden: "when moving a item to your trash just let the player drag it and get rid of the move button make everything movable dragging"*
+- **The Move button is gone.** Items move only by dragging.
+- **The trash takes drags** from the bag, hotbar, gear slots and Banka's backpack. The item still drops on the ground in front of you, as the old trash did. Tapping the trash explains it.
+- **Every slot that holds an item takes drags:** combine slots I to III and the scroll slot, and "You give" in a trade.
+- **Kept:** tapping an item to see its card and Use, Equip, Read, Become and Hold; tapping a stack at Banka to send it across; tapping items on the combine page. These are quick, not "move" buttons.
+
 ## 2026-11-10 (every character redrawn)
 *Brenden: "go study on whaqt works well for looks while keeping it pixelated i think all charecters should be redone and test everything out to make it works good"*
 - **Studied first.** What pixel artists teach (Brandon James Greer, AdamCYounis, Slynyrd's Pixelblog, the Innkeep "eight ways" article, Pixnote): one light direction, short colour ramps that shift hue, few colours per part, a face that pops, outlines tinted by what they touch, a strong silhouette, and a walk that bobs. The list is in [[Art Style#What we learned about pixel art (2026-11-10)]].
