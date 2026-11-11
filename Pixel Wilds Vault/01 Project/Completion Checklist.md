@@ -109,7 +109,8 @@ The living list of every system and how finished it is. It's updated after each 
 | Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |
-| Faint bar, gravestones in rooms, off-screen markers | ✅ | 2026-11-07: small top bar with countdown and an are-you-sure, darker screen, friends revive at your gravestone, markers at the screen's edge; autotest and two-player tested |
+| Faint bar, gravestones in rooms, off-screen markers | ✅ | 2026-11-07: small top bar with countdown and an are-you-sure, darker screen, friends revive at your gravestone, markers at the screen's edge; autotest and two-player tested. 2026-11-11: touching the gravestone revives right away (two-player tested) |
+| Host leaving passes the room on | ✅ | 2026-11-11: the first guest becomes host on the same map, the others rejoin by themselves; server tests, two-player test and the new three-player test. Needs the live server redeployed |
 | Shared drops | ✅ | 2026-11-07: players within 1.5 tiles of the picker get the same drop (not boss drops); two-player tested |
 | Portals one at a time in rooms | ✅ | 2026-11-07: only you go in and nobody is pulled in; leaving takes everyone in that world after 20 s; "Someone's in the current portal"; two-player tested both ways and for leaving |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |

@@ -1,13 +1,12 @@
 extends Node2D
 ## Your gravestone. It rises where you fainted and counts down over it. In a
-## room, a friend who stands by it for 3.5 seconds gets you back up right there
+## room, a friend who touches it gets you back up right there, right away
 ## (see remote_player.gd); after 50 seconds it crumbles and you wake up in Pixel
 ## Town. On your own it's 10 seconds, since nobody can revive you (the ghost
 ## who walked back to it is gone: Brenden, 2026-11-07).
 
 const WINDOW := 50.0 # seconds the gravestone lasts
-const HOLD := 3.5 # seconds to stand by it
-const NEAR := 26.0 # how close counts as "by it", in pixels
+const NEAR := 26.0 # how close counts as touching it, in pixels
 
 var level: Node
 var left := WINDOW

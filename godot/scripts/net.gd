@@ -159,22 +159,96 @@ func _on_peer_disconnected(id: int) -> void:
 				main.level.remove_puppet(id)
 
 func _on_connected() -> void:
-	hello.rpc_id(1, GS.player_name, GS.look)
+	# back in the room after the host changed: say where you are, so the new
+	# host doesn't pull you off your map
+	var world := ""
+	var seed := 0
+	if rejoin_to != "" and main and main.level and not main.on_title():
+		world = main.level.id
+		seed = main.level.seed_used
+	rejoin_to = ""
+	hello.rpc_id(1, GS.player_name, GS.look, world, seed)
 
 func _on_failed() -> void:
 	var why := last_error()
+	if rejoin_to != "":
+		_rejoin_failed()
+		return
 	leave()
 	if main:
 		main.net_join_failed(why if why != "" else "Couldn't connect to that room.")
 
 func _on_server_gone() -> void:
+	var h: Dictionary = relay.handoff if relay else {}
 	leave()
-	if main:
+	if main == null:
+		return
+	if h.is_empty() or main.on_title():
 		main.net_host_left()
+		return
+	_pass_on(h)
+
+# ---------------------------------------------------------------- the host left
+## When the host leaves, the room passes to the player who joined first, and
+## the game goes on for everyone (Brenden, 2026-11-11). The online server
+## picks the new host and lets the others into their room.
+const REJOIN_TRIES := 12
+const REJOIN_WAIT := 1.5
+var rejoin_to := "" # the new host's name, while you're getting back into the room
+var rejoin_tries := 0
+var host_changes := 0 # how many times the room passed on to a new host (tests read it)
+
+func _pass_on(h: Dictionary) -> void:
+	host_changes += 1
+	var heir := str(h.get("host", ""))
+	if bool(h.get("you", false)):
+		want_public = bool(h.get("public", false))
+		var err := host_room()
+		main.take_over_level()
+		if err != "":
+			main.hud.toast("The host left. %s You keep playing on your own." % err, "warn")
+		else:
+			main.hud.toast("The host left. You're the host now, and the game goes on.", "good")
+			Online.ping_now()
+		return
+	main.take_over_level()
+	main.hud.toast("The host left. %s is the host now." % heir, "good")
+	rejoin_to = heir
+	rejoin_tries = 0
+	# give the new host a moment to open their room
+	await get_tree().create_timer(REJOIN_WAIT).timeout
+	_rejoin()
+
+func _rejoin() -> void:
+	if rejoin_to == "" or active or main == null or main.on_title():
+		rejoin_to = ""
+		return
+	var err := join_room(rejoin_to)
+	if err != "":
+		_rejoin_failed()
+
+## Their room isn't open yet: try again in a moment, and after a while just
+## keep playing in a room of your own.
+func _rejoin_failed() -> void:
+	var heir := rejoin_to
+	leave()
+	rejoin_tries += 1
+	if rejoin_tries < REJOIN_TRIES:
+		await get_tree().create_timer(REJOIN_WAIT).timeout
+		if rejoin_to == heir:
+			_rejoin()
+		return
+	rejoin_to = ""
+	if main and not main.on_title():
+		main.hud.toast("Couldn't get back into %s's room. You keep playing on your own." % heir, "warn")
+		main.open_my_room()
+		main.take_over_level()
 
 ## A friend says hi: remember them, tell everyone, and send them the world.
+## world and seed: where they already are, when they're coming back after the
+## host changed. They stay there unless it's the map you're on.
 @rpc("any_peer", "reliable")
-func hello(pname: String, look: String) -> void:
+func hello(pname: String, look: String, world := "", seed := 0) -> void:
 	if not is_host():
 		return
 	var id := multiplayer.get_remote_sender_id()
@@ -193,7 +267,10 @@ func hello(pname: String, look: String) -> void:
 	for pid in players:
 		roster[pid] = {"name": players[pid].name, "look": players[pid].look}
 	roster_update.rpc(roster)
-	send_world(id)
+	if world == "" or world == world_of(1):
+		send_world(id)
+	elif world != "town" and seed != 0 and not room_seeds.has(world):
+		room_seeds[world] = seed
 
 @rpc("authority", "reliable")
 func kicked(reason: String) -> void:

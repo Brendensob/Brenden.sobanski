@@ -5,6 +5,7 @@ extends Node
 const PlacedScript := preload("res://scripts/placed.gd")
 const PortalScript := preload("res://scripts/portal.gd")
 const NodeScript := preload("res://scripts/res_node.gd")
+const MobScript := preload("res://scripts/mob.gd")
 
 var main: Node
 var role := "host"
@@ -22,6 +23,8 @@ func _ready() -> void:
 	Net.chat_received.connect(func(_f: String, t: String): chat_log.append(t))
 	if role == "host":
 		run_host()
+	elif role.begins_with("trio"):
+		run_trio()
 	else:
 		run_client()
 
@@ -120,9 +123,10 @@ func run_host() -> void:
 	check(await until(func(): return is_instance_valid(pp) and pp.dead, 90.0), "the friend fainted")
 	check(pp.stone.visible and not pp.body.visible, "a gravestone stands where the friend fell")
 	await shot("net_host_grave")
+	await wait(3.0) # the friend's game shows its faint bar first
 	lvl.player.position = pp.position + Vector2(8, 0)
-	check(await until(func(): return pp.revive_held > 1.0, 5.0), "standing by it fills the revive bar")
-	check(await until(func(): return not pp.dead, 15.0), "3.5 seconds by the friend's gravestone revives them")
+	check(await until(func(): return pp.revives > 0, 2.0), "touching the gravestone revives them right away")
+	check(await until(func(): return not pp.dead, 5.0), "and the friend is back up")
 	# far away from the friend: a marker at the edge of the screen points at them
 	lvl.player.position = lvl.cell_pos(Vector2i(mini(lvl.W - 6, int(pp.position.x / 16) + 40), lvl.surface[mini(lvl.W - 6, int(pp.position.x / 16) + 40)] - 1))
 	main.camera.position = lvl.player.position
@@ -175,6 +179,15 @@ func run_host() -> void:
 	main.change_level("town")
 	await wait(1.0)
 	check(rock_wall() != null, "after the friend leaves, the host's town has its own rock wall again")
+	# the friend comes back; both go to Grasslands 1, and the host leaves:
+	# the game goes on for the friend, who is the host now
+	check(await until(func(): return Net.players.size() == 1, 60.0), "the friend joined again")
+	await wait(1.0)
+	main.change_level("grass_1")
+	check(await until(func(): return main.level.id == "grass_1" and main.level.puppets.size() == 1, 30.0), "the friend followed into Grasslands 1")
+	await wait(1.5)
+	main.quit_to_title()
+	check(not Net.active, "the host left the room")
 	finish()
 
 func run_client() -> void:
@@ -352,5 +365,70 @@ func run_client() -> void:
 	check(GS.count("wood") >= 5 and GS.count("rock") == 0 and GS.coins == 50, "the friend got 5 Wood for 3 Rocks and 50 coins")
 	await wait(0.5)
 	main.quit_to_title()
+	# the host checks their own town walls once you've gone, then you come back
+	await wait(8.0)
+	main.join_game("HostA")
+	check(await until(func(): return Net.active and not main.on_title() and Net.players.size() == 1, 30.0), "joined HostA's room again")
+	check(await until(func(): return Net.last_went == "grass_1", 30.0), "HostA went into Grasslands 1")
+	main.change_level("grass_1")
+	check(await until(func(): return main.level.id == "grass_1" and main.level.netted and main.level.puppets.size() == 1, 20.0), "followed HostA into the shared Grasslands 1")
+	# HostA leaves: the room passes to the friend and the game goes on
+	var pos: Vector2 = main.level.player.position
+	check(await until(func(): return Net.host_changes == 1, 30.0), "when HostA left, the room passed on instead of closing")
+	check(not main.on_title() and main.level.id == "grass_1", "the friend is still in Grasslands 1, not sent to the title screen")
+	check(Net.active and Net.is_host(), "the friend is the room's host now")
+	check(main.level.netted and main.level.player.position.distance_to(pos) < 64, "the same map goes on, with the friend where they stood")
+	var puppets := 0
+	for e in main.level.entities.get_children():
+		if e is MobScript and e.puppet:
+			puppets += 1
+	check(main.level.count_mobs() > 5 and puppets == 0, "the monsters (%d) carry on, now run by the friend's game" % main.level.count_mobs())
+	check(await until(func(): return Net.relay != null and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED, 15.0), "the friend's room is open on the relay")
+	check(main.level.puppets.is_empty() and Net.players.is_empty(), "HostA is gone from the map")
 	await wait(1.0)
+	await shot("net_client_new_host")
+	main.quit_to_title()
+	await wait(1.0)
+	finish()
+
+## Three players (`--nettest trio0`, `trio1`, `trio2`, started in that order a
+## few seconds apart): Trio0 hosts, both others follow into Grasslands 1, and
+## Trio0 leaves. Trio1 (who joined first) becomes the host, and Trio2 gets
+## back into Trio1's room without leaving the map.
+func run_trio() -> void:
+	var n := int(role.substr(4))
+	await wait(1.0 + n * 4.0)
+	GS.slot = 3 + n
+	GS.delete_slot(GS.slot)
+	var reg := await Online.register("Trio%d" % n)
+	check(reg.get("ok", false), "claimed the name Trio%d" % n)
+	GS.pending_token = reg.get("token", "")
+	GS.new_game(["man_in_suit", "nurse", "ninja"][n], "Trio%d" % n)
+	GS.save_game()
+	if n == 0:
+		Net.want_public = true
+		main.start_game(true)
+		check(await until(func(): return Net.players.size() == 2, 60.0), "both friends joined")
+		main.change_level("grass_1")
+		check(await until(func(): return main.level.puppets.size() == 2, 40.0), "both followed into Grasslands 1")
+		await wait(2.0)
+		main.quit_to_title()
+		finish()
+		return
+	main.join_game("Trio0")
+	check(await until(func(): return Net.active and not main.on_title(), 30.0), "joined Trio0's room")
+	check(await until(func(): return Net.last_went == "grass_1", 40.0), "Trio0 went into Grasslands 1")
+	main.change_level("grass_1")
+	check(await until(func(): return main.level.id == "grass_1" and main.level.netted and main.level.puppets.size() == 2, 30.0), "followed into the shared Grasslands 1")
+	check(await until(func(): return Net.host_changes == 1, 40.0), "Trio0 left and the room passed on")
+	if n == 1:
+		check(Net.is_host() and not main.on_title() and main.level.id == "grass_1", "Trio1, who joined first, is the host now and still in Grasslands 1")
+		check(await until(func(): return Net.players.size() == 1 and main.level.puppets.size() == 1, 30.0), "Trio2 is back in the room and on the map")
+		await wait(6.0)
+	else:
+		check(not main.on_title() and main.level.id == "grass_1", "Trio2 stays in Grasslands 1 while the room passes on")
+		check(await until(func(): return Net.is_client() and Net.players.size() == 1 and Net.rejoin_to == "", 30.0), "and gets back into Trio1's room")
+		check(await until(func(): return main.level.id == "grass_1" and main.level.netted and main.level.puppets.size() == 1, 15.0), "sharing Trio1's Grasslands 1")
+		await wait(1.0)
+		await shot("net_trio_rejoined")
 	finish()

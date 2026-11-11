@@ -18,6 +18,7 @@ const PEER_JOIN := 0x83
 const PEER_LEAVE := 0x84
 const IN_DATA := 0x85
 const ROOM_CLOSED := 0x86
+const HOST_MOVED := 0x87
 
 var ws := WebSocketPeer.new()
 var status: int = MultiplayerPeer.CONNECTION_DISCONNECTED
@@ -31,6 +32,8 @@ var _mode: int = MultiplayerPeer.TRANSFER_MODE_RELIABLE
 var _channel := 0
 var _incoming: Array = [] # [from, channel, mode, bytes]
 var _refusing := false
+## Set when the host left and the room passed on: {"host": name, "you": bool, "public": bool}.
+var handoff := {}
 
 ## Opens your room (as_host) or joins the room of the friend named `room`.
 ## `url` is the relay's address, like wss://server/relay (see Online.relay_url()).
@@ -61,16 +64,11 @@ func _poll() -> void:
 		return
 	ws.poll()
 	var st := ws.get_ready_state()
-	if st == WebSocketPeer.STATE_CLOSED or st == WebSocketPeer.STATE_CLOSING:
-		if last_error == "":
-			last_error = "Lost the connection to the online server." if status == MultiplayerPeer.CONNECTION_CONNECTED else "Can't reach the online server."
-		_drop()
-		return
-	if st != WebSocketPeer.STATE_OPEN:
-		return
-	if not _sent_hello:
+	if st == WebSocketPeer.STATE_OPEN and not _sent_hello:
 		_sent_hello = true
 		_send_frame(HELLO, JSON.stringify(_hello).to_utf8_buffer())
+	# read what came in first, even when the server has just closed the
+	# connection: its last message says why (like who the new host is)
 	while ws.get_available_packet_count() > 0:
 		var msg := ws.get_packet()
 		if msg.is_empty():
@@ -78,6 +76,11 @@ func _poll() -> void:
 		_handle(msg[0], msg.slice(1))
 		if status == MultiplayerPeer.CONNECTION_DISCONNECTED:
 			return
+	if st == WebSocketPeer.STATE_CLOSED or st == WebSocketPeer.STATE_CLOSING:
+		if last_error == "" and handoff.is_empty():
+			last_error = "Lost the connection to the online server." if status == MultiplayerPeer.CONNECTION_CONNECTED else "Can't reach the online server."
+		_drop()
+		return
 
 func _handle(typ: int, payload: PackedByteArray) -> void:
 	match typ:
@@ -101,6 +104,12 @@ func _handle(typ: int, payload: PackedByteArray) -> void:
 				_incoming.append([payload.decode_s32(0), payload.decode_u8(4), payload.decode_u8(5), payload.slice(6)])
 		ROOM_CLOSED:
 			last_error = "The room was closed."
+			_drop()
+		HOST_MOVED:
+			var h = JSON.parse_string(payload.get_string_from_utf8())
+			if typeof(h) == TYPE_DICTIONARY and str(h.get("host", "")) != "":
+				handoff = h
+			last_error = ""
 			_drop()
 
 func _drop() -> void:

@@ -117,9 +117,46 @@ class RelayTest(unittest.TestCase):
         host.sendall(struct.pack("<IBiBB", 1 + 6 + 3, 2, 0, 0, 2) + b"yo!")
         typ, body = self.frame(guest)
         self.assertEqual((typ, struct.unpack("<i", body[:4])[0], body[6:]), (0x85, 1, b"yo!"))
-        # the host leaves: the room closes for the guest
+        # the host leaves: the room passes to the guest, who carries on as the host
         host.close()
-        self.assertEqual(self.frame(guest)[0], 0x86)
+        typ, body = self.frame(guest)
+        self.assertEqual(typ, 0x87)
+        self.assertEqual(json.loads(body), {"host": "Guest1", "you": True, "public": False})
+
+    def test_host_leaves_room_passes_on(self):
+        """Three players: the host leaves, the first guest takes over and the
+        other guest gets into their room even though they aren't friends."""
+        a = ps.handle("/register", {"name": "Boss"}, "")["token"]
+        b = ps.handle("/register", {"name": "First"}, "")["token"]
+        c = ps.handle("/register", {"name": "Second"}, "")["token"]
+        d = ps.handle("/register", {"name": "Outsider"}, "")["token"]
+        for t, n in ((b, "First"), (c, "Second"), (d, "Outsider")):
+            ps.handle("/friends/add", {"token": t, "name": "Boss"}, "")
+            ps.handle("/friends/answer", {"token": a, "name": n, "accept": True}, "")
+        host = self.connect({"token": a, "mode": "host"})
+        self.assertEqual(self.frame(host)[0], 0x81)
+        g1 = self.connect({"token": b, "mode": "join", "room": "boss", "id": 10})
+        self.assertEqual(self.frame(g1)[0], 0x81)
+        self.assertEqual(self.frame(host)[0], 0x83)
+        g2 = self.connect({"token": c, "mode": "join", "room": "boss", "id": 11})
+        self.assertEqual(self.frame(g2)[0], 0x81)
+        self.assertEqual(self.frame(host)[0], 0x83)
+        host.close()
+        self.assertEqual(json.loads(self.frame(g1)[1]), {"host": "First", "you": True, "public": False})
+        typ, body = self.frame(g2)
+        self.assertEqual((typ, json.loads(body)["host"], json.loads(body)["you"]), (0x87, "First", False))
+        # First opens their room; Second gets in, though they aren't friends
+        heir = self.connect({"token": b, "mode": "host"})
+        self.assertEqual(self.frame(heir)[0], 0x81)
+        back = self.connect({"token": c, "mode": "join", "room": "first", "id": 11})
+        self.assertEqual(self.frame(back)[0], 0x81)
+        self.assertEqual(self.frame(heir)[0], 0x83)
+        # someone who wasn't in the room still can't
+        out = self.connect({"token": d, "mode": "join", "room": "first", "id": 12})
+        self.assertEqual(self.frame(out)[0], 0x82)
+        # the last one standing just keeps playing: no one to pass the room to
+        heir.close()
+        self.assertEqual(self.frame(back)[0], 0x87)
 
 
 class PublicRoomTest(RelayTest):
@@ -228,7 +265,7 @@ class WebSocketRelayTest(unittest.TestCase):
         self.send(host, 2, struct.pack("<iBB", 0, 0, 2) + b"yo")
         self.assertEqual(self.frame(guest)[1][6:], b"yo")
         host.close()
-        self.assertEqual(self.frame(guest)[0], 0x86)
+        self.assertEqual(self.frame(guest)[0], 0x87)  # the room passes to the guest
 
     def test_web_build_can_ask(self):
         # browsers check first (CORS), then post

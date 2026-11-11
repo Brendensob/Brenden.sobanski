@@ -310,9 +310,14 @@ def handle(path, body, ip):
 # Frames are [u32 length][u8 type][payload], little-endian.
 # Game -> relay: 1 HELLO (json), 2 DATA ([i32 target][u8 channel][u8 mode][bytes]), 3 KICK ([i32 peer])
 # Relay -> game: 0x81 WELCOME (json), 0x82 ERROR (json), 0x83 PEER_JOIN ([i32]),
-#                0x84 PEER_LEAVE ([i32]), 0x85 DATA ([i32 from][u8 channel][u8 mode][bytes]), 0x86 ROOM_CLOSED
+#                0x84 PEER_LEAVE ([i32]), 0x85 DATA ([i32 from][u8 channel][u8 mode][bytes]), 0x86 ROOM_CLOSED,
+#                0x87 HOST_MOVED (json: the new host's name, whether it's you, public)
 relay_lock = threading.Lock()
-rooms = {}  # host's lower-case name -> {"host": Conn, "clients": {peer id: Conn}}
+rooms = {}  # host's lower-case name -> {"host": Conn, "clients": {peer id: Conn}, "keys": {peer id: name key}}
+# When a host leaves, the room passes to the guest who joined first: they open
+# their own room and the other guests are let into it for a minute, friends or not.
+handoffs = {}  # new host's key -> {"members": set of keys, "public": bool, "until": time}
+HANDOFF_SECONDS = 60
 
 
 class Conn:
@@ -464,16 +469,54 @@ def relay_session(conn, hello_timeout):
         if hello.get("mode") == "host":
             relay_host(conn, key, bool(hello.get("public", False)))
         elif hello.get("mode") == "join":
-            relay_join(conn, is_friend, host_key, int(hello.get("id", 0)))
+            relay_join(conn, is_friend, host_key, int(hello.get("id", 0)), key)
     except (ConnectionError, OSError, ValueError, TypeError, json.JSONDecodeError, struct.error):
         pass
     finally:
         conn.close()
 
 
+def handoff_for(key):
+    """The room this player is taking over from a host who left, if any (relay_lock held)."""
+    h = handoffs.get(key)
+    if h and h["until"] < time.time():
+        del handoffs[key]
+        return None
+    return h
+
+
+def pass_room_on(room):
+    """The host left: the guest who joined first becomes the host, and everyone
+    else is told whose room to go to. The game itself carries on."""
+    with relay_lock:
+        clients = list(room["clients"].items())
+        room["clients"].clear()
+        if not clients:
+            return
+        heir_cid = clients[0][0]
+        heir_key = room["keys"].get(heir_cid, "")
+        members = {room["keys"].get(cid, "") for cid, _ in clients[1:]}
+        handoffs[heir_key] = {"members": members, "public": bool(room.get("public")),
+                              "until": time.time() + HANDOFF_SECONDS}
+    with lock:
+        heir_name = db["players"].get(heir_key, {}).get("name", heir_key)
+    for cid, c in clients:
+        c.send(0x87, json.dumps({"host": heir_name, "you": cid == heir_cid,
+                                 "public": bool(room.get("public"))}).encode())
+        # the game hangs up once it has read this; closing right away could
+        # lose the message on its way, so only close it later if it doesn't
+        t = threading.Timer(5.0, c.close)
+        t.daemon = True
+        t.start()
+
+
 def relay_host(conn, key, public=False):
     # a public room is listed in /rooms and anyone can join it; otherwise only friends
-    room = {"host": conn, "clients": {}, "public": public}
+    with relay_lock:
+        h = handoff_for(key)
+        if h and h["public"]:
+            public = True
+    room = {"host": conn, "clients": {}, "keys": {}, "public": public}
     with relay_lock:
         old = rooms.get(key)
         if old:
@@ -496,6 +539,7 @@ def relay_host(conn, key, public=False):
                 (cid,) = struct.unpack("<i", payload[:4])
                 with relay_lock:
                     c = room["clients"].pop(cid, None)
+                    room["keys"].pop(cid, None)
                 if c:
                     c.send(0x86)
                     c.close()
@@ -503,12 +547,15 @@ def relay_host(conn, key, public=False):
         with relay_lock:
             if rooms.get(key) is room:
                 del rooms[key]
-            close_room(room)
+        pass_room_on(room)
 
 
-def relay_join(conn, is_friend, host_key, cid):
+def relay_join(conn, is_friend, host_key, cid, key=""):
     with relay_lock:
         room = rooms.get(host_key)
+        h = handoff_for(host_key)
+        if h and key in h["members"]:
+            is_friend = True  # they were in the same room a moment ago
         if room is None:
             problem = "Their room isn't open right now."
         elif not is_friend and not room.get("public"):
@@ -520,6 +567,7 @@ def relay_join(conn, is_friend, host_key, cid):
         else:
             problem = ""
             room["clients"][cid] = conn
+            room["keys"][cid] = key
     if problem:
         error(conn, problem)
         return
@@ -534,6 +582,7 @@ def relay_join(conn, is_friend, host_key, cid):
     finally:
         with relay_lock:
             still = room["clients"].pop(cid, None)
+            room["keys"].pop(cid, None)
         if still is not None:
             room["host"].send(0x84, struct.pack("<i", cid))
 
