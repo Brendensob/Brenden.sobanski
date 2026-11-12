@@ -106,7 +106,7 @@ The living list of every system and how finished it is. It's updated after each 
 ## Multiplayer
 | System | Status | Notes |
 |---|---|---|
-| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27) |
+| Rooms, joining, shared world, chat, emotes, trading | ✅ | Two-player test (over the WebSocket relay since 2026-10-27); last 4 chat lines on the side since 2026-11-12 |
 | A dropped connection keeps you playing | ✅ | 2026-11-12: no more kick to the title; the room reopens by itself. Two-player test drops the host's connection and checks |
 | Online on phones (web build) | 🟡 | Server live on Render; its WebSocket relay and CORS answer correctly. Waiting on a real phone-to-phone test |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27) |

@@ -59,6 +59,8 @@ var chat_btn: Button
 var emote_panel: Panel
 var chat_edit: LineEdit
 var chat_log := [] # recent room chat, newest last
+var chat_feed: VBoxContainer # the last 4 messages, always on screen under the Chat.. box
+const CHAT_FEED_LINES := 4
 var room_label: Label
 var room_box: VBoxContainer
 var trade_bag: Array = []
@@ -423,6 +425,20 @@ func _build_hud() -> void:
 	chat_btn.visible = false
 	hud_root.add_child(chat_btn)
 	chat_btn.size = Vector2(92, 13) # after the small font is in place, or it keeps the default height
+	# the last 4 chat messages, white with a black outline, right under the Chat.. box
+	chat_feed = VBoxContainer.new()
+	chat_feed.name = "ChatFeed"
+	chat_feed.position = Vector2(6, 91)
+	chat_feed.add_theme_constant_override("separation", 0)
+	chat_feed.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chat_feed.visible = false
+	for i in CHAT_FEED_LINES:
+		var fl := _outlined(_label("", 7, C_WHITE))
+		fl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		fl.custom_minimum_size = Vector2(170, 0)
+		fl.max_lines_visible = 2
+		chat_feed.add_child(fl)
+	hud_root.add_child(chat_feed)
 	# the three orange buttons right of the bars: friends, chat and emotes
 	var side := [["FriendButton", "friend", func(): open_friends()],
 		["ChatButton", "chat", func():
@@ -690,7 +706,11 @@ func _process(_d: float) -> void:
 	markers.queue_redraw()
 	var town: bool = lvl.kind == "town"
 	chat_btn.visible = Net.active
-	status_label.position.y = 168 if emote_panel.visible else 92
+	chat_feed.visible = Net.active and chat_log.size() > 0 and not emote_panel.visible
+	# the status and goal sit below the chat lines while they show
+	var feed_h := chat_feed_height() if chat_feed.visible else 0.0
+	status_label.position.y = 168 if emote_panel.visible else 92 + feed_h
+	goal_btn.position.y = 102 + feed_h
 	if room_label and panels.pause.visible:
 		room_label.text = _room_text()
 	goal_t -= _d
@@ -2116,9 +2136,27 @@ func add_chat(from: String, text: String) -> void:
 	chat_log.append("%s: %s" % [from, text])
 	while chat_log.size() > 8:
 		chat_log.pop_front()
-	toast("%s: %s" % [from, text], "good")
+	_refresh_chat_feed()
 	if panels.has("chat") and panels.chat.visible:
 		_refresh_chat()
+
+## Fills the always-on chat lines with the newest 4 messages, oldest on top.
+func _refresh_chat_feed() -> void:
+	if chat_feed == null:
+		return
+	var recent: Array = chat_log.slice(maxi(0, chat_log.size() - CHAT_FEED_LINES))
+	for i in CHAT_FEED_LINES:
+		var fl: Label = chat_feed.get_child(i)
+		fl.text = recent[i] if i < recent.size() else ""
+		fl.visible = i < recent.size()
+
+## How tall the chat lines are now, so the status and goal can sit under them.
+func chat_feed_height() -> float:
+	var h := 0.0
+	for fl in chat_feed.get_children():
+		if fl.visible:
+			h += (fl as Label).get_minimum_size().y
+	return ceilf(h) + 2.0
 
 func _refresh_chat() -> void:
 	var lines: Label = panels.chat.get_node("Lines")

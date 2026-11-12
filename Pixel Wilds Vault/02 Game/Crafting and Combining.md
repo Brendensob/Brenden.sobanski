@@ -15,6 +15,7 @@ tags: [game, crafting]
 - Put 2 or 3 items in the slots.
 - Each recipe has a base success chance. Having its Combo Book in your bag adds 50%, and a Combination Scroll adds 35%.
 - A failed or unknown combination gives Dust.
+- **Torch** = Wood + Fire Crystal + Coal (15%, Survival Book, from the wiki). There is no Sap in PSG2.
 - **Our own Survival Book recipes** (2026-11-11), so every item has a source: **Stone Wall** = Wood Wall + Rock (90%), **Torch Stand** = Torch + Wood (90%).
 - **Combo books:** I–V, Survival, Z (28 recipes), ZX (22) and U (14). Missing Pages drop from late bosses.
 
