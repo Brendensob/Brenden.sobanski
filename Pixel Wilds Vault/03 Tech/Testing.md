@@ -22,7 +22,7 @@ xvfb-run -a <godot> --path . --resolution 960x540 -- --autotest --touch
 
 Both copies talk to `http://127.0.0.1:24566` by default (the real game uses the hosted server), and rooms go through the WebSocket relay, the same path phones use.
 
-It checks joining, following through portals, drops, chat, **emotes**, walls, trading and leaving. Since 2026-11-11 it also checks the touch revive, and at the end the host leaves while both are in Grasslands 1: the friend must become the host on the same map.
+It checks joining, a dropped connection (the host's game must stay in town and reopen its room, since 2026-11-12), following through portals, drops, chat, **emotes**, walls, trading and leaving. Since 2026-11-11 it also checks the touch revive, and at the end the host leaves while both are in Grasslands 1: the friend must become the host on the same map.
 
 ### Three-player test (the host leaving)
 Start the server, then three copies a moment apart: `-- --nettest trio0`, `trio1`, `trio2`. Trio0 hosts, both others follow into Grasslands 1, and Trio0 leaves. Trio1 (who joined first) must become the host without leaving the map, and Trio2 must get back into Trio1's room and share the map. Each ends with `NETTEST trioN DONE, 0 failures`.

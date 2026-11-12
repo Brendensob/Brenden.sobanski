@@ -18,7 +18,6 @@ const FLIP_TIME := 0.33
 const AIR_JUMP_COST := 1.0
 const KNOCKBACK := 60.0
 const HURT_SAFE := 1.0 # after a hit you can't be hit again for this long
-const STAMINA_COST := 0.5
 ## The PSG2 swing, timed from the trailer: the blade snaps up, slams down
 ## past level, holds low for a moment and comes back up. Same for every
 ## weapon and tool; only the wait before the next swing changes.
@@ -358,12 +357,10 @@ func use_held(pressed: bool) -> void:
 			return
 	_swing(id, it)
 
-func _swing(id: String, it: Dictionary) -> void:
-	if GS.st < STAMINA_COST:
-		_say("Too tired! Wait for your stamina.")
-		return
-	GS.st -= STAMINA_COST
-	GS.stats_changed.emit()
+## Swinging is free: the green bar is only for air jumps, as in PSG2, so
+## holding A or auto-hit never eats the jumps (Brenden, 2026-11-12: "when I
+## auto hit the jump drains").
+func _swing(_id: String, it: Dictionary) -> void:
 	_start_swing(it.get("spd", 0.5))
 	Sfx.play("swing")
 

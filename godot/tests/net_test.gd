@@ -80,6 +80,13 @@ func run_host() -> void:
 	check(await until(func(): return GS.trusted_time, 10.0), "the game takes its time from the online server")
 	check(absf(GS.now() - Time.get_unix_time_from_system()) < 3.0, "and that time is right (%.1f s off)" % absf(GS.now() - Time.get_unix_time_from_system()))
 	check(await until(func(): return Net.relay != null and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED, 15.0), "the room is open on the relay")
+	# the connection drops (a phone going to sleep): the game goes on and the
+	# room reopens by itself (Brenden, 2026-11-12: "randomly sometimes it
+	# kicks me out even in singleplayer")
+	Net.relay.ws.close()
+	check(await until(func(): return Net.connection_drops == 1, 5.0), "the dropped connection is noticed")
+	check(not main.on_title() and main.level.id == "town", "a dropped connection doesn't send you to the title")
+	check(await until(func(): return Net.is_host() and Net.relay.status == MultiplayerPeer.CONNECTION_CONNECTED and Net.room_public, 20.0), "the room reopens by itself, still public")
 	# the friend asks to be friends; accept it (only friends can join)
 	var got_req := false
 	for k in 80:

@@ -171,8 +171,14 @@ func _on_connected() -> void:
 
 func _on_failed() -> void:
 	var why := last_error()
+	var was_host: bool = relay != null and relay.host
 	if rejoin_to != "":
 		_rejoin_failed()
+		return
+	if was_host and main and not main.on_title():
+		# your own room didn't open (no signal, the server waking up): keep
+		# playing and try again in a moment, never back to the title
+		_room_lost(why, true)
 		return
 	leave()
 	if main:
@@ -180,13 +186,74 @@ func _on_failed() -> void:
 
 func _on_server_gone() -> void:
 	var h: Dictionary = relay.handoff if relay else {}
+	var was_host: bool = relay != null and relay.host
+	var why := last_error()
+	if main == null or main.on_title():
+		leave()
+		if main:
+			main.net_host_left()
+		return
+	if not h.is_empty():
+		leave()
+		_pass_on(h)
+		return
+	# the connection dropped (a phone switching networks or going to sleep,
+	# the server restarting). It used to send you back to the title, even
+	# alone (Brenden, 2026-11-12: "randomly sometimes it kicks me out even in
+	# singleplayer"). Now the game goes on and your room reopens by itself.
+	_room_lost(why, was_host)
+
+# ---------------------------------------------------------------- lost connection
+## Seconds between tries to reopen your room after the connection dropped.
+const REOPEN_WAITS := [2.0, 5.0, 10.0, 20.0, 30.0]
+var reopen_in := 0.0 # > 0 while waiting to reopen your room
+var reopen_tries := 0
+var connection_drops := 0 # how many times the connection dropped (tests read it)
+
+## Your connection to the online server is gone. Keep playing where you are:
+## as the host your map already runs here, so only the others go; as a guest
+## your game takes the map over. Then your own room reopens in the background.
+func _room_lost(why: String, was_host: bool) -> void:
+	connection_drops += 1
+	if trading():
+		_end_trade("The connection dropped.")
+	var had_others := not players.is_empty()
+	if main and main.level:
+		for pid in main.level.puppets.keys():
+			main.level.remove_puppet(pid)
 	leave()
-	if main == null:
+	if main == null or main.on_title():
 		return
-	if h.is_empty() or main.on_title():
-		main.net_host_left()
+	if not was_host:
+		main.take_over_level()
+	if why.begins_with("Claim your name") and not _restored:
+		# the server was wiped and forgot this name: put it back and reopen
+		_restored = true
+		_reopen_after_restore()
 		return
-	_pass_on(h)
+	if reopen_tries == 0 and (had_others or not was_host):
+		main.hud.toast("Lost the connection. You keep playing; your room reopens when it's back.", "warn")
+	reopen_in = REOPEN_WAITS[mini(reopen_tries, REOPEN_WAITS.size() - 1)]
+	reopen_tries += 1
+
+func stop_reopening() -> void:
+	reopen_in = 0.0
+	reopen_tries = 0
+
+func _reopen_tick(delta: float) -> void:
+	if reopen_in <= 0.0:
+		return
+	if active or main == null or main.level == null or main.on_title() or GS.online_token == "":
+		stop_reopening()
+		return
+	reopen_in -= delta
+	if reopen_in > 0.0:
+		return
+	reopen_in = 0.0
+	if host_room() != "":
+		_room_lost(last_error(), true)
+	else:
+		Online.ping_now()
 
 # ---------------------------------------------------------------- the host left
 ## When the host leaves, the room passes to the player who joined first, and
@@ -467,8 +534,11 @@ func _reopen_after_restore() -> void:
 		main.hud.toast("Your room is closed; you can keep playing.", "warn")
 
 func _process(delta: float) -> void:
+	_reopen_tick(delta)
 	if not active or main == null or main.level == null or main.on_title():
 		return
+	if reopen_tries > 0 and is_host() and relay and relay.status == MultiplayerPeer.CONNECTION_CONNECTED:
+		reopen_tries = 0 # back online
 	if trip_to != "":
 		trip_left = maxf(0.0, trip_left - delta)
 	# the countdown ran out: whoever is still in the world being left goes too
@@ -483,16 +553,7 @@ func _process(delta: float) -> void:
 				_end_trip()
 	# your own room closed (the online server went away): keep playing alone
 	if is_host() and relay and relay.status == MultiplayerPeer.CONNECTION_DISCONNECTED:
-		var why: String = relay.last_error
-		for pid in players.keys():
-			_on_peer_disconnected(pid)
-		leave()
-		if why.begins_with("Claim your name") and not _restored:
-			# the server was wiped and forgot this name: put it back and reopen
-			_restored = true
-			_reopen_after_restore()
-			return
-		main.hud.toast("%s Your room is closed; you can keep playing." % why, "warn")
+		_room_lost(relay.last_error, true)
 		return
 	if multiplayer.multiplayer_peer.get_connection_status() != MultiplayerPeer.CONNECTION_CONNECTED:
 		return # the room is still opening
