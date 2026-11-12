@@ -1458,6 +1458,14 @@ func auto_hit_check() -> void:
 	await wait(1.2)
 	check(GS.auto_hit and p.swings >= s0 + 2, "auto-hit stays on after pressing A and switching items")
 	await shot("09c_auto_hit_on")
+	# swinging never touches the green bar, so the air jumps stay (Brenden,
+	# 2026-11-12: "when I auto hit the jump drains")
+	GS.st = GS.max_st()
+	GS.add_status("fatigue") # no stamina coming back during the check
+	s0 = p.swings
+	await wait(2.0)
+	check(p.swings >= s0 + 3 and GS.st >= GS.max_st(), "auto-hit swings %d times and leaves the green bar full (%.1f/%d)" % [p.swings - s0, GS.st, GS.max_st()])
+	GS.status.erase("fatigue")
 	# the button turns it off
 	ab.pressed.emit()
 	await wait(0.1)

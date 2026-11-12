@@ -40,6 +40,10 @@ tags: [game, multiplayer]
 
   ![[host_passed_on.png]]
 
+- **A dropped connection never ends your game** (since 2026-11-12). Every game opens its own room on the online server, even in single player, so a phone going to sleep, switching from Wi-Fi to data, or the server restarting used to send you to the title screen ("The room was closed."). Now you keep playing where you are. *Brenden: "randomly sometimes it kicks me out even in singleplayer"*
+  - Your room reopens by itself in the background (after 2, 5, 10, 20, then every 30 seconds), still public if it was.
+  - Alone, you don't see anything. With friends in the room, or as a guest, you see "Lost the connection. You keep playing; your room reopens when it's back." A guest's game takes over the map they're on, like when the host leaves.
+
 - **Shared drops** (since 2026-11-07): when you pick up a drop from a normal monster or something you broke (trees, rocks, ores, plants, pots), every player standing **right next to you** (within 1.5 tiles) gets the same drop too. Boss drops aren't shared. The host checks who is close.
 - **Town walls in a room:** each player has their own Pixel Town, built from their own unlocks. In a room, a wall (rock wall, Trading Center wall, stone wall to the basement) is open if **anyone in the room** has opened it, so everyone sees the same town. Breaking a wall opens it on everyone's screen at once. The unlock is saved only for the player who broke it. Others get their own wall back when they leave the room. (A design decision: PSG2's behaviour here isn't documented.)
 - **Chat:** the Chat.. box under the bars, or press T.

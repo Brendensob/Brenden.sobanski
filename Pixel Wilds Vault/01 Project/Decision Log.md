@@ -5,6 +5,13 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-12 (auto-hit drained jumps, random kick-outs)
+*Brenden: "When I auto hit the jump drains fix it and randomly sometimes it kicks me out even in singleplayer"*
+- **Swinging no longer costs stamina.** Each swing took half a point of the green bar, and the bar only refills 1 a second, so auto-hit kept it empty and air jumps stopped working. In PSG2 the green bar is for jumps, so swings are now free. The "Too tired!" message is gone.
+- **Read "kicks me out" as being sent back to the title screen.** The cause: every game, even single player, opens its own room on the online server, and when that connection dropped (phone asleep, network switch, server restart or waking up) the game went to the title with "The room was closed."
+- **A dropped connection now keeps you playing** where you are, and your room reopens by itself in the background. Alone you see nothing; with others you get one short message. Guests take over their map, like when the host leaves.
+- Sending you to the title is now only for a join you started yourself from the menu that fails.
+
 ## 2026-11-11 (instant revive, the host passes the room on)
 *Brenden: "When someone dies make sure it's able to rez them right away. ... make sure when someone leaves as the host it doesn't end the game and just passes it down"*
 - **Touching a friend's gravestone revives them right away.** No more standing by it for 3.5 seconds, and it works from the moment they fall.

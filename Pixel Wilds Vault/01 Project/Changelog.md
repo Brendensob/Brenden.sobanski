@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #54 | 2026-11-12 | Swinging and auto-hit no longer use the green bar, so air jumps stay; a dropped online connection no longer kicks you to the title (even in single player): you keep playing and your room reopens by itself |
 | #52 | 2026-11-11 | Touching a fainted friend's gravestone revives them right away; when the host leaves, the room passes to the player who joined first and the game goes on for everyone on the same maps (the others rejoin by themselves); three-player test |
 | #50 | 2026-11-11 | Moving items is dragging only: no Move button; drag onto the trash to throw away (bag, hotbar, gear, Banka); drag into the combine slots, the scroll slot and a trade offer, and back out |
 | #51 | 2026-11-11 | About twice as many trees, rocks, ores and plants in every world (136 instead of 71); Survival starts with 100 instead of 70; autotest checks every world has plenty |

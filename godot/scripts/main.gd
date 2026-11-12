@@ -104,6 +104,7 @@ func start_game(from_save: bool, character: String = "man_in_suit", pname: Strin
 func quit_to_title() -> void:
 	GS.save_game()
 	Net.rejoin_to = ""
+	Net.stop_reopening()
 	if Net.active:
 		Net.leave()
 	hud.menu_step = "slots"
@@ -517,6 +518,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				GS.inventory_changed.emit()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED:
+	# the phone browser can throw a hidden page away, so save when it's hidden too
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		if not title_mode:
 			GS.save_game()

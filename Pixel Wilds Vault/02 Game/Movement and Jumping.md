@@ -5,6 +5,7 @@ tags: [game, movement]
 
 - **Jump (B):** a fast launch about 2.9 blocks high (~46 px) in about 0.2 s, with one full flip. Gravity halves near the top for a smooth peak. About 0.63 s in the air.
 - **Air jumps:** press B again in the air. **Each air jump costs 1 point of the green (stamina) bar**, so a full bar means many extra jumps.
+- **Swinging is free** (since 2026-11-12): attacking, holding A and auto-hit never use the green bar, so your air jumps are always there. Before, every swing cost half a point and auto-hit emptied the bar. *Brenden: "when I auto hit the jump drains"*
 - **Falling:** faster than the first version (Brenden asked for it), capped at 120 px/s.
 - **Thin ledges:** jump up through them from below.
 
