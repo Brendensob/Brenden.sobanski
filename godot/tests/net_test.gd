@@ -144,6 +144,20 @@ func run_host() -> void:
 	await shot("net_host_marker")
 	lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1))
 	check(await until(func(): return chat_log.has("hello from friend"), 90.0), "the friend's chat message arrived")
+	await wait(0.2)
+	var feed: VBoxContainer = main.hud.chat_feed
+	check(feed.visible and (feed.get_child(0) as Label).text.contains("hello from friend") and feed.position.y >= main.hud.chat_btn.position.y + main.hud.chat_btn.size.y - 1,
+		"the message shows on the side, right under the Chat.. box")
+	check(main.hud.goal_btn.position.y >= feed.position.y + main.hud.chat_feed_height() - 1, "the goal moved down under the chat lines")
+	for t in ["anyone got coal?", "yes, by the rocks", "need a fire crystal for a torch", "Firas drop them in Grasslands"]:
+		main.hud.add_chat("Pal", t)
+	await wait(0.3)
+	var shown := []
+	for fl in feed.get_children():
+		if fl.visible:
+			shown.append((fl as Label).text)
+	check(shown.size() == 4 and not "|".join(shown).contains("hello from friend") and shown[3].ends_with("Firas drop them in Grasslands"), "only the last 4 messages show, newest at the bottom (%s)" % [shown])
+	await shot("net_host_chat_feed")
 	var em: Node = pp.get_node_or_null("Emote") if is_instance_valid(pp) else null
 	check(em != null and em.texture == Art.emote("heart"), "the friend's heart emote shows over their head")
 	var placed := 0

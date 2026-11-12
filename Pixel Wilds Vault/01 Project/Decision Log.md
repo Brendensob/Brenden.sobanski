@@ -5,6 +5,12 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-12 (sap for torches, chat on the side)
+*Brenden: "Is sap obtainable to make torch and make chat show on the side right under it just the lest 4 messages in white letters"*
+- **No Sap added.** PSG2 has no Sap item (the wiki has no page for it), and the Torch is made with **Wood + Fire Crystal + Coal** in the Survival Book (15%), as the wiki's Torch page says. All three can already be got: Wood from trees, Coal from rocks and ores, Fire Crystals from Firas in the Grasslands (5%) and Wizards.
+- **Read "right under it" as right under the Chat.. box** on the left, under the bars. The last 4 messages show there all the time in a room, white with a black outline, newest at the bottom; long ones wrap to two lines. The status line and goal card move down below them while they show, and they hide while the emote panel is open.
+- **No more chat pop-up message** (the toast in the middle), since the side lines already show each message.
+
 ## 2026-11-12 (auto-hit drained jumps, random kick-outs)
 *Brenden: "When I auto hit the jump drains fix it and randomly sometimes it kicks me out even in singleplayer"*
 - **Swinging no longer costs stamina.** Each swing took half a point of the green bar, and the bar only refills 1 a second, so auto-hit kept it empty and air jumps stopped working. In PSG2 the green bar is for jumps, so swings are now free. The "Too tired!" message is gone.
