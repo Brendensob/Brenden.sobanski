@@ -34,7 +34,7 @@ Newest first. Each entry gives the decision, why, and where it came from.
   - **Stone Wall:** a Survival Book combination, **Wood Wall + Rock** (90%). The proposal was Rock + Rock + Wood Wall, but the same stack can't go in two slots, so one Rock is used.
   - **Torch Stand:** kept, and made from **Torch + Wood** (90%) with the Survival Book. It isn't in PSG2; it's ours.
 - **The data audit now fails** if any item has no source, so this can't slip back.
-- **Past Hell stays set aside** unless Brenden says otherwise: its 73 items come back when those worlds open (asked him 2026-11-11).
+- **Past Hell stays set aside.** Brenden picked "Keep them set aside for now" on 2026-11-12; its 73 items come back when those worlds open.
 
 ## 2026-11-10 (every character redrawn)
 *Brenden: "go study on whaqt works well for looks while keeping it pixelated i think all charecters should be redone and test everything out to make it works good"*
