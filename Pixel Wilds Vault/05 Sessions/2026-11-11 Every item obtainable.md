@@ -14,4 +14,4 @@ tags: [session]
 
 **Decisions:** see [[Decision Log]] (2026-11-11).
 
-**Next:** Brenden decides whether to open the worlds past Hell, whose 73 items are set aside (see [[Open Questions]]).
+**Next:** nothing. Brenden chose to keep the worlds past Hell (73 items) set aside for now (2026-11-12).
