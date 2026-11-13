@@ -16,7 +16,7 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 
 ## The street (west → east)
 1. Magic soils in a cave behind a rock wall (break it with a gold pickaxe)
-2. Miner, then Brutus
+2. Miner, the **Game House** (the west house, red roof, a sign of game tiles over the door), then Brutus
 3. Miffie (yellow dress)
 4. The sign
 5. The open space under the opening: the **Crafter** on its left, the **portal** in the exact middle (right under the opening's middle, so the two line up), and the **Gatekeeper** on its right, mirroring the Crafter. They stand **13 tiles apart** (5 before 2026-11-05). **You start here**, in the gap just left of the portal.
@@ -25,6 +25,32 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 ![[portal_area.png]]
 
 That order matches Brenden's screenshot (Plumber, Banka, then the spiky-haired seller). The Crafter moved from the east end to beside the portal on 2026-10-29, when Brenden asked for it. The four houses mirror around the middle. See [[NPCs]].
+
+## The Game House (since 2026-11-13)
+Hit its door to play **Tile Match**, once every 2.5 hours. Over the roof it says "Game House", or how long until it opens again.
+
+![[game_house_2026-11-13.png]]
+
+**Tile Match** (our own game): 16 tiles lie face down, 6 prize pairs and 2 bad pairs (a Bomb and a Stinker). Smack two tiles to turn them over:
+
+| You turn over | What happens |
+|---|---|
+| Two of the same prize | It goes in your pot and stays face up |
+| Two different tiles | They turn back; one miss used (5 in all) |
+| Two Bombs or two Stinkers | The pot is lost and the game ends |
+
+Tap **Take prizes** to stop and keep the pot. The game also ends when the misses run out or every prize is found; closing the window keeps the pot too. A full bag drops the rest at your feet.
+
+| Prize pair | Pays (placeholders) |
+|---|---|
+| Gem | 2 gems |
+| Coins | 150 Pixel Coins |
+| Potion | 2 Small Potions |
+| Key | 1 Silver Key |
+| Crystal | 3 Crystals |
+| Scroll | 1 Combination Scroll |
+
+![[tile_match_2026-11-13.png]]
 
 ## The basement
 - A massive stone wall at the east end of the street blocks the way down. Smash it with the Wall Hammer, earned by surviving 10 nights in Survival Grasslands (the night number is a guess).

@@ -7,6 +7,7 @@ Every merged pull request on https://github.com/Brendensob/Brenden.sobanski. New
 
 | PR | Date | What changed |
 |---|---|---|
+| #56 | 2026-11-13 | Boss loot is rolled for each player on the map and only they see and pick it up (arena rewards land at each player's feet); stuck pickups ask the host again; your own drops survive a host hand-over. The west house in Pixel Town is the Game House: Tile Match once every 2.5 hours for gems and items (placeholder prizes) |
 | #55 | 2026-11-12 | The last 4 chat messages show on the left under the Chat.. box in rooms, white with a black outline (no more chat pop-up); the goal card moves down under them. Sap checked: PSG2 has none, the Torch is Wood + Fire Crystal + Coal |
 | #54 | 2026-11-12 | Swinging and auto-hit no longer use the green bar, so air jumps stay; a dropped online connection no longer kicks you to the title (even in single player): you keep playing and your room reopens by itself |
 | #52 | 2026-11-11 | Touching a fainted friend's gravestone revives them right away; when the host leaves, the room passes to the player who joined first and the game goes on for everyone on the same maps (the others rejoin by themselves); three-player test |

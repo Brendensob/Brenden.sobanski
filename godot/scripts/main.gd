@@ -226,9 +226,17 @@ func take_over_level() -> void:
 	var pos: Vector2 = level.player.position
 	var facing: int = level.player.facing
 	var st: Dictionary = level.net_state()
+	# your own drops (a boss's loot, a chest's, a full bag's) aren't in the
+	# room's map: carry them over so nothing of yours vanishes
+	var mine := []
+	for e in level.entities.get_children():
+		if e.get_script() == level.PickupScript and e.nid == 0 and not e.is_queued_for_deletion():
+			mine.append([e.item, e.n, e.position])
 	_load_level(level.id, false, level.seed_used, st, false, true)
 	level.player.position = pos
 	level.player.facing = facing
+	for m in mine:
+		level.drop(m[0], m[1], m[2] + Vector2(0, 6), true)
 	camera.position = pos
 	camera.reset_smoothing()
 	GS.stats_changed.emit()

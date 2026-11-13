@@ -2468,6 +2468,71 @@ func house_tex(wall: Color, roof: Color, w: int = 52) -> Texture2D:
 		px(img, w / 2 - 1, 12, Color("f2fbff"))
 		return to_tex(outline(img)))
 
+## The Game House (2026-11-13): the west house of Pixel Town with a sign of
+## three little game tiles over its door.
+func game_house_tex() -> Texture2D:
+	return cached("game_house", func():
+		var img: Image = house_tex(Color("e8dccb"), Color("d8433a"), 52).get_image().duplicate()
+		var x0 := 18
+		var y0 := 21
+		rect(img, x0, y0, 16, 8, OUTLINE)
+		rect(img, x0 + 1, y0 + 1, 14, 6, Color("8a5a32"))
+		rect(img, x0 + 1, y0 + 1, 14, 1, Color("a8703f"))
+		var tile_c := [Color("7b4fb8"), Color("5ce0d0"), Color("f2cf5b")]
+		for i in 3:
+			rect(img, x0 + 2 + i * 4, y0 + 2, 3, 4, tile_c[i])
+			px(img, x0 + 2 + i * 4, y0 + 2, tile_c[i].lightened(0.4))
+		return to_tex(img))
+
+## Tile Match tiles, 30 pixels square: the back (a purple tile with a star),
+## a prize face (cream, with the prize's picture) or a bad face (red).
+const MATCH_TILE := 30
+func match_tile(face: String) -> Texture2D:
+	return cached("match_" + face, func():
+		var n := MATCH_TILE
+		var img := blank(n, n)
+		var fill := Color("7b4fb8")
+		if face == "back":
+			fill = Color("7b4fb8")
+		elif face in ["bomb", "stinker"]:
+			fill = Color("f6b4a8")
+		else:
+			fill = Color("fff1d2")
+		var rim := fill.darkened(0.45)
+		# a rounded tile with a lit top and a thick shaded bottom lip
+		rect(img, 1, 0, n - 2, n, rim)
+		rect(img, 0, 1, n, n - 2, rim)
+		rect(img, 1, 1, n - 2, n - 3, fill)
+		rect(img, 1, n - 4, n - 2, 2, fill.darkened(0.2))
+		rect(img, 2, 1, n - 4, 1, fill.lightened(0.35))
+		if face == "back":
+			# a diamond pattern and a big star in the middle
+			for y in range(3, n - 4):
+				for x in range(2, n - 2):
+					if (x + y) % 6 == 0 or (x - y + 60) % 6 == 0:
+						px(img, x, y, fill.lightened(0.12))
+			var star := ["....y....", "...yyy...", "yyyyyyyyy", ".yyyyyyy.", "..yyyyy..", ".yyy.yyy.", ".yy...yy."]
+			var si := grid_image(star, {"y": "f2cf5b"})
+			img.blend_rect(outline(si), Rect2i(Vector2i.ZERO, si.get_size()), Vector2i((n - si.get_width()) / 2, (n - si.get_height()) / 2 - 1))
+			return to_tex(img)
+		var pic: Image
+		match face:
+			"bomb":
+				pic = emote_img("bomb")
+			"stinker":
+				pic = emote_img("poop")
+			"coin":
+				pic = prop_tex("coin").get_image()
+			_:
+				pic = icon(MATCH_PICS.get(face, face)).get_image()
+		pic = pic.duplicate()
+		if pic.get_format() != Image.FORMAT_RGBA8:
+			pic.convert(Image.FORMAT_RGBA8)
+		img.blend_rect(pic, Rect2i(Vector2i.ZERO, pic.get_size()), Vector2i((n - pic.get_width()) / 2, (n - 2 - pic.get_height()) / 2))
+		return to_tex(img))
+
+const MATCH_PICS := {"gem": "gem", "potion": "small_potion", "key": "silver_key", "crystal": "crystal", "scroll": "combination_scroll"}
+
 func prop_tex(kind: String, state: String = "") -> Texture2D:
 	return cached("prop_%s_%s" % [kind, state], func():
 		var img: Image = null

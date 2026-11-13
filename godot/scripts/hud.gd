@@ -1796,6 +1796,8 @@ func _build_panels() -> void:
 	var dt := _panel("drops", Vector2(320, 240), "Drop Tables")
 	_scroll(dt, Vector2(8, 26), Vector2(306, 208)).get_parent().name = "Scroll"
 
+	_build_game_house()
+
 	# the original asks first: "Save and Leave Game?" Yes / No
 	var lv := _panel("leave", Vector2(220, 96), "", false)
 	var lq := _label("Save and Leave Game?", 11, C_INK, true)
@@ -3648,3 +3650,218 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END:
 		# dropped somewhere that doesn't take it: the item stays where it was
 		_end_drag()
+
+# ---------------------------------------------------------------- the Game House
+## The west house of Pixel Town is the Game House (Brenden, 2026-11-13): one game
+## of Tile Match every 2.5 hours, for gems and other prizes. See match_game.gd.
+const MatchGame := preload("res://scripts/match_game.gd")
+var match_game: RefCounted = null # the game being played, or null
+var match_busy := false # tiles are turning back over; smacks wait
+var match_note := "" # the line under the pot: how the last game went
+
+func _build_game_house() -> void:
+	var gh := _panel("game_house", Vector2(330, 182), "Game House")
+	var board := Control.new()
+	board.name = "Board"
+	board.position = Vector2(12, 30)
+	gh.add_child(board)
+	var step := Art.MATCH_TILE + 4
+	var under := ColorRect.new()
+	under.color = Color("4a2a5a")
+	under.position = Vector2(-4, -4)
+	under.size = Vector2(MatchGame.COLS * step + 3, MatchGame.ROWS * step + 3)
+	under.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	board.add_child(under)
+	for i in MatchGame.COLS * MatchGame.ROWS:
+		var t := TextureButton.new()
+		t.name = "T%d" % i
+		t.texture_normal = Art.match_tile("back")
+		t.focus_mode = Control.FOCUS_NONE
+		t.size = Vector2(Art.MATCH_TILE, Art.MATCH_TILE)
+		t.pivot_offset = t.size / 2
+		t.position = Vector2((i % MatchGame.COLS) * step, (i / MatchGame.COLS) * step)
+		t.pressed.connect(func(): smack_tile(i))
+		board.add_child(t)
+	var side := VBoxContainer.new()
+	side.name = "Side"
+	side.position = Vector2(160, 26)
+	side.custom_minimum_size = Vector2(160, 0)
+	side.add_theme_constant_override("separation", 3)
+	gh.add_child(side)
+	side.add_child(_label("Tile Match", 10, C_YELLOW, true))
+	var rules := _wrap("Smack two tiles to turn them over. Match two prizes to win them. Match two Bombs or two Stinkers and you lose everything!", 160, C_INK, 7)
+	rules.name = "Rules"
+	side.add_child(rules)
+	var info := _label("", 8, C_INK, true)
+	info.name = "Info"
+	side.add_child(info)
+	var pot := HFlowContainer.new()
+	pot.name = "Pot"
+	pot.custom_minimum_size = Vector2(160, 14)
+	pot.add_theme_constant_override("h_separation", 5)
+	side.add_child(pot)
+	var note := _wrap("", 160, C_INK, 7)
+	note.name = "Note"
+	side.add_child(note)
+	var btn := _button("Play", func(): _game_house_button(), true)
+	btn.name = "Go"
+	btn.custom_minimum_size = Vector2(90, 20)
+	side.add_child(btn)
+	# closing the window in the middle of a game keeps the prizes found so far
+	gh.visibility_changed.connect(func():
+		if not gh.visible and match_game != null and not match_game.over:
+			match_game.cash_out()
+			_match_end())
+
+func open_game_house() -> void:
+	# a finished game stays on the board until the house opens again
+	if match_game != null and match_game.over and GS.game_house_ready():
+		match_game = null
+		match_note = ""
+	open_panel("game_house")
+	_refresh_game_house()
+
+func _game_house_button() -> void:
+	if match_game != null and not match_game.over:
+		match_game.cash_out()
+		_match_end()
+		return
+	if not GS.game_house_ready():
+		toast("The Game House opens again in %s." % _dur(GS.game_house_wait()), "warn")
+		return
+	start_match()
+
+## Starts a game; the house closes for 2.5 hours from now.
+func start_match(seed := -1) -> void:
+	match_game = MatchGame.new(seed)
+	match_busy = false
+	match_note = ""
+	GS.game_house_played()
+	Sfx.play("open", 0.0)
+	_refresh_game_house()
+
+func _tile(i: int) -> TextureButton:
+	return panels.game_house.get_node("Board/T%d" % i)
+
+## Smack a tile: it turns over. Two of a kind: a prize goes in the pot, or a
+## bad pair empties it. Two different ones turn back after a moment.
+func smack_tile(i: int) -> void:
+	if match_game == null or match_game.over or match_busy:
+		return
+	var r: Dictionary = match_game.smack(i)
+	match r.what:
+		"none":
+			return
+		"first":
+			Sfx.play("tap", 0.0)
+			_flip(i, r.face)
+		"match":
+			_flip(i, r.face)
+			Sfx.play("coin", 0.0)
+			for k in [r.a, r.b]:
+				var t := _tile(k)
+				var tw := t.create_tween()
+				tw.tween_property(t, "scale", Vector2(1.2, 1.2), 0.1).set_delay(0.12)
+				tw.tween_property(t, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK)
+			if match_game.over:
+				match_note = "You found every prize!"
+				_match_end()
+		"bad":
+			_flip(i, r.face)
+			Sfx.play("boom", 0.0)
+			main.shake(4)
+			for k in [r.a, r.b]:
+				_tile(k).modulate = Color(1.0, 0.55, 0.5)
+			match_note = "Two %ss! You lost your prizes." % ("Bomb" if r.face == "bomb" else "Stinker")
+			_match_end()
+		"miss":
+			_flip(i, r.face)
+			Sfx.play("fail", 0.0)
+			match_busy = true
+			_refresh_game_house()
+			await get_tree().create_timer(0.8).timeout
+			match_busy = false
+			if match_game == null:
+				return
+			if match_game.over:
+				if match_note == "":
+					match_note = "Out of misses."
+					_match_end()
+			else:
+				_flip(r.a, "back")
+				_flip(r.b, "back")
+	_refresh_game_house()
+
+## Turns a tile over: it squashes flat, changes face and springs back.
+func _flip(i: int, face: String) -> void:
+	var t := _tile(i)
+	var tw := t.create_tween()
+	tw.tween_property(t, "scale:x", 0.0, 0.07)
+	tw.tween_callback(func(): t.texture_normal = Art.match_tile(face))
+	tw.tween_property(t, "scale:x", 1.0, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+## The game is over: whatever is in the pot is yours (a full bag drops the
+## rest at your feet).
+func _match_end() -> void:
+	var pay: Dictionary = match_game.payout()
+	for id in pay:
+		GS.give(id, pay[id])
+	if not pay.is_empty():
+		var got := []
+		for id in pay:
+			got.append("%s x%d" % ["Pixel Coins" if id == "coin" else Data.ITEMS[id].name, pay[id]])
+		toast("Game House prizes: " + ", ".join(got), "good")
+		Sfx.play("quest", 0.0)
+		if match_note == "":
+			match_note = "You took your prizes."
+	elif match_note == "":
+		match_note = "No prizes this time."
+	GS.save_game()
+	_refresh_game_house()
+
+func _refresh_game_house() -> void:
+	var gh: Panel = panels.game_house
+	var g = match_game
+	var playing: bool = g != null and not g.over
+	for i in MatchGame.COLS * MatchGame.ROWS:
+		var t := _tile(i)
+		if g == null:
+			t.texture_normal = Art.match_tile("back")
+			t.modulate = Color.WHITE
+		elif g.over and not match_busy:
+			# at the end every tile shows its face; the ones you didn't find are dim
+			t.texture_normal = Art.match_tile(g.tiles[i])
+			if t.modulate == Color.WHITE and not g.up[i]:
+				t.modulate = Color(1, 1, 1, 0.55)
+		t.disabled = not playing
+	var info: Label = gh.get_node("Side/Info")
+	var go: Button = gh.get_node("Side/Go")
+	if playing:
+		info.text = "Misses left: %d" % g.misses
+		go.text = "Take prizes"
+		go.disabled = false
+	elif GS.game_house_ready():
+		info.text = "Ready to play!"
+		go.text = "Play"
+		go.disabled = false
+	else:
+		info.text = "Opens again in %s" % _dur(GS.game_house_wait())
+		go.text = "Play"
+		go.disabled = true
+	var pot: HFlowContainer = gh.get_node("Side/Pot")
+	_clear(pot)
+	if g != null and not g.pot.is_empty():
+		for f in g.pot:
+			var p: Dictionary = MatchGame.PRIZES[f]
+			var chip := HBoxContainer.new()
+			chip.add_theme_constant_override("separation", 1)
+			var ic := TextureRect.new()
+			ic.texture = Art.prop_tex("coin") if p.item == "coin" else Art.icon(p.item)
+			ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			ic.custom_minimum_size = Vector2(14, 14)
+			chip.add_child(ic)
+			chip.add_child(_label("x%d" % (int(p.n) * int(g.pot[f])), 8, C_INK, true))
+			pot.add_child(chip)
+	else:
+		pot.add_child(_label("Prizes: none yet" if playing else "", 7, C_MUTED))
+	(gh.get_node("Side/Note") as Label).text = match_note

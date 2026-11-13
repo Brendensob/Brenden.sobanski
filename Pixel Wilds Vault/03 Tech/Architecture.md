@@ -19,8 +19,9 @@ Godot **4.3**, renderer `gl_compatibility`.
 | `scripts/player.gd` | Movement, jumps, swinging, magic, bows, eating, building |
 | `scripts/mob.gd` | Monsters and bosses |
 | `scripts/npc.gd` | Villagers, "New stocked items!" callout |
-| `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign |
-| `scripts/hud.gd` | HUD, touch buttons, bag, storage, Crafter, menus, chat, friends, emotes, world cards |
+| `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign, the Game House |
+| `scripts/match_game.gd` | Tile Match's rules and prizes (the Game House); the window is in `hud.gd` |
+| `scripts/hud.gd` | HUD, touch buttons, bag, storage, Crafter, menus, chat, friends, emotes, world cards, the Game House window |
 | `scripts/fx.gd` | Damage numbers and death puffs |
 | `scripts/emote.gd` | The emote bubble over a head |
 | `scripts/net.gd` | Rooms, world sync, chat, emotes, trading |

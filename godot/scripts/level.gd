@@ -841,7 +841,9 @@ func _populate_town() -> void:
 	var y := TOWN_MID - 1
 	var top := TOWN_TOP - 1
 	# the houses stand in the gaps between the villagers, never behind them
-	var houses := [[18, "e8dccb", "d8433a", 52], [28, "c8d6e8", "3b5dc9", 52], [51, "e8d8b0", "4f9a44", 52], [62, "d8c8e8", "7b4fb8", 52]]
+	# the west one is the Game House (hit its door to play; Brenden, 2026-11-13)
+	add_station("game_house", 0, Vector2i(18, y)).position.x = 18 * T
+	var houses := [[28, "c8d6e8", "3b5dc9", 52], [51, "e8d8b0", "4f9a44", 52], [62, "d8c8e8", "7b4fb8", 52]]
 	for h in houses:
 		var s := Sprite2D.new()
 		s.texture = Art.house_tex(Color(h[1]), Color(h[2]), h[3])
@@ -1057,9 +1059,8 @@ func _arena_tick(delta: float) -> void:
 		if not alive:
 			arena_done = true
 			GS.arena_cleared(id)
-			for d in def.boss_drops:
-				if rng.randf() < d[1]:
-					drop(d[0], rng.randi_range(d[2], d[3]), player.position + Vector2(0, -20))
+			# every player on the map gets their own roll, at their own feet
+			boss_loot(def.boss_drops, [], null)
 			announce("Arena cleared!", "good")
 			add_portal(Vector2i(W / 2, 17), "town", "Home", Color("5cbf3f"))
 
@@ -1129,6 +1130,36 @@ func drop(item: String, n: int, pos: Vector2, personal := false, share := false)
 	_register(p)
 	if live and netted and Net.is_host():
 		Net.pickup_spawned.rpc(id, [p.nid, item, n, p.position.x, p.position.y, p.vel.x, p.vel.y])
+
+## Boss loot is rolled for every player on this map on their own, and each
+## player's drops are theirs alone: only they see them and only they can pick
+## them up (Brenden, 2026-11-13: "make boss drops local per player"). Before,
+## one roll landed by the host and whoever got there first took it all.
+## at: where it lands; null puts each player's loot at their own feet.
+func boss_loot(table: Array, coins: Array, at: Variant) -> void:
+	drop_loot(roll_loot(table, coins), at)
+	if netted and Net.is_host():
+		for q in Net.players.keys():
+			if Net.world_of(q) == id:
+				Net.boss_loot.rpc_id(q, id, roll_loot(table, coins), at != null, at if at != null else Vector2.ZERO)
+
+## One player's roll of a drop table: [[item, count], ...], coins last.
+static func roll_loot(table: Array, coins: Array) -> Array:
+	var out := []
+	for d in table:
+		if randf() < float(d[1]):
+			out.append([d[0], randi_range(int(d[2]), int(d[3]))])
+	if coins.size() == 2:
+		out.append(["coin", randi_range(int(coins[0]), int(coins[1]))])
+	return out
+
+## Drops loot that only you can see and pick up.
+func drop_loot(loot: Array, at: Variant = null) -> void:
+	if player == null:
+		return
+	var pos: Vector2 = at if at != null else player.position + Vector2(0, -20)
+	for l in loot:
+		drop(l[0], int(l[1]), pos, true)
 
 func number(pos: Vector2, text: String, color: Color) -> void:
 	var f := FxScript.new()

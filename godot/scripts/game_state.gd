@@ -35,6 +35,10 @@ var furnaces: Array = []
 var incubator := {}
 var soils: Array = []
 var reward_chests := {} # world id -> unix day it was last opened
+## The Game House on the west of Pixel Town: one game every 2.5 hours
+## (Brenden, 2026-11-13). The wait counts on now(), like the furnaces.
+const GAME_HOUSE_WAIT := 2.5 * 3600.0
+var game_house_next := 0.0 # now() when the next game can start
 # Time of day from 0 to 1. Like the original (216 s a day): daytime for the first
 # 11 of 24 ticks, sunset for 4, night for 9, then straight back to morning.
 var clock := 0.0
@@ -164,6 +168,7 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	soils = []
 	soils.resize(5)
 	reward_chests = {}
+	game_house_next = 0.0
 	clock = 0.0
 	day = 1
 	best_survival_day = 0
@@ -572,6 +577,19 @@ func open_chest(kind: String, to_bag: bool = true) -> Array:
 			give(l[0], l[1])
 	return loot
 
+func game_house_ready() -> bool:
+	return now() >= game_house_next
+
+## Seconds until the Game House opens again (0 when it's open).
+func game_house_wait() -> float:
+	return maxf(0.0, game_house_next - now())
+
+## A game started: the house closes for GAME_HOUSE_WAIT. Saved right away, so
+## leaving the game mid-way doesn't give another try.
+func game_house_played() -> void:
+	game_house_next = now() + GAME_HOUSE_WAIT
+	save_game()
+
 func today() -> int:
 	return int(now() / 86400.0)
 
@@ -735,7 +753,7 @@ func save_game() -> void:
 		"v": VERSION, "inv": inv, "storage": storage, "backpacks": backpacks_owned, "equip": equip, "sel": sel, "coins": coins, "gems": gems, "hp": hp, "mp": mp, "st": st,
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
-		"friends": friend_names, "gem_checkouts": gem_checkouts,
+		"friends": friend_names, "gem_checkouts": gem_checkouts, "game_house": game_house_next,
 	}
 	_write_slot(slot, data)
 
@@ -855,6 +873,8 @@ func load_game() -> bool:
 	for i in mini(ss.size(), 5):
 		soils[i] = ss[i] if ss[i] is Dictionary and Data.SEED_LOOT.has(str(ss[i].get("seed", ""))) else null
 	reward_chests = _dict(d, "reward_chests")
+	var gh = d.get("game_house", 0.0)
+	game_house_next = float(gh) if (gh is int or gh is float) else 0.0
 	# the device clock is only read when the game starts, so quitting to the menu
 	# and loading again can't pick up a changed clock either
 	_no_rewind(float(d.get("now", 0.0)))

@@ -5,6 +5,15 @@ tags: [project, decisions]
 
 Newest first. Each entry gives the decision, why, and where it came from.
 
+## 2026-11-13 (boss drops for each player, the Game House)
+*Brenden: "fix drops make boss drops local per player make house on left a minigame room you can player very 2.5 hours and get gems or other rewards from by doing minigames like the mairo mini game where you smack the tiles and try to match stuff to get rewards or you match the bad ones and lose"*
+- **Read "fix drops" together with "make boss drops local per player".** What was wrong: a boss's loot was rolled once and landed by the host (an arena's reward even landed at the *host's* feet), so whoever got there first took it all. Now **every player on the map gets their own roll**, which only they see and only they can pick up. A boss monster's loot lands where it fell; an arena's reward lands at each player's own feet. Normal monsters and broken things still share drops with players right next to you (2026-11-07).
+- **Two smaller drop fixes found while looking:** a friend's pickup that got no answer from the host (the message lost while the connection blinked) stayed stuck at their feet for good; now the game asks again after 2 seconds. And your own drops (boss loot, chest loot, a full bag's spill) used to vanish if the host left and your game took the map over; now they're carried over.
+- **The house on the left of the street is the Game House.** Hit its door to play **Tile Match**, once every **2.5 hours** (the wait is saved with your character and counts on the same clock as the furnaces). It shows "Game House" or "Opens in 2h 14m" over the roof.
+- **Tile Match is our own game, read from "smack the tiles and try to match stuff"**: 16 face-down tiles, 6 prize pairs and 2 bad pairs (a Bomb and a Stinker). Smack two tiles to turn them over. Two prizes go in your pot; two different tiles cost one of 5 misses; two Bombs or two Stinkers lose the whole pot. Take your prizes any time; the game also ends when the misses run out or every prize is found. Closing the window keeps what you found. The art is our own (tiles with a star on the back, our item icons and emotes on the faces), not the Mario game's.
+- **Prizes are placeholders for Brenden to set** (in `godot/scripts/match_game.gd`): Gem pair 2 gems, Coins 150, Potion 2 Small Potions, Key 1 Silver Key, Crystal 3 Crystals, Scroll 1 Combination Scroll; 5 misses. Starting a game starts the 2.5-hour wait, so closing and reopening can't give another try.
+- Only one minigame for now; "minigames" (plural) leaves room for more in the same house.
+
 ## 2026-11-12 (sap for torches, chat on the side)
 *Brenden: "Is sap obtainable to make torch and make chat show on the side right under it just the lest 4 messages in white letters"*
 - **No Sap added.** PSG2 has no Sap item (the wiki has no page for it), and the Torch is made with **Wood + Fire Crystal + Coal** in the Survival Book (15%), as the wiki's Torch page says. All three can already be got: Wood from trees, Coal from rocks and ores, Fire Crystals from Firas in the Grasslands (5%) and Wizards.

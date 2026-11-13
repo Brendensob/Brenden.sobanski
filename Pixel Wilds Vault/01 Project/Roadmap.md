@@ -26,5 +26,10 @@ tags: [project, roadmap]
 - [ ] Phone app export (the web build already plays on phones).
 - [ ] Replace stats taken from the 2.o game with PSG2 numbers when we find them (see [[Known Issues]]).
 
+## Game House
+- [x] Tile Match (2026-11-13)
+- [ ] More minigames in the Game House (Brenden said "minigames").
+- [ ] Brenden sets the Tile Match prizes and misses (placeholders now).
+
 ## Ideas parking lot
 Add ideas here, or in `My Notes`.

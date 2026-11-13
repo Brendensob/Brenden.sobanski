@@ -6,6 +6,7 @@ const PlacedScript := preload("res://scripts/placed.gd")
 const PortalScript := preload("res://scripts/portal.gd")
 const NodeScript := preload("res://scripts/res_node.gd")
 const MobScript := preload("res://scripts/mob.gd")
+const PickupScript := preload("res://scripts/pickup.gd")
 
 var main: Node
 var role := "host"
@@ -125,6 +126,15 @@ func run_host() -> void:
 		lvl.player.position = pp.position + Vector2(6, 0)
 		lvl.drop("rock", 2, lvl.player.position + Vector2(0, -8), false, true)
 		check(await until(func(): return GS.count("rock") >= 2, 5.0), "the host picked up the shared drop")
+		# a boss's loot: everyone on the map gets their own roll that only they see
+		var sb0 := GS.count("sticky_balls")
+		lvl.boss_loot([["sticky_balls", 1.0, 2, 2]], [], lvl.player.position + Vector2(0, -8))
+		var netted_balls := 0
+		for e in lvl.entities.get_children():
+			if e is PickupScript and e.item == "sticky_balls" and e.nid != 0:
+				netted_balls += 1
+		check(netted_balls == 0, "the host's boss loot is only the host's (not sent to the room)")
+		check(await until(func(): return GS.count("sticky_balls") >= sb0 + 2, 5.0), "the host picked up their own boss loot")
 		lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away again so the slime picks the friend
 	# the friend faints: a gravestone stands in their place, and standing by it revives them
 	check(await until(func(): return is_instance_valid(pp) and pp.dead, 90.0), "the friend fainted")
@@ -287,6 +297,7 @@ func run_client() -> void:
 	check(lvl.count_mobs() > 10 and nodes > 50, "the host's monsters (%d) and resources (%d) are here" % [lvl.count_mobs(), nodes])
 	check(await until(func(): return GS.count("wood") >= 3, 20.0), "picked up the wood the host dropped")
 	check(await until(func(): return GS.count("rock") >= 2, 25.0), "got the same drop the host picked up right next to the friend")
+	check(await until(func(): return GS.count("sticky_balls") >= 2, 25.0), "got a boss loot roll of their own (%d Sticky Balls)" % GS.count("sticky_balls"))
 	var hp0: float = GS.hp
 	check(await until(func(): return GS.hp < hp0, 20.0), "the host's slime hurt the friend")
 	# faint: a small bar at the top, a darker screen, and a friend can revive you

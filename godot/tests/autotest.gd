@@ -1134,6 +1134,21 @@ func gameplay_check() -> void:
 	var stray: Array = dropped.keys().filter(func(k): return not allowed.has(k) and k != "gem" and k != "coin")
 	check(dropped.size() > 0 and stray.is_empty(), "25 slimes drop their own loot %s" % str(dropped.keys()))
 	clear_ground()
+	# a boss's loot is the player's own: it isn't shared with the room
+	var king: Node = lvl.spawn_mob_at("jelly_king", p.position + Vector2(50, -4))
+	king.take_damage(99999, king.position.x - 5, false)
+	await wait(0.3)
+	var king_loot := []
+	var shared := 0
+	for e in lvl.entities.get_children():
+		if e is PickupScript and not e.is_queued_for_deletion():
+			king_loot.append(e.item)
+			if e.share or e.nid != 0:
+				shared += 1
+	check(king_loot.has("jelly") and king_loot.has("coin") and shared == 0, "the Jelly King's loot is yours alone %s" % str(king_loot))
+	var roll: Array = lvl.roll_loot([["jelly", 1.0, 3, 3], ["bone", 0.0, 1, 1]], [5, 5])
+	check(roll == [["jelly", 3], ["coin", 5]], "a boss loot roll follows its table (%s)" % str(roll))
+	clear_ground()
 	# mining a stone with the Wooden Pick gives rocks
 	var stone: Node = lvl.add_node("stone", Vector2i(2, 2))
 	stone.position = p.position + Vector2(p.facing * 10, 0)
@@ -2254,6 +2269,7 @@ func run() -> void:
 	main.hud.open_panel("map")
 	await shot("04_world_list")
 	main.hud.close_panels()
+	await game_house_check()
 	# everything past Hell is set aside for now
 	var shown := []
 	for c in main.hud.panels.map.find_child("Cards", true, false).get_children():
@@ -2664,3 +2680,66 @@ func run() -> void:
 	main.hud._refresh_title()
 	print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 	get_tree().quit()
+
+## The Game House (Brenden, 2026-11-13): the west house of Pixel Town; hit its
+## door to play Tile Match once every 2.5 hours.
+func game_house_check() -> void:
+	var MatchGame := preload("res://scripts/match_game.gd")
+	var house := find_prop(func(n): return n.get("kind") == "game_house")
+	check(house != null and house.position.x < main.level.W * 8, "the Game House stands on the west side of Pixel Town")
+	GS.game_house_next = 0.0
+	await stand_by(house)
+	await tap("attack")
+	await wait(0.3)
+	check(main.hud.panels.game_house.visible, "hitting the Game House's door opens the Game House")
+	await shot("06g_game_house")
+	# the rules, on a known board
+	var g = MatchGame.new(7)
+	check(g.tiles.size() == 16 and g.tiles.count("bomb") == 2 and g.tiles.count("stinker") == 2 and g.prizes_left() == 6, "Tile Match has 16 tiles: 6 prize pairs and 2 bad pairs")
+	var at := {}
+	for i in g.tiles.size():
+		at[g.tiles[i]] = at.get(g.tiles[i], []) + [i]
+	g.smack(at.gem[0])
+	check(g.smack(at.gem[1]).what == "match" and g.pot.get("gem", 0) == 1, "matching two prizes puts them in the pot")
+	g.smack(at.coin[0])
+	check(g.smack(at.key[0]).what == "miss" and g.misses == MatchGame.MISSES - 1, "two different tiles cost a miss")
+	g.smack(at.bomb[0])
+	check(g.smack(at.bomb[1]).what == "bad" and g.over and g.payout().is_empty(), "matching two Bombs loses the whole pot")
+	var g2 = MatchGame.new(7)
+	g2.smack(at.coin[0])
+	g2.smack(at.coin[1])
+	g2.cash_out()
+	check(g2.payout() == {"coin": MatchGame.PRIZES.coin.n}, "taking your prizes pays the pot")
+	var g3 = MatchGame.new(7)
+	for k in MatchGame.MISSES:
+		g3.smack(at.coin[0])
+		g3.smack(at.key[0])
+	check(g3.over and not g3.lost, "the game ends when the misses run out")
+	# a real game in the window: two prizes, then take them
+	var gems0 := GS.gems
+	main.hud.start_match(7)
+	check(not GS.game_house_ready() and absf(GS.game_house_wait() - GS.GAME_HOUSE_WAIT) < 5.0, "starting a game closes the house for 2.5 hours")
+	main.hud.smack_tile(at.gem[0])
+	await wait(0.2)
+	main.hud.smack_tile(at.gem[1])
+	await wait(0.3)
+	main.hud.smack_tile(at.potion[0])
+	await wait(0.2)
+	await shot("06h_tile_match")
+	main.hud.smack_tile(at.potion[1])
+	await wait(0.3)
+	main.hud._game_house_button()
+	check(GS.gems == gems0 + MatchGame.PRIZES.gem.n and GS.count("small_potion") >= MatchGame.PRIZES.potion.n, "taking your prizes gives the gems and potions (%d gems)" % GS.gems)
+	await wait(0.2)
+	await shot("06i_tile_match_done")
+	check((main.hud.panels.game_house.get_node("Side/Go") as Button).disabled, "you can't play again until the house opens")
+	# the wait is saved with the character
+	var next := GS.game_house_next
+	GS.save_game()
+	GS.game_house_next = 0.0
+	GS.load_game()
+	check(absf(GS.game_house_next - next) < 1.0, "the Game House's wait is saved")
+	main.hud.close_panels()
+	await wait(0.4)
+	check(house.label.text.begins_with("Opens in"), "the house shows when it opens again (%s)" % house.label.text)
+	GS.game_house_next = 0.0

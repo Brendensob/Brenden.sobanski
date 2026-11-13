@@ -1,6 +1,6 @@
 extends Node2D
 ## Village stations: furnaces, chests, the incubator, seed soils, the furnace
-## gate and the notice sign. Reward chests also appear deep inside worlds.
+## gate, the notice sign and the Game House. Reward chests also appear deep inside worlds.
 
 var kind := ""
 var index := 0
@@ -25,7 +25,7 @@ func _ready() -> void:
 	label.add_theme_font_size_override("font_size", 6)
 	label.add_theme_color_override("font_outline_color", Color("1b1a24"))
 	label.add_theme_constant_override("outline_size", Art.outline_for(6))
-	label.size = Vector2(70, 10)
+	label.size = Vector2(120, 10)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(label)
 	if kind == "gate":
@@ -93,11 +93,14 @@ func _refresh() -> void:
 		"sign":
 			tex = Art.prop_tex("sign")
 			text = "Notice"
+		"game_house":
+			tex = Art.game_house_tex()
+			text = "Game House" if GS.game_house_ready() else "Opens in " + _time(GS.game_house_wait())
 	sprite.texture = tex
 	var s2: Vector2 = tex.get_size()
 	sprite.position = Vector2(-s2.x / 2, -s2.y + 1)
 	label.text = text
-	label.position = Vector2(-35, -s2.y - 10)
+	label.position = Vector2(-60, -s2.y - 10)
 
 func _time(sec: float) -> String:
 	var s := int(maxf(sec, 0))
@@ -123,8 +126,10 @@ func interact(_player: Node) -> void:
 			hit_chest(kind.replace("chest_", ""))
 		"reward_chest":
 			hit_reward_chest()
+		"game_house":
+			level.main.hud.open_game_house()
 		"sign":
-			level.main.hud.open_info("Pixel Town", "West: Brutus and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
+			level.main.hud.open_info("Pixel Town", "West: Brutus, the Game House (one game every 2.5 hours) and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
 		_:
 			level.main.hud.open_station(self)
 
