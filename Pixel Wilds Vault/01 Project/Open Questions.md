@@ -12,6 +12,7 @@ Things only Brenden can answer. Claude asks these when they matter and moves the
 - [ ] Are the **friend, chat and emote buttons** visible in single player in the real game, or only online? (Ours always show.)
 - [ ] Does the Plumber sell exactly our list (tools, potions, ammo, walls, campfire, Combo Book II, Green Egg) in the real game? Brenden answered who sells and who buys on 2026-11-04.
 - [ ] In the recording, a **red-haired girl** says "Do you need a hammer?". Which of our villagers is she, or is she one we don't have yet?
+- [ ] **Tile Match prizes:** a Gem pair gives 2 gems, Coins 150, Potions 2, Key 1 Silver Key, Crystals 3, Scroll 1 Combination Scroll, with 5 misses. What should they be? Want more minigames in the Game House?
 - [ ] Which other worlds or events does he play most, so they get polished first?
 
 ## Answered

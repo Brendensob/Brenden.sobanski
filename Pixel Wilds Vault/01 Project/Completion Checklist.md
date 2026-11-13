@@ -51,6 +51,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
 | Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
+| Game House (Tile Match) | ✅ | 2026-11-13: hit the west house's door; 2.5-hour wait saved; rules, prizes, the bad pairs and the window tested by the autotest. Prizes are placeholders |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
 | Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
 | Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player: slow fall and a gravestone that counts 10 s to Pixel Town (ghost removed 2026-11-07); one free revive in the Grasslands Arena. Autotest covers all of it |
@@ -113,6 +114,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Faint bar, gravestones in rooms, off-screen markers | ✅ | 2026-11-07: small top bar with countdown and an are-you-sure, darker screen, friends revive at your gravestone, markers at the screen's edge; autotest and two-player tested. 2026-11-11: touching the gravestone revives right away (two-player tested) |
 | Host leaving passes the room on | ✅ | 2026-11-11: the first guest becomes host on the same map, the others rejoin by themselves; server tests, two-player test and the new three-player test. Needs the live server redeployed |
 | Shared drops | ✅ | 2026-11-07: players within 1.5 tiles of the picker get the same drop (not boss drops); two-player tested |
+| Boss loot for each player | ✅ | 2026-11-13: every player on the map gets their own roll that only they see; two-player test checks host and friend each get theirs; autotest checks the Jelly King's loot isn't shared |
 | Portals one at a time in rooms | ✅ | 2026-11-07: only you go in and nobody is pulled in; leaving takes everyone in that world after 20 s; "Someone's in the current portal"; two-player tested both ways and for leaving |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |
 | Server wipe recovery | ✅ | Games restore their name and friends (`/restore`); server tests |

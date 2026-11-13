@@ -26,7 +26,7 @@ var players := {} # peer id -> {"name", "look", "state"}
 var main: Node
 var _send_t := 0.0
 var _tick_t := 0.0
-var _pending_take := {} # nid -> true, pickups we asked the host for
+var _pending_take := {} # nid -> when we asked the host for that pickup (msec)
 # trading: who with, and what each side has put up
 const TRADE_SLOTS := 6
 var trade_peer := 0
@@ -706,6 +706,13 @@ func take_pickup(world_id: String, nid: int) -> void:
 	_lvl().net_remove(nid)
 	pickup_gone.rpc(world_id, nid)
 
+## Your own roll of a boss's loot, from the host: only you see it and only you
+## can pick it up. has_at false: it lands at your feet (an arena's reward).
+@rpc("authority", "reliable")
+func boss_loot(world_id: String, loot: Array, has_at: bool, at: Vector2) -> void:
+	if _lvl() and _lvl().id == world_id:
+		_lvl().drop_loot(loot, at if has_at else null)
+
 ## Players standing right next to whoever picked up a shared drop get the same
 ## drop too (not a boss's). The host knows where everyone on its map stands.
 const SHARE_DIST := 24.0
@@ -731,10 +738,16 @@ func _where(lvl: Node, peer: int) -> Variant:
 	var pp: Node = lvl.puppets.get(peer)
 	return pp.position if pp and is_instance_valid(pp) else null
 
+## Asks the host for a pickup. If no answer comes (the message was lost while
+## the connection blinked), ask again after a moment instead of leaving the
+## drop stuck at your feet for good.
+const PICKUP_RETRY_MS := 2000
+
 func ask_pickup(nid: int) -> void:
-	if _pending_take.has(nid):
+	var t := Time.get_ticks_msec()
+	if _pending_take.has(nid) and t - int(_pending_take[nid]) < PICKUP_RETRY_MS:
 		return
-	_pending_take[nid] = true
+	_pending_take[nid] = t
 	take_pickup.rpc_id(1, _lvl().id, nid)
 
 @rpc("any_peer", "reliable")
