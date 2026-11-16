@@ -666,7 +666,7 @@ func hurt_me(dmg: int, crit: float, from_x: float, status: Array) -> void:
 
 ## The host handed you a pickup you asked for.
 @rpc("authority", "reliable")
-func grant(nid: int, item: String, n: int) -> void:
+func grant(nid: int, item: String, n: int, loot := false) -> void:
 	_pending_take.erase(nid)
 	var left := GS.add_item(item, n, true)
 	if left > 0 and item != "coin":
@@ -675,6 +675,8 @@ func grant(nid: int, item: String, n: int) -> void:
 		main.level.number(main.level.player.position + Vector2(0, -24), "+%d coins" % n, Color("f2cf5b"))
 	elif left < n:
 		main.hud.toast("%s obtained%s" % [Data.ITEMS[item].name, " x%d" % (n - left) if n - left > 1 else ""])
+	if loot and Data.is_rare(item):
+		shout_rare(item)
 
 # ---------------------------------------------------------------- requests to the host
 @rpc("any_peer", "reliable")
@@ -700,7 +702,7 @@ func take_pickup(world_id: String, nid: int) -> void:
 		return
 	p.taken = true
 	var who := multiplayer.get_remote_sender_id()
-	grant.rpc_id(who, nid, p.item, p.n)
+	grant.rpc_id(who, nid, p.item, p.n, p.loot)
 	if p.share:
 		share_drop(_lvl(), who, p.item, p.n)
 	_lvl().net_remove(nid)
@@ -728,9 +730,9 @@ func share_drop(lvl: Node, picker: int, item: String, n: int) -> void:
 		if pos == null or (pos as Vector2).distance_to(at) > SHARE_DIST:
 			continue
 		if q == 1:
-			grant(0, item, n)
+			grant(0, item, n, true)
 		else:
-			grant.rpc_id(q, 0, item, n)
+			grant.rpc_id(q, 0, item, n, true)
 
 func _where(lvl: Node, peer: int) -> Variant:
 	if peer == 1:
@@ -772,6 +774,19 @@ func say(text: String) -> void:
 @rpc("any_peer", "reliable")
 func chat(from: String, text: String) -> void:
 	chat_received.emit(from, text.left(80))
+
+## A rare drop (Brenden, 2026-11-16): "brenden found a Blood Long Sword!" goes
+## to everyone in the room's chat, in gold. Playing alone, a gold banner says it.
+var last_shout := ""
+func shout_rare(item: String) -> void:
+	var text := "%s found %s!" % [GS.player_name, Data.with_article(item)]
+	last_shout = text
+	Sfx.play("rare", 0.0)
+	if main:
+		main.hud.toast("Rare drop! You found %s!" % Data.with_article(item), "good")
+	if active:
+		chat.rpc("", text)
+		chat_received.emit("", text)
 
 ## Shows an emote over your head on everyone else's screen.
 func send_emote(id: String) -> void:

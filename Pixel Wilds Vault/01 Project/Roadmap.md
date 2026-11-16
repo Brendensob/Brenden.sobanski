@@ -8,7 +8,7 @@ tags: [project, roadmap]
 - [ ] **Rainbow cape and wings** cosmetics, like the outfit in his video.
 
 ## Seen in the 2026-10-20 recording, not built yet
-- [ ] The bag's **collection book** (every weapon, helmet, armor, shield and ring, by tab).
+- [x] The bag's **collection book** (weapons, armor, rings; 2026-11-16).
 - [ ] The item box showing stats as small icons.
 - [x] Music, with Sound and Music volume in Options (2026-10-24)
 
@@ -28,8 +28,10 @@ tags: [project, roadmap]
 
 ## Game House
 - [x] Tile Match (2026-11-13)
-- [ ] More minigames in the Game House (Brenden said "minigames").
-- [ ] Brenden sets the Tile Match prizes and misses (placeholders now).
+- [x] More minigames: Slime Smack and High or Low (2026-11-16).
+- [ ] Brenden sets the prizes of all three games (placeholders now).
 
 ## Ideas parking lot
 Add ideas here, or in `My Notes`.
+- Skipped from the 2026-11-16 list (Brenden said not now): a "while you were away" card when you load a save; locked worlds as dark shapes on the world list; weekend events (boss rush, double drops).
+- New ideas (2026-11-16, for Brenden to pick): a reward when a collection book page is complete; a boss health bar that shows the boss's name and the "!" too; daily login gift; an Achievements page (also needed for Steam); a Game House leaderboard for Slime Smack scores in rooms.

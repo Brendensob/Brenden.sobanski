@@ -133,6 +133,11 @@ func _build() -> void:
 			{"w": "tri", "f": 262, "f1": 98, "d": 0.45, "v": 0.5}],
 		"shoot": [{"w": "tri", "f": 900, "f1": 250, "d": 0.09, "v": 0.5}, {"w": "noise", "f": 6000, "d": 0.03, "v": 0.2, "lp": 0.5}],
 		"cast": [{"w": "square", "f": 500, "f1": 1300, "d": 0.14, "v": 0.3, "duty": 0.25, "vib": 0.04}],
+		# a boss winding up a big attack: two rising alarm blips
+		"warn": [{"w": "square", "f": 440, "f1": 660, "d": 0.12, "v": 0.32, "duty": 0.5, "gap": 0.06}, {"w": "square", "f": 440, "f1": 880, "d": 0.18, "v": 0.32, "duty": 0.5}],
+		# a rare drop found: a bright fanfare
+		"rare": [{"w": "square", "f": 1047, "d": 0.07, "v": 0.3, "v1": 0.3, "duty": 0.25}, {"w": "square", "f": 1319, "d": 0.07, "v": 0.3, "v1": 0.3, "duty": 0.25},
+			{"w": "square", "f": 1568, "d": 0.07, "v": 0.3, "v1": 0.3, "duty": 0.25}, {"w": "square", "f": 2093, "d": 0.3, "v": 0.3, "duty": 0.25, "vib": 0.03}],
 		"boom": [{"w": "noise", "f": 2200, "f1": 200, "d": 0.4, "v": 0.6, "lp": 0.45}],
 		# gathering
 		"chop": [{"w": "tri", "f": 330, "f1": 170, "d": 0.05, "v": 0.6}, {"w": "noise", "f": 2500, "f1": 900, "d": 0.05, "v": 0.35, "lp": 0.4}],

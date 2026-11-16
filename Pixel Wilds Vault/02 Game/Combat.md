@@ -13,6 +13,9 @@ Matched to the PSG2 trailer (PR #11, 2026-10-10).
 - **Starter weapon:** the **Plunger** (attack 4, 0.4 s a swing), like PSG2, since 2026-11-06. Before that it was the Sword Cast (attack 4, 0.5 s).
 - **Potions from monsters:** every Grasslands and Darklands monster can drop a Small Potion (4%, placeholder), Grasslands Arena monsters 6%, and the Grasslands Arena boss can drop a Holy Banana.
 - **Bosses are big:** drawn twice the size of before (2026-11-06), with hit boxes to match. Every weapon has its own size in your hand (`size`, from reach and weight: 0.9× to 2.4×, 2026-11-06).
+- **Bosses warn before their big attack** (since 2026-11-16): for 2 seconds the boss stops, shakes, pulses red and shows a blinking "!" over its head, with a two-blip alarm (`BOSS_WARN` in `mob.gd`). Then charging bosses charge, speeding and walking bosses **pounce** (a leap that comes down where you stood, with a thud), and flying bosses **dive** at you. Pounces and dives come every 4.5 to 7 seconds when you're within about 14 tiles. The Jelly King keeps its crouch, which shows the "!" too. Friends see the warning. *From Brenden's game-design notes; "Do all except 6 7 5"*
+
+  ![[boss_warning_2026-11-16.png]]
 - **Your health:** every character starts with **10 health** (5 before 2026-10-27), plus what their character and gear add.
 - **Health comes back** on its own: 1 every 4 seconds once you've gone 6 seconds without being hurt (1 every 12 s after 8 s before 2026-11-07). Ours, not the wiki's.
 - **Safe after a hit:** for **1 second** after you're hurt nothing can hurt you again (0.6 s before 2026-10-27). You blink while it lasts.

@@ -38,7 +38,13 @@ var reward_chests := {} # world id -> unix day it was last opened
 ## The Game House on the west of Pixel Town: one game every 2.5 hours
 ## (Brenden, 2026-11-13). The wait counts on now(), like the furnaces.
 const GAME_HOUSE_WAIT := 2.5 * 3600.0
-var game_house_next := 0.0 # now() when the next game can start
+var game_house_next := 0.0 # now() when the next game of Tile Match can start
+## The Game House's other games (2026-11-16), each with its own wait: game -> now()
+## when it can be played again. "tile" (Tile Match) uses game_house_next.
+var house_next := {}
+## The collection book (Brenden, 2026-11-16): every item this character has
+## ever had, so the book in the bag can show it in colour. item id -> true.
+var found := {}
 # Time of day from 0 to 1. Like the original (216 s a day): daytime for the first
 # 11 of 24 ticks, sunset for 4, night for 9, then straight back to morning.
 var clock := 0.0
@@ -169,6 +175,8 @@ func new_game(character: String = "man_in_suit", pname: String = "") -> void:
 	soils.resize(5)
 	reward_chests = {}
 	game_house_next = 0.0
+	house_next = {}
+	found = {}
 	clock = 0.0
 	day = 1
 	best_survival_day = 0
@@ -314,6 +322,7 @@ func add_item(id: String, n: int = 1, quiet: bool = false) -> int:
 		return 0
 	if Data.ITEMS.get(id, {}).get("type", "") == "character":
 		unlock_character(id)
+	found[id] = true
 	var m := stack_size(id)
 	for s in inv:
 		if n <= 0:
@@ -577,18 +586,57 @@ func open_chest(kind: String, to_bag: bool = true) -> Array:
 			give(l[0], l[1])
 	return loot
 
-func game_house_ready() -> bool:
-	return now() >= game_house_next
+## game: "tile" (Tile Match), "smack" (Slime Smack) or "hilo" (High or Low).
+func game_house_ready(game := "tile") -> bool:
+	return game_house_wait(game) <= 0.0
 
-## Seconds until the Game House opens again (0 when it's open).
-func game_house_wait() -> float:
-	return maxf(0.0, game_house_next - now())
+## Seconds until that game can be played again (0 when it's ready).
+func game_house_wait(game := "tile") -> float:
+	var next: float = game_house_next if game == "tile" else float(house_next.get(game, 0.0))
+	return maxf(0.0, next - now())
 
-## A game started: the house closes for GAME_HOUSE_WAIT. Saved right away, so
+## A game started: that game waits GAME_HOUSE_WAIT. Saved right away, so
 ## leaving the game mid-way doesn't give another try.
-func game_house_played() -> void:
-	game_house_next = now() + GAME_HOUSE_WAIT
+func game_house_played(game := "tile") -> void:
+	if game == "tile":
+		game_house_next = now() + GAME_HOUSE_WAIT
+	else:
+		house_next[game] = now() + GAME_HOUSE_WAIT
 	save_game()
+
+const HOUSE_GAMES := ["tile", "smack", "hilo"]
+## Seconds until any game in the house can be played (0 when one is ready).
+func game_house_soonest() -> float:
+	var best := INF
+	for g in HOUSE_GAMES:
+		best = minf(best, game_house_wait(g))
+	return best
+
+## Marks everything you have, wear and store as found, for the collection book.
+func note_found() -> void:
+	for s in inv:
+		if s:
+			found[s.id] = true
+	for page in storage:
+		for s in page:
+			if s:
+				found[s.id] = true
+	for k in equip:
+		if equip[k] != "":
+			found[equip[k]] = true
+
+## The collection book's pages: weapons, armor (helmets, armor, shields) and rings.
+const BOOK_PAGES := {"weapons": ["weapon", "staff", "bow"], "armor": ["helmet", "armor", "shield"], "rings": ["ring"]}
+func book_items(page: String) -> Array:
+	var out := []
+	for id in Data.ITEMS:
+		if Data.ITEMS[id].type in BOOK_PAGES[page] and not Data.set_aside(id):
+			out.append(id)
+	return out
+
+func book_count(page: String) -> Vector2i:
+	var all := book_items(page)
+	return Vector2i(all.filter(func(id): return found.has(id)).size(), all.size())
 
 func today() -> int:
 	return int(now() / 86400.0)
@@ -754,6 +802,7 @@ func save_game() -> void:
 		"flags": flags, "quests": quests_done, "furnaces": furnaces, "incubator": incubator, "soils": soils,
 		"reward_chests": reward_chests, "now": now(), "clock": clock, "day": day, "best_survival_day": best_survival_day, "look": look, "name": player_name, "token": online_token,
 		"friends": friend_names, "gem_checkouts": gem_checkouts, "game_house": game_house_next,
+		"house_games": house_next, "found": found.keys(),
 	}
 	_write_slot(slot, data)
 
@@ -875,6 +924,14 @@ func load_game() -> bool:
 	reward_chests = _dict(d, "reward_chests")
 	var gh = d.get("game_house", 0.0)
 	game_house_next = float(gh) if (gh is int or gh is float) else 0.0
+	var hg: Dictionary = _dict(d, "house_games")
+	for g in hg:
+		if g in HOUSE_GAMES and (hg[g] is int or hg[g] is float):
+			house_next[g] = float(hg[g])
+	for id in _arr(d, "found"):
+		if Data.ITEMS.has(str(id)):
+			found[str(id)] = true
+	note_found() # old saves: whatever you already have counts as found
 	# the device clock is only read when the game starts, so quitting to the menu
 	# and loading again can't pick up a changed clock either
 	_no_rewind(float(d.get("now", 0.0)))

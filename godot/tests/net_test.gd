@@ -135,6 +135,9 @@ func run_host() -> void:
 				netted_balls += 1
 		check(netted_balls == 0, "the host's boss loot is only the host's (not sent to the room)")
 		check(await until(func(): return GS.count("sticky_balls") >= sb0 + 2, 5.0), "the host picked up their own boss loot")
+		# a rare boss drop is shouted in the room's chat (Brenden, 2026-11-16)
+		lvl.boss_loot([["golden_long_sword", 1.0, 1, 1]], [], lvl.player.position + Vector2(0, -8))
+		check(await until(func(): return Net.last_shout.ends_with("found a Golden Long Sword!"), 5.0), "the host's rare drop is shouted (%s)" % Net.last_shout)
 		lvl.player.position = lvl.cell_pos(Vector2i(40, lvl.surface[40] - 1)) # step away again so the slime picks the friend
 	# the friend faints: a gravestone stands in their place, and standing by it revives them
 	check(await until(func(): return is_instance_valid(pp) and pp.dead, 90.0), "the friend fainted")
@@ -156,7 +159,7 @@ func run_host() -> void:
 	check(await until(func(): return chat_log.has("hello from friend"), 90.0), "the friend's chat message arrived")
 	await wait(0.2)
 	var feed: VBoxContainer = main.hud.chat_feed
-	check(feed.visible and (feed.get_child(0) as Label).text.contains("hello from friend") and feed.position.y >= main.hud.chat_btn.position.y + main.hud.chat_btn.size.y - 1,
+	check(feed.visible and feed.get_children().any(func(fl): return fl.visible and (fl as Label).text.contains("hello from friend")) and feed.position.y >= main.hud.chat_btn.position.y + main.hud.chat_btn.size.y - 1,
 		"the message shows on the side, right under the Chat.. box")
 	check(main.hud.goal_btn.position.y >= feed.position.y + main.hud.chat_feed_height() - 1, "the goal moved down under the chat lines")
 	for t in ["anyone got coal?", "yes, by the rocks", "need a fire crystal for a torch", "Firas drop them in Grasslands"]:
@@ -298,6 +301,7 @@ func run_client() -> void:
 	check(await until(func(): return GS.count("wood") >= 3, 20.0), "picked up the wood the host dropped")
 	check(await until(func(): return GS.count("rock") >= 2, 25.0), "got the same drop the host picked up right next to the friend")
 	check(await until(func(): return GS.count("sticky_balls") >= 2, 25.0), "got a boss loot roll of their own (%d Sticky Balls)" % GS.count("sticky_balls"))
+	check(await until(func(): return chat_log.any(func(t): return t.ends_with("found a Golden Long Sword!")), 25.0), "the host's rare drop shows in the friend's chat")
 	var hp0: float = GS.hp
 	check(await until(func(): return GS.hp < hp0, 20.0), "the host's slime hurt the friend")
 	# faint: a small bar at the top, a darker screen, and a friend can revive you

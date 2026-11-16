@@ -11,6 +11,7 @@ var sprite: Sprite2D
 var nid := 0 # shared pickups in a room have a number; the host decides who gets them
 var taken := false
 var share := false # a monster's (not a boss's) or a broken thing's drop: players right next to whoever picks it up get one too
+var loot := false # a monster's or boss's drop: a rare one is shouted in chat when picked up
 
 func setup(id: String, count: int, lvl: Node) -> void:
 	item = id
@@ -82,6 +83,8 @@ func _collect() -> void:
 	if left < n:
 		Sfx.play("pickup")
 		level.main.hud.toast("%s obtained" % Data.ITEMS[item].name + (" x%d" % (n - left) if n - left > 1 else ""), "")
+		if loot and Data.is_rare(item):
+			Net.shout_rare(item)
 	n = left
 	if n <= 0:
 		queue_free()

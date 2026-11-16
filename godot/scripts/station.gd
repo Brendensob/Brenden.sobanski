@@ -95,7 +95,8 @@ func _refresh() -> void:
 			text = "Notice"
 		"game_house":
 			tex = Art.game_house_tex()
-			text = "Game House" if GS.game_house_ready() else "Opens in " + _time(GS.game_house_wait())
+			var soon := GS.game_house_soonest()
+			text = "Game House" if soon <= 0.0 else "Opens in " + _time(soon)
 	sprite.texture = tex
 	var s2: Vector2 = tex.get_size()
 	sprite.position = Vector2(-s2.x / 2, -s2.y + 1)
@@ -129,7 +130,7 @@ func interact(_player: Node) -> void:
 		"game_house":
 			level.main.hud.open_game_house()
 		"sign":
-			level.main.hud.open_info("Pixel Town", "West: Brutus, the Game House (one game every 2.5 hours) and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
+			level.main.hud.open_info("Pixel Town", "West: Brutus, the Game House (three games, each once every 2.5 hours) and the rock wall (break it with a gold pickaxe to reach the magic seed soils).\nChests open with keys. The Incubator hatches monster eggs.\nCentre: the Gatekeeper takes you to every world.\nEast: Miffie, the shops, the Crafter and the Miner. Up the hill: the furnaces.")
 		_:
 			level.main.hud.open_station(self)
 

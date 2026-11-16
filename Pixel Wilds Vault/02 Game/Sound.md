@@ -14,6 +14,8 @@ Sounds:
 
 New in 2026-10-24: **heal** (potions and healing staffs), **equip**, **chest** (opening a keyed chest), **smelt** (starting a furnace), and the **night** sting at nightfall in Survival Grasslands.
 
+New in 2026-11-16: **warn** (a two-blip alarm when a boss winds up a big attack) and **rare** (a bright fanfare for a rare drop).
+
 The same sound can't start twice within 45 ms, so fast hits never stack into one loud blast.
 
 ## Music

@@ -27,7 +27,7 @@ Small and closed in on all sides (a roof on top), with three floors. Since 2026-
 That order matches Brenden's screenshot (Plumber, Banka, then the spiky-haired seller). The Crafter moved from the east end to beside the portal on 2026-10-29, when Brenden asked for it. The four houses mirror around the middle. See [[NPCs]].
 
 ## The Game House (since 2026-11-13)
-Hit its door to play **Tile Match**, once every 2.5 hours. Over the roof it says "Game House", or how long until it opens again.
+Hit its door to play. Three games since 2026-11-16, picked with the tabs across the top of the window: **Tile Match**, **Slime Smack** and **High or Low**. Each can be played once every 2.5 hours, on its own timer. Over the roof it says "Game House" while any game is ready, or how long until the next one opens.
 
 ![[game_house_2026-11-13.png]]
 
@@ -51,6 +51,21 @@ Tap **Take prizes** to stop and keep the pot. The game also ends when the misses
 | Scroll | 1 Combination Scroll |
 
 ![[tile_match_2026-11-13.png]]
+
+**Slime Smack** (our own, 2026-11-16): nine holes, 20 seconds. Slimes pop up and duck back down, faster as time runs out. Smack a slime for 1 point, a gold slime for 3; smack a bomb and lose 3. **Take prizes** stops early. The score picks the prize (placeholders):
+
+| Score | Prize |
+|---|---|
+| 8 | 150 coins |
+| 16 | 300 coins, 2 Small Potions |
+| 24 | 2 gems, 300 coins |
+| 32 | 4 gems, 500 coins |
+
+![[slime_smack_2026-11-16.png]]
+
+**High or Low** (our own, 2026-11-16): a card from 1 to 9 is face up. Guess whether the next is higher or lower (it's never the same number). Each right guess climbs the ladder; a wrong guess loses it all. **Take prizes** any time. Ladder (placeholders): 100 coins, 250 coins, 1 gem + 250, 2 gems + 400, 4 gems + 600, 8 gems + 1,000 (the top ends the game).
+
+![[high_or_low_2026-11-16.png]]
 
 ## The basement
 - A massive stone wall at the east end of the street blocks the way down. Smash it with the Wall Hammer, earned by surviving 10 nights in Survival Grasslands (the night number is a guess).
