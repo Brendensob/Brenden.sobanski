@@ -2242,6 +2242,12 @@ func run() -> void:
 	check(GS.look == "nurse" and GS.player_name == "Tester", "a new game starts as the Nurse named Tester")
 	check(GS.slot_info(0).get("name", "") == "Tester", "the character is saved in slot 1")
 	check(GS.clock == 0.0 and not GS.is_night(), "a new game starts in the morning")
+	if OS.get_environment("AT_BOSS") != "":
+		await goto("grass_arena")
+		await boss_warning_check()
+		print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
+		get_tree().quit()
+		return
 	await guidance_check()
 	GS.clock = 0.5
 	check(GS.darkness() > 0.0 and not GS.is_night(), "sunset starts after 11 of 24 hours")
@@ -2625,6 +2631,9 @@ func run() -> void:
 		check(main.level.bosses_spawned, "%s boss arrives at 3 minutes" % w)
 		await shot("30_" + w)
 	await jelly_king_check()
+	await boss_warning_check()
+	await rare_drop_check()
+	await book_check()
 	await psg2_match_check()
 	await drag_check()
 	await new_monsters()
@@ -2680,6 +2689,200 @@ func run() -> void:
 	main.hud._refresh_title()
 	print("AUTOTEST DONE, %d failures: %s" % [fails.size(), fails])
 	get_tree().quit()
+
+## The Game House's other games (Brenden, 2026-11-16: "more minigames"):
+## Slime Smack and High or Low, each with its own 2.5 hour wait.
+func house_games_check() -> void:
+	var SlimeSmack := preload("res://scripts/slime_smack.gd")
+	var HighLow := preload("res://scripts/high_low.gd")
+	var hud: Node = main.hud
+	check(GS.game_house_ready("smack") and GS.game_house_ready("hilo"), "Slime Smack and High or Low have their own waits (still open after Tile Match)")
+	# Slime Smack's rules
+	var s = SlimeSmack.new(3)
+	var seen := {}
+	var t := 0.0
+	while not s.over:
+		s.tick(0.05)
+		t += 0.05
+		for i in s.HOLES:
+			if s.holes[i] != "":
+				seen[s.holes[i]] = true
+	check(absf(t - SlimeSmack.TIME) < 0.2 and seen.has("slime") and seen.has("bomb"), "Slime Smack lasts 20 seconds and pops up slimes and bombs (%s)" % [seen.keys()])
+	var s2 = SlimeSmack.new(3)
+	s2.holes[0] = "slime"
+	s2.holes[1] = "gold"
+	s2.smack(0)
+	s2.smack(1)
+	check(s2.score == SlimeSmack.SLIME + SlimeSmack.GOLD and s2.smack(0) == "", "a slime is 1 point, a gold slime 3, an empty hole nothing")
+	s2.holes[2] = "bomb"
+	s2.smack(2)
+	check(s2.score == 1, "a bomb takes 3 points away")
+	s2.score = SlimeSmack.PRIZES[1][0]
+	check(s2.payout() == SlimeSmack.PRIZES[1][1], "the score picks the prize")
+	# High or Low's rules
+	var h = HighLow.new(5)
+	var c0: int = h.card
+	var r: Dictionary = h.guess(c0 <= 5)
+	check(r.card != c0 and r.ok == ((r.card > c0) == (c0 <= 5)), "High or Low draws a different card and checks the guess")
+	var h2 = HighLow.new(5)
+	h2.streak = 2
+	h2.cash_out()
+	check(h2.payout() == HighLow.LADDER[1], "taking your prize after 2 right guesses pays the second step")
+	var h3 = HighLow.new(5)
+	h3.card = 9
+	check(not h3.guess(true).ok and h3.lost and h3.payout().is_empty(), "a wrong guess loses it all")
+	# in the window
+	hud.house_game = "smack"
+	hud._refresh_game_house()
+	await wait(0.1)
+	check(hud.panels.game_house.get_node("Holes").visible and not hud.panels.game_house.get_node("Board").visible, "the Slime Smack tab shows the holes")
+	hud._game_house_button()
+	check(hud.smack_game != null and not GS.game_house_ready("smack") and GS.game_house_ready("hilo"), "starting Slime Smack closes only Slime Smack")
+	await wait(1.2)
+	for i in SlimeSmack.HOLES:
+		if hud.smack_game.holes[i] in ["slime", "gold"]:
+			hud.smack_hole(i)
+	await wait(0.5)
+	await shot("06j_slime_smack")
+	hud.smack_game.score = SlimeSmack.PRIZES[0][0]
+	var coins0 := GS.coins
+	hud._game_house_button()
+	check(hud.smack_game.over and GS.coins >= coins0 + int(SlimeSmack.PRIZES[0][1].coin), "taking Slime Smack's prize pays it")
+	hud.house_game = "hilo"
+	hud._game_house_button()
+	check(hud.hilo_game != null and not GS.game_house_ready("hilo"), "High or Low starts from its tab")
+	hud.hilo_game.card = 2
+	hud.guess_hilo(true)
+	await wait(0.3)
+	await shot("06k_high_or_low")
+	hud._game_house_button()
+	await wait(0.2)
+	var next := GS.house_next.duplicate()
+	GS.save_game()
+	GS.house_next = {}
+	GS.load_game()
+	check(GS.house_next.has("smack") and absf(float(GS.house_next.smack) - float(next.smack)) < 1.0, "the new games' waits are saved")
+	hud.house_game = "tile"
+	hud._refresh_game_house()
+
+## Before every big attack a boss stops, shakes and shows a "!" for 2 seconds
+## (Brenden, 2026-11-16). Only the Jelly King warned you before.
+func boss_warning_check() -> void:
+	var lvl: Node = main.level
+	for e in lvl.entities.get_children():
+		if e is MobS:
+			e.queue_free()
+	await get_tree().process_frame
+	var p: Node2D = lvl.player
+	p.invuln = 9999.0
+	# a charging boss winds up before every charge
+	var king: Node = lvl.spawn_mob_at("king", p.position + Vector2(80, -4))
+	king.aggro_forced = true
+	king.state = "idle"
+	king.state_t = 0.1
+	var warned := 0.0
+	var still := true
+	var shot_done := false
+	for f in 400:
+		await get_tree().physics_frame
+		if king.warning():
+			warned += 1.0 / 60.0
+			if warned > 0.3 and absf(king.velocity.x) > 5:
+				still = false
+			if warned > 1.0 and not shot_done:
+				shot_done = true
+				await shot("31d_boss_warning")
+		elif warned > 0:
+			break
+	check(warned >= 1.8 and still and king.state == "charge", "the King stops and warns for 2 seconds before he charges (%.1fs, then %s)" % [warned, king.state])
+	king.queue_free()
+	# a speeding boss pounces after its wind-up, a flying one dives
+	for pair in [["hand", "pounces"], ["ghost_lord", "dives"]]:
+		var b: Node = lvl.spawn_mob_at(pair[0], p.position + Vector2(90, -20), 1.0, 1.0, true)
+		b.aggro_forced = true
+		await wait(0.2)
+		b.big_cd = 0.0
+		var w := 0.0
+		var attacked := false
+		for f in 300:
+			await get_tree().physics_frame
+			if b.warning():
+				w += 1.0 / 60.0
+			elif w > 0:
+				attacked = b.big_t > 0 or absf(b.velocity.x) + absf(b.velocity.y) > 60
+				break
+		check(w >= 1.8 and attacked, "the %s warns for 2 seconds, then %s (%.1fs)" % [b.def.name, pair[1], w])
+		b.queue_free()
+	# the Jelly King's crouch shows the warning too
+	var jk: Node = lvl.spawn_mob_at("jelly_king", p.position + Vector2(90, -4))
+	jk.state = "crouch"
+	jk.state_t = 5.0
+	await wait(0.1)
+	check(jk.warning(), "the Jelly King's crouch shows the warning")
+	jk.queue_free()
+	# a friend sees it: the warning goes out with the monsters' places
+	var b2: Node = lvl.spawn_mob_at("king", p.position + Vector2(110, -4))
+	b2.warn_t = 1.0
+	check(b2.warning(), "a boss winding up reports it")
+	b2.queue_free()
+	await get_tree().process_frame
+
+## A rare drop from a monster or boss is shouted in chat (Brenden, 2026-11-16).
+func rare_drop_check() -> void:
+	var lvl: Node = main.level
+	check(Data.is_rare("golden_long_sword") and not Data.is_rare("jelly") and not Data.is_rare("plunger"), "gear that drops 5% of the time or less is rare; jelly isn't")
+	check(Data.with_article("evil_axe") == "an Evil Axe" and Data.with_article("golden_long_sword") == "a Golden Long Sword", "the shout says a or an")
+	Net.last_shout = ""
+	var p: Node2D = lvl.player
+	lvl.drop_loot([["golden_long_sword", 1]], p.position + Vector2(0, -10))
+	await wait(1.2)
+	check(Net.last_shout == "%s found a Golden Long Sword!" % GS.player_name, "picking up a rare boss drop shouts it (%s)" % Net.last_shout)
+	Net.last_shout = ""
+	main.drop_from_player("golden_long_sword", 1)
+	await wait(3.0)
+	check(Net.last_shout == "", "picking up gear you threw away doesn't shout")
+	main.hud.add_chat("", "Someone found a Golden Long Sword!")
+	check(main.hud.chat_gold.back() == true and main.hud.chat_log.back() == "Someone found a Golden Long Sword!", "a shout goes in the chat in gold, without a name in front")
+	GS.remove_item("golden_long_sword", GS.count("golden_long_sword"))
+
+## The collection book (Brenden, 2026-11-16): every weapon, armor and ring, dark
+## until you find it.
+func book_check() -> void:
+	var hud: Node = main.hud
+	GS.found.erase("evil_axe")
+	GS.remove_item("evil_axe", GS.count("evil_axe"))
+	var n0: Vector2i = GS.book_count("weapons")
+	check(n0.y > 50 and GS.book_items("weapons").has("evil_axe") and GS.book_items("rings").size() > 10, "the book lists every weapon (%d), armor and ring" % n0.y)
+	hud.toggle_bag()
+	hud.bag_tab = "book"
+	hud.book_page = "weapons"
+	hud.book_sel = ""
+	hud._refresh_bag()
+	await wait(0.2)
+	var slot: Button = hud.book_slots.get("evil_axe")
+	check(slot != null and (slot.get_node("Icon") as TextureRect).self_modulate.v < 0.3, "a weapon you haven't found is a dark shape")
+	slot.pressed.emit()
+	await wait(0.1)
+	check(hud.info_box.get_child(0).text == "???", "tapping it keeps its name hidden")
+	await shot("36_collection_book")
+	GS.add_item("evil_axe", 1)
+	check(GS.book_count("weapons").x == n0.x + 1, "getting it marks it found")
+	hud._refresh_bag()
+	await wait(0.1)
+	slot = hud.book_slots.get("evil_axe")
+	check((slot.get_node("Icon") as TextureRect).self_modulate == Color.WHITE, "found, it shows in colour")
+	hud.book_page = "armor"
+	hud._refresh_bag()
+	await wait(0.1)
+	await shot("36b_collection_armor")
+	GS.save_game()
+	GS.found = {}
+	GS.load_game()
+	check(GS.found.has("evil_axe"), "what you've found is saved")
+	GS.remove_item("evil_axe", 1)
+	hud.bag_tab = "combine"
+	hud.close_panels()
+	await wait(0.2)
 
 ## The Game House (Brenden, 2026-11-13): the west house of Pixel Town; hit its
 ## door to play Tile Match once every 2.5 hours.
@@ -2739,7 +2942,9 @@ func game_house_check() -> void:
 	GS.game_house_next = 0.0
 	GS.load_game()
 	check(absf(GS.game_house_next - next) < 1.0, "the Game House's wait is saved")
+	await house_games_check()
 	main.hud.close_panels()
 	await wait(0.4)
-	check(house.label.text.begins_with("Opens in"), "the house shows when it opens again (%s)" % house.label.text)
+	check(house.label.text.begins_with("Opens in"), "the house shows when it opens again once every game is played (%s)" % house.label.text)
 	GS.game_house_next = 0.0
+	GS.house_next = {}

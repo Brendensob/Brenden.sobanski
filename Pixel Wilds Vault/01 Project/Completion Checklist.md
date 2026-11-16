@@ -13,7 +13,7 @@ The living list of every system and how finished it is. It's updated after each 
 | ⛔ | Missing |
 | 🔒 | Blocked: needs data we don't have (see [[Known Issues]]) |
 
-*Last update: 2026-10-27, solid progression (see [[2026-10-27 Solid progression]]). Before that 2026-10-24, the polish pass (see [[2026-10-24 Polish pass phase 1]] and [[2026-10-24 Polish pass phases 2-5]]). The full audit was on 2026-10-22 ([[2026-10-22 Full game audit]]).*
+*Last update: 2026-11-16, collection book, boss warnings, Game House games and rare drop shouts (see [[2026-11-16 Collection book, boss warnings and minigames]]). Before that 2026-10-27, solid progression (see [[2026-10-27 Solid progression]]). Before that 2026-10-24, the polish pass (see [[2026-10-24 Polish pass phase 1]] and [[2026-10-24 Polish pass phases 2-5]]). The full audit was on 2026-10-22 ([[2026-10-22 Full game audit]]).*
 
 ## Game data
 | System | Status | Notes |
@@ -49,9 +49,11 @@ The living list of every system and how finished it is. It's updated after each 
 | Defense and blocks | ✅ | 2026-11-07: a fully blocked hit still does 1–2 half the time (400-roll autotest) |
 | Status effects (poison, fatigue, slow, cold) and cures | ✅ | The Antidote cure and Jade Ring immunity are tested |
 | Knockback, hit stun, hit feedback | ✅ | About a tile of push, a short daze with no touch damage, hit spark and squash (2026-10-24) |
-| Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, with no attack patterns of their own (PSG2's aren't documented) |
+| Monster AI (walk, fly, charge, accel, wizard, stone) | ✅ | All six movement types tested. Bosses use these, plus (2026-11-16) a warned charge, pounce or dive of our own (PSG2's patterns aren't documented) |
 | Monster drops | ✅ | 25 slimes drop only their own table |
 | Game House (Tile Match) | ✅ | 2026-11-13: hit the west house's door; 2.5-hour wait saved; rules, prizes, the bad pairs and the window tested by the autotest. Prizes are placeholders |
+| Game House: Slime Smack, High or Low | ✅ | 2026-11-16: own 2.5-hour timers (saved); rules, prizes and the window tested by the autotest. Prizes are placeholders |
+| Boss wind-up warnings | ✅ | 2026-11-16: 2 s "!" before every big attack (charge, pounce, dive; Jelly King's crouch); autotest checks King, Hand and Ghost Boss. Sent to friends with the monsters' places |
 | Bosses in all 8 arenas | ✅ | Arrive at 3 minutes. Grasslands Arena tuned for low-level players and checked by `arena_test.gd` (wooden gear wins 7 in 8, 2026-11-05) |
 | Set aside past Hell | ✅ | 2026-11-05: 11 later worlds off the Gatekeeper's list, their 73 items off the Crafter, books, furnaces, shops and quests. Autotest checks it, then turns them back on to test them |
 | Fainting and respawn | ✅ | Nothing is lost when you faint. The faint screen gives a tip, with the button under the text (layout tested, 2026-10-27). Single player: slow fall and a gravestone that counts 10 s to Pixel Town (ghost removed 2026-11-07); one free revive in the Grasslands Arena. Autotest covers all of it |
@@ -97,6 +99,7 @@ The living list of every system and how finished it is. It's updated after each 
 | System | Status | Notes |
 |---|---|---|
 | Bag, storage, gear, coins, gems, flags, quests, furnaces, incubator, soils | ✅ | Round trip tested |
+| Collection book (found items) | ✅ | 2026-11-16: saved and reloaded in the autotest; old saves count what you have |
 | Safe writes (temp file and backup) | ✅ | |
 | A damaged save falls back to its backup and is kept aside | ✅ | |
 | Bad fields in a save can't crash loading | ✅ | A deliberately broken save loads and keeps what's good |
@@ -114,6 +117,7 @@ The living list of every system and how finished it is. It's updated after each 
 | Faint bar, gravestones in rooms, off-screen markers | ✅ | 2026-11-07: small top bar with countdown and an are-you-sure, darker screen, friends revive at your gravestone, markers at the screen's edge; autotest and two-player tested. 2026-11-11: touching the gravestone revives right away (two-player tested) |
 | Host leaving passes the room on | ✅ | 2026-11-11: the first guest becomes host on the same map, the others rejoin by themselves; server tests, two-player test and the new three-player test. Needs the live server redeployed |
 | Shared drops | ✅ | 2026-11-07: players within 1.5 tiles of the picker get the same drop (not boss drops); two-player tested |
+| Rare drop shouts | ✅ | 2026-11-16: gold chat line for the room; autotest checks the shout and that thrown-away gear doesn't shout; two-player test checks the friend sees the host's |
 | Boss loot for each player | ✅ | 2026-11-13: every player on the map gets their own roll that only they see; two-player test checks host and friend each get theirs; autotest checks the Jelly King's loot isn't shared |
 | Portals one at a time in rooms | ✅ | 2026-11-07: only you go in and nobody is pulled in; leaving takes everyone in that world after 20 s; "Someone's in the current portal"; two-player tested both ways and for leaving |
 | Multiplayer screen, friend lights, public games | ✅ | Shows the name you own; Friends, Find and Host Public Game; red/green lights with Join. Menu test, two-player test, server tests (2026-10-27). 🟡 on the live server until it's redeployed (it was too old for public games, 2026-11-04) |
@@ -230,7 +234,7 @@ The living list of every system and how finished it is. It's updated after each 
 **6. Still incomplete:**
 - bosses' own attack patterns;
 - sort and split;
-- the collection book and stat icons (from the recording);
+- stat icons (from the recording; the collection book was added 2026-11-16);
 - the rainbow cape cosmetics;
 - the 3 items waiting for approval;
 - the Steam build;
@@ -256,4 +260,4 @@ The living list of every system and how finished it is. It's updated after each 
 **10. Next three:**
 1. Brenden's decision on the 3 items.
 2. Host the online server, so trusted time and rooms work for everyone.
-3. Bosses' own attack patterns, from the trailer and his videos.
+3. Bosses' own attack patterns, from the trailer and his videos (a warned charge, pounce or dive since 2026-11-16).

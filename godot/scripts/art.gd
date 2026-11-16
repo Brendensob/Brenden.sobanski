@@ -2531,6 +2531,45 @@ func match_tile(face: String) -> Texture2D:
 		img.blend_rect(pic, Rect2i(Vector2i.ZERO, pic.get_size()), Vector2i((n - pic.get_width()) / 2, (n - 2 - pic.get_height()) / 2))
 		return to_tex(img))
 
+## Slime Smack holes (2026-11-16), 38 pixels square: a grassy tile with a dark
+## hole, and whatever popped up out of it: a slime, a gold slime or a bomb.
+const SMACK_TILE := 38
+func smack_tile(what: String) -> Texture2D:
+	return cached("smack_" + what, func():
+		# drawn at half size, then doubled, so the slime reads big and crisp
+		var n := SMACK_TILE / 2
+		var img := blank(n, n)
+		var fill := Color("4f9a3a")
+		var rim := fill.darkened(0.45)
+		rect(img, 1, 0, n - 2, n, rim)
+		rect(img, 0, 1, n, n - 2, rim)
+		rect(img, 1, 1, n - 2, n - 2, fill)
+		rect(img, 1, n - 3, n - 2, 1, fill.darkened(0.2))
+		rect(img, 2, 1, n - 4, 1, fill.lightened(0.3))
+		for x in range(3, n - 3, 4):
+			px(img, x, 3 + (x % 3), fill.lightened(0.18))
+		ellipse(img, n / 2.0, n - 5.0, 7, 2.6, Color("2a1a10"))
+		ellipse(img, n / 2.0, n - 4.6, 6, 1.8, Color("120a06"))
+		if what != "":
+			var pic: Image
+			if what == "bomb":
+				pic = emote_img("bomb")
+			else:
+				pic = mob_tex("slime", false).get_image().duplicate()
+			if pic.get_format() != Image.FORMAT_RGBA8:
+				pic.convert(Image.FORMAT_RGBA8)
+			if pic.get_width() > n - 2:
+				pic.resize(n - 2, int(pic.get_height() * float(n - 2) / pic.get_width()), Image.INTERPOLATE_NEAREST)
+			if what == "gold":
+				for y in pic.get_height():
+					for x in pic.get_width():
+						var c := pic.get_pixel(x, y)
+						if c.a > 0.5 and c.get_luminance() > 0.15:
+							pic.set_pixel(x, y, Color("c8901e").lerp(Color("fff3b0"), clampf(c.get_luminance() * 1.3, 0, 1)))
+			img.blend_rect(pic, Rect2i(Vector2i.ZERO, pic.get_size()), Vector2i((n - pic.get_width()) / 2, n - 5 - pic.get_height()))
+		var big := upscale(img, 2)
+		return to_tex(big))
+
 const MATCH_PICS := {"gem": "gem", "potion": "small_potion", "key": "silver_key", "crystal": "crystal", "scroll": "combination_scroll"}
 
 func prop_tex(kind: String, state: String = "") -> Texture2D:
@@ -2783,6 +2822,7 @@ const UI_GRIDS := {
 	"plus": ["..g..", "..g..", "ggggg", "..g..", "..g.."],
 	"friend": ["..kk....", ".kkkk...", ".kkkk.k.", "..kk.kkk", ".kkkk.k.", "kkkkkk..", "kkkkkk.."],
 	"chat": [".kkkkkk.", "kkkkkkkk", "kkkkkkkk", "kkkkkkkk", ".kkkkkk.", "..kk....", ".k......"],
+	"book": ["NNNNNNNN.", "NnnnnnnnN", "NnYYYYnnN", "NnnnnnnnN", "NnYYYYnnN", "NnnnnnnnN", "NnnnnnnnN", "NwwwwwwwN", "NNNNNNNN."],
 	"smile": ["..kkkk..", ".k....k.", "k.k..k.k", "k......k", "k.k..k.k", "k..kk..k", ".k....k.", "..kkkk.."],
 }
 

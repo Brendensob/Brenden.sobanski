@@ -43,7 +43,7 @@ var combo_target := 0
 var use_scroll := false
 var bag_mode := "bag" # "bag" when opened from the backpack, "craft" at the Crafter, "storage" at the Storage girl
 var storage_page := 0 # which of the six backpacks is open
-var bag_tab := "combine" # bag: character, combine, menu. craft: weapon, helmet, armor, shield, ring
+var bag_tab := "combine" # bag: character, combine, book, menu. craft: weapon, helmet, armor, shield, ring
 var craft_sel := -1
 var craft_scroll := 0 # where the Crafter's list is scrolled to
 var info_box: VBoxContainer
@@ -59,6 +59,7 @@ var chat_btn: Button
 var emote_panel: Panel
 var chat_edit: LineEdit
 var chat_log := [] # recent room chat, newest last
+var chat_gold := [] # true for each chat_log line that is a rare-drop shout
 var chat_feed: VBoxContainer # the last 4 messages, always on screen under the Chat.. box
 const CHAT_FEED_LINES := 4
 var room_label: Label
@@ -684,6 +685,8 @@ func set_boss(b: Node) -> void:
 
 func _process(_d: float) -> void:
 	clock.queue_redraw()
+	if smack_game != null:
+		_tick_smack(_d)
 	if GS.hp <= GS.max_hp() * LOW_HP:
 		bars.queue_redraw()
 	var lvl: Node = main.level if main else null
@@ -1106,7 +1109,7 @@ func toggle_bag() -> void:
 		if Input.is_action_pressed("attack") and main.level and main.level.player and not GS.auto_hit:
 			GS.set_auto_hit(true)
 		bag_mode = "bag"
-		if not bag_tab in ["character", "combine", "menu"]:
+		if not bag_tab in ["character", "combine", "book", "menu"]:
 			bag_tab = "combine"
 		open_panel("bag")
 
@@ -1187,7 +1190,7 @@ func _tabs() -> Array:
 		return t
 	if bag_mode == "craft":
 		return [["weapon", "sword_cast"], ["helmet", "copper_helmet"], ["armor", "iron_armor"], ["shield", "wooden_shield"], ["ring", "gold_ring"]]
-	return [["character", ""], ["combine", ""], ["menu", ""]]
+	return [["character", ""], ["combine", ""], ["book", ""], ["menu", ""]]
 
 func _bag_click(i: int) -> void:
 	# at Banka, tapping an item puts it in the open backpack
@@ -1243,14 +1246,14 @@ func _refresh_bag() -> void:
 		var key: String = t[0]
 		var b := Button.new()
 		b.focus_mode = Control.FOCUS_NONE
-		b.custom_minimum_size = Vector2(42 if bag_mode == "craft" else (35 if bag_mode == "storage" else 72), 30)
+		b.custom_minimum_size = Vector2(42 if bag_mode == "craft" else (35 if bag_mode == "storage" else 54), 30)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		if bag_mode == "storage":
 			b.icon = Art.ui_icon("backpack" if GS.owns_backpack(int(key.substr(4))) else "lock", 2)
 		elif bag_mode == "craft":
 			b.icon = Art.icon_big(t[1])
 		else:
-			b.icon = Art.ui_icon({"character": "backpack", "combine": "hammer", "menu": "compass"}[key], 2)
+			b.icon = Art.ui_icon({"character": "backpack", "combine": "hammer", "book": "book", "menu": "compass"}[key], 2)
 		b.tooltip_text = key.capitalize()
 		b.pressed.connect(func():
 			if bag_mode == "storage":
@@ -1273,6 +1276,7 @@ func _refresh_bag() -> void:
 		match bag_tab:
 			"character": _page_character()
 			"combine": _page_combine()
+			"book": _page_book()
 			"menu": _page_menu()
 	_refresh_info()
 
@@ -1427,6 +1431,95 @@ func _page_combine() -> void:
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	page.add_child(_at(h, Vector2(7, 168)))
 
+# ---------------------------------------------------------------- the collection book
+## The collection book (Brenden, 2026-11-16, like PSG2's): every weapon, piece
+## of armor and ring in the game. The ones you've had show in colour; the rest
+## are dark shapes until you find them. Tap one to see what it is, or where it
+## drops if you haven't found it yet.
+var book_page := "weapons"
+var book_sel := ""
+var book_slots := {} # item id -> its slot on the open page
+
+func _page_book() -> void:
+	GS.note_found()
+	var row := HBoxContainer.new()
+	row.position = Vector2(4, 2)
+	row.add_theme_constant_override("separation", 3)
+	page.add_child(row)
+	for pg in [["weapons", "Weapons"], ["armor", "Armor"], ["rings", "Rings"]]:
+		var key: String = pg[0]
+		var b := _small_button(pg[1], func():
+			book_page = key
+			book_sel = ""
+			_refresh_bag())
+		b.custom_minimum_size = Vector2(66, 18)
+		if key == book_page:
+			b.add_theme_stylebox_override("normal", _style("green", 3))
+			b.add_theme_stylebox_override("hover", _style("green", 3))
+		row.add_child(b)
+	var n := GS.book_count(book_page)
+	var count := _label("Found %d / %d" % [n.x, n.y], 8, C_YELLOW, true)
+	count.name = "BookCount"
+	count.position = Vector2(6, 22)
+	page.add_child(count)
+	var scroll := ScrollContainer.new()
+	scroll.name = "Book"
+	scroll.position = Vector2(4, 38)
+	scroll.size = Vector2(208, 176)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	page.add_child(scroll)
+	var grid := GridContainer.new()
+	grid.columns = 7
+	grid.add_theme_constant_override("h_separation", 1)
+	grid.add_theme_constant_override("v_separation", 1)
+	scroll.add_child(grid)
+	book_slots = {}
+	for id in GS.book_items(book_page):
+		var b := _slot(27)
+		_fill_slot(b, {"id": id, "n": 1})
+		if not GS.found.has(id):
+			# not found yet: a dark shape, and no card when you hover it
+			(b.get_node("Icon") as TextureRect).self_modulate = Color(0.12, 0.1, 0.16, 0.85)
+			b.set_meta("item", "")
+		var iid: String = id
+		b.pressed.connect(func():
+			book_sel = "" if book_sel == iid else iid
+			bag_sel = -1
+			for k in book_slots:
+				_select_style(book_slots[k], k == book_sel)
+			_refresh_info())
+		_select_style(b, id == book_sel)
+		grid.add_child(b)
+		book_slots[id] = b
+
+## The info box under the bag on the book page.
+func _book_info() -> void:
+	if book_sel == "" or not Data.ITEMS.has(book_sel):
+		info_box.add_child(_wrap("Every weapon, armor and ring in the game. Dark ones you haven't found yet. Tap one to see it.", 156, C_MUTED, 8))
+		return
+	var it: Dictionary = Data.ITEMS[book_sel]
+	if not GS.found.has(book_sel):
+		info_box.add_child(_label("???", 10, C_EMBER, true))
+		var from := Data.drop_sources(book_sel)
+		var hint := "Not found yet."
+		if not from.is_empty():
+			hint += " Drops from: %s." % ", ".join(from)
+		var d := _wrap(hint, 156, C_INK, 8)
+		d.max_lines_visible = 4
+		info_box.add_child(d)
+		return
+	info_box.add_child(_label(it.name, 10, C_EMBER, true))
+	var line := ""
+	if it.has("stats"):
+		line = _stat_text(book_sel)
+	if it.has("dmg") and it.type in ["weapon", "bow"]:
+		line = "Attack %d, %.2fs per %s" % [it.dmg, it.spd, "shot" if it.type == "bow" else "swing"]
+	if line != "":
+		info_box.add_child(_label(line, 8, Color("a8f0a0")))
+	var d := _wrap(it.desc, 156, C_INK, 8)
+	d.max_lines_visible = 3
+	info_box.add_child(d)
+
 func _page_menu() -> void:
 	var v := VBoxContainer.new()
 	v.position = Vector2(32, 10)
@@ -1573,6 +1666,9 @@ func _stat_text(id: String) -> String:
 
 func _refresh_info() -> void:
 	_clear(info_box)
+	if bag_mode == "bag" and bag_tab == "book" and bag_sel < 0:
+		_book_info()
+		return
 	if bag_mode == "craft" and craft_sel >= 0 and bag_sel < 0:
 		var r: Dictionary = Data.SMITH[craft_sel]
 		info_box.add_child(_label(Data.ITEMS[r.out].name, 10, C_EMBER))
@@ -2134,10 +2230,13 @@ func open_chat() -> void:
 	_refresh_chat()
 	chat_edit.grab_focus()
 
+## from "" is a shout from the game itself (a rare drop), shown in gold.
 func add_chat(from: String, text: String) -> void:
-	chat_log.append("%s: %s" % [from, text])
+	chat_log.append(text if from == "" else "%s: %s" % [from, text])
+	chat_gold.append(from == "")
 	while chat_log.size() > 8:
 		chat_log.pop_front()
+		chat_gold.pop_front()
 	_refresh_chat_feed()
 	if panels.has("chat") and panels.chat.visible:
 		_refresh_chat()
@@ -2147,9 +2246,11 @@ func _refresh_chat_feed() -> void:
 	if chat_feed == null:
 		return
 	var recent: Array = chat_log.slice(maxi(0, chat_log.size() - CHAT_FEED_LINES))
+	var gold: Array = chat_gold.slice(maxi(0, chat_gold.size() - CHAT_FEED_LINES))
 	for i in CHAT_FEED_LINES:
 		var fl: Label = chat_feed.get_child(i)
 		fl.text = recent[i] if i < recent.size() else ""
+		fl.add_theme_color_override("font_color", Color("ffd84a") if i < gold.size() and gold[i] else C_WHITE)
 		fl.visible = i < recent.size()
 
 ## How tall the chat lines are now, so the status and goal can sit under them.
@@ -3652,18 +3753,46 @@ func _notification(what: int) -> void:
 		_end_drag()
 
 # ---------------------------------------------------------------- the Game House
-## The west house of Pixel Town is the Game House (Brenden, 2026-11-13): one game
-## of Tile Match every 2.5 hours, for gems and other prizes. See match_game.gd.
+## The west house of Pixel Town is the Game House (Brenden, 2026-11-13). Three
+## games (2026-11-16: "more minigames"), each playable once every 2.5 hours,
+## for gems and other prizes: Tile Match (match_game.gd), Slime Smack
+## (slime_smack.gd) and High or Low (high_low.gd).
 const MatchGame := preload("res://scripts/match_game.gd")
-var match_game: RefCounted = null # the game being played, or null
+const SlimeSmack := preload("res://scripts/slime_smack.gd")
+const HighLow := preload("res://scripts/high_low.gd")
+const HOUSE_NAMES := {"tile": "Tile Match", "smack": "Slime Smack", "hilo": "High or Low"}
+const HOUSE_RULES := {
+	"tile": "Smack two tiles to turn them over. Match two prizes to win them. Match two Bombs or two Stinkers and you lose everything!",
+	"smack": "Smack the slimes as they pop up! A slime is 1 point, a gold slime 3. Smack a bomb and you lose 3. You have 20 seconds.",
+	"hilo": "Will the next card be higher or lower? Each right guess wins a bigger prize. One wrong guess loses it all!",
+}
+var house_game := "tile" # the game on the board
+var match_game: RefCounted = null # Tile Match being played, or null
+var smack_game: RefCounted = null # Slime Smack being played, or null
+var hilo_game: RefCounted = null # High or Low being played, or null
 var match_busy := false # tiles are turning back over; smacks wait
-var match_note := "" # the line under the pot: how the last game went
+var house_note := {} # game -> the line under the prize: how the last game went
 
 func _build_game_house() -> void:
-	var gh := _panel("game_house", Vector2(330, 182), "Game House")
+	var gh := _panel("game_house", Vector2(330, 206), "Game House")
+	# the games, as tabs across the top
+	var tabs := HBoxContainer.new()
+	tabs.name = "Games"
+	tabs.position = Vector2(12, 26)
+	tabs.add_theme_constant_override("separation", 4)
+	gh.add_child(tabs)
+	for g in _house_games():
+		var key: String = g
+		var b := _small_button(HOUSE_NAMES[g], func():
+			house_game = key
+			_refresh_game_house())
+		b.name = g
+		b.custom_minimum_size = Vector2(72, 18)
+		tabs.add_child(b)
+	# Tile Match: 4 x 4 tiles
 	var board := Control.new()
 	board.name = "Board"
-	board.position = Vector2(12, 30)
+	board.position = Vector2(12, 54)
 	gh.add_child(board)
 	var step := Art.MATCH_TILE + 4
 	var under := ColorRect.new()
@@ -3682,14 +3811,72 @@ func _build_game_house() -> void:
 		t.position = Vector2((i % MatchGame.COLS) * step, (i / MatchGame.COLS) * step)
 		t.pressed.connect(func(): smack_tile(i))
 		board.add_child(t)
+	# Slime Smack: 3 x 3 holes
+	var holes := Control.new()
+	holes.name = "Holes"
+	holes.position = Vector2(12, 54)
+	gh.add_child(holes)
+	var hstep := Art.SMACK_TILE + 4
+	var grass := ColorRect.new()
+	grass.color = Color("2e6a2a")
+	grass.position = Vector2(-4, -4)
+	grass.size = Vector2(3 * hstep + 3, 3 * hstep + 3)
+	grass.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	holes.add_child(grass)
+	for i in SlimeSmack.HOLES:
+		var t := TextureButton.new()
+		t.name = "H%d" % i
+		t.texture_normal = Art.smack_tile("")
+		t.focus_mode = Control.FOCUS_NONE
+		t.size = Vector2(Art.SMACK_TILE, Art.SMACK_TILE)
+		t.pivot_offset = t.size / 2
+		t.position = Vector2((i % 3) * hstep, (i / 3) * hstep)
+		t.pressed.connect(func(): smack_hole(i))
+		holes.add_child(t)
+	# High or Low: the card and the two guesses
+	var hl := Control.new()
+	hl.name = "HiLo"
+	hl.position = Vector2(12, 54)
+	gh.add_child(hl)
+	var card := Panel.new()
+	card.name = "Card"
+	card.position = Vector2(38, 0)
+	card.size = Vector2(62, 84)
+	card.pivot_offset = card.size / 2
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = Color("fff1d2")
+	cs.border_color = Color("7b4fb8")
+	cs.set_border_width_all(3)
+	cs.set_corner_radius_all(6)
+	card.add_theme_stylebox_override("panel", cs)
+	hl.add_child(card)
+	var num := _outlined(_label("?", 30, Color("7b4fb8"), true))
+	num.name = "Num"
+	num.size = Vector2(62, 84)
+	num.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	num.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	card.add_child(num)
+	var higher := _button("Higher", func(): guess_hilo(true), true)
+	higher.name = "Higher"
+	higher.position = Vector2(0, 98)
+	higher.custom_minimum_size = Vector2(66, 22)
+	hl.add_child(higher)
+	var lower := _button("Lower", func(): guess_hilo(false), true)
+	lower.name = "Lower"
+	lower.position = Vector2(72, 98)
+	lower.custom_minimum_size = Vector2(66, 22)
+	hl.add_child(lower)
+	# the side: the game's name, its rules, how it's going and the prize so far
 	var side := VBoxContainer.new()
 	side.name = "Side"
-	side.position = Vector2(160, 26)
+	side.position = Vector2(160, 50)
 	side.custom_minimum_size = Vector2(160, 0)
 	side.add_theme_constant_override("separation", 3)
 	gh.add_child(side)
-	side.add_child(_label("Tile Match", 10, C_YELLOW, true))
-	var rules := _wrap("Smack two tiles to turn them over. Match two prizes to win them. Match two Bombs or two Stinkers and you lose everything!", 160, C_INK, 7)
+	var nm := _label("Tile Match", 10, C_YELLOW, true)
+	nm.name = "Name"
+	side.add_child(nm)
+	var rules := _wrap(HOUSE_RULES.tile, 160, C_INK, 7)
 	rules.name = "Rules"
 	side.add_child(rules)
 	var info := _label("", 8, C_INK, true)
@@ -3707,36 +3894,64 @@ func _build_game_house() -> void:
 	btn.name = "Go"
 	btn.custom_minimum_size = Vector2(90, 20)
 	side.add_child(btn)
-	# closing the window in the middle of a game keeps the prizes found so far
+	# closing the window in the middle of a game keeps the prizes won so far
 	gh.visibility_changed.connect(func():
-		if not gh.visible and match_game != null and not match_game.over:
-			match_game.cash_out()
-			_match_end())
+		if gh.visible:
+			return
+		for g in _house_games():
+			var o = _house_obj(g)
+			if o != null and not o.over:
+				o.cash_out()
+				_house_end(g))
+
+func _house_games() -> Array:
+	return GS.HOUSE_GAMES
+
+func _house_obj(g: String) -> RefCounted:
+	match g:
+		"tile": return match_game
+		"smack": return smack_game
+		"hilo": return hilo_game
+	return null
 
 func open_game_house() -> void:
-	# a finished game stays on the board until the house opens again
-	if match_game != null and match_game.over and GS.game_house_ready():
-		match_game = null
-		match_note = ""
+	# a finished game stays on the board until that game opens again
+	for g in _house_games():
+		var o = _house_obj(g)
+		if o != null and o.over and GS.game_house_ready(g):
+			_set_house_obj(g, null)
+			house_note[g] = ""
 	open_panel("game_house")
 	_refresh_game_house()
 
-func _game_house_button() -> void:
-	if match_game != null and not match_game.over:
-		match_game.cash_out()
-		_match_end()
-		return
-	if not GS.game_house_ready():
-		toast("The Game House opens again in %s." % _dur(GS.game_house_wait()), "warn")
-		return
-	start_match()
+func _set_house_obj(g: String, o: RefCounted) -> void:
+	match g:
+		"tile": match_game = o
+		"smack": smack_game = o
+		"hilo": hilo_game = o
 
-## Starts a game; the house closes for 2.5 hours from now.
+func _game_house_button() -> void:
+	var g := house_game
+	var o = _house_obj(g)
+	if o != null and not o.over:
+		o.cash_out()
+		_house_end(g)
+		return
+	if not GS.game_house_ready(g):
+		toast("%s opens again in %s." % [HOUSE_NAMES[g], _dur(GS.game_house_wait(g))], "warn")
+		return
+	match g:
+		"tile": start_match()
+		"smack": start_smack()
+		"hilo": start_hilo()
+
+## Starts Tile Match; Tile Match closes for 2.5 hours from now.
 func start_match(seed := -1) -> void:
+	house_game = "tile"
 	match_game = MatchGame.new(seed)
 	match_busy = false
-	match_note = ""
-	GS.game_house_played()
+	house_note.tile = ""
+	GS.game_house_played("tile")
 	Sfx.play("open", 0.0)
 	_refresh_game_house()
 
@@ -3764,16 +3979,16 @@ func smack_tile(i: int) -> void:
 				tw.tween_property(t, "scale", Vector2(1.2, 1.2), 0.1).set_delay(0.12)
 				tw.tween_property(t, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK)
 			if match_game.over:
-				match_note = "You found every prize!"
-				_match_end()
+				house_note.tile = "You found every prize!"
+				_house_end("tile")
 		"bad":
 			_flip(i, r.face)
 			Sfx.play("boom", 0.0)
 			main.shake(4)
 			for k in [r.a, r.b]:
 				_tile(k).modulate = Color(1.0, 0.55, 0.5)
-			match_note = "Two %ss! You lost your prizes." % ("Bomb" if r.face == "bomb" else "Stinker")
-			_match_end()
+			house_note.tile = "Two %ss! You lost your prizes." % ("Bomb" if r.face == "bomb" else "Stinker")
+			_house_end("tile")
 		"miss":
 			_flip(i, r.face)
 			Sfx.play("fail", 0.0)
@@ -3784,9 +3999,9 @@ func smack_tile(i: int) -> void:
 			if match_game == null:
 				return
 			if match_game.over:
-				if match_note == "":
-					match_note = "Out of misses."
-					_match_end()
+				if house_note.get("tile", "") == "":
+					house_note.tile = "Out of misses."
+					_house_end("tile")
 			else:
 				_flip(r.a, "back")
 				_flip(r.b, "back")
@@ -3800,27 +4015,121 @@ func _flip(i: int, face: String) -> void:
 	tw.tween_callback(func(): t.texture_normal = Art.match_tile(face))
 	tw.tween_property(t, "scale:x", 1.0, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-## The game is over: whatever is in the pot is yours (a full bag drops the
-## rest at your feet).
-func _match_end() -> void:
-	var pay: Dictionary = match_game.payout()
+# ---- Slime Smack
+func start_smack(seed := -1) -> void:
+	house_game = "smack"
+	smack_game = SlimeSmack.new(seed)
+	house_note.smack = ""
+	GS.game_house_played("smack")
+	Sfx.play("open", 0.0)
+	for i in SlimeSmack.HOLES:
+		_hole(i).texture_normal = Art.smack_tile("")
+	_refresh_game_house()
+
+func _hole(i: int) -> TextureButton:
+	return panels.game_house.get_node("Holes/H%d" % i)
+
+## Runs Slime Smack's clock while the window is open.
+func _tick_smack(delta: float) -> void:
+	if smack_game == null or smack_game.over or not panels.game_house.visible:
+		return
+	for i in smack_game.tick(delta):
+		var t := _hole(i)
+		t.texture_normal = Art.smack_tile(smack_game.holes[i])
+		if smack_game.holes[i] != "":
+			# pops up out of its hole
+			t.scale = Vector2(0.8, 0.6)
+			t.create_tween().tween_property(t, "scale", Vector2.ONE, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if smack_game.over:
+		house_note.smack = "Time's up! You scored %d." % smack_game.score
+		_house_end("smack")
+	_refresh_house_side()
+
+func smack_hole(i: int) -> void:
+	if smack_game == null or smack_game.over:
+		return
+	var what: String = smack_game.smack(i)
+	var t := _hole(i)
+	t.texture_normal = Art.smack_tile("")
+	match what:
+		"":
+			Sfx.play("thud", 0.0)
+			return
+		"slime":
+			Sfx.play("hit", 0.0)
+		"gold":
+			Sfx.play("coin", 0.0)
+		"bomb":
+			Sfx.play("boom", 0.0)
+			main.shake(3)
+	t.scale = Vector2(1.25, 0.75)
+	t.create_tween().tween_property(t, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK)
+	_refresh_house_side()
+
+# ---- High or Low
+func start_hilo(seed := -1) -> void:
+	house_game = "hilo"
+	hilo_game = HighLow.new(seed)
+	house_note.hilo = ""
+	GS.game_house_played("hilo")
+	Sfx.play("open", 0.0)
+	_refresh_game_house()
+
+func guess_hilo(higher: bool) -> void:
+	if hilo_game == null or hilo_game.over:
+		return
+	var r: Dictionary = hilo_game.guess(higher)
+	var card: Panel = panels.game_house.get_node("HiLo/Card")
+	var tw := card.create_tween()
+	tw.tween_property(card, "scale:x", 0.0, 0.07)
+	tw.tween_property(card, "scale:x", 1.0, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	if r.ok:
+		Sfx.play("coin", 0.0)
+		if hilo_game.over:
+			house_note.hilo = "Top of the ladder!"
+			_house_end("hilo")
+	else:
+		Sfx.play("fail", 0.0)
+		main.shake(3)
+		house_note.hilo = "Wrong! It was a %d. You lost your prize." % r.card
+		_house_end("hilo")
+	_refresh_game_house()
+
+## A game is over: whatever it pays is yours (a full bag drops the rest at your feet).
+func _house_end(g: String) -> void:
+	var o = _house_obj(g)
+	if o == null:
+		return
+	var pay: Dictionary = o.payout()
 	for id in pay:
 		GS.give(id, pay[id])
 	if not pay.is_empty():
-		var got := []
-		for id in pay:
-			got.append("%s x%d" % ["Pixel Coins" if id == "coin" else Data.ITEMS[id].name, pay[id]])
-		toast("Game House prizes: " + ", ".join(got), "good")
+		toast("%s prizes: %s" % [HOUSE_NAMES[g], _prize_text(pay)], "good")
 		Sfx.play("quest", 0.0)
-		if match_note == "":
-			match_note = "You took your prizes."
-	elif match_note == "":
-		match_note = "No prizes this time."
+		if house_note.get(g, "") == "":
+			house_note[g] = "You took your prizes."
+	elif house_note.get(g, "") == "":
+		house_note[g] = "No prizes this time."
 	GS.save_game()
 	_refresh_game_house()
 
+func _prize_text(pay: Dictionary) -> String:
+	var got := []
+	for id in pay:
+		got.append("%s x%d" % ["Pixel Coins" if id == "coin" else Data.ITEMS[id].name, pay[id]])
+	return ", ".join(got)
+
 func _refresh_game_house() -> void:
 	var gh: Panel = panels.game_house
+	for g in _house_games():
+		var b: Button = gh.get_node("Games/" + g)
+		var on: bool = g == house_game
+		b.add_theme_stylebox_override("normal", _style("green", 3) if on else _style("button", 3))
+		b.add_theme_stylebox_override("hover", _style("green", 3) if on else _style("button_hover", 3))
+	gh.get_node("Board").visible = house_game == "tile"
+	gh.get_node("Holes").visible = house_game == "smack"
+	gh.get_node("HiLo").visible = house_game == "hilo"
+	# Tile Match's tiles
 	var g = match_game
 	var playing: bool = g != null and not g.over
 	for i in MatchGame.COLS * MatchGame.ROWS:
@@ -3834,34 +4143,65 @@ func _refresh_game_house() -> void:
 			if t.modulate == Color.WHITE and not g.up[i]:
 				t.modulate = Color(1, 1, 1, 0.55)
 		t.disabled = not playing
+	# Slime Smack's holes
+	var sm = smack_game
+	for i in SlimeSmack.HOLES:
+		var t := _hole(i)
+		t.disabled = sm == null or sm.over
+		if sm == null or sm.over:
+			t.texture_normal = Art.smack_tile("")
+	# High or Low's card
+	var hl = hilo_game
+	var num: Label = gh.get_node("HiLo/Card/Num")
+	num.text = str(hl.card) if hl != null else "?"
+	for k in ["Higher", "Lower"]:
+		(gh.get_node("HiLo/" + k) as Button).disabled = hl == null or hl.over
+	_refresh_house_side()
+
+## The side of the window: the chosen game's name, rules, how it's going and its prize.
+func _refresh_house_side() -> void:
+	var gh: Panel = panels.game_house
+	var g := house_game
+	var o = _house_obj(g)
+	var playing: bool = o != null and not o.over
+	(gh.get_node("Side/Name") as Label).text = HOUSE_NAMES[g]
+	(gh.get_node("Side/Rules") as Label).text = HOUSE_RULES[g]
 	var info: Label = gh.get_node("Side/Info")
 	var go: Button = gh.get_node("Side/Go")
 	if playing:
-		info.text = "Misses left: %d" % g.misses
+		match g:
+			"tile": info.text = "Misses left: %d" % o.misses
+			"smack": info.text = "Time: %d   Score: %d" % [ceili(o.time_left), o.score]
+			"hilo": info.text = "Right guesses: %d" % o.streak
 		go.text = "Take prizes"
 		go.disabled = false
-	elif GS.game_house_ready():
+	elif GS.game_house_ready(g):
 		info.text = "Ready to play!"
 		go.text = "Play"
 		go.disabled = false
 	else:
-		info.text = "Opens again in %s" % _dur(GS.game_house_wait())
+		info.text = "Opens again in %s" % _dur(GS.game_house_wait(g))
 		go.text = "Play"
 		go.disabled = true
 	var pot: HFlowContainer = gh.get_node("Side/Pot")
+	var pay: Dictionary = o.payout() if o != null else {}
+	var shown := "%s|%s|%s" % [g, playing, str(pay)]
+	if pot.get_meta("shown", "-") == shown:
+		(gh.get_node("Side/Note") as Label).text = house_note.get(g, "")
+		return
+	pot.set_meta("shown", shown)
 	_clear(pot)
-	if g != null and not g.pot.is_empty():
-		for f in g.pot:
-			var p: Dictionary = MatchGame.PRIZES[f]
+	if not pay.is_empty():
+		for id in pay:
 			var chip := HBoxContainer.new()
 			chip.add_theme_constant_override("separation", 1)
 			var ic := TextureRect.new()
-			ic.texture = Art.prop_tex("coin") if p.item == "coin" else Art.icon(p.item)
+			ic.texture = Art.prop_tex("coin") if id == "coin" else Art.icon(id)
 			ic.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
 			ic.custom_minimum_size = Vector2(14, 14)
 			chip.add_child(ic)
-			chip.add_child(_label("x%d" % (int(p.n) * int(g.pot[f])), 8, C_INK, true))
+			chip.add_child(_label("x%d" % pay[id], 8, C_INK, true))
 			pot.add_child(chip)
 	else:
 		pot.add_child(_label("Prizes: none yet" if playing else "", 7, C_MUTED))
-	(gh.get_node("Side/Note") as Label).text = match_note
+	(gh.get_node("Side/Note") as Label).text = house_note.get(g, "")

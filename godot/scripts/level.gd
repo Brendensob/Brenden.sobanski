@@ -1119,10 +1119,12 @@ func _surv_scale() -> float:
 
 # ---------------------------------------------------------------- drops, effects, building
 ## personal: an item only you can pick up (your own overflow), never shared with the room.
-func drop(item: String, n: int, pos: Vector2, personal := false, share := false) -> void:
+## loot: a monster's or boss's drop (a rare one is shouted in chat when found).
+func drop(item: String, n: int, pos: Vector2, personal := false, share := false, loot := false) -> void:
 	var p := PickupScript.new()
 	p.setup(item, n, self)
 	p.share = share
+	p.loot = loot or share
 	p.position = pos + Vector2(randf_range(-4, 4), -6)
 	entities.add_child(p)
 	if personal:
@@ -1159,7 +1161,7 @@ func drop_loot(loot: Array, at: Variant = null) -> void:
 		return
 	var pos: Vector2 = at if at != null else player.position + Vector2(0, -20)
 	for l in loot:
-		drop(l[0], int(l[1]), pos, true)
+		drop(l[0], int(l[1]), pos, true, false, true)
 
 func number(pos: Vector2, text: String, color: Color) -> void:
 	var f := FxScript.new()
@@ -1386,7 +1388,7 @@ func mob_snapshot() -> Array:
 		return out
 	for e in entities.get_children():
 		if e is MobScript and not e.dead:
-			out.append([e.nid, e.position.x, e.position.y, e.hp, e.dir])
+			out.append([e.nid, e.position.x, e.position.y, e.hp, e.dir, e.warning()])
 	return out
 
 func apply_mob_snapshot(snap: Array) -> void:
@@ -1401,6 +1403,7 @@ func apply_mob_snapshot(snap: Array) -> void:
 				m.flash = 0.1
 			m.hp = float(d[3])
 			m.dir = int(d[4])
+			m.net_warn = d.size() > 5 and bool(d[5])
 
 func tick_state() -> Dictionary:
 	return {"arena_time": arena_time, "bosses": bosses_spawned, "done": arena_done, "s_day": s_day, "s_night": s_night}

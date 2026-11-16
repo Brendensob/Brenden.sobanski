@@ -1490,6 +1490,52 @@ func arena_loot() -> Array:
 func world_open(w: String) -> bool:
 	return later_open or not w in LATER_WORLDS
 
+## Rare drops (Brenden, 2026-11-16): gear, characters and eggs that no monster
+## or arena drops more than RARE_CHANCE (5%) of the time. Picking one up from a
+## monster's or boss's loot shouts it in the room's chat.
+const RARE_CHANCE := 0.05
+const RARE_TYPES := ["weapon", "staff", "bow", "helmet", "armor", "shield", "ring", "pet", "egg", "character"]
+var _best_chance := {}
+
+func is_rare(id: String) -> bool:
+	if _best_chance.is_empty():
+		var tables := []
+		for m in MOBS:
+			tables.append(MOBS[m].drops)
+		for w in WORLDS:
+			tables.append(WORLDS[w].get("boss_drops", []))
+			tables.append(WORLDS[w].get("mob_drops", []))
+		for t in tables:
+			for d in t:
+				_best_chance[d[0]] = maxf(_best_chance.get(d[0], 0.0), float(d[1]))
+	if not ITEMS.has(id) or not ITEMS[id].type in RARE_TYPES:
+		return false
+	return _best_chance.has(id) and float(_best_chance[id]) <= RARE_CHANCE
+
+## Up to three monsters (or arenas) that drop this item, for the collection book.
+func drop_sources(id: String) -> Array:
+	var out := []
+	for m in MOBS:
+		if out.size() >= 3:
+			break
+		for d in MOBS[m].drops:
+			if d[0] == id and not MOBS[m].name in out:
+				out.append(MOBS[m].name)
+				break
+	for w in WORLDS:
+		if out.size() >= 3:
+			break
+		for d in WORLDS[w].get("boss_drops", []) + WORLDS[w].get("mob_drops", []):
+			if d[0] == id and not WORLDS[w].name in out:
+				out.append(WORLDS[w].name)
+				break
+	return out
+
+## "a Blood Long Sword", "an Evil Axe".
+func with_article(id: String) -> String:
+	var nm: String = ITEMS[id].name
+	return ("an " if nm.left(1).to_lower() in ["a", "e", "i", "o", "u"] else "a ") + nm
+
 func set_aside(id: String) -> bool:
 	return SET_ASIDE.has(id)
 

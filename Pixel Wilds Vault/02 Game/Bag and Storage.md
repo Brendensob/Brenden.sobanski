@@ -33,6 +33,15 @@ tags: [game, bag, storage]
 ## A full bag never loses anything
 Rewards that don't fit drop at your feet as your own pickup. In multiplayer only you can pick them up. That covers chests, the Crafter, quests, combining, seed harvests, Survival Tokens, trades and room pickups. A survival key earned while fainting goes to Banka's storage if the bag is full.
 
+## Collection book (2026-11-16)
+- The fourth tab in the bag (a book icon). Three pages: **Weapons**, **Armor** (helmets, armor and shields) and **Rings**.
+- Everything you've ever had shows in colour, with its hover card. The rest are **dark shapes** until you find them. Tap a dark one: "???" and up to three monsters or arenas that drop it.
+- Each page shows "Found 4 / 186". Items set aside past Hell aren't listed.
+- Saved with the character (`GS.found`). Old saves count whatever is already in the bag, gear and backpacks.
+- *Brenden: "Do all except 6 7 5"* (the collection book was idea 1 of his game-design notes; PSG2 has one, seen in his 2026-10-20 recording)
+
+![[collection_book_2026-11-16.png]]
+
 ## Storage (Banka)
 - Hit **Banka** on the street (see [[NPCs]]) and the bag opens in storage mode.
 - **6 backpack tabs**, each a **5 × 6 grid** (30 slots), like Brenden's screenshot.

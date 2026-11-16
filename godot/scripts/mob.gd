@@ -58,6 +58,15 @@ var through := false
 var nid := 0
 var puppet := false
 var net_target := Vector2.ZERO
+var net_warn := false # a puppet's boss is winding up on the host's screen
+## Boss wind-ups (Brenden, 2026-11-16): before every big attack a boss stops,
+## shakes, glows red and shows a "!" over its head for BOSS_WARN seconds, so
+## you can see it coming and get out of the way. Only the Jelly King warned you
+## before (its crouch).
+const BOSS_WARN := 2.0
+var warn_t := 0.0 # time left in the wind-up
+var big_t := 0.0 # time left in a pounce or dive
+var big_cd := 0.0 # time until the next pounce or dive
 
 func setup(mob_id: String, lvl: Node, hp_mul: float = 1.0, dmg_mul: float = 1.0) -> void:
 	id = mob_id
@@ -178,7 +187,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0, KNOCK_DRAG * delta)
 		if flying:
 			velocity.y = move_toward(velocity.y, 0, KNOCK_DRAG * delta)
-	else:
+	elif not _boss_big(delta, to, dist):
 		match def.ai:
 			"walk": _walk(delta, to, dist)
 			"accel": _accel(delta, to, dist)
@@ -231,10 +240,110 @@ func _physics_process(delta: float) -> void:
 		# squashed down before a big jump: the warning to get ready
 		sprite.texture = Art.mob_tex("jelly_king_crouch", false)
 		sprite.offset.y = (frames[0].get_height() - sprite.texture.get_height()) / 2.0
-	if absf(velocity.x) > 1:
+	if absf(velocity.x) > 1 and warn_t <= 0:
 		dir = 1 if velocity.x > 0 else -1
 	sprite.flip_h = dir < 0
+	_warn_look()
 	queue_redraw()
+
+## The blinking "!" bubble over a boss winding up, drawn on its own layer so
+## the boss's sprite never covers it.
+var warn_mark: Node2D
+func _draw_warn_mark() -> void:
+	# over its head; inside a very tall boss's top, so it stays on screen
+	var y := maxf(-size.y - 11.0, -52.0) + sin(anim * 10.0) * 1.5
+	var c := Color("ffd23a") if int(anim * 6.0) % 2 == 0 else Color("ff5a3a")
+	warn_mark.draw_circle(Vector2(0, y), 9.0, Color("1b1a24"))
+	warn_mark.draw_circle(Vector2(0, y), 8.0, c)
+	warn_mark.draw_rect(Rect2(-1.5, y - 5, 3, 6), Color("1b1a24"))
+	warn_mark.draw_rect(Rect2(-1.5, y + 3, 3, 2.5), Color("1b1a24"))
+
+## True while this boss is winding up a big attack (the Jelly King's crouch too).
+func warning() -> bool:
+	if puppet:
+		return net_warn
+	return warn_t > 0 or (def.ai == "king_slime" and state == "crouch")
+
+## The wind-up's look: the boss shakes and pulses red (the "!" is in _draw).
+func _warn_look() -> void:
+	var on := warning() and not dead
+	if on and warn_mark == null:
+		warn_mark = Node2D.new()
+		warn_mark.z_index = 5
+		warn_mark.draw.connect(_draw_warn_mark)
+		add_child(warn_mark)
+	if warn_mark:
+		warn_mark.visible = on
+		if on:
+			warn_mark.queue_redraw()
+	if on:
+		# flashes red, faster as the attack gets close
+		var rate := 8.0 if warn_t > 1.0 or puppet else 14.0
+		sprite.modulate = Color(1.8, 0.45, 0.4) if int(anim * rate) % 2 == 0 else Color(1.15, 0.9, 0.9)
+		sprite.offset.x = (1.0 if int(anim * 30.0) % 2 == 0 else -1.0)
+	else:
+		sprite.modulate = Color.WHITE
+		sprite.offset.x = 0.0
+
+## A boss's big attack, after its wind-up. Charging bosses wind up before every
+## charge (see _charge). Walking and speeding bosses pounce at you, and flying
+## bosses dive at you, every few seconds. Returns true while it moves the boss.
+func _boss_big(delta: float, to: Vector2, dist: float) -> bool:
+	if not is_boss() or def.ai == "king_slime":
+		return false
+	if warn_t > 0:
+		warn_t -= delta
+		velocity.x = move_toward(velocity.x, 0, 600 * delta)
+		if flying:
+			velocity.y = move_toward(velocity.y, 0, 600 * delta)
+		if absf(to.x) > 2:
+			dir = 1 if to.x > 0 else -1
+		if warn_t <= 0:
+			_big_attack(to)
+		return true
+	if big_t > 0:
+		big_t -= delta
+		if not flying and is_on_floor() and big_t < 1.2:
+			# landed from a pounce
+			big_t = 0.0
+			velocity.x = 0.0
+			level.main.shake(4.0)
+			Sfx.play("boom", 0.0)
+			level.burst(position, death_color(), 10)
+		if big_t <= 0:
+			big_cd = randf_range(4.5, 7.0)
+		return true
+	if def.ai in ["charge", "wizard", "stone"]:
+		return false # a charging boss warns before its charges instead
+	big_cd -= delta
+	if big_cd <= 0 and aggro and dist < 220 and (flying or absf(to.y) < 80):
+		wind_up()
+		return true
+	return false
+
+## Starts a wind-up: the warning sound, then BOSS_WARN seconds of warning.
+func wind_up() -> void:
+	warn_t = BOSS_WARN
+	velocity.x = 0.0
+	Sfx.play("warn", 0.0)
+
+func _big_attack(to: Vector2) -> void:
+	dir = 1 if to.x > 0 else -1
+	match def.ai:
+		"charge":
+			state = "charge"
+			state_t = 1.3
+			if def.get("jump", false) and is_on_floor() and randf() < 0.5:
+				velocity.y = -260
+		"fly":
+			# a straight, fast dive at where you are
+			velocity = (to + Vector2(0, -6)).normalized() * maxf(float(def.speed) * 4.5, 180.0)
+			big_t = 0.8
+		_:
+			# a pounce: a big leap that comes down where you stand
+			velocity.y = -420.0 if def.get("big_jump", false) else -360.0
+			velocity.x = clampf(to.x * 1.3, -170.0, 170.0)
+			big_t = 1.6
 
 ## The Jelly King: hops after you like a slime, and every few seconds squashes
 ## down, leaps high and slams into the ground, sending a ripple of jelly along
@@ -347,6 +456,9 @@ func _charge(delta: float, to: Vector2, dist: float) -> void:
 		"idle":
 			if aggro:
 				velocity.x = move_toward(velocity.x, signf(to.x) * float(def.speed) * 0.5, 300 * delta)
+				if state_t <= 0 and is_boss():
+					wind_up()
+					return
 				if state_t <= 0:
 					state = "charge"
 					state_t = 1.3
@@ -411,6 +523,7 @@ func _puppet_tick(delta: float) -> void:
 	var alt := int(anim * (8 if flying else 5)) % 2 == 1 and (moving or flying)
 	sprite.texture = frames[2] if flash > 0 else frames[1 if alt else 0]
 	sprite.flip_h = dir < 0
+	_warn_look()
 	queue_redraw()
 
 ## `knock` is the weapon's knockback strength (0 = none, 1 = about a tile);

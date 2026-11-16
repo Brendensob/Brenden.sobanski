@@ -21,6 +21,8 @@ Godot **4.3**, renderer `gl_compatibility`.
 | `scripts/npc.gd` | Villagers, "New stocked items!" callout |
 | `scripts/station.gd` | Furnaces, chests, incubator, soils, gate, sign, the Game House |
 | `scripts/match_game.gd` | Tile Match's rules and prizes (the Game House); the window is in `hud.gd` |
+| `scripts/slime_smack.gd` | Slime Smack's rules and prizes (the Game House, 2026-11-16) |
+| `scripts/high_low.gd` | High or Low's rules and prize ladder (the Game House, 2026-11-16) |
 | `scripts/hud.gd` | HUD, touch buttons, bag, storage, Crafter, menus, chat, friends, emotes, world cards, the Game House window |
 | `scripts/fx.gd` | Damage numbers and death puffs |
 | `scripts/emote.gd` | The emote bubble over a head |
